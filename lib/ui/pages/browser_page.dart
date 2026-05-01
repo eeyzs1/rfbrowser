@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/browser_service.dart';
 import '../../data/models/browser_tab.dart';
 
@@ -114,46 +116,53 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
           ),
         ),
         Expanded(
-          child: InAppWebView(
-            initialUrlRequest: URLRequest(url: WebUri(activeTab.url)),
-            initialSettings: InAppWebViewSettings(
-              useShouldOverrideUrlLoading: true,
-              mediaPlaybackRequiresUserGesture: false,
-              allowsInlineMediaPlayback: true,
-            ),
-            onWebViewCreated: (controller) {
-              _controllers[activeTab.id] = controller;
-            },
-            onLoadStart: (controller, url) {
-              ref
-                  .read(browserProvider.notifier)
-                  .setTabLoading(activeTab.id, true);
-              if (url != null) {
-                ref
-                    .read(browserProvider.notifier)
-                    .updateTabUrl(activeTab.id, url.toString());
-              }
-            },
-            onLoadStop: (controller, url) async {
-              ref
-                  .read(browserProvider.notifier)
-                  .setTabLoading(activeTab.id, false);
-              if (url != null) {
-                ref
-                    .read(browserProvider.notifier)
-                    .updateTabUrl(activeTab.id, url.toString());
-              }
-              final title = await controller.getTitle();
-              if (title != null) {
-                ref
-                    .read(browserProvider.notifier)
-                    .updateTabTitle(activeTab.id, title);
-              }
-            },
-            shouldOverrideUrlLoading: (controller, navigationAction) async {
-              return NavigationActionPolicy.ALLOW;
-            },
-          ),
+          child: Platform.isLinux
+              ? _LinuxBrowserPlaceholder(
+                  tab: activeTab,
+                  onOpenExternal: () => _openExternal(activeTab.url),
+                )
+              : InAppWebView(
+                  key: ValueKey(activeTab.id),
+                  initialUrlRequest: URLRequest(url: WebUri(activeTab.url)),
+                  initialSettings: InAppWebViewSettings(
+                    useShouldOverrideUrlLoading: true,
+                    mediaPlaybackRequiresUserGesture: false,
+                    allowsInlineMediaPlayback: true,
+                  ),
+                  onWebViewCreated: (controller) {
+                    _controllers[activeTab.id] = controller;
+                  },
+                  onLoadStart: (controller, url) {
+                    ref
+                        .read(browserProvider.notifier)
+                        .setTabLoading(activeTab.id, true);
+                    if (url != null) {
+                      ref
+                          .read(browserProvider.notifier)
+                          .updateTabUrl(activeTab.id, url.toString());
+                    }
+                  },
+                  onLoadStop: (controller, url) async {
+                    ref
+                        .read(browserProvider.notifier)
+                        .setTabLoading(activeTab.id, false);
+                    if (url != null) {
+                      ref
+                          .read(browserProvider.notifier)
+                          .updateTabUrl(activeTab.id, url.toString());
+                    }
+                    final title = await controller.getTitle();
+                    if (title != null) {
+                      ref
+                          .read(browserProvider.notifier)
+                          .updateTabTitle(activeTab.id, title);
+                    }
+                  },
+                  shouldOverrideUrlLoading:
+                      (controller, navigationAction) async {
+                        return NavigationActionPolicy.ALLOW;
+                      },
+                ),
         ),
       ],
     );
@@ -176,5 +185,55 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('Clipping: ${tab.title}')));
+  }
+
+  Future<void> _openExternal(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+}
+
+class _LinuxBrowserPlaceholder extends StatelessWidget {
+  final BrowserTab tab;
+  final VoidCallback onOpenExternal;
+
+  const _LinuxBrowserPlaceholder({
+    required this.tab,
+    required this.onOpenExternal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.open_in_browser, size: 48, color: theme.hintColor),
+          const SizedBox(height: 16),
+          Text(
+            'Embedded browser is not yet available on Linux',
+            style: theme.textTheme.titleMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            tab.url,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: onOpenExternal,
+            icon: const Icon(Icons.open_in_new),
+            label: const Text('Open in System Browser'),
+          ),
+        ],
+      ),
+    );
   }
 }
