@@ -6,6 +6,7 @@ import '../../services/knowledge_service.dart';
 import '../../services/ai_service.dart';
 import '../../services/settings_service.dart';
 import '../../services/agent_service.dart';
+import '../../data/stores/vault_store.dart';
 import '../widgets/tab_group_sidebar.dart';
 import '../widgets/command_bar.dart';
 import '../widgets/backlinks_panel.dart';
@@ -374,6 +375,8 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   Widget _buildStatusBar(ThemeData theme) {
     final browserState = ref.watch(browserProvider);
     final knowledgeState = ref.watch(knowledgeProvider);
+    final vaultState = ref.watch(vaultProvider);
+    final hasVault = vaultState.currentVault != null;
     return Container(
       height: 24,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -388,28 +391,39 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
           ),
           const SizedBox(width: 16),
-          Icon(Icons.circle, size: 8, color: Colors.green.shade400),
+          Icon(
+            Icons.circle,
+            size: 8,
+            color: hasVault ? Colors.green.shade400 : Colors.orange.shade400,
+          ),
           const SizedBox(width: 4),
           Text(
-            'Ready',
+            hasVault ? 'Ready' : 'No Vault',
             style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
           ),
-          const SizedBox(width: 16),
-          Icon(Icons.description, size: 10, color: theme.hintColor),
-          const SizedBox(width: 4),
-          Text(
-            '${knowledgeState.notes.length} notes',
-            style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
-          ),
+          if (hasVault) ...[
+            const SizedBox(width: 16),
+            Icon(Icons.description, size: 10, color: theme.hintColor),
+            const SizedBox(width: 4),
+            Text(
+              '${knowledgeState.notes.length} notes',
+              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+            ),
+          ],
           const Spacer(),
           Text(
             '${browserState.tabs.length} tabs',
             style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
           ),
-          const SizedBox(width: 16),
-          Icon(Icons.sync, size: 10, color: theme.hintColor),
-          const SizedBox(width: 4),
-          Text('Git', style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+          if (hasVault) ...[
+            const SizedBox(width: 16),
+            Icon(Icons.sync, size: 10, color: theme.hintColor),
+            const SizedBox(width: 4),
+            Text(
+              'Git',
+              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+            ),
+          ],
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/knowledge_service.dart';
+import '../../data/stores/vault_store.dart';
 
 class EditorView extends ConsumerStatefulWidget {
   const EditorView({super.key});
@@ -31,7 +32,27 @@ class _EditorViewState extends ConsumerState<EditorView> {
   @override
   Widget build(BuildContext context) {
     final knowledgeState = ref.watch(knowledgeProvider);
+    final vaultState = ref.watch(vaultProvider);
     final theme = Theme.of(context);
+
+    if (vaultState.currentVault == null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.folder_off, size: 64, color: theme.hintColor),
+            const SizedBox(height: 16),
+            Text('No Vault Connected', style: theme.textTheme.headlineMedium),
+            const SizedBox(height: 8),
+            Text(
+              'Open a vault to start writing notes',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ),
+      );
+    }
+
     final note = knowledgeState.activeNote;
 
     if (note == null) {

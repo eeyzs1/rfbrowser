@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../services/knowledge_service.dart';
+import '../../data/stores/vault_store.dart';
 
 class NoteSidebar extends ConsumerStatefulWidget {
   const NoteSidebar({super.key});
@@ -22,7 +24,13 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   @override
   Widget build(BuildContext context) {
     final knowledgeState = ref.watch(knowledgeProvider);
+    final vaultState = ref.watch(vaultProvider);
     final theme = Theme.of(context);
+
+    if (vaultState.currentVault == null) {
+      return _buildNoVaultPrompt(theme);
+    }
+
     final notes = _filterNotes(knowledgeState.notes);
 
     return Column(
@@ -123,6 +131,107 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
       return n.title.toLowerCase().contains(q) ||
           n.tags.any((t) => t.toLowerCase().contains(q));
     }).toList();
+  }
+
+  Widget _buildNoVaultPrompt(ThemeData theme) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: theme.dividerColor)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.folder_open,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Notes',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.folder_off, size: 40, color: theme.hintColor),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No Vault Connected',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Open a vault to manage notes',
+                    style: theme.textTheme.bodySmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: () => _openVault(),
+                    icon: const Icon(Icons.folder_open, size: 16),
+                    label: const Text('Open Vault'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => _createVault(),
+                    icon: const Icon(Icons.create_new_folder, size: 16),
+                    label: const Text('Create Vault'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openVault() async {
+    final result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select Vault Location',
+    );
+    if (result != null) {
+      await ref.read(vaultProvider.notifier).openVault(result);
+      ref.read(knowledgeProvider.notifier).loadAllNotes();
+    }
+  }
+
+  Future<void> _createVault() async {
+    final result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select Vault Location',
+    );
+    if (result != null) {
+      await ref.read(vaultProvider.notifier).createVault(result);
+      ref.read(knowledgeProvider.notifier).loadAllNotes();
+    }
   }
 
   void _createNewNote() async {

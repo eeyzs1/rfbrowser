@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'services/settings_service.dart';
 import 'services/knowledge_service.dart';
 import 'ui/theme/app_theme.dart';
-import 'ui/pages/welcome_page.dart';
 import 'ui/layout/main_layout.dart';
 import 'data/stores/vault_store.dart';
 
@@ -26,13 +25,15 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
   Future<void> _initApp() async {
     await ref.read(settingsProvider.notifier).loadSettings();
     await ref.read(vaultProvider.notifier).loadRecentVaults();
+    if (ref.read(vaultProvider).currentVault != null) {
+      ref.read(knowledgeProvider.notifier).loadAllNotes();
+    }
     setState(() => _initialized = true);
   }
 
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
-    final vaultState = ref.watch(vaultProvider);
 
     if (!_initialized) {
       return MaterialApp(
@@ -60,13 +61,7 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
       themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       locale: Locale(settings.locale),
       supportedLocales: const [Locale('en'), Locale('zh')],
-      home: vaultState.currentVault != null
-          ? const MainLayout()
-          : WelcomePage(
-              onVaultOpened: () {
-                ref.read(knowledgeProvider.notifier).loadAllNotes();
-              },
-            ),
+      home: const MainLayout(),
     );
   }
 }
