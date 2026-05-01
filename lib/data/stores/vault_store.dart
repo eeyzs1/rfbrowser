@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class VaultConfig {
   final String path;
@@ -63,7 +62,6 @@ class VaultNotifier extends StateNotifier<VaultState> {
 
   static const _recentVaultsKey = 'recent_vaults';
   static const _currentVaultKey = 'current_vault';
-  final _secureStorage = const FlutterSecureStorage();
 
   Future<void> loadRecentVaults() async {
     final prefs = await SharedPreferences.getInstance();

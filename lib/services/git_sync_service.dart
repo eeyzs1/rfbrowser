@@ -54,8 +54,9 @@ class GitSyncService {
 
   Future<SyncState> pull() async {
     try {
-      if (!await isGitRepo())
+      if (!await isGitRepo()) {
         return SyncState(status: SyncStatus.error, message: 'Not a git repo');
+      }
       final result = await _runGit(['pull', '--rebase']);
       return SyncState(
         status: result.exitCode == 0 ? SyncStatus.success : SyncStatus.conflict,
@@ -69,8 +70,9 @@ class GitSyncService {
 
   Future<SyncState> push({String message = 'auto: update notes'}) async {
     try {
-      if (!await isGitRepo())
+      if (!await isGitRepo()) {
         return SyncState(status: SyncStatus.error, message: 'Not a git repo');
+      }
       await _runGit(['add', '-A']);
       await _runGit(['commit', '-m', message]);
       final result = await _runGit(['push']);
@@ -86,8 +88,9 @@ class GitSyncService {
 
   Future<SyncState> autoCommit({String message = 'auto: update notes'}) async {
     try {
-      if (!await isGitRepo())
+      if (!await isGitRepo()) {
         return SyncState(status: SyncStatus.error, message: 'Not a git repo');
+      }
       await _runGit(['add', '-A']);
       try {
         await _runGit(['commit', '-m', message]);
