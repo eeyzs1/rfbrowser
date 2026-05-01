@@ -3,6 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+enum AppButtonStyle { rounded, sharp, pill }
+
+enum ComponentDensity { compact, comfortable, spacious }
+
+enum IconSize { small, medium, large }
+
 class AppSettings {
   final String locale;
   final bool isDarkMode;
@@ -11,6 +17,10 @@ class AppSettings {
   final bool showLineNumbers;
   final String themePreset;
   final int? accentColorValue;
+  final AppButtonStyle buttonStyle;
+  final ComponentDensity density;
+  final IconSize iconSize;
+  final double borderRadius;
 
   AppSettings({
     this.locale = 'en',
@@ -20,6 +30,10 @@ class AppSettings {
     this.showLineNumbers = false,
     this.themePreset = 'sky',
     this.accentColorValue,
+    this.buttonStyle = AppButtonStyle.rounded,
+    this.density = ComponentDensity.comfortable,
+    this.iconSize = IconSize.medium,
+    this.borderRadius = 8.0,
   });
 
   Color get accentColor =>
@@ -44,6 +58,39 @@ class AppSettings {
     }
   }
 
+  double get effectiveBorderRadius {
+    switch (buttonStyle) {
+      case AppButtonStyle.sharp:
+        return 2.0;
+      case AppButtonStyle.pill:
+        return 100.0;
+      case AppButtonStyle.rounded:
+        return borderRadius;
+    }
+  }
+
+  double get effectiveIconSize {
+    switch (iconSize) {
+      case IconSize.small:
+        return 16.0;
+      case IconSize.medium:
+        return 18.0;
+      case IconSize.large:
+        return 22.0;
+    }
+  }
+
+  VisualDensity get effectiveVisualDensity {
+    switch (density) {
+      case ComponentDensity.compact:
+        return VisualDensity.compact;
+      case ComponentDensity.comfortable:
+        return VisualDensity.standard;
+      case ComponentDensity.spacious:
+        return const VisualDensity(horizontal: 0, vertical: 2);
+    }
+  }
+
   AppSettings copyWith({
     String? locale,
     bool? isDarkMode,
@@ -53,6 +100,10 @@ class AppSettings {
     String? themePreset,
     int? accentColorValue,
     bool clearAccentColor = false,
+    AppButtonStyle? buttonStyle,
+    ComponentDensity? density,
+    IconSize? iconSize,
+    double? borderRadius,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
@@ -64,6 +115,10 @@ class AppSettings {
       accentColorValue: clearAccentColor
           ? null
           : (accentColorValue ?? this.accentColorValue),
+      buttonStyle: buttonStyle ?? this.buttonStyle,
+      density: density ?? this.density,
+      iconSize: iconSize ?? this.iconSize,
+      borderRadius: borderRadius ?? this.borderRadius,
     );
   }
 }
@@ -87,6 +142,10 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
       showLineNumbers: prefs.getBool('showLineNumbers') ?? false,
       themePreset: prefs.getString('themePreset') ?? 'sky',
       accentColorValue: prefs.getInt('accentColorValue'),
+      buttonStyle: AppButtonStyle.values[prefs.getInt('buttonStyle') ?? 0],
+      density: ComponentDensity.values[prefs.getInt('density') ?? 1],
+      iconSize: IconSize.values[prefs.getInt('iconSize') ?? 1],
+      borderRadius: prefs.getDouble('borderRadius') ?? 8.0,
     );
   }
 
@@ -140,6 +199,30 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
       themePreset: 'custom',
       accentColorValue: color.toARGB32(),
     );
+  }
+
+  Future<void> setButtonStyle(AppButtonStyle style) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('buttonStyle', style.index);
+    state = state.copyWith(buttonStyle: style);
+  }
+
+  Future<void> setDensity(ComponentDensity d) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('density', d.index);
+    state = state.copyWith(density: d);
+  }
+
+  Future<void> setIconSize(IconSize s) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('iconSize', s.index);
+    state = state.copyWith(iconSize: s);
+  }
+
+  Future<void> setBorderRadius(double r) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('borderRadius', r);
+    state = state.copyWith(borderRadius: r);
   }
 }
 

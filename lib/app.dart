@@ -56,8 +56,8 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'RFBrowser',
-      theme: AppTheme.lightTheme(seed: settings.accentColor),
-      darkTheme: AppTheme.darkTheme(seed: settings.accentColor),
+      theme: AppTheme.lightTheme(settings),
+      darkTheme: AppTheme.darkTheme(settings),
       themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       locale: Locale(settings.locale),
       supportedLocales: const [Locale('en'), Locale('zh')],

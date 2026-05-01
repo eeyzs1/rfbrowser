@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
+import '../../services/settings_service.dart';
 
 class AppTheme {
-  static ThemeData darkTheme({Color seed = const Color(0xFF0EA5E9)}) {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: seed,
+  static ThemeData darkTheme(AppSettings settings) {
+    final cs = ColorScheme.fromSeed(
+      seedColor: settings.accentColor,
       brightness: Brightness.dark,
       surface: const Color(0xFF0F172A),
     );
-    return _buildTheme(colorScheme, Brightness.dark);
+    return _buildTheme(cs, Brightness.dark, settings);
   }
 
-  static ThemeData lightTheme({Color seed = const Color(0xFF0EA5E9)}) {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: seed,
+  static ThemeData lightTheme(AppSettings settings) {
+    final cs = ColorScheme.fromSeed(
+      seedColor: settings.accentColor,
       brightness: Brightness.light,
       surface: const Color(0xFFFAFCFF),
     );
-    return _buildTheme(colorScheme, Brightness.light);
+    return _buildTheme(cs, Brightness.light, settings);
   }
 
-  static ThemeData _buildTheme(ColorScheme cs, Brightness brightness) {
+  static ThemeData _buildTheme(
+    ColorScheme cs,
+    Brightness brightness,
+    AppSettings s,
+  ) {
     final isDark = brightness == Brightness.dark;
     final surface = isDark ? const Color(0xFF0F172A) : const Color(0xFFFAFCFF);
     final surfaceContainer = isDark ? const Color(0xFF1E293B) : Colors.white;
@@ -32,11 +37,14 @@ class AppTheme {
     final muted = isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
     final divider = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
     final inputBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
+    final br = s.effectiveBorderRadius;
+    final iconSz = s.effectiveIconSize;
 
     return ThemeData(
       brightness: brightness,
       colorScheme: cs,
       scaffoldBackgroundColor: surface,
+      visualDensity: s.effectiveVisualDensity,
       appBarTheme: AppBarTheme(
         backgroundColor: surfaceContainer,
         foregroundColor: onSurface,
@@ -45,18 +53,18 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: surfaceContainer,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
       ),
       dividerTheme: DividerThemeData(color: divider, thickness: 1),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: inputBg,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(br),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(br),
           borderSide: BorderSide(color: cs.primary, width: 1),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -83,22 +91,25 @@ class AppTheme {
           letterSpacing: 0.3,
         ),
       ),
-      iconTheme: IconThemeData(color: muted, size: 18),
+      iconTheme: IconThemeData(color: muted, size: iconSz),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: cs.primary,
         foregroundColor: cs.onPrimary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: surfaceContainer,
         contentTextStyle: TextStyle(color: onSurface),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
         behavior: SnackBarBehavior.floating,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: cs.primary,
           foregroundColor: cs.onPrimary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(br),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
         ),
@@ -107,9 +118,23 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: cs.primary,
           side: BorderSide(color: divider),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(br),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
+      ),
+      listTileTheme: ListTileThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
+        visualDensity: s.effectiveVisualDensity,
+      ),
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(br + 4),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
       ),
     );
   }
