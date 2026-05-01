@@ -63,10 +63,8 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                     child: Row(
                       children: [
                         _buildLeftSidebar(theme),
-                        Container(width: 1, color: theme.dividerColor),
                         Expanded(child: _buildMainContent(theme)),
                         if (_showRightSidebar || _showBacklinks) ...[
-                          Container(width: 1, color: theme.dividerColor),
                           _buildRightPanel(theme),
                         ],
                       ],
@@ -95,7 +93,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
   Widget _buildMenuBar(ThemeData theme) {
     return Container(
-      height: 40,
+      height: 44,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: theme.appBarTheme.backgroundColor,
@@ -103,20 +101,16 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.menu, size: 16),
-            onPressed: () {},
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-          ),
+          Icon(Icons.explore, size: 20, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
           Text(
             'RFBrowser',
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w600,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.primary,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 20),
           _buildViewModeButton(Icons.language, 'Browser', ViewMode.browser),
           _buildViewModeButton(Icons.edit_note, 'Editor', ViewMode.editor),
           _buildViewModeButton(Icons.vertical_split, 'Split', ViewMode.split),
@@ -124,7 +118,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           _buildViewModeButton(Icons.dashboard, 'Canvas', ViewMode.canvas),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.search, size: 16),
+            icon: const Icon(Icons.search, size: 18),
             onPressed: () => setState(() => _showCommandBar = true),
             tooltip: 'Command Bar (Ctrl+K)',
             padding: EdgeInsets.zero,
@@ -133,7 +127,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           IconButton(
             icon: Icon(
               Icons.link,
-              size: 16,
+              size: 18,
               color: _showBacklinks ? theme.colorScheme.primary : null,
             ),
             onPressed: () => setState(() => _showBacklinks = !_showBacklinks),
@@ -146,7 +140,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
               _showRightSidebar
                   ? Icons.view_sidebar
                   : Icons.view_sidebar_outlined,
-              size: 16,
+              size: 18,
             ),
             onPressed: () =>
                 setState(() => _showRightSidebar = !_showRightSidebar),
@@ -155,7 +149,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
           IconButton(
-            icon: const Icon(Icons.settings, size: 16),
+            icon: const Icon(Icons.settings, size: 18),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SettingsPage()),
@@ -172,81 +166,77 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   Widget _buildViewModeButton(IconData icon, String label, ViewMode mode) {
     final theme = Theme.of(context);
     final isActive = _viewMode == mode;
-    return TextButton(
-      onPressed: () => setState(() => _viewMode = mode),
-      style: TextButton.styleFrom(
-        foregroundColor: isActive
-            ? theme.colorScheme.primary
-            : theme.textTheme.bodySmall?.color,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 12)),
-        ],
+    return Padding(
+      padding: const EdgeInsets.only(right: 2),
+      child: Material(
+        color: isActive
+            ? theme.colorScheme.primary.withValues(alpha: 0.12)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => setState(() => _viewMode = mode),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 14,
+                  color: isActive
+                      ? theme.colorScheme.primary
+                      : theme.iconTheme.color,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 12,
+                    color: isActive
+                        ? theme.colorScheme.primary
+                        : theme.textTheme.bodySmall?.color,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildLeftSidebar(ThemeData theme) {
-    return SizedBox(
-      width: 220,
+    return Container(
+      width: 240,
+      decoration: BoxDecoration(
+        color: theme.appBarTheme.backgroundColor,
+        border: Border(right: BorderSide(color: theme.dividerColor)),
+      ),
       child: Column(
         children: [
           Container(
-            height: 32,
+            height: 36,
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: theme.dividerColor)),
             ),
             child: Row(
               children: [
                 Expanded(
-                  child: TextButton(
-                    onPressed: () =>
-                        setState(() => _leftPanel = LeftPanel.notes),
-                    style: TextButton.styleFrom(
-                      foregroundColor: _leftPanel == LeftPanel.notes
-                          ? theme.colorScheme.primary
-                          : theme.hintColor,
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.description, size: 12),
-                        const SizedBox(width: 4),
-                        Text('Notes', style: TextStyle(fontSize: 11)),
-                      ],
-                    ),
+                  child: _buildTabButton(
+                    icon: Icons.description,
+                    label: 'Notes',
+                    isActive: _leftPanel == LeftPanel.notes,
+                    onTap: () => setState(() => _leftPanel = LeftPanel.notes),
                   ),
                 ),
                 Expanded(
-                  child: TextButton(
-                    onPressed: () =>
-                        setState(() => _leftPanel = LeftPanel.tabs),
-                    style: TextButton.styleFrom(
-                      foregroundColor: _leftPanel == LeftPanel.tabs
-                          ? theme.colorScheme.primary
-                          : theme.hintColor,
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.tab, size: 12),
-                        const SizedBox(width: 4),
-                        Text('Tabs', style: TextStyle(fontSize: 11)),
-                      ],
-                    ),
+                  child: _buildTabButton(
+                    icon: Icons.tab,
+                    label: 'Tabs',
+                    isActive: _leftPanel == LeftPanel.tabs,
+                    onTap: () => setState(() => _leftPanel = LeftPanel.tabs),
                   ),
                 ),
               ],
@@ -258,6 +248,43 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                 : const TabGroupSidebar(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTabButton({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return Material(
+      color: isActive
+          ? theme.colorScheme.primary.withValues(alpha: 0.08)
+          : Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 12,
+                color: isActive ? theme.colorScheme.primary : theme.hintColor,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: isActive ? theme.colorScheme.primary : theme.hintColor,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -284,64 +311,42 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   }
 
   Widget _buildRightPanel(ThemeData theme) {
-    return SizedBox(
-      width: 320,
+    return Container(
+      width: 340,
+      decoration: BoxDecoration(
+        color: theme.appBarTheme.backgroundColor,
+        border: Border(left: BorderSide(color: theme.dividerColor)),
+      ),
       child: Column(
         children: [
           if (_showBacklinks && _showRightSidebar)
             Container(
-              height: 32,
+              height: 36,
               decoration: BoxDecoration(
                 border: Border(bottom: BorderSide(color: theme.dividerColor)),
               ),
               child: Row(
                 children: [
                   Expanded(
-                    child: TextButton(
-                      onPressed: () => setState(() {
+                    child: _buildTabButton(
+                      icon: Icons.link,
+                      label: 'Links',
+                      isActive: _showBacklinks && !_showRightSidebar,
+                      onTap: () => setState(() {
                         _showBacklinks = true;
                         _showRightSidebar = false;
                       }),
-                      style: TextButton.styleFrom(
-                        foregroundColor: _showBacklinks && !_showRightSidebar
-                            ? theme.colorScheme.primary
-                            : theme.hintColor,
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.link, size: 12),
-                          const SizedBox(width: 4),
-                          Text('Links', style: TextStyle(fontSize: 11)),
-                        ],
-                      ),
                     ),
                   ),
                   Expanded(
-                    child: TextButton(
-                      onPressed: () => setState(() {
+                    child: _buildTabButton(
+                      icon: Icons.smart_toy,
+                      label: 'AI',
+                      isActive: _showRightSidebar && !_showBacklinks,
+                      onTap: () => setState(() {
                         _showRightSidebar = true;
                         _showBacklinks = false;
                       }),
-                      style: TextButton.styleFrom(
-                        foregroundColor: _showRightSidebar && !_showBacklinks
-                            ? theme.colorScheme.primary
-                            : theme.hintColor,
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.smart_toy, size: 12),
-                          const SizedBox(width: 4),
-                          Text('AI', style: TextStyle(fontSize: 11)),
-                        ],
-                      ),
                     ),
                   ),
                 ],
@@ -362,8 +367,20 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.dashboard, size: 64, color: theme.hintColor),
-          const SizedBox(height: 16),
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              Icons.dashboard,
+              size: 36,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 20),
           Text('Canvas', style: theme.textTheme.headlineMedium),
           const SizedBox(height: 8),
           Text('Coming in Phase 4', style: theme.textTheme.bodySmall),
@@ -378,7 +395,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     final vaultState = ref.watch(vaultProvider);
     final hasVault = vaultState.currentVault != null;
     return Container(
-      height: 24,
+      height: 26,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: theme.appBarTheme.backgroundColor,
@@ -390,19 +407,24 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             'RFBrowser v0.2.0',
             style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
           ),
-          const SizedBox(width: 16),
-          Icon(
-            Icons.circle,
-            size: 8,
-            color: hasVault ? Colors.green.shade400 : Colors.orange.shade400,
+          const SizedBox(width: 12),
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: hasVault
+                  ? const Color(0xFF73DACA)
+                  : const Color(0xFFFF9E64),
+            ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 6),
           Text(
             hasVault ? 'Ready' : 'No Vault',
             style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
           ),
           if (hasVault) ...[
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Icon(Icons.description, size: 10, color: theme.hintColor),
             const SizedBox(width: 4),
             Text(
@@ -416,7 +438,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
           ),
           if (hasVault) ...[
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Icon(Icons.sync, size: 10, color: theme.hintColor),
             const SizedBox(width: 4),
             Text(

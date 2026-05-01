@@ -51,11 +51,7 @@ class _GraphViewState extends ConsumerState<GraphView>
             onScaleUpdate: (details) {
               setState(() {
                 _scale = (_scale * details.scale).clamp(0.3, 3.0);
-              });
-            },
-            onPanUpdate: (details) {
-              setState(() {
-                _offset += details.delta;
+                _offset += details.focalPointDelta;
               });
             },
             child: CustomPaint(

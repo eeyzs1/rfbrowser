@@ -64,53 +64,55 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
+            color: theme.appBarTheme.backgroundColor,
             border: Border(bottom: BorderSide(color: theme.dividerColor)),
           ),
           child: Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, size: 18),
-                onPressed: () => _controllers[activeTab.id]?.goBack(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              _buildNavButton(
+                Icons.arrow_back,
+                () => _controllers[activeTab.id]?.goBack(),
               ),
-              IconButton(
-                icon: const Icon(Icons.arrow_forward, size: 18),
-                onPressed: () => _controllers[activeTab.id]?.goForward(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              _buildNavButton(
+                Icons.arrow_forward,
+                () => _controllers[activeTab.id]?.goForward(),
               ),
-              IconButton(
-                icon: const Icon(Icons.refresh, size: 18),
-                onPressed: () => _controllers[activeTab.id]?.reload(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              _buildNavButton(
+                Icons.refresh,
+                () => _controllers[activeTab.id]?.reload(),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: TextField(
-                  controller: _urlController,
-                  style: theme.textTheme.bodyMedium,
-                  decoration: InputDecoration(
-                    hintText: 'Enter URL or search...',
-                    hintStyle: theme.textTheme.bodySmall,
-                    prefixIcon: const Icon(Icons.search, size: 16),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  onSubmitted: (url) => _navigateTo(activeTab.id, url),
+                  child: TextField(
+                    controller: _urlController,
+                    style: theme.textTheme.bodyMedium,
+                    decoration: InputDecoration(
+                      hintText: 'Search or enter URL...',
+                      hintStyle: theme.textTheme.bodySmall,
+                      prefixIcon: Icon(
+                        Icons.search,
+                        size: 16,
+                        color: theme.hintColor,
+                      ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                    onSubmitted: (url) => _navigateTo(activeTab.id, url),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.bookmark_add_outlined, size: 18),
-                onPressed: () => _clipPage(activeTab),
+              _buildNavButton(
+                Icons.bookmark_add_outlined,
+                () => _clipPage(activeTab),
                 tooltip: 'Clip Page',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               ),
             ],
           ),
@@ -179,6 +181,29 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     }
     ref.read(browserProvider.notifier).updateTabUrl(tabId, url);
     _controllers[tabId]?.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+  }
+
+  Widget _buildNavButton(
+    IconData icon,
+    VoidCallback onPressed, {
+    String? tooltip,
+  }) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onPressed,
+        child: Tooltip(
+          message: tooltip ?? '',
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Icon(icon, size: 18, color: theme.iconTheme.color),
+          ),
+        ),
+      ),
+    );
   }
 
   void _clipPage(BrowserTab tab) {
