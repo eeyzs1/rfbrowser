@@ -63,8 +63,3 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
-
-hooks:
-  user_defines:
-    sqlite3:
-      source: system
