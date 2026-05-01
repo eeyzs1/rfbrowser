@@ -40,10 +40,22 @@ class _EditorViewState extends ConsumerState<EditorView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.folder_off, size: 64, color: theme.hintColor),
-            const SizedBox(height: 16),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Icon(
+                Icons.edit_note,
+                size: 32,
+                color: theme.colorScheme.secondary,
+              ),
+            ),
+            const SizedBox(height: 20),
             Text('No Vault Connected', style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               'Open a vault to start writing notes',
               style: theme.textTheme.bodySmall,

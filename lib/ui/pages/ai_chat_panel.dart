@@ -60,17 +60,25 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.psychology, size: 48, color: theme.hintColor),
-                      const SizedBox(height: 12),
-                      Text(
-                        'AI Assistant',
-                        style: theme.textTheme.headlineMedium,
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.08,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          Icons.psychology,
+                          size: 28,
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
+                      const SizedBox(height: 16),
+                      Text('AI Assistant', style: theme.textTheme.titleMedium),
                       const SizedBox(height: 4),
-                      Text(
-                        'Ask me anything about your notes or the web',
-                        style: theme.textTheme.bodySmall,
-                      ),
+                      Text('Ask me anything', style: theme.textTheme.bodySmall),
                     ],
                   ),
                 )

@@ -34,12 +34,24 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.language, size: 64, color: theme.hintColor),
-            const SizedBox(height: 16),
-            Text('No tab open', style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 8),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Icon(
+                Icons.language,
+                size: 32,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Start Browsing', style: theme.textTheme.headlineMedium),
+            const SizedBox(height: 6),
             Text(
-              'Open a new tab to start browsing',
+              'Open a new tab to explore the web',
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 24),
@@ -49,7 +61,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                     .read(browserProvider.notifier)
                     .createTab(url: 'https://www.google.com');
               },
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add, size: 16),
               label: const Text('New Tab'),
             ),
           ],

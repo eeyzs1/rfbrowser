@@ -409,13 +409,13 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           ),
           const SizedBox(width: 12),
           Container(
-            width: 7,
-            height: 7,
+            width: 6,
+            height: 6,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: hasVault
-                  ? const Color(0xFF73DACA)
-                  : const Color(0xFFFF9E64),
+                  ? const Color(0xFF2DD4BF)
+                  : const Color(0xFFFBBF24),
             ),
           ),
           const SizedBox(width: 6),
