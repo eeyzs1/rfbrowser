@@ -3,6 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/settings_service.dart';
 import '../../services/ai_service.dart';
 
+class _PresetTheme {
+  final String id;
+  final String label;
+  final Color color;
+  final IconData icon;
+  const _PresetTheme(this.id, this.label, this.color, this.icon);
+}
+
+const _presets = [
+  _PresetTheme('sky', 'Sky', Color(0xFF0EA5E9), Icons.cloud),
+  _PresetTheme('violet', 'Violet', Color(0xFF8B5CF6), Icons.auto_awesome),
+  _PresetTheme('rose', 'Rose', Color(0xFFF43F5E), Icons.favorite),
+  _PresetTheme('emerald', 'Emerald', Color(0xFF10B981), Icons.eco),
+  _PresetTheme('amber', 'Amber', Color(0xFFF59E0B), Icons.wb_sunny),
+];
+
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
@@ -14,9 +30,9 @@ class SettingsPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         children: [
-          _buildSection(theme, 'Appearance', [
+          _buildSection(theme, 'Theme', [
             SwitchListTile(
               title: const Text('Dark Mode'),
               subtitle: const Text('Toggle dark/light theme'),
@@ -24,6 +40,40 @@ class SettingsPage extends ConsumerWidget {
               onChanged: (_) =>
                   ref.read(settingsProvider.notifier).toggleDarkMode(),
             ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Text(
+                'Accent Color',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: _buildPresetGrid(context, ref, settings),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final color = await _showColorPicker(
+                    context,
+                    settings.accentColor,
+                  );
+                  if (color != null) {
+                    ref.read(settingsProvider.notifier).setAccentColor(color);
+                  }
+                },
+                icon: const Icon(Icons.palette, size: 16),
+                label: const Text('Custom Color'),
+              ),
+            ),
+            const SizedBox(height: 4),
+          ]),
+          const SizedBox(height: 20),
+          _buildSection(theme, 'Language', [
             ListTile(
               title: const Text('Language'),
               subtitle: Text(settings.locale == 'zh' ? '中文' : 'English'),
@@ -31,7 +81,7 @@ class SettingsPage extends ConsumerWidget {
               onTap: () => _showLanguageDialog(context, ref, settings.locale),
             ),
           ]),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           _buildSection(theme, 'AI Models', [
             ListTile(
               title: const Text('OpenAI API Key'),
@@ -56,7 +106,7 @@ class SettingsPage extends ConsumerWidget {
               onTap: () => _showOllamaDialog(context, ref),
             ),
           ]),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           _buildSection(theme, 'Editor', [
             ListTile(
               title: const Text('Font Size'),
@@ -75,7 +125,7 @@ class SettingsPage extends ConsumerWidget {
               ),
             ),
           ]),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           _buildSection(theme, 'Sync', [
             ListTile(
               title: const Text('Git Sync'),
@@ -90,7 +140,7 @@ class SettingsPage extends ConsumerWidget {
               onTap: () => _showWebdavConfigDialog(context, ref),
             ),
           ]),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           _buildSection(theme, 'About', [
             ListTile(
               title: const Text('RFBrowser'),
@@ -102,6 +152,143 @@ class SettingsPage extends ConsumerWidget {
             ),
           ]),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPresetGrid(
+    BuildContext context,
+    WidgetRef ref,
+    AppSettings settings,
+  ) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _presets.map((preset) {
+        final isSelected = settings.themePreset == preset.id;
+        return GestureDetector(
+          onTap: () =>
+              ref.read(settingsProvider.notifier).setThemePreset(preset.id),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: preset.color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: isSelected
+                  ? Border.all(color: preset.color, width: 2)
+                  : Border.all(color: Colors.transparent, width: 2),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(preset.icon, size: 18, color: preset.color),
+                const SizedBox(height: 4),
+                Text(
+                  preset.label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                    color: isSelected
+                        ? preset.color
+                        : Theme.of(context).hintColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Future<Color?> _showColorPicker(BuildContext context, Color current) async {
+    Color selected = current;
+    return showDialog<Color>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: const Text('Custom Accent Color'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: double.infinity,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: selected,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children:
+                    [
+                      Colors.red,
+                      Colors.pink,
+                      Colors.purple,
+                      Colors.deepPurple,
+                      Colors.indigo,
+                      Colors.blue,
+                      Colors.lightBlue,
+                      Colors.cyan,
+                      Colors.teal,
+                      Colors.green,
+                      Colors.lightGreen,
+                      Colors.lime,
+                      Colors.yellow,
+                      Colors.amber,
+                      Colors.orange,
+                      Colors.deepOrange,
+                      Colors.brown,
+                    ].map((color) {
+                      final isSelected =
+                          selected.toARGB32() == color.toARGB32();
+                      return GestureDetector(
+                        onTap: () => setState(() => selected = color),
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                            border: isSelected
+                                ? Border.all(color: Colors.white, width: 2)
+                                : null,
+                            boxShadow: [
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.4),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: isSelected
+                              ? const Icon(
+                                  Icons.check,
+                                  size: 14,
+                                  color: Colors.white,
+                                )
+                              : null,
+                        ),
+                      );
+                    }).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, selected),
+              child: const Text('Apply'),
+            ),
+          ],
+        ),
       ),
     );
   }

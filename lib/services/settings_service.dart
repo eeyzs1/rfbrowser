@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -8,6 +9,8 @@ class AppSettings {
   final String activeModel;
   final double editorFontSize;
   final bool showLineNumbers;
+  final String themePreset;
+  final int? accentColorValue;
 
   AppSettings({
     this.locale = 'en',
@@ -15,7 +18,31 @@ class AppSettings {
     this.activeModel = 'gpt-4o',
     this.editorFontSize = 14.0,
     this.showLineNumbers = false,
+    this.themePreset = 'sky',
+    this.accentColorValue,
   });
+
+  Color get accentColor =>
+      accentColorValue != null ? Color(accentColorValue!) : _presetColor;
+
+  Color get _presetColor {
+    switch (themePreset) {
+      case 'sky':
+        return const Color(0xFF0EA5E9);
+      case 'violet':
+        return const Color(0xFF8B5CF6);
+      case 'rose':
+        return const Color(0xFFF43F5E);
+      case 'emerald':
+        return const Color(0xFF10B981);
+      case 'amber':
+        return const Color(0xFFF59E0B);
+      case 'custom':
+        return accentColor;
+      default:
+        return const Color(0xFF0EA5E9);
+    }
+  }
 
   AppSettings copyWith({
     String? locale,
@@ -23,6 +50,9 @@ class AppSettings {
     String? activeModel,
     double? editorFontSize,
     bool? showLineNumbers,
+    String? themePreset,
+    int? accentColorValue,
+    bool clearAccentColor = false,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
@@ -30,6 +60,10 @@ class AppSettings {
       activeModel: activeModel ?? this.activeModel,
       editorFontSize: editorFontSize ?? this.editorFontSize,
       showLineNumbers: showLineNumbers ?? this.showLineNumbers,
+      themePreset: themePreset ?? this.themePreset,
+      accentColorValue: clearAccentColor
+          ? null
+          : (accentColorValue ?? this.accentColorValue),
     );
   }
 }
@@ -51,6 +85,8 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
       activeModel: prefs.getString('activeModel') ?? 'gpt-4o',
       editorFontSize: prefs.getDouble('editorFontSize') ?? 14.0,
       showLineNumbers: prefs.getBool('showLineNumbers') ?? false,
+      themePreset: prefs.getString('themePreset') ?? 'sky',
+      accentColorValue: prefs.getInt('accentColorValue'),
     );
   }
 
@@ -86,6 +122,24 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('editorFontSize', size);
     state = state.copyWith(editorFontSize: size);
+  }
+
+  Future<void> setThemePreset(String preset) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('themePreset', preset);
+    state = state.copyWith(
+      themePreset: preset,
+      clearAccentColor: preset != 'custom',
+    );
+  }
+
+  Future<void> setAccentColor(Color color) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('accentColorValue', color.toARGB32());
+    state = state.copyWith(
+      themePreset: 'custom',
+      accentColorValue: color.toARGB32(),
+    );
   }
 }
 
