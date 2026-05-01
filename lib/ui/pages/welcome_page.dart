@@ -20,11 +20,7 @@ class WelcomePage extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.explore,
-                size: 80,
-                color: theme.colorScheme.primary,
-              ),
+              Icon(Icons.explore, size: 80, color: theme.colorScheme.primary),
               const SizedBox(height: 24),
               Text(
                 'RFBrowser',
@@ -36,7 +32,9 @@ class WelcomePage extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 'AI-Powered Knowledge Browser',
-                style: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.hintColor,
+                ),
               ),
               const SizedBox(height: 48),
               Row(
@@ -47,7 +45,10 @@ class WelcomePage extends ConsumerWidget {
                     icon: const Icon(Icons.folder_open),
                     label: const Text('Open Vault'),
                     style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -56,7 +57,10 @@ class WelcomePage extends ConsumerWidget {
                     icon: const Icon(Icons.create_new_folder),
                     label: const Text('Create Vault'),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
                     ),
                   ),
                 ],
@@ -65,25 +69,31 @@ class WelcomePage extends ConsumerWidget {
                 const SizedBox(height: 48),
                 Text(
                   'Recent Vaults',
-                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                ...vaultState.recentVaults.map((vault) => Card(
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  child: ListTile(
-                    leading: const Icon(Icons.folder),
-                    title: Text(vault.name),
-                    subtitle: Text(vault.path),
-                    trailing: Text(
-                      _formatDate(vault.lastOpened),
-                      style: theme.textTheme.bodySmall,
+                ...vaultState.recentVaults.map(
+                  (vault) => Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: ListTile(
+                      leading: const Icon(Icons.folder),
+                      title: Text(vault.name),
+                      subtitle: Text(vault.path),
+                      trailing: Text(
+                        _formatDate(vault.lastOpened),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      onTap: () async {
+                        await ref
+                            .read(vaultProvider.notifier)
+                            .openVault(vault.path);
+                        onVaultOpened();
+                      },
                     ),
-                    onTap: () async {
-                      await ref.read(vaultProvider.notifier).openVault(vault.path);
-                      onVaultOpened();
-                    },
                   ),
-                )),
+                ),
               ],
               if (vaultState.error != null) ...[
                 const SizedBox(height: 16),
@@ -96,10 +106,19 @@ class WelcomePage extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.error_outline, size: 16, color: theme.colorScheme.error),
+                      Icon(
+                        Icons.error_outline,
+                        size: 16,
+                        color: theme.colorScheme.error,
+                      ),
                       const SizedBox(width: 8),
                       Flexible(
-                        child: Text(vaultState.error!, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
+                        child: Text(
+                          vaultState.error!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -113,7 +132,9 @@ class WelcomePage extends ConsumerWidget {
   }
 
   Future<void> _openVault(BuildContext context, WidgetRef ref) async {
-    final result = await FilePicker.platform.getDirectoryPath(dialogTitle: 'Select Vault Location');
+    final result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select Vault Location',
+    );
     if (result != null) {
       await ref.read(vaultProvider.notifier).openVault(result);
       onVaultOpened();
@@ -121,7 +142,9 @@ class WelcomePage extends ConsumerWidget {
   }
 
   Future<void> _createVault(BuildContext context, WidgetRef ref) async {
-    final result = await FilePicker.platform.getDirectoryPath(dialogTitle: 'Select Vault Location');
+    final result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select Vault Location',
+    );
     if (result != null) {
       await ref.read(vaultProvider.notifier).createVault(result);
       onVaultOpened();

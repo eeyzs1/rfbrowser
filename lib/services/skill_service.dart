@@ -21,13 +21,15 @@ class SkillService {
           try {
             final content = await entity.readAsString();
             final yaml = loadYaml(content);
-            skills.add(Skill(
-              id: yaml['id'] ?? p.basenameWithoutExtension(entity.path),
-              name: yaml['name'] ?? 'Unnamed',
-              description: yaml['description'] ?? '',
-              prompt: yaml['prompt'] ?? '',
-              isBuiltin: false,
-            ));
+            skills.add(
+              Skill(
+                id: yaml['id'] ?? p.basenameWithoutExtension(entity.path),
+                name: yaml['name'] ?? 'Unnamed',
+                description: yaml['description'] ?? '',
+                prompt: yaml['prompt'] ?? '',
+                isBuiltin: false,
+              ),
+            );
           } catch (_) {}
         }
       }
@@ -40,7 +42,8 @@ class SkillService {
     if (!await skillDir.exists()) {
       await skillDir.create(recursive: true);
     }
-    final content = '''id: ${skill.id}
+    final content =
+        '''id: ${skill.id}
 name: ${skill.name}
 description: ${skill.description}
 prompt: |
@@ -51,7 +54,9 @@ prompt: |
   }
 
   Future<void> deleteSkill(String skillId) async {
-    final file = File(p.join(vaultPath, '.rfbrowser', 'skills', '$skillId.yaml'));
+    final file = File(
+      p.join(vaultPath, '.rfbrowser', 'skills', '$skillId.yaml'),
+    );
     if (await file.exists()) {
       await file.delete();
     }
@@ -63,7 +68,8 @@ prompt: |
         id: 'summarize-page',
         name: 'Summarize Page',
         description: 'Summarize the current web page',
-        prompt: 'Please summarize the following web page content:\n\n@web[current]',
+        prompt:
+            'Please summarize the following web page content:\n\n@web[current]',
         isBuiltin: true,
       ),
       Skill(
@@ -77,9 +83,15 @@ prompt: |
         id: 'research-topic',
         name: 'Research Topic',
         description: 'Deep research on a topic',
-        prompt: 'Conduct thorough research on the following topic and provide a comprehensive summary with key findings:\n\n{{topic}}',
+        prompt:
+            'Conduct thorough research on the following topic and provide a comprehensive summary with key findings:\n\n{{topic}}',
         params: {
-          'topic': SkillParam(name: 'topic', type: 'string', description: 'Topic to research', required: true),
+          'topic': SkillParam(
+            name: 'topic',
+            type: 'string',
+            description: 'Topic to research',
+            required: true,
+          ),
         },
         isBuiltin: true,
       ),
@@ -87,16 +99,23 @@ prompt: |
         id: 'extract-key-points',
         name: 'Extract Key Points',
         description: 'Extract key points from content',
-        prompt: 'Extract the key points from the following content and format them as a bullet list:\n\n@note[current]',
+        prompt:
+            'Extract the key points from the following content and format them as a bullet list:\n\n@note[current]',
         isBuiltin: true,
       ),
       Skill(
         id: 'generate-outline',
         name: 'Generate Outline',
         description: 'Generate an outline for a topic',
-        prompt: 'Generate a detailed outline for the following topic:\n\n{{topic}}',
+        prompt:
+            'Generate a detailed outline for the following topic:\n\n{{topic}}',
         params: {
-          'topic': SkillParam(name: 'topic', type: 'string', description: 'Topic for the outline', required: true),
+          'topic': SkillParam(
+            name: 'topic',
+            type: 'string',
+            description: 'Topic for the outline',
+            required: true,
+          ),
         },
         isBuiltin: true,
       ),
@@ -104,14 +123,16 @@ prompt: |
         id: 'auto-tag',
         name: 'Auto Tag',
         description: 'Automatically suggest tags for the current note',
-        prompt: 'Analyze the following note and suggest relevant tags. Return only the tags as a comma-separated list:\n\n@note[current]',
+        prompt:
+            'Analyze the following note and suggest relevant tags. Return only the tags as a comma-separated list:\n\n@note[current]',
         isBuiltin: true,
       ),
       Skill(
         id: 'daily-review',
         name: 'Daily Review',
         description: 'Generate a daily review summary',
-        prompt: 'Review today\'s daily note and generate a summary of accomplishments and pending tasks:\n\n@note[daily]',
+        prompt:
+            'Review today\'s daily note and generate a summary of accomplishments and pending tasks:\n\n@note[daily]',
         isBuiltin: true,
       ),
     ];

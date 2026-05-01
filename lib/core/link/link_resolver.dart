@@ -44,19 +44,24 @@ class LinkResolver {
     for (final link in links) {
       final targetPath = resolveTitleToPath(link.target);
       if (targetPath != null) {
-        resolvedLinks.add(Link(
-          sourceId: note.id,
-          targetId: _pathToId(targetPath),
-          type: link.type,
-          context: link.context,
-          position: link.position,
-        ));
+        resolvedLinks.add(
+          Link(
+            sourceId: note.id,
+            targetId: _pathToId(targetPath),
+            type: link.type,
+            context: link.context,
+            position: link.position,
+          ),
+        );
       }
     }
     return resolvedLinks;
   }
 
-  Future<List<UnlinkedMention>> findUnlinkedMentions(Note note, List<String> allTitles) async {
+  Future<List<UnlinkedMention>> findUnlinkedMentions(
+    Note note,
+    List<String> allTitles,
+  ) async {
     return _extractor.findUnlinkedMentions(note.content, allTitles);
   }
 

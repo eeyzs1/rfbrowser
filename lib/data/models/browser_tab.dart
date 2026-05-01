@@ -62,9 +62,7 @@ class BrowserTab {
     );
   }
 
-  BrowserTab copyWithExplicit({
-    String? groupId,
-  }) {
+  BrowserTab copyWithExplicit({String? groupId}) {
     return BrowserTab(
       id: id,
       url: url,

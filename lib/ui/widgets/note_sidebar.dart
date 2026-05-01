@@ -34,12 +34,18 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
           ),
           child: Row(
             children: [
-              Icon(Icons.folder_open, size: 16, color: theme.colorScheme.primary),
+              Icon(
+                Icons.folder_open,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Notes',
-                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               IconButton(
@@ -70,7 +76,10 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                         setState(() => _searchQuery = '');
                       },
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                      constraints: const BoxConstraints(
+                        minWidth: 20,
+                        minHeight: 20,
+                      ),
                     )
                   : null,
             ),
@@ -80,7 +89,10 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         Expanded(
           child: notes.isEmpty
               ? Center(
-                  child: Text('No notes found', style: theme.textTheme.bodySmall),
+                  child: Text(
+                    'No notes found',
+                    style: theme.textTheme.bodySmall,
+                  ),
                 )
               : ListView.builder(
                   itemCount: notes.length,
@@ -90,8 +102,12 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                     return _NoteItem(
                       note: note,
                       isActive: isActive,
-                      onTap: () => ref.read(knowledgeProvider.notifier).openNote(note.filePath),
-                      onDelete: () => ref.read(knowledgeProvider.notifier).deleteNote(note.filePath),
+                      onTap: () => ref
+                          .read(knowledgeProvider.notifier)
+                          .openNote(note.filePath),
+                      onDelete: () => ref
+                          .read(knowledgeProvider.notifier)
+                          .deleteNote(note.filePath),
                     );
                   },
                 ),
@@ -123,7 +139,10 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
             onSubmitted: (v) => Navigator.pop(ctx, v),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, controller.text),
               child: const Text('Create'),
@@ -158,10 +177,16 @@ class _NoteItem extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        color: isActive ? theme.colorScheme.primary.withValues(alpha: 0.1) : null,
+        color: isActive
+            ? theme.colorScheme.primary.withValues(alpha: 0.1)
+            : null,
         child: Row(
           children: [
-            Icon(Icons.description, size: 14, color: isActive ? theme.colorScheme.primary : theme.hintColor),
+            Icon(
+              Icons.description,
+              size: 14,
+              color: isActive ? theme.colorScheme.primary : theme.hintColor,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -181,17 +206,29 @@ class _NoteItem extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 2),
                       child: Wrap(
                         spacing: 4,
-                        children: note.tags.take(3).map<Widget>((tag) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.secondary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: Text(
-                            '#$tag',
-                            style: theme.textTheme.bodySmall?.copyWith(fontSize: 9),
-                          ),
-                        )).toList(),
+                        children: note.tags
+                            .take(3)
+                            .map<Widget>(
+                              (tag) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.secondary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                                child: Text(
+                                  '#$tag',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
                       ),
                     ),
                 ],

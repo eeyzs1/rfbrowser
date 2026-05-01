@@ -17,16 +17,16 @@ class VaultConfig {
   });
 
   Map<String, dynamic> toJson() => {
-        'path': path,
-        'name': name,
-        'lastOpened': lastOpened.toIso8601String(),
-      };
+    'path': path,
+    'name': name,
+    'lastOpened': lastOpened.toIso8601String(),
+  };
 
   factory VaultConfig.fromJson(Map<String, dynamic> json) => VaultConfig(
-        path: json['path'] as String,
-        name: json['name'] as String,
-        lastOpened: DateTime.parse(json['lastOpened'] as String),
-      );
+    path: json['path'] as String,
+    name: json['name'] as String,
+    lastOpened: DateTime.parse(json['lastOpened'] as String),
+  );
 }
 
 class VaultState {
@@ -71,7 +71,9 @@ class VaultNotifier extends StateNotifier<VaultState> {
     final vaults = vaultsJson
         .map((j) {
           try {
-            return VaultConfig.fromJson(Map<String, dynamic>.from(jsonDecode(j)));
+            return VaultConfig.fromJson(
+              Map<String, dynamic>.from(jsonDecode(j)),
+            );
           } catch (_) {
             return null;
           }
@@ -94,7 +96,14 @@ class VaultNotifier extends StateNotifier<VaultState> {
         await rfbrowserDir.create(recursive: true);
       }
 
-      final subdirs = ['cache', 'plugins', 'skills', 'templates', 'themes', 'sync'];
+      final subdirs = [
+        'cache',
+        'plugins',
+        'skills',
+        'templates',
+        'themes',
+        'sync',
+      ];
       for (final subdir in subdirs) {
         final d = Directory(p.join(rfbrowserDir.path, subdir));
         if (!await d.exists()) {
@@ -111,15 +120,9 @@ class VaultNotifier extends StateNotifier<VaultState> {
 
       await _saveToRecent(config);
 
-      state = state.copyWith(
-        currentVault: config,
-        isLoading: false,
-      );
+      state = state.copyWith(currentVault: config, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -141,10 +144,7 @@ class VaultNotifier extends StateNotifier<VaultState> {
 
       await openVault(vaultPath);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 

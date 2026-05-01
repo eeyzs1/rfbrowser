@@ -62,7 +62,11 @@ class _CommandBarState extends State<CommandBar> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Icon(Icons.search, color: theme.colorScheme.primary, size: 20),
+                  Icon(
+                    Icons.search,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
@@ -71,7 +75,9 @@ class _CommandBarState extends State<CommandBar> {
                       style: theme.textTheme.bodyLarge,
                       decoration: InputDecoration.collapsed(
                         hintText: 'Ask anything or type a command...',
-                        hintStyle: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
+                        hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.hintColor,
+                        ),
                       ),
                       onSubmitted: (_) => _handleSubmit(),
                       onChanged: (value) {
@@ -85,7 +91,10 @@ class _CommandBarState extends State<CommandBar> {
                     icon: const Icon(Icons.close, size: 18),
                     onPressed: widget.onClose,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
                   ),
                 ],
               ),
@@ -102,7 +111,10 @@ class _CommandBarState extends State<CommandBar> {
                     return ListTile(
                       dense: true,
                       leading: const Icon(Icons.arrow_right, size: 16),
-                      title: Text(_suggestions[index], style: theme.textTheme.bodyMedium),
+                      title: Text(
+                        _suggestions[index],
+                        style: theme.textTheme.bodyMedium,
+                      ),
                       onTap: () {
                         _controller.text = _suggestions[index];
                         _handleSubmit();
@@ -128,6 +140,8 @@ class _CommandBarState extends State<CommandBar> {
       'Settings',
       'AI Chat',
     ];
-    return commands.where((c) => c.toLowerCase().contains(query.toLowerCase())).toList();
+    return commands
+        .where((c) => c.toLowerCase().contains(query.toLowerCase()))
+        .toList();
   }
 }

@@ -83,10 +83,7 @@ class KnowledgeNotifier extends StateNotifier<KnowledgeState> {
   Future<Note> createNote({required String title, String folder = ''}) async {
     final note = await _repo.createNote(title: title, folder: folder);
     await _indexStore.indexNote(note);
-    state = state.copyWith(
-      notes: [...state.notes, note],
-      activeNote: note,
-    );
+    state = state.copyWith(notes: [...state.notes, note], activeNote: note);
     return note;
   }
 
@@ -114,7 +111,9 @@ class KnowledgeNotifier extends StateNotifier<KnowledgeState> {
       await _indexStore.removeNote(note.id);
       state = state.copyWith(
         notes: state.notes.where((n) => n.filePath != relativePath).toList(),
-        activeNote: state.activeNote?.filePath == relativePath ? null : state.activeNote,
+        activeNote: state.activeNote?.filePath == relativePath
+            ? null
+            : state.activeNote,
       );
     }
   }
@@ -152,18 +151,16 @@ class KnowledgeNotifier extends StateNotifier<KnowledgeState> {
       selectedText: selectedText,
     );
     await _indexStore.indexNote(note);
-    state = state.copyWith(
-      notes: [...state.notes, note],
-      activeNote: note,
-    );
+    state = state.copyWith(notes: [...state.notes, note], activeNote: note);
     return note;
   }
 }
 
 final indexStoreProvider = Provider<IndexStore>((ref) => IndexStore());
 
-final knowledgeProvider = StateNotifierProvider<KnowledgeNotifier, KnowledgeState>((ref) {
-  final noteRepo = ref.watch(noteRepositoryProvider);
-  final indexStore = ref.watch(indexStoreProvider);
-  return KnowledgeNotifier(noteRepo, indexStore);
-});
+final knowledgeProvider =
+    StateNotifierProvider<KnowledgeNotifier, KnowledgeState>((ref) {
+      final noteRepo = ref.watch(noteRepositoryProvider);
+      final indexStore = ref.watch(indexStoreProvider);
+      return KnowledgeNotifier(noteRepo, indexStore);
+    });

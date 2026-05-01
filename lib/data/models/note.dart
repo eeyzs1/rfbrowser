@@ -27,12 +27,12 @@ class Note {
     this.sourceUrl,
     this.sourceTitle,
     this.agentTaskId,
-  })  : id = id ?? const Uuid().v4(),
-        frontMatter = frontMatter ?? {},
-        tags = tags ?? [],
-        aliases = aliases ?? [],
-        created = created ?? DateTime.now(),
-        modified = modified ?? DateTime.now();
+  }) : id = id ?? const Uuid().v4(),
+       frontMatter = frontMatter ?? {},
+       tags = tags ?? [],
+       aliases = aliases ?? [],
+       created = created ?? DateTime.now(),
+       modified = modified ?? DateTime.now();
 
   Note copyWith({
     String? title,
@@ -79,7 +79,16 @@ class Note {
       if (sourceTitle != null) buffer.writeln('source-title: "$sourceTitle"');
       if (agentTaskId != null) buffer.writeln('agent-task: $agentTaskId');
       frontMatter.forEach((key, value) {
-        if (!['title', 'created', 'modified', 'tags', 'aliases', 'source', 'source-title', 'agent-task'].contains(key)) {
+        if (![
+          'title',
+          'created',
+          'modified',
+          'tags',
+          'aliases',
+          'source',
+          'source-title',
+          'agent-task',
+        ].contains(key)) {
           buffer.writeln('$key: $value');
         }
       });
@@ -141,7 +150,9 @@ class Note {
     }
 
     if (title.isEmpty) {
-      final firstLine = content.split('\n').firstWhere((l) => l.trim().isNotEmpty, orElse: () => 'Untitled');
+      final firstLine = content
+          .split('\n')
+          .firstWhere((l) => l.trim().isNotEmpty, orElse: () => 'Untitled');
       title = firstLine.replaceFirst(RegExp(r'^#+\s*'), '').trim();
       if (title.isEmpty) title = 'Untitled';
     }
@@ -153,8 +164,14 @@ class Note {
       frontMatter: frontMatter,
       tags: tags,
       aliases: aliases,
-      created: frontMatter['created'] != null ? DateTime.tryParse(frontMatter['created'].toString()) ?? DateTime.now() : DateTime.now(),
-      modified: frontMatter['modified'] != null ? DateTime.tryParse(frontMatter['modified'].toString()) ?? DateTime.now() : DateTime.now(),
+      created: frontMatter['created'] != null
+          ? DateTime.tryParse(frontMatter['created'].toString()) ??
+                DateTime.now()
+          : DateTime.now(),
+      modified: frontMatter['modified'] != null
+          ? DateTime.tryParse(frontMatter['modified'].toString()) ??
+                DateTime.now()
+          : DateTime.now(),
       sourceUrl: sourceUrl,
       sourceTitle: sourceTitle,
     );

@@ -24,7 +24,9 @@ class BacklinksPanel extends ConsumerWidget {
               const SizedBox(width: 6),
               Text(
                 'Backlinks',
-                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(width: 8),
               Container(
@@ -55,11 +57,13 @@ class BacklinksPanel extends ConsumerWidget {
             child: Text('No backlinks yet', style: theme.textTheme.bodySmall),
           )
         else
-          ...backlinks.map((link) => _BacklinkItem(
-                sourceId: link.sourceId,
-                linkContext: link.context,
-                type: link.type,
-              )),
+          ...backlinks.map(
+            (link) => _BacklinkItem(
+              sourceId: link.sourceId,
+              linkContext: link.context,
+              type: link.type,
+            ),
+          ),
       ],
     );
   }
@@ -80,7 +84,9 @@ class _BacklinkItem extends ConsumerWidget {
   Widget build(BuildContext ctx, WidgetRef ref) {
     final theme = Theme.of(ctx);
     final knowledgeState = ref.watch(knowledgeProvider);
-    final sourceNote = knowledgeState.notes.where((n) => n.id == sourceId).firstOrNull;
+    final sourceNote = knowledgeState.notes
+        .where((n) => n.id == sourceId)
+        .firstOrNull;
     final title = sourceNote?.title ?? sourceId;
 
     return InkWell(
@@ -92,7 +98,11 @@ class _BacklinkItem extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3))),
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor.withValues(alpha: 0.3),
+            ),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

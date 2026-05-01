@@ -55,9 +55,18 @@ class TemplateService {
     variables.forEach((key, value) {
       result = result.replaceAll('{{{$key}}}', value);
     });
-    result = result.replaceAll('{{date}}', DateTime.now().toIso8601String().substring(0, 10));
-    result = result.replaceAll('{{time}}', DateTime.now().toIso8601String().substring(11, 19));
-    result = result.replaceAll('{{timestamp}}', DateTime.now().toIso8601String());
+    result = result.replaceAll(
+      '{{date}}',
+      DateTime.now().toIso8601String().substring(0, 10),
+    );
+    result = result.replaceAll(
+      '{{time}}',
+      DateTime.now().toIso8601String().substring(11, 19),
+    );
+    result = result.replaceAll(
+      '{{timestamp}}',
+      DateTime.now().toIso8601String(),
+    );
     return result;
   }
 
@@ -75,17 +84,20 @@ class TemplateService {
       ),
       Template(
         name: 'Meeting Notes',
-        content: '# {{{title}}}\n\n**Date:** {{{date}}}\n**Attendees:** \n\n## Agenda\n\n1. \n\n## Notes\n\n\n## Action Items\n\n- [ ] \n',
+        content:
+            '# {{{title}}}\n\n**Date:** {{{date}}}\n**Attendees:** \n\n## Agenda\n\n1. \n\n## Notes\n\n\n## Action Items\n\n- [ ] \n',
         description: 'Meeting notes template',
       ),
       Template(
         name: 'Research Note',
-        content: '# {{{title}}}\n\n**Source:** \n**Date:** {{{date}}}\n\n## Summary\n\n\n## Key Points\n\n1. \n\n## Questions\n\n- \n\n## Connections\n\n- [[]]\n',
+        content:
+            '# {{{title}}}\n\n**Source:** \n**Date:** {{{date}}}\n\n## Summary\n\n\n## Key Points\n\n1. \n\n## Questions\n\n- \n\n## Connections\n\n- [[]]\n',
         description: 'Research note with source tracking',
       ),
       Template(
         name: 'Web Clip',
-        content: '# {{{title}}}\n\n> **Source:** [{{{title}}}]({{{url}}})\n> **Captured:** {{{date}}}\n\n## Content\n\n',
+        content:
+            '# {{{title}}}\n\n> **Source:** [{{{title}}}]({{{url}}})\n> **Captured:** {{{date}}}\n\n## Content\n\n',
         description: 'Web clipping template',
       ),
     ];

@@ -8,7 +8,12 @@ class ModelInfo {
   final String provider;
   final bool isLocal;
 
-  ModelInfo({required this.id, required this.name, required this.provider, this.isLocal = false});
+  ModelInfo({
+    required this.id,
+    required this.name,
+    required this.provider,
+    this.isLocal = false,
+  });
 }
 
 class ModelRouter {
@@ -25,7 +30,9 @@ class ModelRouter {
       if (data is Map && data.containsKey('data')) {
         for (final model in data['data']) {
           final id = model['id'] as String;
-          if (id.startsWith('gpt-') || id.startsWith('o1-') || id.startsWith('o3-')) {
+          if (id.startsWith('gpt-') ||
+              id.startsWith('o1-') ||
+              id.startsWith('o3-')) {
             models.add(ModelInfo(id: id, name: id, provider: 'openai'));
           }
         }
@@ -42,7 +49,9 @@ class ModelRouter {
       if (data is Map && data.containsKey('models')) {
         for (final model in data['models']) {
           final name = model['name'] as String;
-          models.add(ModelInfo(id: name, name: name, provider: 'ollama', isLocal: true));
+          models.add(
+            ModelInfo(id: name, name: name, provider: 'ollama', isLocal: true),
+          );
         }
       }
     } catch (_) {}
@@ -62,32 +71,53 @@ class ModelRouter {
     } else if (model.contains('deepseek')) {
       return _chatDeepSeek(model, messages, apiKey!);
     } else {
-      return _chatOllama(model, messages, localEndpoint ?? 'http://localhost:11434');
+      return _chatOllama(
+        model,
+        messages,
+        localEndpoint ?? 'http://localhost:11434',
+      );
     }
   }
 
-  Future<String> _chatOpenAI(String model, List<Map<String, String>> messages, String apiKey) async {
+  Future<String> _chatOpenAI(
+    String model,
+    List<Map<String, String>> messages,
+    String apiKey,
+  ) async {
     final response = await _dio.post(
       'https://api.openai.com/v1/chat/completions',
-      options: Options(headers: {
-        'Authorization': 'Bearer $apiKey',
-        'Content-Type': 'application/json',
-      }),
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $apiKey',
+          'Content-Type': 'application/json',
+        },
+      ),
       data: jsonEncode({'model': model, 'messages': messages}),
     );
     return response.data['choices'][0]['message']['content'];
   }
 
-  Future<String> _chatAnthropic(String model, List<Map<String, String>> messages, String apiKey) async {
-    final systemMsg = messages.where((m) => m['role'] == 'system').map((m) => m['content']!).firstOrNull ?? '';
+  Future<String> _chatAnthropic(
+    String model,
+    List<Map<String, String>> messages,
+    String apiKey,
+  ) async {
+    final systemMsg =
+        messages
+            .where((m) => m['role'] == 'system')
+            .map((m) => m['content']!)
+            .firstOrNull ??
+        '';
     final chatMsgs = messages.where((m) => m['role'] != 'system').toList();
     final response = await _dio.post(
       'https://api.anthropic.com/v1/messages',
-      options: Options(headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json',
-      }),
+      options: Options(
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json',
+        },
+      ),
       data: jsonEncode({
         'model': model,
         'max_tokens': 4096,
@@ -99,19 +129,29 @@ class ModelRouter {
     return content.first['text'] ?? '';
   }
 
-  Future<String> _chatDeepSeek(String model, List<Map<String, String>> messages, String apiKey) async {
+  Future<String> _chatDeepSeek(
+    String model,
+    List<Map<String, String>> messages,
+    String apiKey,
+  ) async {
     final response = await _dio.post(
       'https://api.deepseek.com/v1/chat/completions',
-      options: Options(headers: {
-        'Authorization': 'Bearer $apiKey',
-        'Content-Type': 'application/json',
-      }),
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $apiKey',
+          'Content-Type': 'application/json',
+        },
+      ),
       data: jsonEncode({'model': model, 'messages': messages}),
     );
     return response.data['choices'][0]['message']['content'];
   }
 
-  Future<String> _chatOllama(String model, List<Map<String, String>> messages, String endpoint) async {
+  Future<String> _chatOllama(
+    String model,
+    List<Map<String, String>> messages,
+    String endpoint,
+  ) async {
     final response = await _dio.post(
       '$endpoint/api/chat',
       data: jsonEncode({'model': model, 'messages': messages, 'stream': false}),

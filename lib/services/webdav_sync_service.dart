@@ -11,9 +11,17 @@ class WebdavSyncState {
   final String? message;
   final DateTime? lastSync;
 
-  WebdavSyncState({this.status = WebdavSyncStatus.idle, this.message, this.lastSync});
+  WebdavSyncState({
+    this.status = WebdavSyncStatus.idle,
+    this.message,
+    this.lastSync,
+  });
 
-  WebdavSyncState copyWith({WebdavSyncStatus? status, String? message, DateTime? lastSync}) {
+  WebdavSyncState copyWith({
+    WebdavSyncStatus? status,
+    String? message,
+    DateTime? lastSync,
+  }) {
     return WebdavSyncState(
       status: status ?? this.status,
       message: message ?? this.message,
@@ -38,11 +46,15 @@ class WebdavSyncService {
     _password = password;
   }
 
-  bool get isConfigured => _serverUrl != null && _username != null && _password != null;
+  bool get isConfigured =>
+      _serverUrl != null && _username != null && _password != null;
 
   Future<WebdavSyncState> sync() async {
     if (!isConfigured) {
-      return WebdavSyncState(status: WebdavSyncStatus.error, message: 'WebDAV not configured');
+      return WebdavSyncState(
+        status: WebdavSyncStatus.error,
+        message: 'WebDAV not configured',
+      );
     }
 
     try {
@@ -50,9 +62,15 @@ class WebdavSyncService {
       await _ensureRemoteDir(remotePath);
       await _uploadChanges(remotePath);
       await _downloadChanges(remotePath);
-      return WebdavSyncState(status: WebdavSyncStatus.success, lastSync: DateTime.now());
+      return WebdavSyncState(
+        status: WebdavSyncStatus.success,
+        lastSync: DateTime.now(),
+      );
     } catch (e) {
-      return WebdavSyncState(status: WebdavSyncStatus.error, message: e.toString());
+      return WebdavSyncState(
+        status: WebdavSyncStatus.error,
+        message: e.toString(),
+      );
     }
   }
 
@@ -71,14 +89,18 @@ class WebdavSyncService {
     final vaultDir = Directory(vaultPath);
     await for (final entity in vaultDir.list(recursive: true)) {
       if (entity is File && entity.path.endsWith('.md')) {
-        final relativePath = entity.path.substring(vaultPath.length + 1).replaceAll('\\', '/');
+        final relativePath = entity.path
+            .substring(vaultPath.length + 1)
+            .replaceAll('\\', '/');
         if (relativePath.startsWith('.rfbrowser/')) continue;
         final url = '$remotePath$relativePath';
         final content = await entity.readAsString();
         await _dio.put(
           url,
           data: content,
-          options: Options(headers: {..._authHeaders(), 'Content-Type': 'text/markdown'}),
+          options: Options(
+            headers: {..._authHeaders(), 'Content-Type': 'text/markdown'},
+          ),
         );
       }
     }
@@ -88,11 +110,14 @@ class WebdavSyncService {
     try {
       await _dio.request(
         remotePath,
-        options: Options(method: 'PROPFIND', headers: {
-          ..._authHeaders(),
-          'Depth': '1',
-          'Content-Type': 'application/xml',
-        }),
+        options: Options(
+          method: 'PROPFIND',
+          headers: {
+            ..._authHeaders(),
+            'Depth': '1',
+            'Content-Type': 'application/xml',
+          },
+        ),
       );
     } catch (_) {}
   }

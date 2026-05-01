@@ -19,7 +19,8 @@ class AgentService {
       ],
     );
 
-    final prompt = '''You are a research assistant. Conduct a thorough research on the following topic:
+    final prompt =
+        '''You are a research assistant. Conduct a thorough research on the following topic:
 
 Topic: $topic
 Depth: $depth levels
@@ -32,7 +33,11 @@ Please provide:
 
 Format your response in Markdown.''';
 
-    await _aiNotifier.sendMessage(prompt, systemPrompt: 'You are a research assistant specialized in deep analysis and synthesis.');
+    await _aiNotifier.sendMessage(
+      prompt,
+      systemPrompt:
+          'You are a research assistant specialized in deep analysis and synthesis.',
+    );
     return task;
   }
 
@@ -41,11 +46,17 @@ Format your response in Markdown.''';
       id: 'summarize-${DateTime.now().millisecondsSinceEpoch}',
       name: 'Summarize URLs',
       description: 'Summarize ${urls.length} URLs',
-      steps: urls.map((url) => AgentStep(description: 'Summarizing: $url')).toList(),
+      steps: urls
+          .map((url) => AgentStep(description: 'Summarizing: $url'))
+          .toList(),
     );
 
-    final prompt = 'Please summarize the key points from the following URLs:\n\n${urls.map((u) => '- $u').join('\n')}';
-    await _aiNotifier.sendMessage(prompt, systemPrompt: 'You are a content summarization assistant.');
+    final prompt =
+        'Please summarize the key points from the following URLs:\n\n${urls.map((u) => '- $u').join('\n')}';
+    await _aiNotifier.sendMessage(
+      prompt,
+      systemPrompt: 'You are a content summarization assistant.',
+    );
     return task;
   }
 
@@ -60,8 +71,12 @@ Format your response in Markdown.''';
       ],
     );
 
-    final prompt = 'Extract the following data from this URL: $url\n\nSchema: $schema';
-    await _aiNotifier.sendMessage(prompt, systemPrompt: 'You are a data extraction assistant.');
+    final prompt =
+        'Extract the following data from this URL: $url\n\nSchema: $schema';
+    await _aiNotifier.sendMessage(
+      prompt,
+      systemPrompt: 'You are a data extraction assistant.',
+    );
     return task;
   }
 
@@ -85,7 +100,10 @@ Format your response in Markdown.''';
 Notes:
 ${noteTitles.map((t) => '- $t').join('\n')}''';
 
-    await _aiNotifier.sendMessage(prompt, systemPrompt: 'You are a knowledge organization assistant.');
+    await _aiNotifier.sendMessage(
+      prompt,
+      systemPrompt: 'You are a knowledge organization assistant.',
+    );
     return task;
   }
 }

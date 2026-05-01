@@ -36,11 +36,16 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
             const SizedBox(height: 16),
             Text('No tab open', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 8),
-            Text('Open a new tab to start browsing', style: theme.textTheme.bodySmall),
+            Text(
+              'Open a new tab to start browsing',
+              style: theme.textTheme.bodySmall,
+            ),
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () {
-                ref.read(browserProvider.notifier).createTab(url: 'https://www.google.com');
+                ref
+                    .read(browserProvider.notifier)
+                    .createTab(url: 'https://www.google.com');
               },
               icon: const Icon(Icons.add),
               label: const Text('New Tab'),
@@ -89,7 +94,10 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                     hintStyle: theme.textTheme.bodySmall,
                     prefixIcon: const Icon(Icons.search, size: 16),
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                   onSubmitted: (url) => _navigateTo(activeTab.id, url),
                 ),
@@ -107,9 +115,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
         ),
         Expanded(
           child: InAppWebView(
-            initialUrlRequest: URLRequest(
-              url: WebUri(activeTab.url),
-            ),
+            initialUrlRequest: URLRequest(url: WebUri(activeTab.url)),
             initialSettings: InAppWebViewSettings(
               useShouldOverrideUrlLoading: true,
               mediaPlaybackRequiresUserGesture: false,
@@ -119,19 +125,29 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
               _controllers[activeTab.id] = controller;
             },
             onLoadStart: (controller, url) {
-              ref.read(browserProvider.notifier).setTabLoading(activeTab.id, true);
+              ref
+                  .read(browserProvider.notifier)
+                  .setTabLoading(activeTab.id, true);
               if (url != null) {
-                ref.read(browserProvider.notifier).updateTabUrl(activeTab.id, url.toString());
+                ref
+                    .read(browserProvider.notifier)
+                    .updateTabUrl(activeTab.id, url.toString());
               }
             },
             onLoadStop: (controller, url) async {
-              ref.read(browserProvider.notifier).setTabLoading(activeTab.id, false);
+              ref
+                  .read(browserProvider.notifier)
+                  .setTabLoading(activeTab.id, false);
               if (url != null) {
-                ref.read(browserProvider.notifier).updateTabUrl(activeTab.id, url.toString());
+                ref
+                    .read(browserProvider.notifier)
+                    .updateTabUrl(activeTab.id, url.toString());
               }
               final title = await controller.getTitle();
               if (title != null) {
-                ref.read(browserProvider.notifier).updateTabTitle(activeTab.id, title);
+                ref
+                    .read(browserProvider.notifier)
+                    .updateTabTitle(activeTab.id, title);
               }
             },
             shouldOverrideUrlLoading: (controller, navigationAction) async {
@@ -153,14 +169,12 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
       url = 'https://www.google.com/search?q=${Uri.encodeComponent(input)}';
     }
     ref.read(browserProvider.notifier).updateTabUrl(tabId, url);
-    _controllers[tabId]?.loadUrl(
-      urlRequest: URLRequest(url: WebUri(url)),
-    );
+    _controllers[tabId]?.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
   }
 
   void _clipPage(BrowserTab tab) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Clipping: ${tab.title}')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Clipping: ${tab.title}')));
   }
 }

@@ -21,7 +21,8 @@ class SettingsPage extends ConsumerWidget {
               title: const Text('Dark Mode'),
               subtitle: const Text('Toggle dark/light theme'),
               value: settings.isDarkMode,
-              onChanged: (_) => ref.read(settingsProvider.notifier).toggleDarkMode(),
+              onChanged: (_) =>
+                  ref.read(settingsProvider.notifier).toggleDarkMode(),
             ),
             ListTile(
               title: const Text('Language'),
@@ -35,7 +36,9 @@ class SettingsPage extends ConsumerWidget {
             ListTile(
               title: const Text('OpenAI API Key'),
               subtitle: Text(
-                ref.read(settingsProvider.notifier).apiKey != null ? '${ref.read(settingsProvider.notifier).apiKey!.substring(0, 8)}...' : 'Not set',
+                ref.read(settingsProvider.notifier).apiKey != null
+                    ? '${ref.read(settingsProvider.notifier).apiKey!.substring(0, 8)}...'
+                    : 'Not set',
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _showApiKeyDialog(context, ref, 'OpenAI'),
@@ -66,7 +69,8 @@ class SettingsPage extends ConsumerWidget {
                   max: 24,
                   divisions: 14,
                   label: '${settings.editorFontSize.toInt()}px',
-                  onChanged: (v) => ref.read(settingsProvider.notifier).setEditorFontSize(v),
+                  onChanged: (v) =>
+                      ref.read(settingsProvider.notifier).setEditorFontSize(v),
                 ),
               ),
             ),
@@ -124,7 +128,11 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  void _showLanguageDialog(BuildContext context, WidgetRef ref, String current) {
+  void _showLanguageDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String current,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) => SimpleDialog(
@@ -173,7 +181,10 @@ class SettingsPage extends ConsumerWidget {
           decoration: const InputDecoration(hintText: 'sk-...'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () {
               ref.read(settingsProvider.notifier).setApiKey(controller.text);
@@ -191,28 +202,33 @@ class SettingsPage extends ConsumerWidget {
       context: context,
       builder: (ctx) => SimpleDialog(
         title: const Text('Select Model'),
-        children: [
-          'gpt-4o',
-          'gpt-4o-mini',
-          'claude-sonnet-4-20250514',
-          'deepseek-chat',
-          'deepseek-reasoner',
-          'llama3 (local)',
-          'qwen2.5 (local)',
-        ].map((model) => SimpleDialogOption(
-          onPressed: () {
-            ref.read(settingsProvider.notifier).setActiveModel(model);
-            ref.read(aiProvider.notifier).setActiveModel(model);
-            Navigator.pop(ctx);
-          },
-          child: Row(
-            children: [
-              if (current == model) const Icon(Icons.check, size: 16),
-              const SizedBox(width: 8),
-              Text(model),
-            ],
-          ),
-        )).toList(),
+        children:
+            [
+                  'gpt-4o',
+                  'gpt-4o-mini',
+                  'claude-sonnet-4-20250514',
+                  'deepseek-chat',
+                  'deepseek-reasoner',
+                  'llama3 (local)',
+                  'qwen2.5 (local)',
+                ]
+                .map(
+                  (model) => SimpleDialogOption(
+                    onPressed: () {
+                      ref.read(settingsProvider.notifier).setActiveModel(model);
+                      ref.read(aiProvider.notifier).setActiveModel(model);
+                      Navigator.pop(ctx);
+                    },
+                    child: Row(
+                      children: [
+                        if (current == model) const Icon(Icons.check, size: 16),
+                        const SizedBox(width: 8),
+                        Text(model),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
       ),
     );
   }
@@ -234,11 +250,16 @@ class SettingsPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Text('Make sure Ollama is running locally before using local models.'),
+            const Text(
+              'Make sure Ollama is running locally before using local models.',
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Save'),
@@ -267,7 +288,10 @@ class SettingsPage extends ConsumerWidget {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Save'),
@@ -309,7 +333,10 @@ class SettingsPage extends ConsumerWidget {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Save'),

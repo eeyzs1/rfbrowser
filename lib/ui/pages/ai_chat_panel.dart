@@ -36,7 +36,12 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
             children: [
               Icon(Icons.smart_toy, size: 18, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
-              Text('AI Chat', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                'AI Chat',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const Spacer(),
               _buildModelSelector(theme, aiState),
               IconButton(
@@ -57,9 +62,15 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                     children: [
                       Icon(Icons.psychology, size: 48, color: theme.hintColor),
                       const SizedBox(height: 12),
-                      Text('AI Assistant', style: theme.textTheme.headlineMedium),
+                      Text(
+                        'AI Assistant',
+                        style: theme.textTheme.headlineMedium,
+                      ),
                       const SizedBox(height: 4),
-                      Text('Ask me anything about your notes or the web', style: theme.textTheme.bodySmall),
+                      Text(
+                        'Ask me anything about your notes or the web',
+                        style: theme.textTheme.bodySmall,
+                      ),
                     ],
                   ),
                 )
@@ -81,7 +92,10 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                 SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: theme.colorScheme.primary),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Text('Thinking...', style: theme.textTheme.bodySmall),
@@ -94,16 +108,28 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
             color: theme.colorScheme.error.withValues(alpha: 0.1),
             child: Row(
               children: [
-                Icon(Icons.error_outline, size: 16, color: theme.colorScheme.error),
+                Icon(
+                  Icons.error_outline,
+                  size: 16,
+                  color: theme.colorScheme.error,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(aiState.error!, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
+                  child: Text(
+                    aiState.error!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 14),
                   onPressed: () {},
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 20,
+                  ),
                 ),
               ],
             ),
@@ -123,7 +149,10 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                     hintText: 'Type a message...',
                     hintStyle: theme.textTheme.bodySmall,
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                   onSubmitted: (_) => _sendMessage(),
                 ),
@@ -151,15 +180,16 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.7,
+        ),
         decoration: BoxDecoration(
-          color: isUser ? theme.colorScheme.primary.withValues(alpha: 0.15) : theme.cardColor,
+          color: isUser
+              ? theme.colorScheme.primary.withValues(alpha: 0.15)
+              : theme.cardColor,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: SelectableText(
-          msg.content,
-          style: theme.textTheme.bodyMedium,
-        ),
+        child: SelectableText(msg.content, style: theme.textTheme.bodyMedium),
       ),
     );
   }
@@ -180,7 +210,10 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
         items: const [
           DropdownMenuItem(value: 'gpt-4o', child: Text('GPT-4o')),
           DropdownMenuItem(value: 'gpt-4o-mini', child: Text('GPT-4o Mini')),
-          DropdownMenuItem(value: 'claude-sonnet-4-20250514', child: Text('Claude')),
+          DropdownMenuItem(
+            value: 'claude-sonnet-4-20250514',
+            child: Text('Claude'),
+          ),
           DropdownMenuItem(value: 'deepseek-chat', child: Text('DeepSeek')),
         ],
         onChanged: (model) {

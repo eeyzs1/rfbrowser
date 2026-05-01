@@ -41,10 +41,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
           children: [
             Icon(Icons.edit_note, size: 64, color: theme.hintColor),
             const SizedBox(height: 16),
-            Text(
-              'No note selected',
-              style: theme.textTheme.headlineMedium,
-            ),
+            Text('No note selected', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 8),
             Text(
               'Create a new note or select one from the sidebar',
@@ -95,7 +92,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
                   ),
                 ),
               IconButton(
-                icon: Icon(_isPreview ? Icons.edit : Icons.visibility, size: 18),
+                icon: Icon(
+                  _isPreview ? Icons.edit : Icons.visibility,
+                  size: 18,
+                ),
                 onPressed: () => setState(() => _isPreview = !_isPreview),
                 tooltip: _isPreview ? 'Edit' : 'Preview',
               ),
@@ -129,10 +129,14 @@ class _EditorViewState extends ConsumerState<EditorView> {
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: 'Start writing...',
-          hintStyle: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
+          hintStyle: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.hintColor,
+          ),
         ),
         onChanged: (_) {
-          ref.read(knowledgeProvider.notifier).updateActiveNoteContent(_controller.text);
+          ref
+              .read(knowledgeProvider.notifier)
+              .updateActiveNoteContent(_controller.text);
         },
       ),
     );
@@ -167,7 +171,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
             onSubmitted: (v) => Navigator.pop(ctx, v),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, controller.text),
               child: const Text('Create'),

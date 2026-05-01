@@ -59,10 +59,7 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
       darkTheme: AppTheme.darkTheme(),
       themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       locale: Locale(settings.locale),
-      supportedLocales: const [
-        Locale('en'),
-        Locale('zh'),
-      ],
+      supportedLocales: const [Locale('en'), Locale('zh')],
       home: vaultState.currentVault != null
           ? const MainLayout()
           : WelcomePage(

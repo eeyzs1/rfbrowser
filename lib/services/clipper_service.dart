@@ -62,7 +62,10 @@ class ClipperService {
     text = text.replaceAll(RegExp(r'<strong[^>]*>(.*?)</strong>'), '**\$1**');
     text = text.replaceAll(RegExp(r'<i[^>]*>(.*?)</i>'), '*\$1*');
     text = text.replaceAll(RegExp(r'<em[^>]*>(.*?)</em>'), '*\$1*');
-    text = text.replaceAll(RegExp(r'<a[^>]*href="([^"]*)"[^>]*>(.*?)</a>'), '[\$2](\$1)');
+    text = text.replaceAll(
+      RegExp(r'<a[^>]*href="([^"]*)"[^>]*>(.*?)</a>'),
+      '[\$2](\$1)',
+    );
     text = text.replaceAll(RegExp(r'<li[^>]*>(.*?)</li>'), '- \$1\n');
     text = text.replaceAll(RegExp(r'<br\s*/?>'), '\n');
     text = text.replaceAll(RegExp(r'<p[^>]*>(.*?)</p>'), '\$1\n\n');

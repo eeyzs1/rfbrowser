@@ -8,11 +8,8 @@ class ChatMessage {
   final String content;
   final DateTime timestamp;
 
-  ChatMessage({
-    required this.role,
-    required this.content,
-    DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
+  ChatMessage({required this.role, required this.content, DateTime? timestamp})
+    : timestamp = timestamp ?? DateTime.now();
 }
 
 class AIState {
@@ -53,10 +50,16 @@ class AINotifier extends StateNotifier<AIState> {
     state = state.copyWith(activeModel: model);
   }
 
-  Future<void> sendMessage(String userMessage, {String? systemPrompt, String? context}) async {
+  Future<void> sendMessage(
+    String userMessage, {
+    String? systemPrompt,
+    String? context,
+  }) async {
     final apiKey = _getApiKey();
     if (apiKey == null || apiKey.isEmpty) {
-      state = state.copyWith(error: 'API key not set. Please configure it in Settings.');
+      state = state.copyWith(
+        error: 'API key not set. Please configure it in Settings.',
+      );
       return;
     }
 
@@ -72,7 +75,8 @@ class AINotifier extends StateNotifier<AIState> {
       if (systemPrompt != null || context != null) {
         messages.add({
           'role': 'system',
-          'content': '${systemPrompt ?? "You are a helpful AI assistant."}\n\n${context != null ? "Context:\n$context" : ""}',
+          'content':
+              '${systemPrompt ?? "You are a helpful AI assistant."}\n\n${context != null ? "Context:\n$context" : ""}',
         });
       }
       for (final msg in state.messages) {
@@ -94,27 +98,32 @@ class AINotifier extends StateNotifier<AIState> {
         }),
       );
 
-      final assistantContent = response.data['choices'][0]['message']['content'] as String;
-      final assistantMsg = ChatMessage(role: 'assistant', content: assistantContent);
+      final assistantContent =
+          response.data['choices'][0]['message']['content'] as String;
+      final assistantMsg = ChatMessage(
+        role: 'assistant',
+        content: assistantContent,
+      );
       state = state.copyWith(
         messages: [...state.messages, assistantMsg],
         isLoading: false,
       );
     } on DioException catch (e) {
-      final errorMsg = e.response?.data?['error']?['message'] ?? e.message ?? 'Unknown error';
-      state = state.copyWith(
-        isLoading: false,
-        error: errorMsg,
-      );
+      final errorMsg =
+          e.response?.data?['error']?['message'] ??
+          e.message ??
+          'Unknown error';
+      state = state.copyWith(isLoading: false, error: errorMsg);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
-  Stream<String> sendMessageStream(String userMessage, {String? systemPrompt, String? context}) async* {
+  Stream<String> sendMessageStream(
+    String userMessage, {
+    String? systemPrompt,
+    String? context,
+  }) async* {
     final apiKey = _getApiKey();
     if (apiKey == null || apiKey.isEmpty) {
       yield '[Error] API key not set';
@@ -133,7 +142,8 @@ class AINotifier extends StateNotifier<AIState> {
       if (systemPrompt != null || context != null) {
         messages.add({
           'role': 'system',
-          'content': '${systemPrompt ?? "You are a helpful AI assistant."}\n\n${context != null ? "Context:\n$context" : ""}',
+          'content':
+              '${systemPrompt ?? "You are a helpful AI assistant."}\n\n${context != null ? "Context:\n$context" : ""}',
         });
       }
       for (final msg in state.messages) {
@@ -177,7 +187,10 @@ class AINotifier extends StateNotifier<AIState> {
         }
       }
 
-      final assistantMsg = ChatMessage(role: 'assistant', content: buffer.toString());
+      final assistantMsg = ChatMessage(
+        role: 'assistant',
+        content: buffer.toString(),
+      );
       state = state.copyWith(
         messages: [...state.messages, assistantMsg],
         isLoading: false,

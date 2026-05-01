@@ -41,8 +41,14 @@ class AppTheme {
         hintStyle: const TextStyle(color: Color(0xFF6C7086)),
       ),
       textTheme: const TextTheme(
-        headlineLarge: TextStyle(color: Color(0xFFCDD6F4), fontWeight: FontWeight.bold),
-        headlineMedium: TextStyle(color: Color(0xFFCDD6F4), fontWeight: FontWeight.w600),
+        headlineLarge: TextStyle(
+          color: Color(0xFFCDD6F4),
+          fontWeight: FontWeight.bold,
+        ),
+        headlineMedium: TextStyle(
+          color: Color(0xFFCDD6F4),
+          fontWeight: FontWeight.w600,
+        ),
         bodyLarge: TextStyle(color: Color(0xFFCDD6F4)),
         bodyMedium: TextStyle(color: Color(0xFFBAC2DE)),
         bodySmall: TextStyle(color: Color(0xFF6C7086)),
@@ -100,8 +106,14 @@ class AppTheme {
         hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
       ),
       textTheme: const TextTheme(
-        headlineLarge: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold),
-        headlineMedium: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
+        headlineLarge: TextStyle(
+          color: Color(0xFF1E293B),
+          fontWeight: FontWeight.bold,
+        ),
+        headlineMedium: TextStyle(
+          color: Color(0xFF1E293B),
+          fontWeight: FontWeight.w600,
+        ),
         bodyLarge: TextStyle(color: Color(0xFF1E293B)),
         bodyMedium: TextStyle(color: Color(0xFF475569)),
         bodySmall: TextStyle(color: Color(0xFF94A3B8)),

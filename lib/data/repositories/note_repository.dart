@@ -67,7 +67,9 @@ class NoteRepository {
   }) async {
     final fileName = _sanitizeFileName(title);
     final safeFolder = _sanitizeRelativePath(folder);
-    final relativePath = safeFolder.isEmpty ? '$fileName.md' : p.join(safeFolder, '$fileName.md');
+    final relativePath = safeFolder.isEmpty
+        ? '$fileName.md'
+        : p.join(safeFolder, '$fileName.md');
     _validatePath(relativePath);
     final filePath = p.join(vaultPath, relativePath);
 
@@ -106,7 +108,8 @@ class NoteRepository {
   }
 
   Future<Note> createDailyNote(DateTime date) async {
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     final relativePath = p.join('daily-notes', '$dateStr.md');
     final existing = await getNoteByPath(relativePath);
     if (existing != null) return existing;
@@ -143,7 +146,8 @@ class NoteRepository {
     final note = Note(
       title: title,
       filePath: relativePath,
-      content: '# $title\n\n$content\n\n${selectedText != null ? '## Selected\n\n$selectedText\n' : ''}',
+      content:
+          '# $title\n\n$content\n\n${selectedText != null ? '## Selected\n\n$selectedText\n' : ''}',
       sourceUrl: url,
       sourceTitle: title,
       tags: ['clipping'],

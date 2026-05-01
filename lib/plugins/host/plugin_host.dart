@@ -59,10 +59,7 @@ class PluginHost {
           try {
             final content = await manifestFile.readAsString();
             final manifest = _parseManifest(content);
-            plugins.add(Plugin(
-              manifest: manifest,
-              path: entity.path,
-            ));
+            plugins.add(Plugin(manifest: manifest, path: entity.path));
           } catch (_) {}
         }
       }
@@ -85,7 +82,9 @@ class PluginHost {
   }
 
   Future<void> uninstallPlugin(String pluginId) async {
-    final pluginDir = Directory(p.join(vaultPath, '.rfbrowser', 'plugins', pluginId));
+    final pluginDir = Directory(
+      p.join(vaultPath, '.rfbrowser', 'plugins', pluginId),
+    );
     if (await pluginDir.exists()) {
       await pluginDir.delete(recursive: true);
     }

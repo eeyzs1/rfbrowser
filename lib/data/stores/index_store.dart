@@ -66,29 +66,21 @@ class IndexStore {
 
   Future<void> indexNote(Note note) async {
     final db = await database;
-    await db.insert(
-      'notes',
-      {
-        'id': note.id,
-        'title': note.title,
-        'file_path': note.filePath,
-        'tags': note.tags.join(','),
-        'source_url': note.sourceUrl,
-        'created': note.created.toIso8601String(),
-        'modified': note.modified.toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    await db.insert(
-      'notes_fts',
-      {
-        'id': note.id,
-        'title': note.title,
-        'content': note.content,
-        'tags': note.tags.join(' '),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('notes', {
+      'id': note.id,
+      'title': note.title,
+      'file_path': note.filePath,
+      'tags': note.tags.join(','),
+      'source_url': note.sourceUrl,
+      'created': note.created.toIso8601String(),
+      'modified': note.modified.toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('notes_fts', {
+      'id': note.id,
+      'title': note.title,
+      'content': note.content,
+      'tags': note.tags.join(' '),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
     for (final tag in note.tags) {
       await db.rawInsert(
         'INSERT OR REPLACE INTO tags (name, count) VALUES (?, COALESCE((SELECT count FROM tags WHERE name = ?), 0) + 1)',
@@ -101,35 +93,43 @@ class IndexStore {
     final db = await database;
     await db.delete('notes', where: 'id = ?', whereArgs: [noteId]);
     await db.delete('notes_fts', where: 'id = ?', whereArgs: [noteId]);
-    await db.delete('links', where: 'source_id = ? OR target_id = ?', whereArgs: [noteId, noteId]);
+    await db.delete(
+      'links',
+      where: 'source_id = ? OR target_id = ?',
+      whereArgs: [noteId, noteId],
+    );
   }
 
-  Future<List<Map<String, dynamic>>> searchNotes(String query, {int limit = 50}) async {
+  Future<List<Map<String, dynamic>>> searchNotes(
+    String query, {
+    int limit = 50,
+  }) async {
     final db = await database;
-    final sanitized = query.replaceAll(RegExp(r'[^\w\s\u4e00-\u9fff]'), ' ').trim();
+    final sanitized = query
+        .replaceAll(RegExp(r'[^\w\s\u4e00-\u9fff]'), ' ')
+        .trim();
     if (sanitized.isEmpty) return [];
-    return db.rawQuery('''
+    return db.rawQuery(
+      '''
       SELECT n.* FROM notes n
       JOIN notes_fts fts ON n.id = fts.id
       WHERE notes_fts MATCH ?
       ORDER BY rank
       LIMIT ?
-    ''', [sanitized, limit]);
+    ''',
+      [sanitized, limit],
+    );
   }
 
   Future<void> indexLink(Link link) async {
     final db = await database;
-    await db.insert(
-      'links',
-      {
-        'source_id': link.sourceId,
-        'target_id': link.targetId,
-        'type': link.type.name,
-        'context': link.context,
-        'position': link.position,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('links', {
+      'source_id': link.sourceId,
+      'target_id': link.targetId,
+      'type': link.type.name,
+      'context': link.context,
+      'position': link.position,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<Link>> getBacklinks(String noteId, {int limit = 100}) async {
@@ -142,7 +142,9 @@ class IndexStore {
     );
     return rows.map((row) {
       final typeName = row['type'] as String;
-      final linkType = LinkType.values.where((t) => t.name == typeName).firstOrNull ?? LinkType.wikilink;
+      final linkType =
+          LinkType.values.where((t) => t.name == typeName).firstOrNull ??
+          LinkType.wikilink;
       return Link(
         sourceId: row['source_id'] as String,
         targetId: row['target_id'] as String,

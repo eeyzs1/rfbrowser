@@ -13,7 +13,8 @@ class BrowserState {
     this.activeTabId,
   });
 
-  BrowserTab? get activeTab => tabs.where((t) => t.id == activeTabId).firstOrNull;
+  BrowserTab? get activeTab =>
+      tabs.where((t) => t.id == activeTabId).firstOrNull;
 
   List<BrowserTab> get ungroupedTabs =>
       tabs.where((t) => t.groupId == null).toList();
@@ -39,17 +40,11 @@ class BrowserNotifier extends StateNotifier<BrowserState> {
 
   String createTab({String url = 'about:blank', String? groupId}) {
     final id = const Uuid().v4();
-    final tab = BrowserTab(
-      id: id,
-      url: url,
-      groupId: groupId,
-      isActive: true,
-    );
-    final updatedTabs = state.tabs.map((t) => t.copyWith(isActive: false)).toList();
-    state = state.copyWith(
-      tabs: [...updatedTabs, tab],
-      activeTabId: id,
-    );
+    final tab = BrowserTab(id: id, url: url, groupId: groupId, isActive: true);
+    final updatedTabs = state.tabs
+        .map((t) => t.copyWith(isActive: false))
+        .toList();
+    state = state.copyWith(tabs: [...updatedTabs, tab], activeTabId: id);
     return id;
   }
 
@@ -67,26 +62,38 @@ class BrowserNotifier extends StateNotifier<BrowserState> {
     final groups = state.groups.map((g) {
       return g.copyWith(tabIds: g.tabIds.where((id) => id != tabId).toList());
     }).toList();
-    state = state.copyWith(tabs: tabs, groups: groups, activeTabId: newActiveId);
+    state = state.copyWith(
+      tabs: tabs,
+      groups: groups,
+      activeTabId: newActiveId,
+    );
   }
 
   void setActiveTab(String tabId) {
-    final tabs = state.tabs.map((t) => t.copyWith(isActive: t.id == tabId)).toList();
+    final tabs = state.tabs
+        .map((t) => t.copyWith(isActive: t.id == tabId))
+        .toList();
     state = state.copyWith(tabs: tabs, activeTabId: tabId);
   }
 
   void updateTabUrl(String tabId, String url) {
-    final tabs = state.tabs.map((t) => t.id == tabId ? t.copyWith(url: url) : t).toList();
+    final tabs = state.tabs
+        .map((t) => t.id == tabId ? t.copyWith(url: url) : t)
+        .toList();
     state = state.copyWith(tabs: tabs);
   }
 
   void updateTabTitle(String tabId, String title) {
-    final tabs = state.tabs.map((t) => t.id == tabId ? t.copyWith(title: title) : t).toList();
+    final tabs = state.tabs
+        .map((t) => t.id == tabId ? t.copyWith(title: title) : t)
+        .toList();
     state = state.copyWith(tabs: tabs);
   }
 
   void setTabLoading(String tabId, bool loading) {
-    final tabs = state.tabs.map((t) => t.id == tabId ? t.copyWith(isLoading: loading) : t).toList();
+    final tabs = state.tabs
+        .map((t) => t.id == tabId ? t.copyWith(isLoading: loading) : t)
+        .toList();
     state = state.copyWith(tabs: tabs);
   }
 
@@ -98,7 +105,9 @@ class BrowserNotifier extends StateNotifier<BrowserState> {
   }
 
   void addTabToGroup(String tabId, String groupId) {
-    final tabs = state.tabs.map((t) => t.id == tabId ? t.copyWithExplicit(groupId: groupId) : t).toList();
+    final tabs = state.tabs
+        .map((t) => t.id == tabId ? t.copyWithExplicit(groupId: groupId) : t)
+        .toList();
     final groups = state.groups.map((g) {
       if (g.id == groupId) {
         return g.copyWith(tabIds: [...g.tabIds, tabId]);
@@ -148,6 +157,8 @@ class BrowserNotifier extends StateNotifier<BrowserState> {
   }
 }
 
-final browserProvider = StateNotifierProvider<BrowserNotifier, BrowserState>((ref) {
+final browserProvider = StateNotifierProvider<BrowserNotifier, BrowserState>((
+  ref,
+) {
   return BrowserNotifier();
 });

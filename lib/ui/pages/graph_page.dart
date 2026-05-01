@@ -12,7 +12,8 @@ class GraphView extends ConsumerStatefulWidget {
   ConsumerState<GraphView> createState() => _GraphViewState();
 }
 
-class _GraphViewState extends ConsumerState<GraphView> with SingleTickerProviderStateMixin {
+class _GraphViewState extends ConsumerState<GraphView>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   Offset _offset = Offset.zero;
   double _scale = 1.0;
@@ -23,8 +24,10 @@ class _GraphViewState extends ConsumerState<GraphView> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 60))
-      ..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 60),
+    )..repeat();
   }
 
   @override
@@ -83,32 +86,54 @@ class _GraphViewState extends ConsumerState<GraphView> with SingleTickerProvider
               decoration: BoxDecoration(
                 color: theme.cardColor,
                 borderRadius: BorderRadius.circular(8),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8)],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.hub, size: 16, color: theme.colorScheme.primary),
                   const SizedBox(width: 6),
-                  Text('${notes.length} notes', style: theme.textTheme.bodySmall),
+                  Text(
+                    '${notes.length} notes',
+                    style: theme.textTheme.bodySmall,
+                  ),
                   const SizedBox(width: 12),
                   IconButton(
                     icon: const Icon(Icons.zoom_in, size: 16),
-                    onPressed: () => setState(() => _scale = (_scale * 1.2).clamp(0.3, 3.0)),
+                    onPressed: () =>
+                        setState(() => _scale = (_scale * 1.2).clamp(0.3, 3.0)),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.zoom_out, size: 16),
-                    onPressed: () => setState(() => _scale = (_scale / 1.2).clamp(0.3, 3.0)),
+                    onPressed: () =>
+                        setState(() => _scale = (_scale / 1.2).clamp(0.3, 3.0)),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.center_focus_strong, size: 16),
-                    onPressed: () => setState(() { _offset = Offset.zero; _scale = 1.0; }),
+                    onPressed: () => setState(() {
+                      _offset = Offset.zero;
+                      _scale = 1.0;
+                    }),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                   ),
                 ],
               ),
@@ -212,7 +237,10 @@ class GraphPainter extends CustomPainter {
       if (pos == null) continue;
 
       final connections = linkCount[note.id] ?? 0;
-      final r = (nodeRadius + connections * 1.5).clamp(nodeRadius, nodeRadius * 3);
+      final r = (nodeRadius + connections * 1.5).clamp(
+        nodeRadius,
+        nodeRadius * 3,
+      );
       final isHovered = hoveredNode == note.id;
       final isSelected = selectedNode == note.id;
 
@@ -220,8 +248,8 @@ class GraphPainter extends CustomPainter {
         ..color = isSelected
             ? primaryColor
             : isHovered
-                ? secondaryColor
-                : primaryColor.withValues(alpha: 0.7)
+            ? secondaryColor
+            : primaryColor.withValues(alpha: 0.7)
         ..style = PaintingStyle.fill;
 
       final glowPaint = Paint()
@@ -237,7 +265,9 @@ class GraphPainter extends CustomPainter {
         final textSpan = TextSpan(
           text: note.title,
           style: TextStyle(
-            color: isSelected ? primaryColor : onSurfaceColor.withValues(alpha: 0.8),
+            color: isSelected
+                ? primaryColor
+                : onSurfaceColor.withValues(alpha: 0.8),
             fontSize: (10 * scale).clamp(8, 14),
           ),
         );

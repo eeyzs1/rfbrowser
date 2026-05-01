@@ -17,6 +17,7 @@ import '../pages/graph_page.dart';
 import '../pages/settings_page.dart';
 
 enum ViewMode { browser, editor, split, graph, canvas }
+
 enum LeftPanel { tabs, notes }
 
 class MainLayout extends ConsumerStatefulWidget {
@@ -108,7 +109,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
           const SizedBox(width: 8),
-          Text('RFBrowser', style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(
+            'RFBrowser',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(width: 16),
           _buildViewModeButton(Icons.language, 'Browser', ViewMode.browser),
           _buildViewModeButton(Icons.edit_note, 'Editor', ViewMode.editor),
@@ -124,22 +130,35 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
           IconButton(
-            icon: Icon(Icons.link, size: 16, color: _showBacklinks ? theme.colorScheme.primary : null),
+            icon: Icon(
+              Icons.link,
+              size: 16,
+              color: _showBacklinks ? theme.colorScheme.primary : null,
+            ),
             onPressed: () => setState(() => _showBacklinks = !_showBacklinks),
             tooltip: 'Toggle Backlinks',
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
           IconButton(
-            icon: Icon(_showRightSidebar ? Icons.view_sidebar : Icons.view_sidebar_outlined, size: 16),
-            onPressed: () => setState(() => _showRightSidebar = !_showRightSidebar),
+            icon: Icon(
+              _showRightSidebar
+                  ? Icons.view_sidebar
+                  : Icons.view_sidebar_outlined,
+              size: 16,
+            ),
+            onPressed: () =>
+                setState(() => _showRightSidebar = !_showRightSidebar),
             tooltip: 'Toggle AI Sidebar',
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
           IconButton(
             icon: const Icon(Icons.settings, size: 16),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+            ),
             tooltip: 'Settings',
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -155,7 +174,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     return TextButton(
       onPressed: () => setState(() => _viewMode = mode),
       style: TextButton.styleFrom(
-        foregroundColor: isActive ? theme.colorScheme.primary : theme.textTheme.bodySmall?.color,
+        foregroundColor: isActive
+            ? theme.colorScheme.primary
+            : theme.textTheme.bodySmall?.color,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -185,9 +206,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
               children: [
                 Expanded(
                   child: TextButton(
-                    onPressed: () => setState(() => _leftPanel = LeftPanel.notes),
+                    onPressed: () =>
+                        setState(() => _leftPanel = LeftPanel.notes),
                     style: TextButton.styleFrom(
-                      foregroundColor: _leftPanel == LeftPanel.notes ? theme.colorScheme.primary : theme.hintColor,
+                      foregroundColor: _leftPanel == LeftPanel.notes
+                          ? theme.colorScheme.primary
+                          : theme.hintColor,
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -204,9 +228,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                 ),
                 Expanded(
                   child: TextButton(
-                    onPressed: () => setState(() => _leftPanel = LeftPanel.tabs),
+                    onPressed: () =>
+                        setState(() => _leftPanel = LeftPanel.tabs),
                     style: TextButton.styleFrom(
-                      foregroundColor: _leftPanel == LeftPanel.tabs ? theme.colorScheme.primary : theme.hintColor,
+                      foregroundColor: _leftPanel == LeftPanel.tabs
+                          ? theme.colorScheme.primary
+                          : theme.hintColor,
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -270,9 +297,14 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                 children: [
                   Expanded(
                     child: TextButton(
-                      onPressed: () => setState(() { _showBacklinks = true; _showRightSidebar = false; }),
+                      onPressed: () => setState(() {
+                        _showBacklinks = true;
+                        _showRightSidebar = false;
+                      }),
                       style: TextButton.styleFrom(
-                        foregroundColor: _showBacklinks && !_showRightSidebar ? theme.colorScheme.primary : theme.hintColor,
+                        foregroundColor: _showBacklinks && !_showRightSidebar
+                            ? theme.colorScheme.primary
+                            : theme.hintColor,
                         padding: EdgeInsets.zero,
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -289,9 +321,14 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                   ),
                   Expanded(
                     child: TextButton(
-                      onPressed: () => setState(() { _showRightSidebar = true; _showBacklinks = false; }),
+                      onPressed: () => setState(() {
+                        _showRightSidebar = true;
+                        _showBacklinks = false;
+                      }),
                       style: TextButton.styleFrom(
-                        foregroundColor: _showRightSidebar && !_showBacklinks ? theme.colorScheme.primary : theme.hintColor,
+                        foregroundColor: _showRightSidebar && !_showBacklinks
+                            ? theme.colorScheme.primary
+                            : theme.hintColor,
                         padding: EdgeInsets.zero,
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -346,15 +383,24 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       ),
       child: Row(
         children: [
-          Text('RFBrowser v0.2.0', style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+          Text(
+            'RFBrowser v0.2.0',
+            style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+          ),
           const SizedBox(width: 16),
           Icon(Icons.circle, size: 8, color: Colors.green.shade400),
           const SizedBox(width: 4),
-          Text('Ready', style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+          Text(
+            'Ready',
+            style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+          ),
           const SizedBox(width: 16),
           Icon(Icons.description, size: 10, color: theme.hintColor),
           const SizedBox(width: 4),
-          Text('${knowledgeState.notes.length} notes', style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+          Text(
+            '${knowledgeState.notes.length} notes',
+            style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+          ),
           const Spacer(),
           Text(
             '${browserState.tabs.length} tabs',
@@ -374,7 +420,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     if (lower.contains('new note')) {
       _createNewNote();
     } else if (lower.contains('new tab')) {
-      ref.read(browserProvider.notifier).createTab(url: 'https://www.google.com');
+      ref
+          .read(browserProvider.notifier)
+          .createTab(url: 'https://www.google.com');
       setState(() => _viewMode = ViewMode.browser);
     } else if (lower.contains('daily note')) {
       ref.read(knowledgeProvider.notifier).createDailyNote(DateTime.now());
@@ -382,17 +430,26 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     } else if (lower.contains('graph')) {
       setState(() => _viewMode = ViewMode.graph);
     } else if (lower.contains('settings')) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SettingsPage()),
+      );
     } else if (lower.contains('theme')) {
       ref.read(settingsProvider.notifier).toggleDarkMode();
     } else if (lower.contains('backlinks')) {
       setState(() => _showBacklinks = !_showBacklinks);
     } else if (lower.contains('research')) {
       ref.read(agentServiceProvider).research(command);
-      setState(() { _showRightSidebar = true; _showBacklinks = false; });
+      setState(() {
+        _showRightSidebar = true;
+        _showBacklinks = false;
+      });
     } else {
       ref.read(aiProvider.notifier).sendMessage(command);
-      setState(() { _showRightSidebar = true; _showBacklinks = false; });
+      setState(() {
+        _showRightSidebar = true;
+        _showBacklinks = false;
+      });
     }
   }
 
@@ -410,7 +467,10 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             onSubmitted: (v) => Navigator.pop(ctx, v),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, controller.text),
               child: const Text('Create'),
