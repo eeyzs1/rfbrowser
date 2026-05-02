@@ -35,8 +35,9 @@ class BrowserState {
   }
 }
 
-class BrowserNotifier extends StateNotifier<BrowserState> {
-  BrowserNotifier() : super(BrowserState());
+class BrowserNotifier extends Notifier<BrowserState> {
+  @override
+  BrowserState build() => BrowserState();
 
   String createTab({String url = 'about:blank', String? groupId}) {
     final id = const Uuid().v4();
@@ -54,7 +55,11 @@ class BrowserNotifier extends StateNotifier<BrowserState> {
     if (state.activeTabId == tabId) {
       final idx = state.tabs.indexWhere((t) => t.id == tabId);
       if (tabs.isNotEmpty) {
-        newActiveId = tabs[idx.clamp(0, tabs.length - 1)].id;
+        if (idx > 0) {
+          newActiveId = state.tabs[idx - 1].id;
+        } else {
+          newActiveId = tabs.first.id;
+        }
       } else {
         newActiveId = null;
       }
@@ -157,8 +162,6 @@ class BrowserNotifier extends StateNotifier<BrowserState> {
   }
 }
 
-final browserProvider = StateNotifierProvider<BrowserNotifier, BrowserState>((
-  ref,
-) {
-  return BrowserNotifier();
-});
+final browserProvider = NotifierProvider<BrowserNotifier, BrowserState>(
+  BrowserNotifier.new,
+);

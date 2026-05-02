@@ -30,7 +30,8 @@ class BacklinksPanel extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
@@ -46,24 +47,32 @@ class BacklinksPanel extends ConsumerWidget {
             ],
           ),
         ),
-        if (activeNote == null)
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Text('No note selected', style: theme.textTheme.bodySmall),
-          )
-        else if (backlinks.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Text('No backlinks yet', style: theme.textTheme.bodySmall),
-          )
-        else
-          ...backlinks.map(
-            (link) => _BacklinkItem(
-              sourceId: link.sourceId,
-              linkContext: link.context,
-              type: link.type,
-            ),
-          ),
+        Expanded(
+          child: activeNote == null
+              ? Padding(
+                  padding: const EdgeInsets.all(12),
+                  child:
+                      Text('No note selected', style: theme.textTheme.bodySmall),
+                )
+              : backlinks.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text('No backlinks yet',
+                          style: theme.textTheme.bodySmall),
+                    )
+                  : ListView(
+                      padding: EdgeInsets.zero,
+                      children: backlinks
+                          .map(
+                            (link) => _BacklinkItem(
+                              sourceId: link.sourceId,
+                              linkContext: link.context,
+                              type: link.type,
+                            ),
+                          )
+                          .toList(),
+                    ),
+        ),
       ],
     );
   }

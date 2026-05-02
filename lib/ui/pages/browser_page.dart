@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/browser_service.dart';
+import '../../services/knowledge_service.dart';
 import '../../data/models/browser_tab.dart';
 
 class BrowserView extends ConsumerStatefulWidget {
@@ -59,7 +60,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
               onPressed: () {
                 ref
                     .read(browserProvider.notifier)
-                    .createTab(url: 'https://www.google.com');
+                    .createTab(url: 'https://www.bing.com');
               },
               icon: const Icon(Icons.add, size: 16),
               label: const Text('New Tab'),
@@ -174,6 +175,12 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                   },
                   shouldOverrideUrlLoading:
                       (controller, navigationAction) async {
+                        final url = navigationAction.request.url?.toString() ?? '';
+                        if (url.startsWith('file://') ||
+                            url.startsWith('javascript:') ||
+                            url.startsWith('data:')) {
+                          return NavigationActionPolicy.CANCEL;
+                        }
                         return NavigationActionPolicy.ALLOW;
                       },
                 ),
@@ -189,7 +196,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     } else if (input.contains('.') && !input.contains(' ')) {
       url = 'https://$input';
     } else {
-      url = 'https://www.google.com/search?q=${Uri.encodeComponent(input)}';
+      url = 'https://www.bing.com/search?q=${Uri.encodeComponent(input)}';
     }
     ref.read(browserProvider.notifier).updateTabUrl(tabId, url);
     _controllers[tabId]?.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
@@ -218,10 +225,68 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     );
   }
 
-  void _clipPage(BrowserTab tab) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Clipping: ${tab.title}')));
+  void _clipPage(BrowserTab tab) async {
+    final controller = _controllers[tab.id];
+    if (controller == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Page not loaded yet')),
+      );
+      return;
+    }
+
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Clip Page'),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, 'full'),
+            child: const Row(children: [Icon(Icons.description, size: 16), SizedBox(width: 8), Text('Full Page')]),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, 'bookmark'),
+            child: const Row(children: [Icon(Icons.bookmark, size: 16), SizedBox(width: 8), Text('Bookmark')]),
+          ),
+        ],
+      ),
+    );
+
+    if (choice == null || !mounted) return;
+
+    try {
+      if (choice == 'bookmark') {
+        await ref.read(knowledgeProvider.notifier).clipToNote(
+              url: tab.url,
+              title: tab.title,
+              content: '# ${tab.title}\n\n> Source: [${tab.title}](${tab.url})\n',
+            );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Bookmarked: ${tab.title}')),
+          );
+        }
+      } else {
+        final html = await controller.getHtml() ?? '';
+        final text = await controller.evaluateJavascript(source: 'document.body.innerText') ?? '';
+        final textContent = text is String ? text : text.toString();
+        await ref.read(knowledgeProvider.notifier).clipToNote(
+              url: tab.url,
+              title: tab.title,
+              content: textContent.isNotEmpty ? textContent : html,
+            );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Clipped: ${tab.title}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Clip failed: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _openExternal(String url) async {

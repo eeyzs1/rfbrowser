@@ -38,7 +38,8 @@ class AppTheme {
     final divider = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
     final inputBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
     final br = s.effectiveBorderRadius;
-    final iconSz = s.effectiveIconSize;
+    final iconSz = s.iconSize.toDouble();
+    final fontSize = s.editorFontSize;
 
     return ThemeData(
       brightness: brightness,
@@ -68,27 +69,46 @@ class AppTheme {
           borderSide: BorderSide(color: cs.primary, width: 1),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        hintStyle: TextStyle(color: muted),
+        hintStyle: TextStyle(color: muted, fontSize: fontSize - 2),
       ),
       textTheme: TextTheme(
         headlineLarge: TextStyle(
           color: onSurface,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
+          fontSize: fontSize * 2,
         ),
         headlineMedium: TextStyle(
           color: onSurface,
           fontWeight: FontWeight.w600,
           letterSpacing: -0.3,
+          fontSize: fontSize * 1.5,
         ),
-        titleMedium: TextStyle(color: onSurface, fontWeight: FontWeight.w500),
-        bodyLarge: TextStyle(color: onSurface, height: 1.6),
-        bodyMedium: TextStyle(color: onSurfaceVariant, height: 1.5),
-        bodySmall: TextStyle(color: muted, height: 1.4),
+        titleMedium: TextStyle(
+          color: onSurface,
+          fontWeight: FontWeight.w500,
+          fontSize: fontSize + 2,
+        ),
+        bodyLarge: TextStyle(
+          color: onSurface,
+          height: 1.6,
+          fontSize: fontSize + 1,
+        ),
+        bodyMedium: TextStyle(
+          color: onSurfaceVariant,
+          height: 1.5,
+          fontSize: fontSize,
+        ),
+        bodySmall: TextStyle(
+          color: muted,
+          height: 1.4,
+          fontSize: fontSize - 2,
+        ),
         labelSmall: TextStyle(
           color: muted,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.3,
+          fontSize: fontSize - 3,
         ),
       ),
       iconTheme: IconThemeData(color: muted, size: iconSz),
@@ -111,7 +131,11 @@ class AppTheme {
             borderRadius: BorderRadius.circular(br),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          textStyle: TextStyle(
+            inherit: false,
+            fontWeight: FontWeight.w600,
+            fontSize: fontSize - 1,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -122,6 +146,11 @@ class AppTheme {
             borderRadius: BorderRadius.circular(br),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          textStyle: TextStyle(
+            inherit: false,
+            fontWeight: FontWeight.w500,
+            fontSize: fontSize - 1,
+          ),
         ),
       ),
       listTileTheme: ListTileThemeData(

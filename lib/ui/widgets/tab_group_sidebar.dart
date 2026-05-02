@@ -11,77 +11,73 @@ class TabGroupSidebar extends ConsumerWidget {
     final browserState = ref.watch(browserProvider);
     final theme = Theme.of(context);
 
-    return Container(
-      width: 220,
-      color: theme.colorScheme.surface,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: theme.dividerColor)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.tab, size: 18, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-                Text(
-                  'Tab Groups',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.add, size: 18),
-                  onPressed: () => _showNewGroupDialog(context, ref),
-                  tooltip: 'New Group',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 28,
-                    minHeight: 28,
-                  ),
-                ),
-              ],
-            ),
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: theme.dividerColor)),
           ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              children: [
-                _buildUngroupedSection(context, ref, browserState),
-                ...browserState.groups.map(
-                  (group) =>
-                      _buildGroupSection(context, ref, browserState, group),
+          child: Row(
+            children: [
+              Icon(Icons.tab, size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Tab Groups',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
-            ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.add, size: 18),
+                onPressed: () => _showNewGroupDialog(context, ref),
+                tooltip: 'New Group',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 28,
+                  minHeight: 28,
+                ),
+              ),
+            ],
           ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: theme.dividerColor)),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline, size: 20),
-                  onPressed: () =>
-                      ref.read(browserProvider.notifier).createTab(),
-                  tooltip: 'New Tab',
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    '${browserState.tabs.length} tab${browserState.tabs.length != 1 ? 's' : ''}',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-              ],
-            ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            children: [
+              _buildUngroupedSection(context, ref, browserState),
+              ...browserState.groups.map(
+                (group) =>
+                    _buildGroupSection(context, ref, browserState, group),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: theme.dividerColor)),
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline, size: 20),
+                onPressed: () =>
+                    ref.read(browserProvider.notifier).createTab(),
+                tooltip: 'New Tab',
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  '${browserState.tabs.length} tab${browserState.tabs.length != 1 ? 's' : ''}',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

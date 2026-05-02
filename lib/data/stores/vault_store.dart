@@ -57,8 +57,9 @@ class VaultState {
   }
 }
 
-class VaultNotifier extends StateNotifier<VaultState> {
-  VaultNotifier() : super(VaultState());
+class VaultNotifier extends Notifier<VaultState> {
+  @override
+  VaultState build() => VaultState();
 
   static const _recentVaultsKey = 'recent_vaults';
   static const _currentVaultKey = 'current_vault';
@@ -167,6 +168,4 @@ class VaultNotifier extends StateNotifier<VaultState> {
   }
 }
 
-final vaultProvider = StateNotifierProvider<VaultNotifier, VaultState>((ref) {
-  return VaultNotifier();
-});
+final vaultProvider = NotifierProvider<VaultNotifier, VaultState>(VaultNotifier.new);

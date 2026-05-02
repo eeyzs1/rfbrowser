@@ -344,11 +344,23 @@ abstract class AppLocalizations {
   /// **'Chinese'**
   String get chinese;
 
+  /// No description provided for @followSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow System'**
+  String get followSystem;
+
   /// No description provided for @darkMode.
   ///
   /// In en, this message translates to:
   /// **'Dark Mode'**
   String get darkMode;
+
+  /// No description provided for @toggleDarkLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle dark/light theme'**
+  String get toggleDarkLight;
 
   /// No description provided for @lightMode.
   ///
@@ -362,23 +374,389 @@ abstract class AppLocalizations {
   /// **'Theme'**
   String get theme;
 
-  /// No description provided for @aiModel.
+  /// No description provided for @accentColor.
   ///
   /// In en, this message translates to:
-  /// **'AI Model'**
-  String get aiModel;
+  /// **'Accent Color'**
+  String get accentColor;
 
-  /// No description provided for @apiKey.
+  /// No description provided for @customColor.
   ///
   /// In en, this message translates to:
-  /// **'API Key'**
-  String get apiKey;
+  /// **'Custom Color'**
+  String get customColor;
 
-  /// No description provided for @send.
+  /// No description provided for @components.
   ///
   /// In en, this message translates to:
-  /// **'Send'**
-  String get send;
+  /// **'Components'**
+  String get components;
+
+  /// No description provided for @buttonShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Button Shape'**
+  String get buttonShape;
+
+  /// No description provided for @rounded.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounded'**
+  String get rounded;
+
+  /// No description provided for @sharp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharp'**
+  String get sharp;
+
+  /// No description provided for @pill.
+  ///
+  /// In en, this message translates to:
+  /// **'Pill'**
+  String get pill;
+
+  /// No description provided for @cornerRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Corner Radius'**
+  String get cornerRadius;
+
+  /// No description provided for @density.
+  ///
+  /// In en, this message translates to:
+  /// **'Density'**
+  String get density;
+
+  /// No description provided for @compact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get compact;
+
+  /// No description provided for @comfortable.
+  ///
+  /// In en, this message translates to:
+  /// **'Comfortable'**
+  String get comfortable;
+
+  /// No description provided for @spacious.
+  ///
+  /// In en, this message translates to:
+  /// **'Spacious'**
+  String get spacious;
+
+  /// No description provided for @iconSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon Size'**
+  String get iconSize;
+
+  /// No description provided for @small.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get small;
+
+  /// No description provided for @medium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get medium;
+
+  /// No description provided for @large.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get large;
+
+  /// No description provided for @fontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Font Size'**
+  String get fontSize;
+
+  /// No description provided for @preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get preview;
+
+  /// No description provided for @filled.
+  ///
+  /// In en, this message translates to:
+  /// **'Filled'**
+  String get filled;
+
+  /// No description provided for @outlined.
+  ///
+  /// In en, this message translates to:
+  /// **'Outlined'**
+  String get outlined;
+
+  /// No description provided for @aiModels.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Models'**
+  String get aiModels;
+
+  /// No description provided for @openaiApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenAI API Key'**
+  String get openaiApiKey;
+
+  /// No description provided for @notSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get notSet;
+
+  /// No description provided for @activeModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Model'**
+  String get activeModel;
+
+  /// No description provided for @localModelOllama.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Model (Ollama)'**
+  String get localModelOllama;
+
+  /// No description provided for @configureLocalModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure local model endpoint'**
+  String get configureLocalModel;
+
+  /// No description provided for @ollamaEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ollama Endpoint'**
+  String get ollamaEndpoint;
+
+  /// No description provided for @ollamaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure Ollama is running locally before using local models.'**
+  String get ollamaHint;
+
+  /// No description provided for @editorSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Editor'**
+  String get editorSection;
+
+  /// No description provided for @syncSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get syncSection;
+
+  /// No description provided for @configureGitRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure Git remote for vault sync'**
+  String get configureGitRemote;
+
+  /// No description provided for @configureWebdav.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure WebDAV server for vault sync'**
+  String get configureWebdav;
+
+  /// No description provided for @remoteUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote URL'**
+  String get remoteUrl;
+
+  /// No description provided for @serverUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get serverUrl;
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @about.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// No description provided for @versionInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'v0.2.0 - AI-Powered Knowledge Browser'**
+  String get versionInfo;
+
+  /// No description provided for @license.
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get license;
+
+  /// No description provided for @selectLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get selectLanguage;
+
+  /// No description provided for @selectModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Model'**
+  String get selectModel;
+
+  /// No description provided for @componentDensity.
+  ///
+  /// In en, this message translates to:
+  /// **'Component Density'**
+  String get componentDensity;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @customAccentColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Accent Color'**
+  String get customAccentColor;
+
+  /// No description provided for @noVaultConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'No Vault Connected'**
+  String get noVaultConnected;
+
+  /// No description provided for @openVaultToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a vault to start writing notes'**
+  String get openVaultToStart;
+
+  /// No description provided for @noNoteSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'No note selected'**
+  String get noNoteSelected;
+
+  /// No description provided for @createOrSelectNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new note or select one from the sidebar'**
+  String get createOrSelectNote;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @startWriting.
+  ///
+  /// In en, this message translates to:
+  /// **'Start writing...'**
+  String get startWriting;
+
+  /// No description provided for @splitRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Right'**
+  String get splitRight;
+
+  /// No description provided for @splitLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Left'**
+  String get splitLeft;
+
+  /// No description provided for @splitUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Up'**
+  String get splitUp;
+
+  /// No description provided for @splitDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Down'**
+  String get splitDown;
+
+  /// No description provided for @changeView.
+  ///
+  /// In en, this message translates to:
+  /// **'Change View'**
+  String get changeView;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @changeViewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open View'**
+  String get changeViewTitle;
+
+  /// No description provided for @notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notes;
+
+  /// No description provided for @tabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Tabs'**
+  String get tabs;
+
+  /// No description provided for @ready.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get ready;
+
+  /// No description provided for @noVault.
+  ///
+  /// In en, this message translates to:
+  /// **'No Vault'**
+  String get noVault;
+
+  /// No description provided for @notesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes'**
+  String notesCount(int count);
+
+  /// No description provided for @tabsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tabs'**
+  String tabsCount(int count);
+
+  /// No description provided for @clearChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Chat'**
+  String get clearChat;
 
   /// No description provided for @typeMessage.
   ///
@@ -577,6 +955,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Agent task failed'**
   String get agentFailed;
+
+  /// No description provided for @newNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Note'**
+  String get newNoteTitle;
+
+  /// No description provided for @noteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Note title'**
+  String get noteTitle;
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
+
+  /// No description provided for @comingInPhase4.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming in Phase 4'**
+  String get comingInPhase4;
+
+  /// No description provided for @gitSyncConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Git Sync Configuration'**
+  String get gitSyncConfig;
+
+  /// No description provided for @webdavConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV Configuration'**
+  String get webdavConfig;
+
+  /// No description provided for @providers.
+  ///
+  /// In en, this message translates to:
+  /// **'Providers'**
+  String get providers;
+
+  /// No description provided for @addProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Provider'**
+  String get addProvider;
+
+  /// No description provided for @providerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider Name'**
+  String get providerName;
+
+  /// No description provided for @providerNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'My OpenAI, Work Azure, etc.'**
+  String get providerNameHint;
+
+  /// No description provided for @protocol.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol'**
+  String get protocol;
+
+  /// No description provided for @baseUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Base URL'**
+  String get baseUrl;
+
+  /// No description provided for @apiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API Key'**
+  String get apiKey;
+
+  /// No description provided for @leaveEmptyToKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'leave empty to keep current'**
+  String get leaveEmptyToKeep;
+
+  /// No description provided for @editProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Provider'**
+  String get editProvider;
+
+  /// No description provided for @deleteProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Provider'**
+  String get deleteProvider;
+
+  /// No description provided for @deleteProviderConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete provider and all its models?'**
+  String get deleteProviderConfirm;
+
+  /// No description provided for @addCustomModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Custom Model'**
+  String get addCustomModel;
+
+  /// No description provided for @modelId.
+  ///
+  /// In en, this message translates to:
+  /// **'Model ID'**
+  String get modelId;
+
+  /// No description provided for @displayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display Name'**
+  String get displayName;
+
+  /// No description provided for @displayNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'My Custom Model'**
+  String get displayNameHint;
+
+  /// No description provided for @refreshModels.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Models'**
+  String get refreshModels;
+
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// No description provided for @noProvidersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No providers configured. Add one to get started.'**
+  String get noProvidersHint;
+
+  /// No description provided for @noModelsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No models found'**
+  String get noModelsFound;
+
+  /// No description provided for @modelsRefreshed.
+  ///
+  /// In en, this message translates to:
+  /// **'Found'**
+  String get modelsRefreshed;
+
+  /// No description provided for @disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get disabled;
+
+  /// No description provided for @enable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get enable;
+
+  /// No description provided for @custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get custom;
 }
 
 class _AppLocalizationsDelegate

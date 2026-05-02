@@ -91,7 +91,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                     )
                   : null,
             ),
-            onChanged: (v) => setState(() => _searchQuery = v),
+            onChanged: _onSearchChanged,
           ),
         ),
         Expanded(
@@ -113,9 +113,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                       onTap: () => ref
                           .read(knowledgeProvider.notifier)
                           .openNote(note.filePath),
-                      onDelete: () => ref
-                          .read(knowledgeProvider.notifier)
-                          .deleteNote(note.filePath),
+                      onDelete: () => _confirmDeleteNote(note.title, note.filePath),
                     );
                   },
                 ),
@@ -126,11 +124,19 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
 
   List<dynamic> _filterNotes(List notes) {
     if (_searchQuery.isEmpty) return notes;
+    final q = _searchQuery.toLowerCase();
     return notes.where((n) {
-      final q = _searchQuery.toLowerCase();
       return n.title.toLowerCase().contains(q) ||
-          n.tags.any((t) => t.toLowerCase().contains(q));
+          n.tags.any((t) => t.toLowerCase().contains(q)) ||
+          n.content.toLowerCase().contains(q);
     }).toList();
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() => _searchQuery = query);
+    if (query.length >= 2) {
+      ref.read(knowledgeProvider.notifier).search(query);
+    }
   }
 
   Widget _buildNoVaultPrompt(ThemeData theme) {
@@ -162,7 +168,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         ),
         Expanded(
           child: Center(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -262,6 +268,32 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     );
     if (title != null && title.isNotEmpty) {
       await ref.read(knowledgeProvider.notifier).createNote(title: title);
+    }
+  }
+
+  void _confirmDeleteNote(String title, String filePath) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Note'),
+        content: Text('Are you sure you want to delete "$title"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      ref.read(knowledgeProvider.notifier).deleteNote(filePath);
     }
   }
 }

@@ -11,15 +11,15 @@ import '../widgets/tab_group_sidebar.dart';
 import '../widgets/command_bar.dart';
 import '../widgets/backlinks_panel.dart';
 import '../widgets/note_sidebar.dart';
+import '../widgets/split_pane.dart';
 import '../pages/editor_page.dart';
 import '../pages/browser_page.dart';
 import '../pages/ai_chat_panel.dart';
 import '../pages/graph_page.dart';
+import '../pages/canvas_page.dart';
 import '../pages/settings_page.dart';
 
-enum ViewMode { browser, editor, split, graph, canvas }
-
-enum LeftPanel { tabs, notes }
+enum LayoutPreset { browser, editor, split, graph, canvas }
 
 class MainLayout extends ConsumerStatefulWidget {
   const MainLayout({super.key});
@@ -29,11 +29,59 @@ class MainLayout extends ConsumerStatefulWidget {
 }
 
 class _MainLayoutState extends ConsumerState<MainLayout> {
-  ViewMode _viewMode = ViewMode.split;
-  LeftPanel _leftPanel = LeftPanel.notes;
   bool _showCommandBar = false;
-  bool _showRightSidebar = true;
-  bool _showBacklinks = true;
+  bool _isPreview = false;
+  late SplitNode _rootNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _rootNode = _splitPreset;
+  }
+
+  SplitNode get _splitPreset => SplitNode.split(
+        id: 'root',
+        direction: SplitDirection.horizontal,
+        children: [
+          SplitNode.leaf(id: 'notes', viewType: ViewType.notes, flex: 2),
+          SplitNode.split(
+            id: 'center',
+            direction: SplitDirection.horizontal,
+            children: [
+              SplitNode.leaf(
+                  id: 'browser', viewType: ViewType.browser, flex: 1),
+              SplitNode.leaf(
+                  id: 'editor', viewType: ViewType.editor, flex: 1),
+            ],
+            flex: 5,
+          ),
+          SplitNode.leaf(id: 'ai', viewType: ViewType.ai, flex: 2),
+        ],
+      );
+
+  SplitNode _presetFor(LayoutPreset preset) {
+    final mainViewType = switch (preset) {
+      LayoutPreset.browser => ViewType.browser,
+      LayoutPreset.editor => ViewType.editor,
+      LayoutPreset.graph => ViewType.graph,
+      LayoutPreset.canvas => ViewType.canvas,
+      LayoutPreset.split => ViewType.browser,
+    };
+
+    if (preset == LayoutPreset.split) {
+      return _splitPreset;
+    }
+
+    return SplitNode.split(
+      id: 'root',
+      direction: SplitDirection.horizontal,
+      children: [
+        SplitNode.leaf(id: 'notes', viewType: ViewType.notes, flex: 2),
+        SplitNode.leaf(id: 'main', viewType: mainViewType, flex: 5),
+        SplitNode.leaf(id: 'ai', viewType: ViewType.ai, flex: 2),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,14 +90,42 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     return Scaffold(
       body: CallbackShortcuts(
         bindings: {
-          SingleActivator(LogicalKeyboardKey.keyK, control: true): () {
+          const SingleActivator(LogicalKeyboardKey.keyK, control: true): () {
             setState(() => _showCommandBar = true);
           },
-          SingleActivator(LogicalKeyboardKey.keyN, control: true): () {
+          const SingleActivator(LogicalKeyboardKey.keyN, control: true): () {
             _createNewNote();
           },
-          SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
+          const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
             ref.read(knowledgeProvider.notifier).saveActiveNote();
+          },
+          const SingleActivator(LogicalKeyboardKey.keyE, control: true): () {
+            setState(() => _rootNode = _presetFor(LayoutPreset.editor));
+          },
+          const SingleActivator(LogicalKeyboardKey.keyB, control: true): () {
+            setState(() => _rootNode = _presetFor(LayoutPreset.browser));
+          },
+          const SingleActivator(LogicalKeyboardKey.keyG, control: true, shift: true): () {
+            setState(() => _rootNode = _presetFor(LayoutPreset.graph));
+          },
+          const SingleActivator(LogicalKeyboardKey.keyD, control: true): () {
+            ref.read(knowledgeProvider.notifier).createDailyNote(DateTime.now());
+            setState(() => _rootNode = _presetFor(LayoutPreset.editor));
+          },
+          const SingleActivator(LogicalKeyboardKey.keyP, control: true): () {
+            setState(() => _isPreview = !_isPreview);
+          },
+          const SingleActivator(LogicalKeyboardKey.keyW, control: true): () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+            );
+          },
+          const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+            setState(() => _showCommandBar = true);
+          },
+          const SingleActivator(LogicalKeyboardKey.escape): () {
+            if (_showCommandBar) setState(() => _showCommandBar = false);
           },
         },
         child: Focus(
@@ -60,14 +136,10 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                 children: [
                   _buildMenuBar(theme),
                   Expanded(
-                    child: Row(
-                      children: [
-                        _buildLeftSidebar(theme),
-                        Expanded(child: _buildMainContent(theme)),
-                        if (_showRightSidebar || _showBacklinks) ...[
-                          _buildRightPanel(theme),
-                        ],
-                      ],
+                    child: SplitPane(
+                      node: _rootNode,
+                      viewBuilder: _buildView,
+                      onChanged: (node) => setState(() => _rootNode = node),
                     ),
                   ),
                   _buildStatusBar(theme),
@@ -91,6 +163,19 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     );
   }
 
+  Widget _buildView(BuildContext context, ViewType viewType) {
+    return switch (viewType) {
+      ViewType.browser => const BrowserView(),
+      ViewType.editor => const EditorView(),
+      ViewType.graph => const GraphView(),
+      ViewType.ai => const AIChatPanel(),
+      ViewType.backlinks => const BacklinksPanel(),
+      ViewType.notes => const NoteSidebar(),
+      ViewType.tabs => const TabGroupSidebar(),
+      ViewType.canvas => const CanvasView(),
+    };
+  }
+
   Widget _buildMenuBar(ThemeData theme) {
     return Container(
       height: 44,
@@ -111,40 +196,20 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             ),
           ),
           const SizedBox(width: 20),
-          _buildViewModeButton(Icons.language, 'Browser', ViewMode.browser),
-          _buildViewModeButton(Icons.edit_note, 'Editor', ViewMode.editor),
-          _buildViewModeButton(Icons.vertical_split, 'Split', ViewMode.split),
-          _buildViewModeButton(Icons.hub, 'Graph', ViewMode.graph),
-          _buildViewModeButton(Icons.dashboard, 'Canvas', ViewMode.canvas),
+          _buildPresetButton(
+              Icons.language, 'Browser', LayoutPreset.browser),
+          _buildPresetButton(
+              Icons.edit_note, 'Editor', LayoutPreset.editor),
+          _buildPresetButton(
+              Icons.vertical_split, 'Split', LayoutPreset.split),
+          _buildPresetButton(Icons.hub, 'Graph', LayoutPreset.graph),
+          _buildPresetButton(
+              Icons.dashboard, 'Canvas', LayoutPreset.canvas),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.search, size: 18),
             onPressed: () => setState(() => _showCommandBar = true),
             tooltip: 'Command Bar (Ctrl+K)',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.link,
-              size: 18,
-              color: _showBacklinks ? theme.colorScheme.primary : null,
-            ),
-            onPressed: () => setState(() => _showBacklinks = !_showBacklinks),
-            tooltip: 'Toggle Backlinks',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-          ),
-          IconButton(
-            icon: Icon(
-              _showRightSidebar
-                  ? Icons.view_sidebar
-                  : Icons.view_sidebar_outlined,
-              size: 18,
-            ),
-            onPressed: () =>
-                setState(() => _showRightSidebar = !_showRightSidebar),
-            tooltip: 'Toggle AI Sidebar',
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
@@ -163,228 +228,35 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     );
   }
 
-  Widget _buildViewModeButton(IconData icon, String label, ViewMode mode) {
+  Widget _buildPresetButton(
+      IconData icon, String label, LayoutPreset preset) {
     final theme = Theme.of(context);
-    final isActive = _viewMode == mode;
     return Padding(
       padding: const EdgeInsets.only(right: 2),
       child: Material(
-        color: isActive
-            ? theme.colorScheme.primary.withValues(alpha: 0.12)
-            : Colors.transparent,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () => setState(() => _viewMode = mode),
+          onTap: () => setState(() => _rootNode = _presetFor(preset)),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  icon,
-                  size: 14,
-                  color: isActive
-                      ? theme.colorScheme.primary
-                      : theme.iconTheme.color,
-                ),
+                Icon(icon, size: 14, color: theme.iconTheme.color),
                 const SizedBox(width: 5),
                 Text(
                   label,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 12,
-                    color: isActive
-                        ? theme.colorScheme.primary
-                        : theme.textTheme.bodySmall?.color,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLeftSidebar(ThemeData theme) {
-    return Container(
-      width: 240,
-      decoration: BoxDecoration(
-        color: theme.appBarTheme.backgroundColor,
-        border: Border(right: BorderSide(color: theme.dividerColor)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            height: 36,
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: theme.dividerColor)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildTabButton(
-                    icon: Icons.description,
-                    label: 'Notes',
-                    isActive: _leftPanel == LeftPanel.notes,
-                    onTap: () => setState(() => _leftPanel = LeftPanel.notes),
-                  ),
-                ),
-                Expanded(
-                  child: _buildTabButton(
-                    icon: Icons.tab,
-                    label: 'Tabs',
-                    isActive: _leftPanel == LeftPanel.tabs,
-                    onTap: () => setState(() => _leftPanel = LeftPanel.tabs),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: _leftPanel == LeftPanel.notes
-                ? const NoteSidebar()
-                : const TabGroupSidebar(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabButton({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    return Material(
-      color: isActive
-          ? theme.colorScheme.primary.withValues(alpha: 0.08)
-          : Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 12,
-                color: isActive ? theme.colorScheme.primary : theme.hintColor,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: isActive ? theme.colorScheme.primary : theme.hintColor,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMainContent(ThemeData theme) {
-    switch (_viewMode) {
-      case ViewMode.browser:
-        return const BrowserView();
-      case ViewMode.editor:
-        return const EditorView();
-      case ViewMode.split:
-        return Row(
-          children: [
-            const Expanded(child: BrowserView()),
-            Container(width: 1, color: theme.dividerColor),
-            const Expanded(child: EditorView()),
-          ],
-        );
-      case ViewMode.graph:
-        return const GraphView();
-      case ViewMode.canvas:
-        return _buildCanvasPlaceholder(theme);
-    }
-  }
-
-  Widget _buildRightPanel(ThemeData theme) {
-    return Container(
-      width: 340,
-      decoration: BoxDecoration(
-        color: theme.appBarTheme.backgroundColor,
-        border: Border(left: BorderSide(color: theme.dividerColor)),
-      ),
-      child: Column(
-        children: [
-          if (_showBacklinks && _showRightSidebar)
-            Container(
-              height: 36,
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: theme.dividerColor)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildTabButton(
-                      icon: Icons.link,
-                      label: 'Links',
-                      isActive: _showBacklinks && !_showRightSidebar,
-                      onTap: () => setState(() {
-                        _showBacklinks = true;
-                        _showRightSidebar = false;
-                      }),
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildTabButton(
-                      icon: Icons.smart_toy,
-                      label: 'AI',
-                      isActive: _showRightSidebar && !_showBacklinks,
-                      onTap: () => setState(() {
-                        _showRightSidebar = true;
-                        _showBacklinks = false;
-                      }),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: _showRightSidebar
-                ? const AIChatPanel()
-                : const BacklinksPanel(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCanvasPlaceholder(ThemeData theme) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              Icons.dashboard,
-              size: 36,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text('Canvas', style: theme.textTheme.headlineMedium),
-          const SizedBox(height: 8),
-          Text('Coming in Phase 4', style: theme.textTheme.bodySmall),
-        ],
       ),
     );
   }
@@ -458,13 +330,13 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     } else if (lower.contains('new tab')) {
       ref
           .read(browserProvider.notifier)
-          .createTab(url: 'https://www.google.com');
-      setState(() => _viewMode = ViewMode.browser);
+          .createTab(url: 'https://www.bing.com');
+      setState(() => _rootNode = _presetFor(LayoutPreset.browser));
     } else if (lower.contains('daily note')) {
       ref.read(knowledgeProvider.notifier).createDailyNote(DateTime.now());
-      setState(() => _viewMode = ViewMode.editor);
+      setState(() => _rootNode = _presetFor(LayoutPreset.editor));
     } else if (lower.contains('graph')) {
-      setState(() => _viewMode = ViewMode.graph);
+      setState(() => _rootNode = _presetFor(LayoutPreset.graph));
     } else if (lower.contains('settings')) {
       Navigator.push(
         context,
@@ -472,20 +344,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       );
     } else if (lower.contains('theme')) {
       ref.read(settingsProvider.notifier).toggleDarkMode();
-    } else if (lower.contains('backlinks')) {
-      setState(() => _showBacklinks = !_showBacklinks);
     } else if (lower.contains('research')) {
       ref.read(agentServiceProvider).research(command);
-      setState(() {
-        _showRightSidebar = true;
-        _showBacklinks = false;
-      });
+      setState(() => _rootNode = _splitPreset);
     } else {
       ref.read(aiProvider.notifier).sendMessage(command);
-      setState(() {
-        _showRightSidebar = true;
-        _showBacklinks = false;
-      });
+      setState(() => _rootNode = _splitPreset);
     }
   }
 
@@ -517,7 +381,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     );
     if (title != null && title.isNotEmpty) {
       await ref.read(knowledgeProvider.notifier).createNote(title: title);
-      setState(() => _viewMode = ViewMode.editor);
+      setState(() => _rootNode = _presetFor(LayoutPreset.editor));
     }
   }
 }

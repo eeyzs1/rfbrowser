@@ -132,7 +132,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chinese => 'Chinese';
 
   @override
+  String get followSystem => 'Follow System';
+
+  @override
   String get darkMode => 'Dark Mode';
+
+  @override
+  String get toggleDarkLight => 'Toggle dark/light theme';
 
   @override
   String get lightMode => 'Light Mode';
@@ -141,13 +147,202 @@ class AppLocalizationsEn extends AppLocalizations {
   String get theme => 'Theme';
 
   @override
-  String get aiModel => 'AI Model';
+  String get accentColor => 'Accent Color';
 
   @override
-  String get apiKey => 'API Key';
+  String get customColor => 'Custom Color';
 
   @override
-  String get send => 'Send';
+  String get components => 'Components';
+
+  @override
+  String get buttonShape => 'Button Shape';
+
+  @override
+  String get rounded => 'Rounded';
+
+  @override
+  String get sharp => 'Sharp';
+
+  @override
+  String get pill => 'Pill';
+
+  @override
+  String get cornerRadius => 'Corner Radius';
+
+  @override
+  String get density => 'Density';
+
+  @override
+  String get compact => 'Compact';
+
+  @override
+  String get comfortable => 'Comfortable';
+
+  @override
+  String get spacious => 'Spacious';
+
+  @override
+  String get iconSize => 'Icon Size';
+
+  @override
+  String get small => 'Small';
+
+  @override
+  String get medium => 'Medium';
+
+  @override
+  String get large => 'Large';
+
+  @override
+  String get fontSize => 'Font Size';
+
+  @override
+  String get preview => 'Preview';
+
+  @override
+  String get filled => 'Filled';
+
+  @override
+  String get outlined => 'Outlined';
+
+  @override
+  String get aiModels => 'AI Models';
+
+  @override
+  String get openaiApiKey => 'OpenAI API Key';
+
+  @override
+  String get notSet => 'Not set';
+
+  @override
+  String get activeModel => 'Active Model';
+
+  @override
+  String get localModelOllama => 'Local Model (Ollama)';
+
+  @override
+  String get configureLocalModel => 'Configure local model endpoint';
+
+  @override
+  String get ollamaEndpoint => 'Ollama Endpoint';
+
+  @override
+  String get ollamaHint =>
+      'Make sure Ollama is running locally before using local models.';
+
+  @override
+  String get editorSection => 'Editor';
+
+  @override
+  String get syncSection => 'Sync';
+
+  @override
+  String get configureGitRemote => 'Configure Git remote for vault sync';
+
+  @override
+  String get configureWebdav => 'Configure WebDAV server for vault sync';
+
+  @override
+  String get remoteUrl => 'Remote URL';
+
+  @override
+  String get serverUrl => 'Server URL';
+
+  @override
+  String get username => 'Username';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get versionInfo => 'v0.2.0 - AI-Powered Knowledge Browser';
+
+  @override
+  String get license => 'License';
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get selectModel => 'Select Model';
+
+  @override
+  String get componentDensity => 'Component Density';
+
+  @override
+  String get apply => 'Apply';
+
+  @override
+  String get customAccentColor => 'Custom Accent Color';
+
+  @override
+  String get noVaultConnected => 'No Vault Connected';
+
+  @override
+  String get openVaultToStart => 'Open a vault to start writing notes';
+
+  @override
+  String get noNoteSelected => 'No note selected';
+
+  @override
+  String get createOrSelectNote =>
+      'Create a new note or select one from the sidebar';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get startWriting => 'Start writing...';
+
+  @override
+  String get splitRight => 'Split Right';
+
+  @override
+  String get splitLeft => 'Split Left';
+
+  @override
+  String get splitUp => 'Split Up';
+
+  @override
+  String get splitDown => 'Split Down';
+
+  @override
+  String get changeView => 'Change View';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get changeViewTitle => 'Open View';
+
+  @override
+  String get notes => 'Notes';
+
+  @override
+  String get tabs => 'Tabs';
+
+  @override
+  String get ready => 'Ready';
+
+  @override
+  String get noVault => 'No Vault';
+
+  @override
+  String notesCount(int count) {
+    return '$count notes';
+  }
+
+  @override
+  String tabsCount(int count) {
+    return '$count tabs';
+  }
+
+  @override
+  String get clearChat => 'Clear Chat';
 
   @override
   String get typeMessage => 'Type a message...';
@@ -248,4 +443,92 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentFailed => 'Agent task failed';
+
+  @override
+  String get newNoteTitle => 'New Note';
+
+  @override
+  String get noteTitle => 'Note title';
+
+  @override
+  String get create => 'Create';
+
+  @override
+  String get comingInPhase4 => 'Coming in Phase 4';
+
+  @override
+  String get gitSyncConfig => 'Git Sync Configuration';
+
+  @override
+  String get webdavConfig => 'WebDAV Configuration';
+
+  @override
+  String get providers => 'Providers';
+
+  @override
+  String get addProvider => 'Add Provider';
+
+  @override
+  String get providerName => 'Provider Name';
+
+  @override
+  String get providerNameHint => 'My OpenAI, Work Azure, etc.';
+
+  @override
+  String get protocol => 'Protocol';
+
+  @override
+  String get baseUrl => 'Base URL';
+
+  @override
+  String get apiKey => 'API Key';
+
+  @override
+  String get leaveEmptyToKeep => 'leave empty to keep current';
+
+  @override
+  String get editProvider => 'Edit Provider';
+
+  @override
+  String get deleteProvider => 'Delete Provider';
+
+  @override
+  String get deleteProviderConfirm => 'Delete provider and all its models?';
+
+  @override
+  String get addCustomModel => 'Add Custom Model';
+
+  @override
+  String get modelId => 'Model ID';
+
+  @override
+  String get displayName => 'Display Name';
+
+  @override
+  String get displayNameHint => 'My Custom Model';
+
+  @override
+  String get refreshModels => 'Refresh Models';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get noProvidersHint =>
+      'No providers configured. Add one to get started.';
+
+  @override
+  String get noModelsFound => 'No models found';
+
+  @override
+  String get modelsRefreshed => 'Found';
+
+  @override
+  String get disabled => 'Disabled';
+
+  @override
+  String get enable => 'Enable';
+
+  @override
+  String get custom => 'Custom';
 }

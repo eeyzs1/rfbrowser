@@ -23,8 +23,30 @@ Thumbs.db
 .pub/
 *.iml
 .idea/
-*.lock
-!pubspec.lock
+pubspec.lock
+coverage/
+.fvm/
+
+# iOS (if added in the future)
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/App.framework/
+**/ios/Flutter/Flutter.framework/
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Runner.xcodeproj/xcuserdata/
+**/ios/Runner.xcworkspace/xcuserdata/
+**/ios/ServiceDefinitions.json
+**/ios/Runner.app/
+
+# macOS (if added in the future)
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral/
+
+# Web (if added in the future)
+**/web/favicon.png
+lib/generated_plugin_registrant.dart
 
 # Android
 **/android/local.properties
@@ -33,6 +55,10 @@ Thumbs.db
 **/android/gradlew
 **/android/gradlew.bat
 **/android/gradle/wrapper/gradle-wrapper.jar
+**/android/.cxx/
+**/android/key.properties
+**/android/**/*.keystore
+**/android/**/*.jks
 
 # Windows
 **/windows/flutter/generated_plugin_registrant.cc

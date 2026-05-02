@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/knowledge_service.dart';
 import '../../data/models/note.dart';
-import '../../data/models/link.dart';
 
 class GraphView extends ConsumerStatefulWidget {
   const GraphView({super.key});
@@ -12,9 +11,7 @@ class GraphView extends ConsumerStatefulWidget {
   ConsumerState<GraphView> createState() => _GraphViewState();
 }
 
-class _GraphViewState extends ConsumerState<GraphView>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _GraphViewState extends ConsumerState<GraphView> {
   Offset _offset = Offset.zero;
   double _scale = 1.0;
   String? _hoveredNode;
@@ -22,26 +19,53 @@ class _GraphViewState extends ConsumerState<GraphView>
   final _graphKey = GlobalKey();
 
   @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 60),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final knowledgeState = ref.watch(knowledgeProvider);
     final theme = Theme.of(context);
     final notes = knowledgeState.notes;
-    final backlinks = knowledgeState.backlinks;
+
+    if (notes.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Icon(Icons.hub, size: 32, color: theme.colorScheme.primary),
+            ),
+            const SizedBox(height: 16),
+            Text('Knowledge Graph', style: theme.textTheme.headlineMedium),
+            const SizedBox(height: 8),
+            Text(
+              'Create notes with [[links]] to see connections',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ),
+      );
+    }
+
+    final allLinks = <GraphLink>[];
+    final seenLinks = <String>{};
+    for (final link in knowledgeState.outlinks) {
+      final key = '${link.sourceId}->${link.targetId}';
+      if (!seenLinks.contains(key)) {
+        seenLinks.add(key);
+        allLinks.add(GraphLink(sourceId: link.sourceId, targetId: link.targetId));
+      }
+    }
+    for (final link in knowledgeState.backlinks) {
+      final key = '${link.sourceId}->${link.targetId}';
+      if (!seenLinks.contains(key)) {
+        seenLinks.add(key);
+        allLinks.add(GraphLink(sourceId: link.sourceId, targetId: link.targetId));
+      }
+    }
 
     return Container(
       color: theme.colorScheme.surface,
@@ -54,11 +78,36 @@ class _GraphViewState extends ConsumerState<GraphView>
                 _offset += details.focalPointDelta;
               });
             },
+            onTapUp: (details) {
+              final notes = ref.read(knowledgeProvider).notes;
+              final size = (_graphKey.currentContext?.findRenderObject() as RenderBox?)?.size ?? Size.zero;
+              final centerX = size.width / 2 + _offset.dx;
+              final centerY = size.height / 2 + _offset.dy;
+              final spacing = 80.0 * _scale;
+              final nodeRadius = 6.0 * _scale;
+
+              String? tappedNotePath;
+              for (var i = 0; i < notes.length; i++) {
+                final angle = (i / notes.length) * 2 * pi;
+                final radius = spacing * (1 + (i % 3) * 0.5);
+                final x = centerX + radius * cos(angle);
+                final y = centerY + radius * sin(angle);
+                final dist = (Offset(x, y) - details.localPosition).distance;
+                if (dist < nodeRadius * 3) {
+                  tappedNotePath = notes[i].filePath;
+                  break;
+                }
+              }
+
+              if (tappedNotePath != null) {
+                ref.read(knowledgeProvider.notifier).openNote(tappedNotePath);
+              }
+            },
             child: CustomPaint(
               key: _graphKey,
               painter: GraphPainter(
                 notes: notes,
-                links: _buildLinks(notes, backlinks),
+                links: allLinks,
                 scale: _scale,
                 offset: _offset,
                 hoveredNode: _hoveredNode,
@@ -69,7 +118,6 @@ class _GraphViewState extends ConsumerState<GraphView>
                 onSurfaceColor: theme.colorScheme.onSurface,
                 hintColor: theme.hintColor,
                 cardColor: theme.cardColor,
-                animation: _controller,
               ),
               size: Size.infinite,
             ),
@@ -140,18 +188,6 @@ class _GraphViewState extends ConsumerState<GraphView>
     );
   }
 
-  List<GraphLink> _buildLinks(List<Note> notes, List<Link> backlinks) {
-    final links = <GraphLink>[];
-    final noteMap = {for (var n in notes) n.id: n};
-    for (final link in backlinks) {
-      final source = noteMap[link.sourceId];
-      final target = noteMap[link.targetId];
-      if (source != null && target != null) {
-        links.add(GraphLink(sourceId: source.id, targetId: target.id));
-      }
-    }
-    return links;
-  }
 }
 
 class GraphLink {
@@ -173,7 +209,6 @@ class GraphPainter extends CustomPainter {
   final Color onSurfaceColor;
   final Color hintColor;
   final Color cardColor;
-  final Animation<double> animation;
 
   GraphPainter({
     required this.notes,
@@ -188,8 +223,7 @@ class GraphPainter extends CustomPainter {
     required this.onSurfaceColor,
     required this.hintColor,
     required this.cardColor,
-    required this.animation,
-  }) : super(repaint: animation);
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -208,7 +242,7 @@ class GraphPainter extends CustomPainter {
 
     final spacing = 80.0 * scale;
     for (var i = 0; i < notes.length; i++) {
-      final angle = (i / notes.length) * 2 * pi + animation.value * 0.01;
+      final angle = (i / notes.length) * 2 * pi;
       final radius = spacing * (1 + (i % 3) * 0.5);
       final x = centerX + radius * cos(angle);
       final y = centerY + radius * sin(angle);
@@ -282,5 +316,11 @@ class GraphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant GraphPainter oldDelegate) => true;
+  bool shouldRepaint(covariant GraphPainter oldDelegate) =>
+      oldDelegate.notes != notes ||
+      oldDelegate.links != links ||
+      oldDelegate.scale != scale ||
+      oldDelegate.offset != offset ||
+      oldDelegate.hoveredNode != hoveredNode ||
+      oldDelegate.selectedNode != selectedNode;
 }
