@@ -19,7 +19,7 @@ import '../pages/graph_page.dart';
 import '../pages/canvas_page.dart';
 import '../pages/settings_page.dart';
 
-enum LayoutPreset { browser, editor, split, graph, canvas }
+enum LayoutPreset { browser, editor, notes, split, graph, canvas }
 
 class MainLayout extends ConsumerStatefulWidget {
   const MainLayout({super.key});
@@ -61,6 +61,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     final mainViewType = switch (preset) {
       LayoutPreset.browser => ViewType.browser,
       LayoutPreset.editor => ViewType.editor,
+      LayoutPreset.notes => ViewType.editor,
       LayoutPreset.graph => ViewType.graph,
       LayoutPreset.canvas => ViewType.canvas,
       LayoutPreset.split => ViewType.browser,
@@ -68,6 +69,17 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
     if (preset == LayoutPreset.split) {
       return _splitPreset;
+    }
+
+    if (preset == LayoutPreset.notes) {
+      return SplitNode.split(
+        id: 'root',
+        direction: SplitDirection.horizontal,
+        children: [
+          SplitNode.leaf(id: 'notes', viewType: ViewType.notes, flex: 3),
+          SplitNode.leaf(id: 'editor', viewType: ViewType.editor, flex: 5),
+        ],
+      );
     }
 
     return SplitNode.split(
@@ -202,6 +214,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           const SizedBox(width: 20),
           _buildPresetButton(Icons.language, 'Browser', LayoutPreset.browser),
           _buildPresetButton(Icons.edit_note, 'Editor', LayoutPreset.editor),
+          _buildPresetButton(Icons.notes, 'Notes', LayoutPreset.notes),
           _buildPresetButton(Icons.vertical_split, 'Split', LayoutPreset.split),
           _buildPresetButton(Icons.hub, 'Graph', LayoutPreset.graph),
           _buildPresetButton(Icons.dashboard, 'Canvas', LayoutPreset.canvas),

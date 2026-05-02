@@ -54,35 +54,6 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
 
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: theme.dividerColor)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.smart_toy, size: 14, color: theme.colorScheme.primary),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  'AI Chat',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, size: 14),
-                onPressed: () => ref.read(aiProvider.notifier).clearMessages(),
-                tooltip: 'Clear Chat',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-              ),
-            ],
-          ),
-        ),
         Expanded(
           child: aiState.messages.isEmpty
               ? Center(
@@ -181,6 +152,25 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                 ),
               ),
               const Spacer(),
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 12),
+                  onPressed: () =>
+                      ref.read(aiProvider.notifier).clearMessages(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 24,
+                    minHeight: 24,
+                  ),
+                  tooltip: 'Clear Chat',
+                  style: IconButton.styleFrom(
+                    backgroundColor: theme.colorScheme.surface,
+                    side: BorderSide(color: theme.dividerColor),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

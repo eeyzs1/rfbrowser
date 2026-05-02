@@ -81,7 +81,23 @@ class VaultNotifier extends Notifier<VaultState> {
         .whereType<VaultConfig>()
         .where((v) => seen.add(v.path))
         .toList();
-    state = state.copyWith(recentVaults: vaults);
+
+    if (vaults.length != vaultsJson.length) {
+      final dedupedJson = vaults.map((v) => jsonEncode(v.toJson())).toList();
+      await prefs.setStringList(_recentVaultsKey, dedupedJson);
+    }
+
+    VaultConfig? currentVault;
+    final currentVaultPath = prefs.getString(_currentVaultKey);
+    if (currentVaultPath != null) {
+      try {
+        currentVault = vaults.firstWhere((v) => v.path == currentVaultPath);
+      } catch (_) {
+        await prefs.remove(_currentVaultKey);
+      }
+    }
+
+    state = state.copyWith(recentVaults: vaults, currentVault: currentVault);
   }
 
   Future<void> openVault(String vaultPath) async {

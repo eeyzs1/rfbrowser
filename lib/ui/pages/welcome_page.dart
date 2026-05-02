@@ -77,52 +77,43 @@ class WelcomePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 ...vaultState.recentVaults.map(
-                  (vault) => Dismissible(
-                    key: ValueKey(vault.path),
-                    direction: DismissDirection.endToStart,
-                    confirmDismiss: (_) =>
-                        _confirmRemoveVault(context, vault.name),
-                    onDismissed: (_) {
-                      ref
-                          .read(vaultProvider.notifier)
-                          .removeFromRecent(vault.path);
-                    },
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 16),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.error,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.delete_outline,
-                        color: theme.colorScheme.onError,
-                      ),
-                    ),
-                    child: Card(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      child: ListTile(
-                        leading: const Icon(Icons.folder),
-                        title: Text(vault.name),
-                        subtitle: Text(vault.path),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _formatDate(vault.lastOpened),
-                              style: theme.textTheme.bodySmall,
+                  (vault) => Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: ListTile(
+                      leading: const Icon(Icons.folder),
+                      title: Text(vault.name),
+                      subtitle: Text(vault.path),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _formatDate(vault.lastOpened),
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: theme.hintColor,
                             ),
-                            const SizedBox(width: 4),
-                            Icon(Icons.swipe, size: 14, color: theme.hintColor),
-                          ],
-                        ),
-                        onTap: () async {
-                          await ref
-                              .read(vaultProvider.notifier)
-                              .openVault(vault.path);
-                          onVaultOpened();
-                        },
+                            onPressed: () =>
+                                _confirmAndRemove(context, ref, vault),
+                            tooltip: l.removeVault,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 28,
+                              minHeight: 28,
+                            ),
+                          ),
+                        ],
                       ),
+                      onTap: () async {
+                        await ref
+                            .read(vaultProvider.notifier)
+                            .openVault(vault.path);
+                        onVaultOpened();
+                      },
                     ),
                   ),
                 ),
@@ -163,32 +154,35 @@ class WelcomePage extends ConsumerWidget {
     );
   }
 
-  Future<bool> _confirmRemoveVault(
+  void _confirmAndRemove(
     BuildContext context,
-    String vaultName,
-  ) async {
+    WidgetRef ref,
+    VaultConfig vault,
+  ) {
     final l = AppLocalizations.of(context)!;
-    final result = await showDialog<bool>(
+    showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l.removeVault),
-        content: Text(l.removeVaultConfirm(vaultName)),
+        content: Text(l.removeVaultConfirm(vault.name)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
+            onPressed: () => Navigator.pop(ctx),
             child: Text(l.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () {
+              Navigator.pop(ctx);
+              ref.read(vaultProvider.notifier).removeFromRecent(vault.path);
+            },
             child: Text(l.remove),
           ),
         ],
       ),
     );
-    return result ?? false;
   }
 
   Future<void> _openVault(BuildContext context, WidgetRef ref) async {
