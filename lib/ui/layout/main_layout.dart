@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/browser_service.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/ai_service.dart';
@@ -29,100 +30,128 @@ class MainLayout extends ConsumerStatefulWidget {
 class _MainLayoutState extends ConsumerState<MainLayout> {
   bool _showCommandBar = false;
   bool _isPreview = false;
-  late SplitNode _rootNode;
+  Set<ViewType> _activePanels = {
+    ViewType.notes,
+    ViewType.browser,
+    ViewType.editor,
+    ViewType.ai,
+  };
 
-  @override
-  void initState() {
-    super.initState();
-    _rootNode = _defaultLayout();
-  }
+  static const Map<ViewType, double> _panelFlex = {
+    ViewType.notes: 2,
+    ViewType.browser: 3,
+    ViewType.editor: 3,
+    ViewType.canvas: 3,
+    ViewType.ai: 2,
+    ViewType.graph: 3,
+    ViewType.backlinks: 2,
+    ViewType.tabs: 2,
+  };
 
-  SplitNode _defaultLayout() => SplitNode.split(
-    id: 'root',
-    direction: SplitDirection.horizontal,
-    children: [
-      SplitNode.leaf(id: 'notes', viewType: ViewType.notes, flex: 2),
-      SplitNode.split(
-        id: 'center',
-        direction: SplitDirection.horizontal,
-        children: [
-          SplitNode.leaf(id: 'browser', viewType: ViewType.browser, flex: 1),
-          SplitNode.leaf(id: 'editor', viewType: ViewType.editor, flex: 1),
-        ],
-        flex: 5,
-      ),
-      SplitNode.leaf(id: 'ai', viewType: ViewType.ai, flex: 2),
-    ],
-  );
+  static const List<ViewType> _panelOrder = [
+    ViewType.notes,
+    ViewType.browser,
+    ViewType.editor,
+    ViewType.canvas,
+    ViewType.ai,
+  ];
 
-  bool _hasViewType(SplitNode node, ViewType vt) {
-    if (node.isLeaf) return node.viewType == vt;
-    return node.children.any((c) => _hasViewType(c, vt));
-  }
-
-  SplitNode _removeViewType(SplitNode node, ViewType vt) {
-    if (node.isLeaf) return node;
-    final newChildren = node.children
-        .where((c) => !_isOnlyLeafWithViewType(c, vt))
-        .map((c) => _removeViewType(c, vt))
-        .where((c) => c.isLeaf || c.children.isNotEmpty)
-        .toList();
-    if (newChildren.isEmpty) {
-      return SplitNode.leaf(
-        id: node.id,
-        viewType: ViewType.editor,
-        flex: node.flex,
-      );
-    }
-    if (newChildren.length == 1) {
-      final only = newChildren.first;
-      return SplitNode.leaf(
-        id: only.id,
-        viewType: only.viewType,
-        flex: node.flex,
-      );
-    }
-    return SplitNode.split(
-      id: node.id,
-      direction: node.direction,
-      children: newChildren,
-      flex: node.flex,
-    );
-  }
-
-  bool _isOnlyLeafWithViewType(SplitNode node, ViewType vt) {
-    if (node.isLeaf) return node.viewType == vt;
-    return node.children.every((c) => _isOnlyLeafWithViewType(c, vt));
-  }
-
-  SplitNode _addViewType(SplitNode node, ViewType vt) {
-    if (!node.isLeaf && node.id == 'root') {
-      final newLeaf = SplitNode.leaf(
-        id: vt.name,
-        viewType: vt,
-        flex: vt == ViewType.ai ? 2 : (vt == ViewType.notes ? 2 : 5),
-      );
-      final insertIndex = vt == ViewType.notes ? 0 : node.children.length;
-      final newChildren = List<SplitNode>.from(node.children);
-      newChildren.insert(insertIndex, newLeaf);
-      return SplitNode.split(
-        id: node.id,
-        direction: node.direction,
-        children: newChildren,
-        flex: node.flex,
-      );
-    }
-    return node;
-  }
+  bool _isActive(ViewType vt) => _activePanels.contains(vt);
 
   void _togglePanel(ViewType vt) {
     setState(() {
-      if (_hasViewType(_rootNode, vt)) {
-        _rootNode = _removeViewType(_rootNode, vt);
+      final next = Set<ViewType>.from(_activePanels);
+      if (next.contains(vt)) {
+        next.remove(vt);
       } else {
-        _rootNode = _addViewType(_rootNode, vt);
+        next.add(vt);
       }
+      _activePanels = next;
     });
+  }
+
+  Set<ViewType> _collectViewTypes(SplitNode node) {
+    final result = <ViewType>{};
+    void walk(SplitNode n) {
+      if (n.isLeaf && n.viewType != null) {
+        result.add(n.viewType!);
+      }
+      for (final c in n.children) {
+        walk(c);
+      }
+    }
+
+    walk(node);
+    return result;
+  }
+
+  void _syncFromTree(SplitNode node) {
+    final types = _collectViewTypes(node);
+    if (types.isEmpty) {
+      setState(() => _activePanels = {});
+      return;
+    }
+    if (!types.containsAll(_activePanels) ||
+        _activePanels.difference(types).isNotEmpty) {
+      setState(() => _activePanels = types);
+    }
+  }
+
+  bool get _hasActivePanels => _activePanels.isNotEmpty;
+
+  SplitNode _buildTree() {
+    final ordered = _panelOrder.where(_isActive).toList();
+    if (ordered.isEmpty) {
+      return SplitNode.leaf(id: 'empty', viewType: ViewType.editor);
+    }
+    if (ordered.length == 1) {
+      return SplitNode.leaf(
+        id: ordered.first.name,
+        viewType: ordered.first,
+        flex: _panelFlex[ordered.first] ?? 3,
+      );
+    }
+    return SplitNode.split(
+      id: 'root',
+      direction: SplitDirection.horizontal,
+      children: ordered
+          .map(
+            (vt) => SplitNode.leaf(
+              id: vt.name,
+              viewType: vt,
+              flex: _panelFlex[vt] ?? 3,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildEmptyState(ThemeData theme) {
+    final l = AppLocalizations.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.dashboard_customize_outlined,
+            size: 64,
+            color: theme.hintColor.withValues(alpha: 0.4),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l?.noResults ?? 'No panels open',
+            style: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Use the toolbar above to open panels',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.hintColor.withValues(alpha: 0.6),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -158,7 +187,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             ref
                 .read(knowledgeProvider.notifier)
                 .createDailyNote(DateTime.now());
-            if (!_hasViewType(_rootNode, ViewType.editor)) {
+            if (!_isActive(ViewType.editor)) {
               _togglePanel(ViewType.editor);
             }
           },
@@ -186,11 +215,15 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                 children: [
                   _buildMenuBar(theme),
                   Expanded(
-                    child: SplitPane(
-                      node: _rootNode,
-                      viewBuilder: _buildView,
-                      onChanged: (node) => setState(() => _rootNode = node),
-                    ),
+                    child: _hasActivePanels
+                        ? SplitPane(
+                            key: ValueKey(_activePanels.hashCode),
+                            node: _buildTree(),
+                            viewBuilder: _buildView,
+                            onChanged: (node) => _syncFromTree(node),
+                            onClose: () => setState(() => _activePanels = {}),
+                          )
+                        : _buildEmptyState(theme),
                   ),
                   _buildStatusBar(theme),
                 ],
@@ -228,53 +261,47 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
   Widget _buildMenuBar(ThemeData theme) {
     return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: theme.appBarTheme.backgroundColor,
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         children: [
-          Icon(Icons.explore, size: 20, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
+          Icon(Icons.explore, size: 18, color: theme.colorScheme.primary),
+          const SizedBox(width: 6),
           Text(
             'RFBrowser',
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: theme.colorScheme.primary,
+              fontSize: 13,
             ),
           ),
-          const SizedBox(width: 20),
-          _buildPanelButton(Icons.description, 'Notes', ViewType.notes),
-          _buildPanelButton(Icons.language, 'Browser', ViewType.browser),
-          _buildPanelButton(Icons.edit_note, 'Editor', ViewType.editor),
-          _buildPanelButton(Icons.dashboard, 'Canvas', ViewType.canvas),
-          _buildPanelButton(Icons.smart_toy, 'AI', ViewType.ai),
+          const SizedBox(width: 12),
+          ..._panelOrder.map(
+            (vt) =>
+                _buildPanelButton(_viewTypeIcon(vt), _viewTypeLabel(vt), vt),
+          ),
           const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.folder_open, size: 18),
-            onPressed: () => ref.read(vaultProvider.notifier).closeVault(),
-            tooltip: 'Switch Vault',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          _buildActionButton(
+            Icons.folder_open,
+            'Switch Vault',
+            () => ref.read(vaultProvider.notifier).closeVault(),
           ),
-          IconButton(
-            icon: const Icon(Icons.search, size: 18),
-            onPressed: () => setState(() => _showCommandBar = true),
-            tooltip: 'Command Bar (Ctrl+K)',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          _buildActionButton(
+            Icons.search,
+            'Search',
+            () => setState(() => _showCommandBar = true),
           ),
-          IconButton(
-            icon: const Icon(Icons.settings, size: 18),
-            onPressed: () => Navigator.push(
+          _buildActionButton(
+            Icons.settings,
+            'Settings',
+            () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             ),
-            tooltip: 'Settings',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
         ],
       ),
@@ -283,38 +310,48 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
   Widget _buildPanelButton(IconData icon, String label, ViewType vt) {
     final theme = Theme.of(context);
-    final isActive = _hasViewType(_rootNode, vt);
+    final active = _isActive(vt);
     return Padding(
-      padding: const EdgeInsets.only(right: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 1),
       child: Material(
-        color: isActive
-            ? theme.colorScheme.primary.withValues(alpha: 0.12)
+        color: active
+            ? theme.colorScheme.primary.withValues(alpha: 0.15)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
           onTap: () => _togglePanel(vt),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: active
+                ? BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: theme.colorScheme.primary,
+                        width: 2,
+                      ),
+                    ),
+                  )
+                : null,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   icon,
                   size: 14,
-                  color: isActive
+                  color: active
                       ? theme.colorScheme.primary
-                      : theme.iconTheme.color,
+                      : theme.iconTheme.color?.withValues(alpha: 0.6),
                 ),
-                const SizedBox(width: 5),
+                const SizedBox(width: 4),
                 Text(
                   label,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 12,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                    color: isActive
+                    fontSize: 11,
+                    fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                    color: active
                         ? theme.colorScheme.primary
-                        : theme.iconTheme.color,
+                        : theme.iconTheme.color?.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -325,13 +362,53 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     );
   }
 
+  Widget _buildActionButton(
+    IconData icon,
+    String tooltip,
+    VoidCallback onPressed,
+  ) {
+    final theme = Theme.of(context);
+    return IconButton(
+      icon: Icon(icon, size: 16, color: theme.iconTheme.color),
+      onPressed: onPressed,
+      tooltip: tooltip,
+      padding: const EdgeInsets.all(4),
+      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+      style: IconButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      ),
+    );
+  }
+
+  String _viewTypeLabel(ViewType vt) => switch (vt) {
+    ViewType.browser => 'Browser',
+    ViewType.editor => 'Editor',
+    ViewType.graph => 'Graph',
+    ViewType.ai => 'AI',
+    ViewType.backlinks => 'Links',
+    ViewType.notes => 'Notes',
+    ViewType.tabs => 'Tabs',
+    ViewType.canvas => 'Canvas',
+  };
+
+  IconData _viewTypeIcon(ViewType vt) => switch (vt) {
+    ViewType.browser => Icons.language,
+    ViewType.editor => Icons.edit_note,
+    ViewType.graph => Icons.hub,
+    ViewType.ai => Icons.smart_toy,
+    ViewType.backlinks => Icons.link,
+    ViewType.notes => Icons.description,
+    ViewType.tabs => Icons.tab,
+    ViewType.canvas => Icons.dashboard,
+  };
+
   Widget _buildStatusBar(ThemeData theme) {
     final browserState = ref.watch(browserProvider);
     final knowledgeState = ref.watch(knowledgeProvider);
     final vaultState = ref.watch(vaultProvider);
     final hasVault = vaultState.currentVault != null;
     return Container(
-      height: 26,
+      height: 24,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: theme.appBarTheme.backgroundColor,
@@ -393,12 +470,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       _createNewNote();
     } else if (lower.contains('new tab')) {
       ref.read(browserProvider.notifier).createTab(url: 'https://www.bing.com');
-      if (!_hasViewType(_rootNode, ViewType.browser)) {
+      if (!_isActive(ViewType.browser)) {
         _togglePanel(ViewType.browser);
       }
     } else if (lower.contains('daily note')) {
       ref.read(knowledgeProvider.notifier).createDailyNote(DateTime.now());
-      if (!_hasViewType(_rootNode, ViewType.editor)) {
+      if (!_isActive(ViewType.editor)) {
         _togglePanel(ViewType.editor);
       }
     } else if (lower.contains('graph')) {
@@ -412,12 +489,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       ref.read(settingsProvider.notifier).toggleDarkMode();
     } else if (lower.contains('research')) {
       ref.read(agentServiceProvider).research(command);
-      if (!_hasViewType(_rootNode, ViewType.ai)) {
+      if (!_isActive(ViewType.ai)) {
         _togglePanel(ViewType.ai);
       }
     } else {
       ref.read(aiProvider.notifier).sendMessage(command);
-      if (!_hasViewType(_rootNode, ViewType.ai)) {
+      if (!_isActive(ViewType.ai)) {
         _togglePanel(ViewType.ai);
       }
     }
@@ -451,7 +528,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     );
     if (title != null && title.isNotEmpty) {
       await ref.read(knowledgeProvider.notifier).createNote(title: title);
-      if (!_hasViewType(_rootNode, ViewType.editor)) {
+      if (!_isActive(ViewType.editor)) {
         _togglePanel(ViewType.editor);
       }
     }

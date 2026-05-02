@@ -1153,6 +1153,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove'**
   String get remove;
+
+  /// No description provided for @alwaysShowWelcomePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Always Show Welcome Page'**
+  String get alwaysShowWelcomePage;
+
+  /// No description provided for @alwaysShowWelcomePageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the welcome page on every launch instead of opening the last vault directly'**
+  String get alwaysShowWelcomePageDesc;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @daysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String daysAgo(int count);
 }
 
 class _AppLocalizationsDelegate

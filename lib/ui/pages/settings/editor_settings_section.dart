@@ -15,6 +15,13 @@ class EditorSettingsSection extends ConsumerWidget {
     return SettingsSection(
       title: l.editorSection,
       children: [
+        SwitchListTile(
+          title: Text(l.alwaysShowWelcomePage),
+          subtitle: Text(l.alwaysShowWelcomePageDesc),
+          value: settings.alwaysShowWelcomePage,
+          onChanged: (v) =>
+              ref.read(settingsProvider.notifier).setAlwaysShowWelcomePage(v),
+        ),
         ListTile(
           title: Text(l.fontSize),
           subtitle: Text('${settings.editorFontSize.toInt()}px'),

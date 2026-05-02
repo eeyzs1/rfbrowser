@@ -22,6 +22,7 @@ class RFBrowserApp extends ConsumerStatefulWidget {
 
 class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
   bool _initialized = false;
+  bool _enteredMainLayout = false;
 
   @override
   void initState() {
@@ -32,7 +33,12 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
   Future<void> _initApp() async {
     await ref.read(settingsProvider.notifier).loadSettings();
     await ref.read(vaultProvider.notifier).loadRecentVaults();
-    if (ref.read(vaultProvider).currentVault != null) {
+    final vaultState = ref.read(vaultProvider);
+    final settings = ref.read(settingsProvider);
+    if (vaultState.currentVault != null) {
+      if (!settings.alwaysShowWelcomePage) {
+        _enteredMainLayout = true;
+      }
       ref.read(knowledgeProvider.notifier).loadAllNotes();
     }
     setState(() => _initialized = true);
@@ -62,6 +68,10 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
       );
     }
 
+    final noVault = ref.watch(vaultProvider).currentVault == null;
+    final showWelcome =
+        noVault || (settings.alwaysShowWelcomePage && !_enteredMainLayout);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'RFBrowser',
@@ -71,9 +81,10 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
       darkTheme: AppTheme.darkTheme(settings),
       themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       locale: RFBrowserApp._resolveLocale(settings.locale),
-      home: ref.watch(vaultProvider).currentVault == null
+      home: showWelcome
           ? WelcomePage(
               onVaultOpened: () {
+                setState(() => _enteredMainLayout = true);
                 ref.read(knowledgeProvider.notifier).loadAllNotes();
               },
             )

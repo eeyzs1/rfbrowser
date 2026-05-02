@@ -190,5 +190,15 @@
       "name": {"type": "String"}
     }
   },
-  "remove": "Remove"
+  "remove": "Remove",
+  "alwaysShowWelcomePage": "Always Show Welcome Page",
+  "alwaysShowWelcomePageDesc": "Show the welcome page on every launch instead of opening the last vault directly",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "daysAgo": "{count} days ago",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  }
 }

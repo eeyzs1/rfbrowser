@@ -190,5 +190,15 @@
       "name": {"type": "String"}
     }
   },
-  "remove": "移除"
+  "remove": "移除",
+  "alwaysShowWelcomePage": "总是显示欢迎页",
+  "alwaysShowWelcomePageDesc": "每次启动时显示欢迎页，而不是直接打开上次的知识库",
+  "today": "今天",
+  "yesterday": "昨天",
+  "daysAgo": "{count} 天前",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  }
 }

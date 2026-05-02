@@ -47,9 +47,12 @@ class VaultState {
     bool? isLoading,
     String? error,
     bool clearError = false,
+    bool clearCurrentVault = false,
   }) {
     return VaultState(
-      currentVault: currentVault ?? this.currentVault,
+      currentVault: clearCurrentVault
+          ? null
+          : (currentVault ?? this.currentVault),
       recentVaults: recentVaults ?? this.recentVaults,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
@@ -79,7 +82,7 @@ class VaultNotifier extends Notifier<VaultState> {
           }
         })
         .whereType<VaultConfig>()
-        .where((v) => seen.add(v.path))
+        .where((v) => seen.add(_normalizePath(v.path)))
         .toList();
 
     if (vaults.length != vaultsJson.length) {
@@ -91,7 +94,9 @@ class VaultNotifier extends Notifier<VaultState> {
     final currentVaultPath = prefs.getString(_currentVaultKey);
     if (currentVaultPath != null) {
       try {
-        currentVault = vaults.firstWhere((v) => v.path == currentVaultPath);
+        currentVault = vaults.firstWhere(
+          (v) => _normalizePath(v.path) == _normalizePath(currentVaultPath),
+        );
       } catch (_) {
         await prefs.remove(_currentVaultKey);
       }
@@ -99,6 +104,9 @@ class VaultNotifier extends Notifier<VaultState> {
 
     state = state.copyWith(recentVaults: vaults, currentVault: currentVault);
   }
+
+  String _normalizePath(String path) =>
+      p.absolute(path).toLowerCase().replaceAll('\\', '/');
 
   Future<void> openVault(String vaultPath) async {
     state = state.copyWith(isLoading: true, clearError: true);
@@ -167,35 +175,53 @@ class VaultNotifier extends Notifier<VaultState> {
 
   Future<void> _saveToRecent(VaultConfig config) async {
     final prefs = await SharedPreferences.getInstance();
-    final vaults = List<VaultConfig>.from(state.recentVaults);
-    vaults.removeWhere((v) => v.path == config.path);
-    vaults.insert(0, config);
-    if (vaults.length > 10) vaults.removeRange(10, vaults.length);
+    final rawJson = prefs.getStringList(_recentVaultsKey) ?? [];
+    final seen = <String>{};
+    final existing = rawJson
+        .map((j) {
+          try {
+            return VaultConfig.fromJson(
+              Map<String, dynamic>.from(jsonDecode(j)),
+            );
+          } catch (_) {
+            return null;
+          }
+        })
+        .whereType<VaultConfig>()
+        .where((v) => seen.add(_normalizePath(v.path)))
+        .toList();
 
-    final vaultsJson = vaults.map((v) => jsonEncode(v.toJson())).toList();
+    existing.removeWhere(
+      (v) => _normalizePath(v.path) == _normalizePath(config.path),
+    );
+    existing.insert(0, config);
+    if (existing.length > 10) existing.removeRange(10, existing.length);
+
+    final vaultsJson = existing.map((v) => jsonEncode(v.toJson())).toList();
     await prefs.setStringList(_recentVaultsKey, vaultsJson);
     await prefs.setString(_currentVaultKey, config.path);
 
-    state = state.copyWith(recentVaults: vaults);
+    state = state.copyWith(recentVaults: existing);
   }
 
   Future<void> closeVault() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_currentVaultKey);
-    state = state.copyWith(currentVault: null);
+    state = state.copyWith(clearCurrentVault: true);
   }
 
   Future<void> removeFromRecent(String vaultPath) async {
     final prefs = await SharedPreferences.getInstance();
     final vaults = List<VaultConfig>.from(state.recentVaults)
-      ..removeWhere((v) => v.path == vaultPath);
+      ..removeWhere((v) => _normalizePath(v.path) == _normalizePath(vaultPath));
 
     final vaultsJson = vaults.map((v) => jsonEncode(v.toJson())).toList();
     await prefs.setStringList(_recentVaultsKey, vaultsJson);
 
-    if (state.currentVault?.path == vaultPath) {
+    if (_normalizePath(state.currentVault?.path ?? '') ==
+        _normalizePath(vaultPath)) {
       await prefs.remove(_currentVaultKey);
-      state = state.copyWith(currentVault: null, recentVaults: vaults);
+      state = state.copyWith(clearCurrentVault: true, recentVaults: vaults);
     } else {
       state = state.copyWith(recentVaults: vaults);
     }

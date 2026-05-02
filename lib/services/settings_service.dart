@@ -35,6 +35,7 @@ class AppSettings {
   final ComponentDensity density;
   final int iconSize;
   final double borderRadius;
+  final bool alwaysShowWelcomePage;
 
   AppSettings({
     this.locale = 'system',
@@ -47,6 +48,7 @@ class AppSettings {
     this.density = ComponentDensity.comfortable,
     this.iconSize = 18,
     this.borderRadius = 8.0,
+    this.alwaysShowWelcomePage = false,
   });
 
   Color get accentColor => Color(accentColorValue);
@@ -84,6 +86,7 @@ class AppSettings {
     ComponentDensity? density,
     int? iconSize,
     double? borderRadius,
+    bool? alwaysShowWelcomePage,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
@@ -96,6 +99,8 @@ class AppSettings {
       density: density ?? this.density,
       iconSize: iconSize ?? this.iconSize,
       borderRadius: borderRadius ?? this.borderRadius,
+      alwaysShowWelcomePage:
+          alwaysShowWelcomePage ?? this.alwaysShowWelcomePage,
     );
   }
 }
@@ -163,6 +168,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
       density: ComponentDensity.values[prefs.getInt('density') ?? 1],
       iconSize: (prefs.getInt('iconSize') ?? 18).clamp(12, 36),
       borderRadius: prefs.getDouble('borderRadius') ?? 8.0,
+      alwaysShowWelcomePage: prefs.getBool('alwaysShowWelcomePage') ?? false,
     );
 
     await _loadProviders(prefs);
@@ -406,6 +412,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('borderRadius', r);
     state = state.copyWith(borderRadius: r);
+  }
+
+  Future<void> setAlwaysShowWelcomePage(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('alwaysShowWelcomePage', value);
+    state = state.copyWith(alwaysShowWelcomePage: value);
   }
 }
 

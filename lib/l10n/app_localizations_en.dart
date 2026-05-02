@@ -545,4 +545,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get remove => 'Remove';
+
+  @override
+  String get alwaysShowWelcomePage => 'Always Show Welcome Page';
+
+  @override
+  String get alwaysShowWelcomePageDesc =>
+      'Show the welcome page on every launch instead of opening the last vault directly';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String daysAgo(int count) {
+    return '$count days ago';
+  }
 }

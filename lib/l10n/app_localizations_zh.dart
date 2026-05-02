@@ -541,4 +541,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get remove => '移除';
+
+  @override
+  String get alwaysShowWelcomePage => '总是显示欢迎页';
+
+  @override
+  String get alwaysShowWelcomePageDesc => '每次启动时显示欢迎页，而不是直接打开上次的知识库';
+
+  @override
+  String get today => '今天';
+
+  @override
+  String get yesterday => '昨天';
+
+  @override
+  String daysAgo(int count) {
+    return '$count 天前';
+  }
 }
