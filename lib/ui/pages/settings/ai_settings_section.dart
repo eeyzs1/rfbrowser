@@ -395,10 +395,9 @@ class AISettingsSection extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // ignore: deprecated_member_use
                     DropdownButtonFormField<ApiProtocol>(
                       key: ValueKey(selectedProtocol),
-                      value: selectedProtocol,
+                      initialValue: selectedProtocol,
                       decoration: InputDecoration(labelText: l.protocol),
                       items: ApiProtocol.values
                           .map(
@@ -497,10 +496,9 @@ class AISettingsSection extends ConsumerWidget {
                       decoration: InputDecoration(labelText: l.providerName),
                     ),
                     const SizedBox(height: 12),
-                    // ignore: deprecated_member_use
                     DropdownButtonFormField<ApiProtocol>(
                       key: ValueKey(selectedProtocol),
-                      value: selectedProtocol,
+                      initialValue: selectedProtocol,
                       decoration: InputDecoration(labelText: l.protocol),
                       items: ApiProtocol.values
                           .map(

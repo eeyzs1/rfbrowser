@@ -575,10 +575,9 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // ignore: deprecated_member_use
                     DropdownButtonFormField<ApiProtocol>(
                       key: ValueKey(selectedProtocol),
-                      value: selectedProtocol,
+                      initialValue: selectedProtocol,
                       decoration: const InputDecoration(labelText: 'Protocol'),
                       items: ApiProtocol.values
                           .map(
