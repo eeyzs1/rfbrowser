@@ -168,4 +168,6 @@ class VaultNotifier extends Notifier<VaultState> {
   }
 }
 
-final vaultProvider = NotifierProvider<VaultNotifier, VaultState>(VaultNotifier.new);
+final vaultProvider = NotifierProvider<VaultNotifier, VaultState>(
+  VaultNotifier.new,
+);

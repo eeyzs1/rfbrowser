@@ -124,7 +124,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
     if (_activeConfig == null) return null;
     try {
       return _models.firstWhere(
-        (m) => m.id == _activeConfig!.modelId && m.providerId == _activeConfig!.providerId,
+        (m) =>
+            m.id == _activeConfig!.modelId &&
+            m.providerId == _activeConfig!.providerId,
       );
     } catch (_) {
       return null;
@@ -174,7 +176,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
     if (json != null) {
       try {
         final list = jsonDecode(json) as List;
-        _providers = list.map((e) => AIProvider.fromJson(e as Map<String, dynamic>)).toList();
+        _providers = list
+            .map((e) => AIProvider.fromJson(e as Map<String, dynamic>))
+            .toList();
       } catch (_) {
         _providers = [];
       }
@@ -186,7 +190,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
     if (json != null) {
       try {
         final list = jsonDecode(json) as List;
-        _models = list.map((e) => AIModel.fromJson(e as Map<String, dynamic>)).toList();
+        _models = list
+            .map((e) => AIModel.fromJson(e as Map<String, dynamic>))
+            .toList();
       } catch (_) {
         _models = [];
       }
@@ -234,7 +240,10 @@ class SettingsNotifier extends Notifier<AppSettings> {
   Future<void> _saveActiveConfig() async {
     final prefs = await SharedPreferences.getInstance();
     if (_activeConfig != null) {
-      await prefs.setString('ai_active_config', jsonEncode(_activeConfig!.toJson()));
+      await prefs.setString(
+        'ai_active_config',
+        jsonEncode(_activeConfig!.toJson()),
+      );
     } else {
       await prefs.remove('ai_active_config');
     }
@@ -247,7 +256,10 @@ class SettingsNotifier extends Notifier<AppSettings> {
   Future<void> addProvider(AIProvider provider) async {
     _providers.removeWhere((p) => p.id == provider.id);
     if (provider.protocol.requiresApiKey && provider.apiKey != null) {
-      await _secureStorage.write(key: 'ai_key_${provider.id}', value: provider.apiKey);
+      await _secureStorage.write(
+        key: 'ai_key_${provider.id}',
+        value: provider.apiKey,
+      );
     }
     _providers.add(provider.copyWith(apiKey: null));
     await _saveProviders();
@@ -258,7 +270,10 @@ class SettingsNotifier extends Notifier<AppSettings> {
     final idx = _providers.indexWhere((p) => p.id == provider.id);
     if (idx >= 0) {
       if (provider.protocol.requiresApiKey && provider.apiKey != null) {
-        await _secureStorage.write(key: 'ai_key_${provider.id}', value: provider.apiKey);
+        await _secureStorage.write(
+          key: 'ai_key_${provider.id}',
+          value: provider.apiKey,
+        );
       }
       _providers[idx] = provider.copyWith(apiKey: null);
       await _saveProviders();
@@ -288,7 +303,10 @@ class SettingsNotifier extends Notifier<AppSettings> {
     }
   }
 
-  Future<void> setModelsForProvider(String providerId, List<AIModel> newModels) async {
+  Future<void> setModelsForProvider(
+    String providerId,
+    List<AIModel> newModels,
+  ) async {
     _models.removeWhere((m) => m.providerId == providerId && !m.isCustom);
     _models.addAll(newModels);
     await _saveModels();
@@ -296,7 +314,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
   }
 
   Future<void> addCustomModel(AIModel model) async {
-    _models.removeWhere((m) => m.id == model.id && m.providerId == model.providerId);
+    _models.removeWhere(
+      (m) => m.id == model.id && m.providerId == model.providerId,
+    );
     _models.add(model);
     await _saveModels();
     state = state.copyWith();
@@ -304,7 +324,8 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> removeModel(String modelId, String providerId) async {
     _models.removeWhere((m) => m.id == modelId && m.providerId == providerId);
-    if (_activeConfig?.modelId == modelId && _activeConfig?.providerId == providerId) {
+    if (_activeConfig?.modelId == modelId &&
+        _activeConfig?.providerId == providerId) {
       _activeConfig = null;
       await _saveActiveConfig();
     }

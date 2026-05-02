@@ -14,7 +14,8 @@ class CanvasView extends ConsumerStatefulWidget {
 }
 
 class _CanvasViewState extends ConsumerState<CanvasView> {
-  final TransformationController _transformController = TransformationController();
+  final TransformationController _transformController =
+      TransformationController();
   String? _selectedCardId;
   String? _connectingFromCardId;
   Offset? _connectingPreviewEnd;
@@ -75,19 +76,21 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
                           color: theme.colorScheme.primary,
                           previewFrom: _connectingFromCardId != null
                               ? canvasData.cards
-                                  .where((c) => c.id == _connectingFromCardId)
-                                  .firstOrNull
-                                  ?.center
+                                    .where((c) => c.id == _connectingFromCardId)
+                                    .firstOrNull
+                                    ?.center
                               : null,
                           previewTo: _connectingPreviewEnd,
                         ),
                       ),
-                      ...canvasData.cards.map((card) => _buildCard(
-                            theme,
-                            card,
-                            isSelected: card.id == _selectedCardId,
-                            isConnecting: card.id == _connectingFromCardId,
-                          )),
+                      ...canvasData.cards.map(
+                        (card) => _buildCard(
+                          theme,
+                          card,
+                          isSelected: card.id == _selectedCardId,
+                          isConnecting: card.id == _connectingFromCardId,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -120,10 +123,12 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
           ),
           const SizedBox(width: 12),
           _toolbarButton(theme, Icons.add, 'Add Card', () {
-            final offset = _screenToCanvas(Offset(
-              MediaQuery.of(context).size.width / 2,
-              MediaQuery.of(context).size.height / 2,
-            ));
+            final offset = _screenToCanvas(
+              Offset(
+                MediaQuery.of(context).size.width / 2,
+                MediaQuery.of(context).size.height / 2,
+              ),
+            );
             _addCardAt(offset);
           }),
           _toolbarButton(theme, Icons.link, 'Connect', () {
@@ -153,7 +158,12 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
     );
   }
 
-  Widget _toolbarButton(ThemeData theme, IconData icon, String tooltip, VoidCallback onTap) {
+  Widget _toolbarButton(
+    ThemeData theme,
+    IconData icon,
+    String tooltip,
+    VoidCallback onTap,
+  ) {
     return IconButton(
       icon: Icon(icon, size: 14),
       onPressed: onTap,
@@ -164,7 +174,12 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
     );
   }
 
-  Widget _buildCard(ThemeData theme, CanvasCard card, {required bool isSelected, required bool isConnecting}) {
+  Widget _buildCard(
+    ThemeData theme,
+    CanvasCard card, {
+    required bool isSelected,
+    required bool isConnecting,
+  }) {
     final cardColor = Color(card.colorValue);
     final isDark = theme.brightness == Brightness.dark;
     final bgColor = isDark
@@ -173,8 +188,8 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
     final borderColor = isSelected
         ? theme.colorScheme.primary
         : isConnecting
-            ? theme.colorScheme.tertiary
-            : theme.dividerColor;
+        ? theme.colorScheme.tertiary
+        : theme.dividerColor;
 
     return Positioned(
       left: card.x,
@@ -182,17 +197,22 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
       child: GestureDetector(
         onPanUpdate: (details) {
           final scale = _transformController.value[0];
-          ref.read(canvasProvider.notifier).updateCardInMemory(card.copyWith(
-            x: card.x + details.delta.dx / scale,
-            y: card.y + details.delta.dy / scale,
-          ));
+          ref
+              .read(canvasProvider.notifier)
+              .updateCardInMemory(
+                card.copyWith(
+                  x: card.x + details.delta.dx / scale,
+                  y: card.y + details.delta.dy / scale,
+                ),
+              );
         },
         onPanEnd: (_) {
           setState(() => _selectedCardId = card.id);
           ref.read(canvasProvider.notifier).persist();
         },
         onTap: () {
-          if (_connectingFromCardId != null && _connectingFromCardId != card.id) {
+          if (_connectingFromCardId != null &&
+              _connectingFromCardId != card.id) {
             _createConnection(_connectingFromCardId!, card.id);
             setState(() => _connectingFromCardId = null);
           } else {
@@ -234,14 +254,20 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   decoration: BoxDecoration(
                     color: cardColor.withValues(alpha: 0.15),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(7)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(7),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Icon(card.type.icon, size: 12, color: theme.hintColor),
                       if (card.noteId != null) ...[
                         const SizedBox(width: 2),
-                        Icon(Icons.link, size: 10, color: theme.colorScheme.primary),
+                        Icon(
+                          Icons.link,
+                          size: 10,
+                          color: theme.colorScheme.primary,
+                        ),
                       ],
                       const SizedBox(width: 4),
                       Expanded(
@@ -257,10 +283,16 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
                       if (isSelected)
                         GestureDetector(
                           onTap: () {
-                            ref.read(canvasProvider.notifier).removeCard(card.id);
+                            ref
+                                .read(canvasProvider.notifier)
+                                .removeCard(card.id);
                             setState(() => _selectedCardId = null);
                           },
-                          child: Icon(Icons.close, size: 12, color: theme.hintColor),
+                          child: Icon(
+                            Icons.close,
+                            size: 12,
+                            color: theme.hintColor,
+                          ),
                         ),
                     ],
                   ),
@@ -275,9 +307,13 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
                   GestureDetector(
                     onPanUpdate: (details) {
                       final scale = _transformController.value[0];
-                      final newW = (card.width + details.delta.dx / scale).clamp(120.0, 800.0);
-                      final newH = (card.height + details.delta.dy / scale).clamp(80.0, 600.0);
-                      ref.read(canvasProvider.notifier).updateCardInMemory(
+                      final newW = (card.width + details.delta.dx / scale)
+                          .clamp(120.0, 800.0);
+                      final newH = (card.height + details.delta.dy / scale)
+                          .clamp(80.0, 600.0);
+                      ref
+                          .read(canvasProvider.notifier)
+                          .updateCardInMemory(
                             card.copyWith(width: newW, height: newH),
                           );
                     },
@@ -287,10 +323,16 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
                     child: Container(
                       height: 12,
                       decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.vertical(bottom: Radius.circular(7)),
+                        borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(7),
+                        ),
                       ),
                       child: Center(
-                        child: Icon(Icons.drag_handle, size: 10, color: theme.hintColor),
+                        child: Icon(
+                          Icons.drag_handle,
+                          size: 10,
+                          color: theme.hintColor,
+                        ),
                       ),
                     ),
                   ),
@@ -305,48 +347,65 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
   Widget _buildCardContent(ThemeData theme, CanvasCard card) {
     return switch (card.type) {
       CanvasCardType.note => Text(
-          card.content.isEmpty ? 'Empty note' : card.content,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: card.content.isEmpty ? theme.hintColor : null,
-            fontSize: 12,
-          ),
-          maxLines: null,
-          overflow: TextOverflow.fade,
+        card.content.isEmpty ? 'Empty note' : card.content,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: card.content.isEmpty ? theme.hintColor : null,
+          fontSize: 12,
         ),
+        maxLines: null,
+        overflow: TextOverflow.fade,
+      ),
       CanvasCardType.text => Text(
-          card.content.isEmpty ? 'Type something...' : card.content,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: card.content.isEmpty ? theme.hintColor : null,
-          ),
+        card.content.isEmpty ? 'Type something...' : card.content,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: card.content.isEmpty ? theme.hintColor : null,
         ),
-      CanvasCardType.image => card.content.isEmpty
-          ? Center(
-              child: Icon(Icons.image, size: 32, color: theme.hintColor.withValues(alpha: 0.3)),
-            )
-          : Center(
-              child: Icon(Icons.image, size: 32, color: theme.colorScheme.primary),
-            ),
-      CanvasCardType.link => Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.open_in_browser, size: 20, color: theme.colorScheme.primary),
-            const SizedBox(height: 4),
-            Text(
-              card.content.isEmpty ? 'No URL' : card.content,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontSize: 11,
+      ),
+      CanvasCardType.image =>
+        card.content.isEmpty
+            ? Center(
+                child: Icon(
+                  Icons.image,
+                  size: 32,
+                  color: theme.hintColor.withValues(alpha: 0.3),
+                ),
+              )
+            : Center(
+                child: Icon(
+                  Icons.image,
+                  size: 32,
+                  color: theme.colorScheme.primary,
+                ),
               ),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
+      CanvasCardType.link => Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.open_in_browser,
+            size: 20,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            card.content.isEmpty ? 'No URL' : card.content,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontSize: 11,
             ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+          ),
+        ],
+      ),
     };
   }
 
-  void _showContextMenu(BuildContext context, TapUpDetails details, CanvasData canvasData) {
+  void _showContextMenu(
+    BuildContext context,
+    TapUpDetails details,
+    CanvasData canvasData,
+  ) {
     final canvasPos = _screenToCanvas(details.globalPosition);
 
     showMenu<String>(
@@ -358,16 +417,79 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
         details.globalPosition.dy + 1,
       ),
       items: [
-        PopupMenuItem(value: 'note', child: Row(children: [Icon(Icons.description, size: 16), const SizedBox(width: 8), const Text('Note Card')])),
-        PopupMenuItem(value: 'text', child: Row(children: [Icon(Icons.text_fields, size: 16), const SizedBox(width: 8), const Text('Text Card')])),
-        PopupMenuItem(value: 'image', child: Row(children: [Icon(Icons.image, size: 16), const SizedBox(width: 8), const Text('Image Card')])),
-        PopupMenuItem(value: 'link', child: Row(children: [Icon(Icons.link, size: 16), const SizedBox(width: 8), const Text('Link Card')])),
+        PopupMenuItem(
+          value: 'note',
+          child: Row(
+            children: [
+              Icon(Icons.description, size: 16),
+              const SizedBox(width: 8),
+              const Text('Note Card'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'text',
+          child: Row(
+            children: [
+              Icon(Icons.text_fields, size: 16),
+              const SizedBox(width: 8),
+              const Text('Text Card'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'image',
+          child: Row(
+            children: [
+              Icon(Icons.image, size: 16),
+              const SizedBox(width: 8),
+              const Text('Image Card'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'link',
+          child: Row(
+            children: [
+              Icon(Icons.link, size: 16),
+              const SizedBox(width: 8),
+              const Text('Link Card'),
+            ],
+          ),
+        ),
         const PopupMenuDivider(),
-        PopupMenuItem(value: 'fromNote', child: Row(children: [Icon(Icons.library_books, size: 16), const SizedBox(width: 8), const Text('From Knowledge Note')])),
+        PopupMenuItem(
+          value: 'fromNote',
+          child: Row(
+            children: [
+              Icon(Icons.library_books, size: 16),
+              const SizedBox(width: 8),
+              const Text('From Knowledge Note'),
+            ],
+          ),
+        ),
         if (_selectedCardId != null) ...[
           const PopupMenuDivider(),
-          PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit, size: 16), const SizedBox(width: 8), const Text('Edit Card')])),
-          PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete, size: 16, color: Colors.red), const SizedBox(width: 8), const Text('Delete Card')])),
+          PopupMenuItem(
+            value: 'edit',
+            child: Row(
+              children: [
+                Icon(Icons.edit, size: 16),
+                const SizedBox(width: 8),
+                const Text('Edit Card'),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(Icons.delete, size: 16, color: Colors.red),
+                const SizedBox(width: 8),
+                const Text('Delete Card'),
+              ],
+            ),
+          ),
         ],
       ],
     ).then((value) {
@@ -449,7 +571,9 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
                     width: 280,
                     height: 200,
                     title: note.title,
-                    content: note.content.length > 500 ? '${note.content.substring(0, 500)}...' : note.content,
+                    content: note.content.length > 500
+                        ? '${note.content.substring(0, 500)}...'
+                        : note.content,
                     noteId: note.id,
                   );
                   ref.read(canvasProvider.notifier).addCard(card);
@@ -515,7 +639,11 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
                     CanvasCardType.link => 'URL',
                   },
                 ),
-                maxLines: card.type == CanvasCardType.note || card.type == CanvasCardType.text ? 5 : 1,
+                maxLines:
+                    card.type == CanvasCardType.note ||
+                        card.type == CanvasCardType.text
+                    ? 5
+                    : 1,
               ),
             ],
           ),
@@ -527,7 +655,9 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
           ),
           FilledButton(
             onPressed: () {
-              ref.read(canvasProvider.notifier).updateCard(
+              ref
+                  .read(canvasProvider.notifier)
+                  .updateCard(
                     card.copyWith(
                       title: titleController.text.trim(),
                       content: contentController.text.trim(),
@@ -571,10 +701,12 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
     final transform = _transformController.value;
     final inverse = Matrix4.inverted(transform);
     final translated = screenPos.translate(0, 36);
-    final x = inverse.entry(0, 0) * translated.dx +
+    final x =
+        inverse.entry(0, 0) * translated.dx +
         inverse.entry(0, 1) * translated.dy +
         inverse.entry(0, 3);
-    final y = inverse.entry(1, 0) * translated.dx +
+    final y =
+        inverse.entry(1, 0) * translated.dx +
         inverse.entry(1, 1) * translated.dy +
         inverse.entry(1, 3);
     return Offset(x, y);
@@ -681,11 +813,23 @@ class _ConnectionPainter extends CustomPainter {
         ..color = color.withValues(alpha: 0.4)
         ..strokeWidth = 2
         ..style = PaintingStyle.stroke;
-      _drawBezierLine(canvas, previewFrom!, previewTo!, previewPaint, arrowPaint);
+      _drawBezierLine(
+        canvas,
+        previewFrom!,
+        previewTo!,
+        previewPaint,
+        arrowPaint,
+      );
     }
   }
 
-  void _drawBezierLine(Canvas canvas, Offset from, Offset to, Paint paint, Paint arrowPaint) {
+  void _drawBezierLine(
+    Canvas canvas,
+    Offset from,
+    Offset to,
+    Paint paint,
+    Paint arrowPaint,
+  ) {
     final dx = (to.dx - from.dx).abs();
     final dy = (to.dy - from.dy).abs();
     final cp = math.max(dx, dy) * 0.4;

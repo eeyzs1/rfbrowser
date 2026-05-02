@@ -44,22 +44,22 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
 
     if (!_initialized) {
       return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.explore, size: 64, color: Colors.blue.shade400),
-              const SizedBox(height: 16),
-              const CircularProgressIndicator(),
-            ],
+        debugShowCheckedModeBanner: false,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.explore, size: 64, color: Colors.blue.shade400),
+                const SizedBox(height: 16),
+                const CircularProgressIndicator(),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
     }
 
     return MaterialApp(

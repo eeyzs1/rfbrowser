@@ -4,10 +4,7 @@ import 'dart:math' as math;
 class ColorPickerDialog extends StatefulWidget {
   final Color initialColor;
 
-  const ColorPickerDialog({
-    super.key,
-    required this.initialColor,
-  });
+  const ColorPickerDialog({super.key, required this.initialColor});
 
   static Future<Color?> show(BuildContext context, Color initialColor) {
     return showDialog<Color>(
@@ -98,10 +95,14 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               GestureDetector(
-                onPanDown: (details) =>
-                    _onWheelInteraction(details.localPosition, const Size(240, 240)),
-                onPanUpdate: (details) =>
-                    _onWheelInteraction(details.localPosition, const Size(240, 240)),
+                onPanDown: (details) => _onWheelInteraction(
+                  details.localPosition,
+                  const Size(240, 240),
+                ),
+                onPanUpdate: (details) => _onWheelInteraction(
+                  details.localPosition,
+                  const Size(240, 240),
+                ),
                 child: CustomPaint(
                   size: const Size(240, 240),
                   painter: _ColorWheelPainter(
@@ -245,7 +246,12 @@ class _ColorWheelPainter extends CustomPainter {
     _drawSvThumb(canvas, center, innerRadius);
   }
 
-  void _drawHueRing(Canvas canvas, Offset center, double outerR, double innerR) {
+  void _drawHueRing(
+    Canvas canvas,
+    Offset center,
+    double outerR,
+    double innerR,
+  ) {
     const steps = 360;
     for (var i = 0; i < steps; i++) {
       final startAngle = (i - 90) * math.pi / 180;
@@ -298,7 +304,12 @@ class _ColorWheelPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawHueThumb(Canvas canvas, Offset center, double outerR, double innerR) {
+  void _drawHueThumb(
+    Canvas canvas,
+    Offset center,
+    double outerR,
+    double innerR,
+  ) {
     final angle = (hue - 90) * math.pi / 180;
     final thumbR = (outerR + innerR) / 2;
     final thumbX = center.dx + thumbR * math.cos(angle);

@@ -134,7 +134,9 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     if (note != null) {
       await repo.deleteNote(relativePath);
       await _indexStore.removeNote(note.id);
-      final remaining = state.notes.where((n) => n.filePath != relativePath).toList();
+      final remaining = state.notes
+          .where((n) => n.filePath != relativePath)
+          .toList();
       _linkResolver?.rebuildTitleIndex(remaining);
       state = state.copyWith(
         notes: remaining,
@@ -215,5 +217,6 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
 
 final indexStoreProvider = Provider<IndexStore>((ref) => IndexStore());
 
-final knowledgeProvider =
-    NotifierProvider<KnowledgeNotifier, KnowledgeState>(KnowledgeNotifier.new);
+final knowledgeProvider = NotifierProvider<KnowledgeNotifier, KnowledgeState>(
+  KnowledgeNotifier.new,
+);

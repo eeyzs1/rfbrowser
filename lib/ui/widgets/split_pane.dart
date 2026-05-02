@@ -11,12 +11,9 @@ class SplitNode {
   final double? flex;
   final ViewType? viewType;
 
-  const SplitNode.leaf({
-    required this.id,
-    required this.viewType,
-    this.flex,
-  })  : direction = null,
-        children = const [];
+  const SplitNode.leaf({required this.id, required this.viewType, this.flex})
+    : direction = null,
+      children = const [];
 
   const SplitNode.split({
     required this.id,
@@ -28,13 +25,13 @@ class SplitNode {
   bool get isLeaf => viewType != null;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        if (direction != null) 'direction': direction!.index,
-        if (viewType != null) 'viewType': viewType!.index,
-        if (flex != null) 'flex': flex,
-        if (children.isNotEmpty)
-          'children': children.map((c) => c.toJson()).toList(),
-      };
+    'id': id,
+    if (direction != null) 'direction': direction!.index,
+    if (viewType != null) 'viewType': viewType!.index,
+    if (flex != null) 'flex': flex,
+    if (children.isNotEmpty)
+      'children': children.map((c) => c.toJson()).toList(),
+  };
 
   factory SplitNode.fromJson(Map<String, dynamic> json) {
     if (json['viewType'] != null) {
@@ -92,9 +89,7 @@ class _SplitPaneState extends State<SplitPane> {
     return Column(
       children: [
         _buildTabBar(),
-        Expanded(
-          child: widget.viewBuilder(context, widget.node.viewType!),
-        ),
+        Expanded(child: widget.viewBuilder(context, widget.node.viewType!)),
       ],
     );
   }
@@ -117,8 +112,11 @@ class _SplitPaneState extends State<SplitPane> {
           ),
           child: Row(
             children: [
-              Icon(_viewTypeIcon(vt),
-                  size: 13, color: theme.colorScheme.primary),
+              Icon(
+                _viewTypeIcon(vt),
+                size: 13,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 5),
               Flexible(
                 child: Text(
@@ -140,8 +138,10 @@ class _SplitPaneState extends State<SplitPane> {
                     icon: Icon(Icons.close, size: 12, color: theme.hintColor),
                     onPressed: widget.onClose,
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 18, minHeight: 18),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
                     tooltip: 'Close',
                   ),
                 ),
@@ -186,11 +186,13 @@ class _SplitPaneState extends State<SplitPane> {
     if (action == 'change_view') {
       _showViewTypePicker().then((vt) {
         if (vt != null) {
-          widget.onChanged(SplitNode.leaf(
-            id: widget.node.id,
-            viewType: vt,
-            flex: widget.node.flex,
-          ));
+          widget.onChanged(
+            SplitNode.leaf(
+              id: widget.node.id,
+              viewType: vt,
+              flex: widget.node.flex,
+            ),
+          );
         }
       });
       return;
@@ -232,15 +234,18 @@ class _SplitPaneState extends State<SplitPane> {
       flex: 1,
     );
 
-    final children =
-        insertBefore ? [newLeaf, currentLeaf] : [currentLeaf, newLeaf];
+    final children = insertBefore
+        ? [newLeaf, currentLeaf]
+        : [currentLeaf, newLeaf];
 
-    widget.onChanged(SplitNode.split(
-      id: node.id,
-      direction: newDirection,
-      children: children,
-      flex: node.flex,
-    ));
+    widget.onChanged(
+      SplitNode.split(
+        id: node.id,
+        direction: newDirection,
+        children: children,
+        flex: node.flex,
+      ),
+    );
   }
 
   Future<ViewType?> _showViewTypePicker() {
@@ -276,8 +281,7 @@ class _SplitPaneState extends State<SplitPane> {
             ? constraints.maxWidth
             : constraints.maxHeight;
 
-        final totalFlex =
-            children.fold(0.0, (sum, c) => sum + (c.flex ?? 1));
+        final totalFlex = children.fold(0.0, (sum, c) => sum + (c.flex ?? 1));
         final dividerCount = children.length - 1;
         final dividerTotal = dividerCount * 12.0;
         _cachedAvailableSize = totalSize - dividerTotal;
@@ -285,13 +289,15 @@ class _SplitPaneState extends State<SplitPane> {
         final List<Widget> paneChildren = [];
         for (var i = 0; i < children.length; i++) {
           if (i > 0) {
-            paneChildren.add(_Divider(
-              key: ValueKey('divider_$i'),
-              isHorizontal: isHorizontal,
-              onDragStart: (globalPos) => _handleDragStart(i, globalPos),
-              onDragUpdate: (globalPos) => _handleDragUpdate(i, globalPos),
-              onDoubleTap: () => _handleDividerDoubleTap(i),
-            ));
+            paneChildren.add(
+              _Divider(
+                key: ValueKey('divider_$i'),
+                isHorizontal: isHorizontal,
+                onDragStart: (globalPos) => _handleDragStart(i, globalPos),
+                onDragUpdate: (globalPos) => _handleDragUpdate(i, globalPos),
+                onDoubleTap: () => _handleDividerDoubleTap(i),
+              ),
+            );
           }
 
           final childSize =
@@ -321,8 +327,9 @@ class _SplitPaneState extends State<SplitPane> {
 
   void _handleDragStart(int childIndex, double globalPos) {
     _dragStartGlobal = globalPos;
-    _dragStartFlexValues =
-        widget.node.children.map((c) => c.flex ?? 1).toList();
+    _dragStartFlexValues = widget.node.children
+        .map((c) => c.flex ?? 1)
+        .toList();
   }
 
   void _handleDragUpdate(int childIndex, double globalPos) {
@@ -340,22 +347,27 @@ class _SplitPaneState extends State<SplitPane> {
 
     final flexDelta = pixelDelta * totalFlex / _cachedAvailableSize;
 
-    final newLeftFlex =
-        (leftFlex + flexDelta).clamp(totalFlex * 0.1, totalFlex * 0.9);
+    final newLeftFlex = (leftFlex + flexDelta).clamp(
+      totalFlex * 0.1,
+      totalFlex * 0.9,
+    );
     final newRightFlex = totalFlex - newLeftFlex;
 
     final newChildren = List<SplitNode>.from(children);
-    newChildren[childIndex - 1] =
-        _copyWithFlex(children[childIndex - 1], newLeftFlex);
-    newChildren[childIndex] =
-        _copyWithFlex(children[childIndex], newRightFlex);
+    newChildren[childIndex - 1] = _copyWithFlex(
+      children[childIndex - 1],
+      newLeftFlex,
+    );
+    newChildren[childIndex] = _copyWithFlex(children[childIndex], newRightFlex);
 
-    widget.onChanged(SplitNode.split(
-      id: widget.node.id,
-      direction: widget.node.direction,
-      children: newChildren,
-      flex: widget.node.flex,
-    ));
+    widget.onChanged(
+      SplitNode.split(
+        id: widget.node.id,
+        direction: widget.node.direction,
+        children: newChildren,
+        flex: widget.node.flex,
+      ),
+    );
   }
 
   void _handleDividerDoubleTap(int childIndex) {
@@ -366,23 +378,27 @@ class _SplitPaneState extends State<SplitPane> {
     newChildren[childIndex - 1] = _copyWithFlex(children[childIndex - 1], 1);
     newChildren[childIndex] = _copyWithFlex(children[childIndex], 1);
 
-    widget.onChanged(SplitNode.split(
-      id: widget.node.id,
-      direction: widget.node.direction,
-      children: newChildren,
-      flex: widget.node.flex,
-    ));
+    widget.onChanged(
+      SplitNode.split(
+        id: widget.node.id,
+        direction: widget.node.direction,
+        children: newChildren,
+        flex: widget.node.flex,
+      ),
+    );
   }
 
   void _handleChildChanged(int index, SplitNode updated) {
     final newChildren = List<SplitNode>.from(widget.node.children);
     newChildren[index] = updated;
-    widget.onChanged(SplitNode.split(
-      id: widget.node.id,
-      direction: widget.node.direction,
-      children: newChildren,
-      flex: widget.node.flex,
-    ));
+    widget.onChanged(
+      SplitNode.split(
+        id: widget.node.id,
+        direction: widget.node.direction,
+        children: newChildren,
+        flex: widget.node.flex,
+      ),
+    );
   }
 
   void _handleChildClose(int index) {
@@ -394,26 +410,32 @@ class _SplitPaneState extends State<SplitPane> {
     } else if (newChildren.length == 1) {
       final remaining = newChildren.first;
       if (remaining.isLeaf) {
-        widget.onChanged(SplitNode.leaf(
-          id: remaining.id,
-          viewType: remaining.viewType,
-          flex: widget.node.flex,
-        ));
+        widget.onChanged(
+          SplitNode.leaf(
+            id: remaining.id,
+            viewType: remaining.viewType,
+            flex: widget.node.flex,
+          ),
+        );
       } else {
-        widget.onChanged(SplitNode.split(
-          id: remaining.id,
-          direction: remaining.direction,
-          children: remaining.children,
-          flex: widget.node.flex,
-        ));
+        widget.onChanged(
+          SplitNode.split(
+            id: remaining.id,
+            direction: remaining.direction,
+            children: remaining.children,
+            flex: widget.node.flex,
+          ),
+        );
       }
     } else {
-      widget.onChanged(SplitNode.split(
-        id: widget.node.id,
-        direction: widget.node.direction,
-        children: newChildren,
-        flex: widget.node.flex,
-      ));
+      widget.onChanged(
+        SplitNode.split(
+          id: widget.node.id,
+          direction: widget.node.direction,
+          children: newChildren,
+          flex: widget.node.flex,
+        ),
+      );
     }
   }
 
@@ -430,26 +452,26 @@ class _SplitPaneState extends State<SplitPane> {
   }
 
   String _viewTypeLabel(ViewType vt) => switch (vt) {
-        ViewType.browser => 'Browser',
-        ViewType.editor => 'Editor',
-        ViewType.graph => 'Graph',
-        ViewType.ai => 'AI Chat',
-        ViewType.backlinks => 'Backlinks',
-        ViewType.notes => 'Notes',
-        ViewType.tabs => 'Tabs',
-        ViewType.canvas => 'Canvas',
-      };
+    ViewType.browser => 'Browser',
+    ViewType.editor => 'Editor',
+    ViewType.graph => 'Graph',
+    ViewType.ai => 'AI Chat',
+    ViewType.backlinks => 'Backlinks',
+    ViewType.notes => 'Notes',
+    ViewType.tabs => 'Tabs',
+    ViewType.canvas => 'Canvas',
+  };
 
   IconData _viewTypeIcon(ViewType vt) => switch (vt) {
-        ViewType.browser => Icons.language,
-        ViewType.editor => Icons.edit_note,
-        ViewType.graph => Icons.hub,
-        ViewType.ai => Icons.smart_toy,
-        ViewType.backlinks => Icons.link,
-        ViewType.notes => Icons.description,
-        ViewType.tabs => Icons.tab,
-        ViewType.canvas => Icons.dashboard,
-      };
+    ViewType.browser => Icons.language,
+    ViewType.editor => Icons.edit_note,
+    ViewType.graph => Icons.hub,
+    ViewType.ai => Icons.smart_toy,
+    ViewType.backlinks => Icons.link,
+    ViewType.notes => Icons.description,
+    ViewType.tabs => Icons.tab,
+    ViewType.canvas => Icons.dashboard,
+  };
 }
 
 class _Divider extends StatefulWidget {

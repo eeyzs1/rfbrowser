@@ -113,7 +113,8 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                       onTap: () => ref
                           .read(knowledgeProvider.notifier)
                           .openNote(note.filePath),
-                      onDelete: () => _confirmDeleteNote(note.title, note.filePath),
+                      onDelete: () =>
+                          _confirmDeleteNote(note.title, note.filePath),
                     );
                   },
                 ),

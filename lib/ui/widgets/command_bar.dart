@@ -71,12 +71,14 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       final title = result['title'] as String? ?? '';
       final filePath = result['file_path'] as String? ?? '';
       final note = notes.where((n) => n.id == noteId).firstOrNull;
-      results.add(_SearchResult(
-        title: title,
-        filePath: filePath,
-        tags: note?.tags ?? [],
-        sourceUrl: note?.sourceUrl,
-      ));
+      results.add(
+        _SearchResult(
+          title: title,
+          filePath: filePath,
+          tags: note?.tags ?? [],
+          sourceUrl: note?.sourceUrl,
+        ),
+      );
     }
 
     if (mounted) {
@@ -93,7 +95,9 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     if (text.isEmpty) return;
 
     if (_results.isNotEmpty && _selectedIndex < _results.length) {
-      ref.read(knowledgeProvider.notifier).openNote(_results[_selectedIndex].filePath);
+      ref
+          .read(knowledgeProvider.notifier)
+          .openNote(_results[_selectedIndex].filePath);
       widget.onClose();
       return;
     }
@@ -120,7 +124,9 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       widget.onClose();
     } else {
       final resultIndex = index - _commandResults.length;
-      ref.read(knowledgeProvider.notifier).openNote(_results[resultIndex].filePath);
+      ref
+          .read(knowledgeProvider.notifier)
+          .openNote(_results[resultIndex].filePath);
       widget.onClose();
     }
   }
@@ -128,7 +134,9 @@ class _CommandBarState extends ConsumerState<CommandBar> {
   List<_CommandDef> get _commandResults {
     final query = _controller.text.trim().toLowerCase();
     if (query.isEmpty) return _commands;
-    return _commands.where((c) => c.label.toLowerCase().contains(query)).toList();
+    return _commands
+        .where((c) => c.label.toLowerCase().contains(query))
+        .toList();
   }
 
   @override
@@ -206,7 +214,8 @@ class _CommandBarState extends ConsumerState<CommandBar> {
               child: ListView.builder(
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(vertical: 4),
-                itemCount: (showCommands ? commands.length : 0) + _results.length,
+                itemCount:
+                    (showCommands ? commands.length : 0) + _results.length,
                 itemBuilder: (context, index) {
                   if (showCommands && index < commands.length) {
                     final cmd = commands[index];
@@ -218,7 +227,9 @@ class _CommandBarState extends ConsumerState<CommandBar> {
                       () => _selectItem(globalIndex),
                     );
                   }
-                  final resultIndex = showCommands ? index - commands.length : index;
+                  final resultIndex = showCommands
+                      ? index - commands.length
+                      : index;
                   final globalIndex = index;
                   if (resultIndex < _results.length) {
                     final result = _results[resultIndex];
@@ -272,7 +283,11 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       dense: true,
       selected: isSelected,
       selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-      leading: Icon(Icons.description, size: 16, color: theme.colorScheme.primary),
+      leading: Icon(
+        Icons.description,
+        size: 16,
+        color: theme.colorScheme.primary,
+      ),
       title: Row(
         children: [
           Expanded(
@@ -292,13 +307,18 @@ class _CommandBarState extends ConsumerState<CommandBar> {
               padding: const EdgeInsets.only(top: 2),
               child: Wrap(
                 spacing: 4,
-                children: result.tags.take(3).map((tag) => Text(
-                  '#$tag',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 10,
-                    color: theme.colorScheme.primary,
-                  ),
-                )).toList(),
+                children: result.tags
+                    .take(3)
+                    .map(
+                      (tag) => Text(
+                        '#$tag',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 10,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             )
           : null,

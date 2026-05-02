@@ -34,10 +34,7 @@ class TabGroupSidebar extends ConsumerWidget {
                 onPressed: () => _showNewGroupDialog(context, ref),
                 tooltip: 'New Group',
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 28,
-                  minHeight: 28,
-                ),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               ),
             ],
           ),
@@ -63,8 +60,7 @@ class TabGroupSidebar extends ConsumerWidget {
             children: [
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, size: 20),
-                onPressed: () =>
-                    ref.read(browserProvider.notifier).createTab(),
+                onPressed: () => ref.read(browserProvider.notifier).createTab(),
                 tooltip: 'New Tab',
               ),
               const SizedBox(width: 4),

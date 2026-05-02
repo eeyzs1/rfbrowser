@@ -36,7 +36,11 @@ class _GraphViewState extends ConsumerState<GraphView> {
                 color: theme.colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: Icon(Icons.hub, size: 32, color: theme.colorScheme.primary),
+              child: Icon(
+                Icons.hub,
+                size: 32,
+                color: theme.colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 16),
             Text('Knowledge Graph', style: theme.textTheme.headlineMedium),
@@ -56,14 +60,18 @@ class _GraphViewState extends ConsumerState<GraphView> {
       final key = '${link.sourceId}->${link.targetId}';
       if (!seenLinks.contains(key)) {
         seenLinks.add(key);
-        allLinks.add(GraphLink(sourceId: link.sourceId, targetId: link.targetId));
+        allLinks.add(
+          GraphLink(sourceId: link.sourceId, targetId: link.targetId),
+        );
       }
     }
     for (final link in knowledgeState.backlinks) {
       final key = '${link.sourceId}->${link.targetId}';
       if (!seenLinks.contains(key)) {
         seenLinks.add(key);
-        allLinks.add(GraphLink(sourceId: link.sourceId, targetId: link.targetId));
+        allLinks.add(
+          GraphLink(sourceId: link.sourceId, targetId: link.targetId),
+        );
       }
     }
 
@@ -80,7 +88,10 @@ class _GraphViewState extends ConsumerState<GraphView> {
             },
             onTapUp: (details) {
               final notes = ref.read(knowledgeProvider).notes;
-              final size = (_graphKey.currentContext?.findRenderObject() as RenderBox?)?.size ?? Size.zero;
+              final size =
+                  (_graphKey.currentContext?.findRenderObject() as RenderBox?)
+                      ?.size ??
+                  Size.zero;
               final centerX = size.width / 2 + _offset.dx;
               final centerY = size.height / 2 + _offset.dy;
               final spacing = 80.0 * _scale;
@@ -187,7 +198,6 @@ class _GraphViewState extends ConsumerState<GraphView> {
       ),
     );
   }
-
 }
 
 class GraphLink {

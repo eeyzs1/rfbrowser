@@ -56,17 +56,21 @@ class AIState {
       messages: messages ?? this.messages,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
-      activeProvider: clearProvider ? null : (activeProvider ?? this.activeProvider),
+      activeProvider: clearProvider
+          ? null
+          : (activeProvider ?? this.activeProvider),
       activeModel: clearModel ? null : (activeModel ?? this.activeModel),
     );
   }
 }
 
 class AINotifier extends Notifier<AIState> {
-  final Dio _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 120),
-  ));
+  final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 120),
+    ),
+  );
 
   @override
   AIState build() {
@@ -81,22 +85,18 @@ class AINotifier extends Notifier<AIState> {
       final provider = settings.activeProvider;
       final model = settings.activeModel;
       if (provider != null && model != null) {
-        state = state.copyWith(
-          activeProvider: provider,
-          activeModel: model,
-        );
+        state = state.copyWith(activeProvider: provider, activeModel: model);
       }
     }
   }
 
   void setActiveModel(AIProvider provider, AIModel model) {
-    ref.read(settingsProvider.notifier).setActiveConfig(
+    ref
+        .read(settingsProvider.notifier)
+        .setActiveConfig(
           ActiveAIConfig(providerId: provider.id, modelId: model.id),
         );
-    state = state.copyWith(
-      activeProvider: provider,
-      activeModel: model,
-    );
+    state = state.copyWith(activeProvider: provider, activeModel: model);
   }
 
   Future<void> sendMessage(
@@ -106,8 +106,11 @@ class AINotifier extends Notifier<AIState> {
   }) async {
     if (state.isLoading) return;
 
-    final provider = state.activeProvider ?? ref.read(settingsProvider.notifier).activeProvider;
-    final model = state.activeModel ?? ref.read(settingsProvider.notifier).activeModel;
+    final provider =
+        state.activeProvider ??
+        ref.read(settingsProvider.notifier).activeProvider;
+    final model =
+        state.activeModel ?? ref.read(settingsProvider.notifier).activeModel;
 
     if (provider == null || model == null) {
       state = state.copyWith(
@@ -117,17 +120,24 @@ class AINotifier extends Notifier<AIState> {
     }
 
     if (provider.protocol.requiresApiKey) {
-      final apiKey = await ref.read(settingsProvider.notifier).getApiKeyForProvider(provider.id);
+      final apiKey = await ref
+          .read(settingsProvider.notifier)
+          .getApiKeyForProvider(provider.id);
       if (apiKey == null || apiKey.isEmpty) {
         state = state.copyWith(
-          error: 'API key not set for "${provider.name}". Please configure it in Settings.',
+          error:
+              'API key not set for "${provider.name}". Please configure it in Settings.',
         );
         return;
       }
     }
 
     final userMsg = ChatMessage(role: 'user', content: userMessage);
-    final streamingMsg = ChatMessage(role: 'assistant', content: '', isStreaming: true);
+    final streamingMsg = ChatMessage(
+      role: 'assistant',
+      content: '',
+      isStreaming: true,
+    );
     state = state.copyWith(
       messages: [...state.messages, userMsg, streamingMsg],
       isLoading: true,
@@ -137,7 +147,9 @@ class AINotifier extends Notifier<AIState> {
     try {
       final messages = _buildMessages(systemPrompt, context);
       final apiKey = provider.protocol.requiresApiKey
-          ? await ref.read(settingsProvider.notifier).getApiKeyForProvider(provider.id)
+          ? await ref
+                .read(settingsProvider.notifier)
+                .getApiKeyForProvider(provider.id)
           : null;
 
       if (provider.protocol == ApiProtocol.ollama) {
@@ -175,7 +187,10 @@ class AINotifier extends Notifier<AIState> {
               final delta = _extractStreamDelta(json, provider.protocol);
               if (delta != null) {
                 buffer.write(delta);
-                _updateLastAssistantMessage(buffer.toString(), isStreaming: true);
+                _updateLastAssistantMessage(
+                  buffer.toString(),
+                  isStreaming: true,
+                );
               }
             } catch (_) {}
           }
@@ -193,18 +208,21 @@ class AINotifier extends Notifier<AIState> {
     }
   }
 
-  void _updateLastAssistantMessage(String content, {required bool isStreaming}) {
+  void _updateLastAssistantMessage(
+    String content, {
+    required bool isStreaming,
+  }) {
     final messages = List<ChatMessage>.from(state.messages);
     for (int i = messages.length - 1; i >= 0; i--) {
       if (messages[i].role == 'assistant') {
-        messages[i] = messages[i].copyWith(content: content, isStreaming: isStreaming);
+        messages[i] = messages[i].copyWith(
+          content: content,
+          isStreaming: isStreaming,
+        );
         break;
       }
     }
-    state = state.copyWith(
-      messages: messages,
-      isLoading: isStreaming,
-    );
+    state = state.copyWith(messages: messages, isLoading: isStreaming);
   }
 
   void _removeLastAssistantMessage() {
@@ -226,7 +244,10 @@ class AINotifier extends Notifier<AIState> {
     state = state.copyWith(clearError: true);
   }
 
-  List<Map<String, dynamic>> _buildMessages(String? systemPrompt, String? context) {
+  List<Map<String, dynamic>> _buildMessages(
+    String? systemPrompt,
+    String? context,
+  ) {
     final messages = <Map<String, dynamic>>[];
     final systemContent = <String>[];
     if (systemPrompt != null) systemContent.add(systemPrompt);
@@ -345,9 +366,13 @@ class AINotifier extends Notifier<AIState> {
       if (data is Map) {
         switch (protocol) {
           case ApiProtocol.openaiCompatible:
-            return data['error']?['message'] as String? ?? e.message ?? 'Unknown error';
+            return data['error']?['message'] as String? ??
+                e.message ??
+                'Unknown error';
           case ApiProtocol.anthropic:
-            return data['error']?['message'] as String? ?? e.message ?? 'Unknown error';
+            return data['error']?['message'] as String? ??
+                e.message ??
+                'Unknown error';
           case ApiProtocol.ollama:
             return data['error'] as String? ?? e.message ?? 'Unknown error';
         }

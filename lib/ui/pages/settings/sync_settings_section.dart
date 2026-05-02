@@ -54,10 +54,7 @@ class SyncSettingsSection extends ConsumerWidget {
           labelText: l.serverUrl,
           hintText: 'https://dav.example.com/',
         ),
-        DialogFieldConfig(
-          key: 'username',
-          labelText: l.username,
-        ),
+        DialogFieldConfig(key: 'username', labelText: l.username),
         DialogFieldConfig(
           key: 'password',
           labelText: l.password,

@@ -16,10 +16,7 @@ class AboutSection extends StatelessWidget {
           title: Text('RFBrowser'),
           subtitle: Text('v0.2.0 - AI-Powered Knowledge Browser'),
         ),
-        ListTile(
-          title: Text(l.license),
-          subtitle: const Text('MIT License'),
-        ),
+        ListTile(title: Text(l.license), subtitle: const Text('MIT License')),
       ],
     );
   }

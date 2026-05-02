@@ -8,18 +8,18 @@ enum CanvasCardType {
   text;
 
   String get label => switch (this) {
-        CanvasCardType.note => 'Note',
-        CanvasCardType.image => 'Image',
-        CanvasCardType.link => 'Link',
-        CanvasCardType.text => 'Text',
-      };
+    CanvasCardType.note => 'Note',
+    CanvasCardType.image => 'Image',
+    CanvasCardType.link => 'Link',
+    CanvasCardType.text => 'Text',
+  };
 
   IconData get icon => switch (this) {
-        CanvasCardType.note => Icons.description,
-        CanvasCardType.image => Icons.image,
-        CanvasCardType.link => Icons.link,
-        CanvasCardType.text => Icons.text_fields,
-      };
+    CanvasCardType.note => Icons.description,
+    CanvasCardType.image => Icons.image,
+    CanvasCardType.link => Icons.link,
+    CanvasCardType.text => Icons.text_fields,
+  };
 }
 
 class CanvasCard {
@@ -76,30 +76,30 @@ class CanvasCard {
   Offset get center => Offset(x + width / 2, y + height / 2);
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'type': type.index,
-        'x': x,
-        'y': y,
-        'width': width,
-        'height': height,
-        'title': title,
-        'content': content,
-        'colorValue': colorValue,
-        'noteId': noteId,
-      };
+    'id': id,
+    'type': type.index,
+    'x': x,
+    'y': y,
+    'width': width,
+    'height': height,
+    'title': title,
+    'content': content,
+    'colorValue': colorValue,
+    'noteId': noteId,
+  };
 
   factory CanvasCard.fromJson(Map<String, dynamic> json) => CanvasCard(
-        id: json['id'] as String,
-        type: CanvasCardType.values[json['type'] as int],
-        x: (json['x'] as num).toDouble(),
-        y: (json['y'] as num).toDouble(),
-        width: (json['width'] as num).toDouble(),
-        height: (json['height'] as num).toDouble(),
-        title: json['title'] as String? ?? '',
-        content: json['content'] as String? ?? '',
-        colorValue: json['colorValue'] as int? ?? 0xFFFFFFFF,
-        noteId: json['noteId'] as String?,
-      );
+    id: json['id'] as String,
+    type: CanvasCardType.values[json['type'] as int],
+    x: (json['x'] as num).toDouble(),
+    y: (json['y'] as num).toDouble(),
+    width: (json['width'] as num).toDouble(),
+    height: (json['height'] as num).toDouble(),
+    title: json['title'] as String? ?? '',
+    content: json['content'] as String? ?? '',
+    colorValue: json['colorValue'] as int? ?? 0xFFFFFFFF,
+    noteId: json['noteId'] as String?,
+  );
 }
 
 enum ConnectionSide {
@@ -109,11 +109,11 @@ enum ConnectionSide {
   right;
 
   Offset point(Rect rect) => switch (this) {
-        ConnectionSide.top => Offset(rect.center.dx, rect.top),
-        ConnectionSide.bottom => Offset(rect.center.dx, rect.bottom),
-        ConnectionSide.left => Offset(rect.left, rect.center.dy),
-        ConnectionSide.right => Offset(rect.right, rect.center.dy),
-      };
+    ConnectionSide.top => Offset(rect.center.dx, rect.top),
+    ConnectionSide.bottom => Offset(rect.center.dx, rect.bottom),
+    ConnectionSide.left => Offset(rect.left, rect.center.dy),
+    ConnectionSide.right => Offset(rect.right, rect.center.dy),
+  };
 }
 
 class CanvasConnection {
@@ -134,30 +134,29 @@ class CanvasConnection {
   });
 
   CanvasConnection copyWith({String? label}) => CanvasConnection(
-        id: id,
-        fromCardId: fromCardId,
-        toCardId: toCardId,
-        fromSide: fromSide,
-        toSide: toSide,
-        label: label ?? this.label,
-      );
+    id: id,
+    fromCardId: fromCardId,
+    toCardId: toCardId,
+    fromSide: fromSide,
+    toSide: toSide,
+    label: label ?? this.label,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'fromCardId': fromCardId,
-        'toCardId': toCardId,
-        'fromSide': fromSide.index,
-        'toSide': toSide.index,
-        'label': label,
-      };
+    'id': id,
+    'fromCardId': fromCardId,
+    'toCardId': toCardId,
+    'fromSide': fromSide.index,
+    'toSide': toSide.index,
+    'label': label,
+  };
 
   factory CanvasConnection.fromJson(Map<String, dynamic> json) =>
       CanvasConnection(
         id: json['id'] as String,
         fromCardId: json['fromCardId'] as String,
         toCardId: json['toCardId'] as String,
-        fromSide:
-            ConnectionSide.values[json['fromSide'] as int? ?? 3],
+        fromSide: ConnectionSide.values[json['fromSide'] as int? ?? 3],
         toSide: ConnectionSide.values[json['toSide'] as int? ?? 2],
         label: json['label'] as String? ?? '',
       );
@@ -167,10 +166,7 @@ class CanvasData {
   final List<CanvasCard> cards;
   final List<CanvasConnection> connections;
 
-  const CanvasData({
-    this.cards = const [],
-    this.connections = const [],
-  });
+  const CanvasData({this.cards = const [], this.connections = const []});
 
   CanvasData copyWith({
     List<CanvasCard>? cards,
@@ -183,21 +179,24 @@ class CanvasData {
   }
 
   String toJsonString() => jsonEncode({
-        'cards': cards.map((c) => c.toJson()).toList(),
-        'connections': connections.map((c) => c.toJson()).toList(),
-      });
+    'cards': cards.map((c) => c.toJson()).toList(),
+    'connections': connections.map((c) => c.toJson()).toList(),
+  });
 
   factory CanvasData.fromJsonString(String json) {
     try {
       final data = jsonDecode(json) as Map<String, dynamic>;
       return CanvasData(
-        cards: (data['cards'] as List?)
+        cards:
+            (data['cards'] as List?)
                 ?.map((e) => CanvasCard.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
-        connections: (data['connections'] as List?)
+        connections:
+            (data['connections'] as List?)
                 ?.map(
-                    (e) => CanvasConnection.fromJson(e as Map<String, dynamic>))
+                  (e) => CanvasConnection.fromJson(e as Map<String, dynamic>),
+                )
                 .toList() ??
             [],
       );

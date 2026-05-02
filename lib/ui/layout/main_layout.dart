@@ -40,24 +40,22 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   }
 
   SplitNode get _splitPreset => SplitNode.split(
-        id: 'root',
+    id: 'root',
+    direction: SplitDirection.horizontal,
+    children: [
+      SplitNode.leaf(id: 'notes', viewType: ViewType.notes, flex: 2),
+      SplitNode.split(
+        id: 'center',
         direction: SplitDirection.horizontal,
         children: [
-          SplitNode.leaf(id: 'notes', viewType: ViewType.notes, flex: 2),
-          SplitNode.split(
-            id: 'center',
-            direction: SplitDirection.horizontal,
-            children: [
-              SplitNode.leaf(
-                  id: 'browser', viewType: ViewType.browser, flex: 1),
-              SplitNode.leaf(
-                  id: 'editor', viewType: ViewType.editor, flex: 1),
-            ],
-            flex: 5,
-          ),
-          SplitNode.leaf(id: 'ai', viewType: ViewType.ai, flex: 2),
+          SplitNode.leaf(id: 'browser', viewType: ViewType.browser, flex: 1),
+          SplitNode.leaf(id: 'editor', viewType: ViewType.editor, flex: 1),
         ],
-      );
+        flex: 5,
+      ),
+      SplitNode.leaf(id: 'ai', viewType: ViewType.ai, flex: 2),
+    ],
+  );
 
   SplitNode _presetFor(LayoutPreset preset) {
     final mainViewType = switch (preset) {
@@ -105,11 +103,17 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           const SingleActivator(LogicalKeyboardKey.keyB, control: true): () {
             setState(() => _rootNode = _presetFor(LayoutPreset.browser));
           },
-          const SingleActivator(LogicalKeyboardKey.keyG, control: true, shift: true): () {
+          const SingleActivator(
+            LogicalKeyboardKey.keyG,
+            control: true,
+            shift: true,
+          ): () {
             setState(() => _rootNode = _presetFor(LayoutPreset.graph));
           },
           const SingleActivator(LogicalKeyboardKey.keyD, control: true): () {
-            ref.read(knowledgeProvider.notifier).createDailyNote(DateTime.now());
+            ref
+                .read(knowledgeProvider.notifier)
+                .createDailyNote(DateTime.now());
             setState(() => _rootNode = _presetFor(LayoutPreset.editor));
           },
           const SingleActivator(LogicalKeyboardKey.keyP, control: true): () {
@@ -196,15 +200,11 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             ),
           ),
           const SizedBox(width: 20),
-          _buildPresetButton(
-              Icons.language, 'Browser', LayoutPreset.browser),
-          _buildPresetButton(
-              Icons.edit_note, 'Editor', LayoutPreset.editor),
-          _buildPresetButton(
-              Icons.vertical_split, 'Split', LayoutPreset.split),
+          _buildPresetButton(Icons.language, 'Browser', LayoutPreset.browser),
+          _buildPresetButton(Icons.edit_note, 'Editor', LayoutPreset.editor),
+          _buildPresetButton(Icons.vertical_split, 'Split', LayoutPreset.split),
           _buildPresetButton(Icons.hub, 'Graph', LayoutPreset.graph),
-          _buildPresetButton(
-              Icons.dashboard, 'Canvas', LayoutPreset.canvas),
+          _buildPresetButton(Icons.dashboard, 'Canvas', LayoutPreset.canvas),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.search, size: 18),
@@ -228,8 +228,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     );
   }
 
-  Widget _buildPresetButton(
-      IconData icon, String label, LayoutPreset preset) {
+  Widget _buildPresetButton(IconData icon, String label, LayoutPreset preset) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(right: 2),
@@ -328,9 +327,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     if (lower.contains('new note')) {
       _createNewNote();
     } else if (lower.contains('new tab')) {
-      ref
-          .read(browserProvider.notifier)
-          .createTab(url: 'https://www.bing.com');
+      ref.read(browserProvider.notifier).createTab(url: 'https://www.bing.com');
       setState(() => _rootNode = _presetFor(LayoutPreset.browser));
     } else if (lower.contains('daily note')) {
       ref.read(knowledgeProvider.notifier).createDailyNote(DateTime.now());

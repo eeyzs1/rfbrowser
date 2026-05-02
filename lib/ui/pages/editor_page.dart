@@ -30,7 +30,9 @@ class _EditorViewState extends ConsumerState<EditorView> {
     if (!_isDirty && _lastLoadedNoteId != null) {
       setState(() => _isDirty = true);
     }
-    ref.read(knowledgeProvider.notifier).updateActiveNoteContent(_controller.text);
+    ref
+        .read(knowledgeProvider.notifier)
+        .updateActiveNoteContent(_controller.text);
   }
 
   @override
@@ -277,7 +279,8 @@ class _EditorViewState extends ConsumerState<EditorView> {
 }
 
 class _WikiLinkSyntax extends md.InlineSyntax {
-  _WikiLinkSyntax() : super(r'\[\[([^\]#\|]+)(?:#([^\|\]]+))?(?:\|([^\]]+))?\]\]');
+  _WikiLinkSyntax()
+    : super(r'\[\[([^\]#\|]+)(?:#([^\|\]]+))?(?:\|([^\]]+))?\]\]');
 
   @override
   bool onMatch(md.InlineParser parser, Match match) {
@@ -463,12 +466,9 @@ class _EmbedBuilder extends MarkdownElementBuilder {
 }
 
 md.ExtensionSet _rfbrowserExtensionSet() {
-  return md.ExtensionSet(
-    md.ExtensionSet.gitHubWeb.blockSyntaxes,
-    [
-      ...md.ExtensionSet.gitHubWeb.inlineSyntaxes,
-      _WikiLinkSyntax(),
-      _EmbedSyntax(),
-    ],
-  );
+  return md.ExtensionSet(md.ExtensionSet.gitHubWeb.blockSyntaxes, [
+    ...md.ExtensionSet.gitHubWeb.inlineSyntaxes,
+    _WikiLinkSyntax(),
+    _EmbedSyntax(),
+  ]);
 }

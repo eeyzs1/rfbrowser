@@ -4,10 +4,7 @@ class SelectionOption<T> {
   final T value;
   final String label;
 
-  const SelectionOption({
-    required this.value,
-    required this.label,
-  });
+  const SelectionOption({required this.value, required this.label});
 }
 
 Future<T?> showSelectionDialog<T>({
@@ -103,10 +100,7 @@ class _InputDialog extends StatelessWidget {
       content: TextField(
         controller: controller,
         obscureText: obscureText,
-        decoration: InputDecoration(
-          hintText: hintText,
-          labelText: labelText,
-        ),
+        decoration: InputDecoration(hintText: hintText, labelText: labelText),
       ),
       actions: [
         TextButton(

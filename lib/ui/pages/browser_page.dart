@@ -175,7 +175,8 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                   },
                   shouldOverrideUrlLoading:
                       (controller, navigationAction) async {
-                        final url = navigationAction.request.url?.toString() ?? '';
+                        final url =
+                            navigationAction.request.url?.toString() ?? '';
                         if (url.startsWith('file://') ||
                             url.startsWith('javascript:') ||
                             url.startsWith('data:')) {
@@ -228,9 +229,9 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   void _clipPage(BrowserTab tab) async {
     final controller = _controllers[tab.id];
     if (controller == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Page not loaded yet')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Page not loaded yet')));
       return;
     }
 
@@ -241,11 +242,23 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
         children: [
           SimpleDialogOption(
             onPressed: () => Navigator.pop(ctx, 'full'),
-            child: const Row(children: [Icon(Icons.description, size: 16), SizedBox(width: 8), Text('Full Page')]),
+            child: const Row(
+              children: [
+                Icon(Icons.description, size: 16),
+                SizedBox(width: 8),
+                Text('Full Page'),
+              ],
+            ),
           ),
           SimpleDialogOption(
             onPressed: () => Navigator.pop(ctx, 'bookmark'),
-            child: const Row(children: [Icon(Icons.bookmark, size: 16), SizedBox(width: 8), Text('Bookmark')]),
+            child: const Row(
+              children: [
+                Icon(Icons.bookmark, size: 16),
+                SizedBox(width: 8),
+                Text('Bookmark'),
+              ],
+            ),
           ),
         ],
       ),
@@ -255,36 +268,45 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
 
     try {
       if (choice == 'bookmark') {
-        await ref.read(knowledgeProvider.notifier).clipToNote(
+        await ref
+            .read(knowledgeProvider.notifier)
+            .clipToNote(
               url: tab.url,
               title: tab.title,
-              content: '# ${tab.title}\n\n> Source: [${tab.title}](${tab.url})\n',
+              content:
+                  '# ${tab.title}\n\n> Source: [${tab.title}](${tab.url})\n',
             );
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Bookmarked: ${tab.title}')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Bookmarked: ${tab.title}')));
         }
       } else {
         final html = await controller.getHtml() ?? '';
-        final text = await controller.evaluateJavascript(source: 'document.body.innerText') ?? '';
+        final text =
+            await controller.evaluateJavascript(
+              source: 'document.body.innerText',
+            ) ??
+            '';
         final textContent = text is String ? text : text.toString();
-        await ref.read(knowledgeProvider.notifier).clipToNote(
+        await ref
+            .read(knowledgeProvider.notifier)
+            .clipToNote(
               url: tab.url,
               title: tab.title,
               content: textContent.isNotEmpty ? textContent : html,
             );
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Clipped: ${tab.title}')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Clipped: ${tab.title}')));
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Clip failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Clip failed: $e')));
       }
     }
   }

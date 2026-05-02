@@ -21,45 +21,66 @@ class AISettingsSection extends ConsumerWidget {
 
     final children = <Widget>[];
 
-    children.add(ListTile(
-      title: Text(l.activeModel),
-      subtitle: Text(
-        activeModel != null && activeProvider != null
-            ? '${activeModel.displayName} via ${activeProvider.name}'
-            : l.notSet,
+    children.add(
+      ListTile(
+        title: Text(l.activeModel),
+        subtitle: Text(
+          activeModel != null && activeProvider != null
+              ? '${activeModel.displayName} via ${activeProvider.name}'
+              : l.notSet,
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _showActiveModelDialog(context, ref, l),
       ),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => _showActiveModelDialog(context, ref, l),
-    ));
+    );
 
     children.add(const Divider(height: 1));
 
-    children.add(Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Row(
-        children: [
-          Text(l.providers, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-          const Spacer(),
-          TextButton.icon(
-            onPressed: () => _showAddProviderDialog(context, ref, l),
-            icon: const Icon(Icons.add, size: 16),
-            label: Text(l.addProvider),
-          ),
-        ],
+    children.add(
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        child: Row(
+          children: [
+            Text(
+              l.providers,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: () => _showAddProviderDialog(context, ref, l),
+              icon: const Icon(Icons.add, size: 16),
+              label: Text(l.addProvider),
+            ),
+          ],
+        ),
       ),
-    ));
+    );
 
     if (providers.isEmpty) {
-      children.add(Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          l.noProvidersHint,
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+      children.add(
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            l.noProvidersHint,
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          ),
         ),
-      ));
+      );
     } else {
       for (final provider in providers) {
-        children.add(_buildProviderTile(context, ref, theme, l, provider, activeProvider, activeModel));
+        children.add(
+          _buildProviderTile(
+            context,
+            ref,
+            theme,
+            l,
+            provider,
+            activeProvider,
+            activeModel,
+          ),
+        );
       }
     }
 
@@ -76,7 +97,9 @@ class AISettingsSection extends ConsumerWidget {
     AIModel? activeModel,
   ) {
     final isActive = activeProvider?.id == provider.id;
-    final models = ref.read(settingsProvider.notifier).modelsForProvider(provider.id);
+    final models = ref
+        .read(settingsProvider.notifier)
+        .modelsForProvider(provider.id);
 
     return ExpansionTile(
       initiallyExpanded: isActive,
@@ -123,10 +146,14 @@ class AISettingsSection extends ConsumerWidget {
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, size: 16),
-            onSelected: (action) => _handleProviderAction(context, ref, action, provider, l),
+            onSelected: (action) =>
+                _handleProviderAction(context, ref, action, provider, l),
             itemBuilder: (ctx) => [
               PopupMenuItem(value: 'edit', child: Text(l.edit)),
-              PopupMenuItem(value: 'toggle', child: Text(provider.isEnabled ? l.disabled : l.enable)),
+              PopupMenuItem(
+                value: 'toggle',
+                child: Text(provider.isEnabled ? l.disabled : l.enable),
+              ),
               PopupMenuItem(value: 'addModel', child: Text(l.addCustomModel)),
               PopupMenuItem(value: 'delete', child: Text(l.delete)),
             ],
@@ -141,7 +168,9 @@ class AISettingsSection extends ConsumerWidget {
               Flexible(
                 child: Text(
                   '${provider.protocol.label} · ${provider.baseUrl}',
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -153,7 +182,12 @@ class AISettingsSection extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
               children: [
-                Text(l.noModelsFound, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+                Text(
+                  l.noModelsFound,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
                 const SizedBox(width: 8),
                 TextButton(
                   onPressed: () => _refreshModels(context, ref, provider, l),
@@ -163,15 +197,17 @@ class AISettingsSection extends ConsumerWidget {
             ),
           )
         else
-          ...models.map((model) => _buildModelTile(
-                context,
-                ref,
-                theme,
-                l,
-                model,
-                provider,
-                isActive && activeModel?.id == model.id,
-              )),
+          ...models.map(
+            (model) => _buildModelTile(
+              context,
+              ref,
+              theme,
+              l,
+              model,
+              provider,
+              isActive && activeModel?.id == model.id,
+            ),
+          ),
       ],
     );
   }
@@ -195,19 +231,25 @@ class AISettingsSection extends ConsumerWidget {
       ),
       title: Row(
         children: [
-          Flexible(child: Text(model.displayName, overflow: TextOverflow.ellipsis)),
+          Flexible(
+            child: Text(model.displayName, overflow: TextOverflow.ellipsis),
+          ),
           const SizedBox(width: 4),
-          ...model.capabilities.map((cap) => Padding(
-                padding: const EdgeInsets.only(right: 2),
-                child: Tooltip(
-                  message: cap.label,
-                  child: Icon(
-                    cap == ModelCapability.vision ? Icons.visibility : Icons.text_fields,
-                    size: 12,
-                    color: theme.hintColor,
-                  ),
+          ...model.capabilities.map(
+            (cap) => Padding(
+              padding: const EdgeInsets.only(right: 2),
+              child: Tooltip(
+                message: cap.label,
+                child: Icon(
+                  cap == ModelCapability.vision
+                      ? Icons.visibility
+                      : Icons.text_fields,
+                  size: 12,
+                  color: theme.hintColor,
                 ),
-              )),
+              ),
+            ),
+          ),
           if (model.isCustom)
             Padding(
               padding: const EdgeInsets.only(left: 4),
@@ -217,14 +259,23 @@ class AISettingsSection extends ConsumerWidget {
                   color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(3),
                 ),
-                child: Text(l.custom, style: TextStyle(fontSize: 9, color: theme.colorScheme.tertiary)),
+                child: Text(
+                  l.custom,
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: theme.colorScheme.tertiary,
+                  ),
+                ),
               ),
             ),
         ],
       ),
       subtitle: Text(
         model.id,
-        style: theme.textTheme.bodySmall?.copyWith(fontSize: 11, color: theme.hintColor),
+        style: theme.textTheme.bodySmall?.copyWith(
+          fontSize: 11,
+          color: theme.hintColor,
+        ),
         overflow: TextOverflow.ellipsis,
       ),
       onTap: () {
@@ -233,38 +284,61 @@ class AISettingsSection extends ConsumerWidget {
       trailing: model.isCustom
           ? IconButton(
               icon: const Icon(Icons.close, size: 14),
-              onPressed: () => ref.read(settingsProvider.notifier).removeModel(model.id, model.providerId),
+              onPressed: () => ref
+                  .read(settingsProvider.notifier)
+                  .removeModel(model.id, model.providerId),
             )
           : null,
     );
   }
 
-  Future<void> _refreshModels(BuildContext context, WidgetRef ref, AIProvider provider, AppLocalizations l) async {
+  Future<void> _refreshModels(
+    BuildContext context,
+    WidgetRef ref,
+    AIProvider provider,
+    AppLocalizations l,
+  ) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final discovery = ref.read(modelDiscoveryProvider);
-    final apiKey = await ref.read(settingsProvider.notifier).getApiKeyForProvider(provider.id);
+    final apiKey = await ref
+        .read(settingsProvider.notifier)
+        .getApiKeyForProvider(provider.id);
     final models = await discovery.fetchModels(provider, apiKey: apiKey);
     if (models.isNotEmpty) {
-      await ref.read(settingsProvider.notifier).setModelsForProvider(provider.id, models);
-      scaffoldMessenger.showSnackBar(SnackBar(
-        content: Text('${l.modelsRefreshed} ${models.length}'),
-        duration: const Duration(seconds: 2),
-      ));
+      await ref
+          .read(settingsProvider.notifier)
+          .setModelsForProvider(provider.id, models);
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('${l.modelsRefreshed} ${models.length}'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     } else {
-      scaffoldMessenger.showSnackBar(SnackBar(
-        content: Text(l.noModelsFound),
-        duration: const Duration(seconds: 2),
-      ));
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(l.noModelsFound),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
-  void _handleProviderAction(BuildContext context, WidgetRef ref, String action, AIProvider provider, AppLocalizations l) {
+  void _handleProviderAction(
+    BuildContext context,
+    WidgetRef ref,
+    String action,
+    AIProvider provider,
+    AppLocalizations l,
+  ) {
     switch (action) {
       case 'edit':
         _showEditProviderDialog(context, ref, provider, l);
         break;
       case 'toggle':
-        ref.read(settingsProvider.notifier).setProviderEnabled(provider.id, !provider.isEnabled);
+        ref
+            .read(settingsProvider.notifier)
+            .setProviderEnabled(provider.id, !provider.isEnabled);
         break;
       case 'addModel':
         _showAddCustomModelDialog(context, ref, provider, l);
@@ -275,9 +349,15 @@ class AISettingsSection extends ConsumerWidget {
     }
   }
 
-  void _showAddProviderDialog(BuildContext context, WidgetRef ref, AppLocalizations l) {
+  void _showAddProviderDialog(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l,
+  ) {
     final nameController = TextEditingController();
-    final baseUrlController = TextEditingController(text: ApiProtocol.openaiCompatible.defaultBaseUrl);
+    final baseUrlController = TextEditingController(
+      text: ApiProtocol.openaiCompatible.defaultBaseUrl,
+    );
     final apiKeyController = TextEditingController();
     ApiProtocol selectedProtocol = ApiProtocol.openaiCompatible;
 
@@ -290,7 +370,9 @@ class AISettingsSection extends ConsumerWidget {
               setState(() {
                 selectedProtocol = p;
                 if (baseUrlController.text.isEmpty ||
-                    ApiProtocol.values.any((proto) => baseUrlController.text == proto.defaultBaseUrl)) {
+                    ApiProtocol.values.any(
+                      (proto) => baseUrlController.text == proto.defaultBaseUrl,
+                    )) {
                   baseUrlController.text = p.defaultBaseUrl;
                 }
               });
@@ -318,10 +400,14 @@ class AISettingsSection extends ConsumerWidget {
                       key: ValueKey(selectedProtocol),
                       value: selectedProtocol,
                       decoration: InputDecoration(labelText: l.protocol),
-                      items: ApiProtocol.values.map((p) => DropdownMenuItem(
-                            value: p,
-                            child: Text(p.label),
-                          )).toList(),
+                      items: ApiProtocol.values
+                          .map(
+                            (p) => DropdownMenuItem(
+                              value: p,
+                              child: Text(p.label),
+                            ),
+                          )
+                          .toList(),
                       onChanged: onProtocolChanged,
                     ),
                     const SizedBox(height: 12),
@@ -339,7 +425,10 @@ class AISettingsSection extends ConsumerWidget {
                         obscureText: true,
                         decoration: InputDecoration(
                           labelText: l.apiKey,
-                          hintText: selectedProtocol == ApiProtocol.openaiCompatible ? 'sk-...' : '',
+                          hintText:
+                              selectedProtocol == ApiProtocol.openaiCompatible
+                              ? 'sk-...'
+                              : '',
                         ),
                       ),
                     ],
@@ -360,8 +449,13 @@ class AISettingsSection extends ConsumerWidget {
                     id: 'provider_${DateTime.now().millisecondsSinceEpoch}',
                     name: name,
                     protocol: selectedProtocol,
-                    baseUrl: baseUrlController.text.trim().replaceAll(RegExp(r'/$'), ''),
-                    apiKey: selectedProtocol.requiresApiKey ? apiKeyController.text.trim() : null,
+                    baseUrl: baseUrlController.text.trim().replaceAll(
+                      RegExp(r'/$'),
+                      '',
+                    ),
+                    apiKey: selectedProtocol.requiresApiKey
+                        ? apiKeyController.text.trim()
+                        : null,
                   );
                   ref.read(settingsProvider.notifier).addProvider(provider);
                   Navigator.pop(ctx);
@@ -375,7 +469,12 @@ class AISettingsSection extends ConsumerWidget {
     );
   }
 
-  void _showEditProviderDialog(BuildContext context, WidgetRef ref, AIProvider provider, AppLocalizations l) {
+  void _showEditProviderDialog(
+    BuildContext context,
+    WidgetRef ref,
+    AIProvider provider,
+    AppLocalizations l,
+  ) {
     final nameController = TextEditingController(text: provider.name);
     final baseUrlController = TextEditingController(text: provider.baseUrl);
     final apiKeyController = TextEditingController();
@@ -403,10 +502,14 @@ class AISettingsSection extends ConsumerWidget {
                       key: ValueKey(selectedProtocol),
                       value: selectedProtocol,
                       decoration: InputDecoration(labelText: l.protocol),
-                      items: ApiProtocol.values.map((p) => DropdownMenuItem(
-                            value: p,
-                            child: Text(p.label),
-                          )).toList(),
+                      items: ApiProtocol.values
+                          .map(
+                            (p) => DropdownMenuItem(
+                              value: p,
+                              child: Text(p.label),
+                            ),
+                          )
+                          .toList(),
                       onChanged: (p) {
                         if (p != null) setState(() => selectedProtocol = p);
                       },
@@ -440,12 +543,19 @@ class AISettingsSection extends ConsumerWidget {
                   final updated = provider.copyWith(
                     name: nameController.text.trim(),
                     protocol: selectedProtocol,
-                    baseUrl: baseUrlController.text.trim().replaceAll(RegExp(r'/$'), ''),
-                    apiKey: selectedProtocol.requiresApiKey && apiKeyController.text.trim().isNotEmpty
+                    baseUrl: baseUrlController.text.trim().replaceAll(
+                      RegExp(r'/$'),
+                      '',
+                    ),
+                    apiKey:
+                        selectedProtocol.requiresApiKey &&
+                            apiKeyController.text.trim().isNotEmpty
                         ? apiKeyController.text.trim()
                         : null,
                   );
-                  await ref.read(settingsProvider.notifier).updateProvider(updated);
+                  await ref
+                      .read(settingsProvider.notifier)
+                      .updateProvider(updated);
                   if (ctx.mounted) Navigator.pop(ctx);
                 },
                 child: Text(l.save),
@@ -457,7 +567,12 @@ class AISettingsSection extends ConsumerWidget {
     );
   }
 
-  void _showDeleteProviderConfirmDialog(BuildContext context, WidgetRef ref, AIProvider provider, AppLocalizations l) {
+  void _showDeleteProviderConfirmDialog(
+    BuildContext context,
+    WidgetRef ref,
+    AIProvider provider,
+    AppLocalizations l,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -469,7 +584,9 @@ class AISettingsSection extends ConsumerWidget {
             child: Text(l.cancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
             onPressed: () {
               ref.read(settingsProvider.notifier).removeProvider(provider.id);
               Navigator.pop(ctx);
@@ -481,7 +598,12 @@ class AISettingsSection extends ConsumerWidget {
     );
   }
 
-  void _showAddCustomModelDialog(BuildContext context, WidgetRef ref, AIProvider provider, AppLocalizations l) {
+  void _showAddCustomModelDialog(
+    BuildContext context,
+    WidgetRef ref,
+    AIProvider provider,
+    AppLocalizations l,
+  ) {
     final modelIdController = TextEditingController();
     final displayNameController = TextEditingController();
     final selectedCapabilities = <ModelCapability>{ModelCapability.text};
@@ -565,9 +687,15 @@ class AISettingsSection extends ConsumerWidget {
     );
   }
 
-  void _showActiveModelDialog(BuildContext context, WidgetRef ref, AppLocalizations l) {
+  void _showActiveModelDialog(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l,
+  ) {
     final settingsNotifier = ref.read(settingsProvider.notifier);
-    final providers = settingsNotifier.providers.where((p) => p.isEnabled).toList();
+    final providers = settingsNotifier.providers
+        .where((p) => p.isEnabled)
+        .toList();
     final activeConfig = settingsNotifier.activeConfig;
 
     showDialog(
@@ -586,9 +714,12 @@ class AISettingsSection extends ConsumerWidget {
                   itemCount: providers.length,
                   itemBuilder: (ctx, index) {
                     final provider = providers[index];
-                    final models = settingsNotifier.modelsForProvider(provider.id);
+                    final models = settingsNotifier.modelsForProvider(
+                      provider.id,
+                    );
                     return ExpansionTile(
-                      initiallyExpanded: activeConfig?.providerId == provider.id,
+                      initiallyExpanded:
+                          activeConfig?.providerId == provider.id,
                       title: Row(
                         children: [
                           Icon(provider.protocol.icon, size: 16),
@@ -597,17 +728,26 @@ class AISettingsSection extends ConsumerWidget {
                         ],
                       ),
                       children: models.map((model) {
-                        final isActive = activeConfig?.providerId == provider.id && activeConfig?.modelId == model.id;
+                        final isActive =
+                            activeConfig?.providerId == provider.id &&
+                            activeConfig?.modelId == model.id;
                         return ListTile(
                           dense: true,
                           leading: Icon(
-                            isActive ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                            isActive
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_unchecked,
                             size: 16,
                           ),
                           title: Text(model.displayName),
-                          subtitle: Text(model.capabilityLabel, style: const TextStyle(fontSize: 11)),
+                          subtitle: Text(
+                            model.capabilityLabel,
+                            style: const TextStyle(fontSize: 11),
+                          ),
                           onTap: () {
-                            ref.read(aiProvider.notifier).setActiveModel(provider, model);
+                            ref
+                                .read(aiProvider.notifier)
+                                .setActiveModel(provider, model);
                             Navigator.pop(ctx);
                           },
                         );

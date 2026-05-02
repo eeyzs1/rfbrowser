@@ -6,36 +6,36 @@ enum ApiProtocol {
   ollama;
 
   String get label => switch (this) {
-        ApiProtocol.openaiCompatible => 'OpenAI Compatible',
-        ApiProtocol.anthropic => 'Anthropic',
-        ApiProtocol.ollama => 'Ollama',
-      };
+    ApiProtocol.openaiCompatible => 'OpenAI Compatible',
+    ApiProtocol.anthropic => 'Anthropic',
+    ApiProtocol.ollama => 'Ollama',
+  };
 
   IconData get icon => switch (this) {
-        ApiProtocol.openaiCompatible => Icons.cloud,
-        ApiProtocol.anthropic => Icons.auto_awesome,
-        ApiProtocol.ollama => Icons.computer,
-      };
+    ApiProtocol.openaiCompatible => Icons.cloud,
+    ApiProtocol.anthropic => Icons.auto_awesome,
+    ApiProtocol.ollama => Icons.computer,
+  };
 
   String get defaultBaseUrl => switch (this) {
-        ApiProtocol.openaiCompatible => 'https://api.openai.com',
-        ApiProtocol.anthropic => 'https://api.anthropic.com',
-        ApiProtocol.ollama => 'http://localhost:11434',
-      };
+    ApiProtocol.openaiCompatible => 'https://api.openai.com',
+    ApiProtocol.anthropic => 'https://api.anthropic.com',
+    ApiProtocol.ollama => 'http://localhost:11434',
+  };
 
   bool get requiresApiKey => this != ApiProtocol.ollama;
 
   String get modelsPath => switch (this) {
-        ApiProtocol.openaiCompatible => '/v1/models',
-        ApiProtocol.anthropic => '/v1/models',
-        ApiProtocol.ollama => '/api/tags',
-      };
+    ApiProtocol.openaiCompatible => '/v1/models',
+    ApiProtocol.anthropic => '/v1/models',
+    ApiProtocol.ollama => '/api/tags',
+  };
 
   String get chatPath => switch (this) {
-        ApiProtocol.openaiCompatible => '/v1/chat/completions',
-        ApiProtocol.anthropic => '/v1/messages',
-        ApiProtocol.ollama => '/api/chat',
-      };
+    ApiProtocol.openaiCompatible => '/v1/chat/completions',
+    ApiProtocol.anthropic => '/v1/messages',
+    ApiProtocol.ollama => '/api/chat',
+  };
 }
 
 enum ModelCapability {
@@ -43,14 +43,14 @@ enum ModelCapability {
   vision;
 
   String get label => switch (this) {
-        ModelCapability.text => 'Text',
-        ModelCapability.vision => 'Vision',
-      };
+    ModelCapability.text => 'Text',
+    ModelCapability.vision => 'Vision',
+  };
 
   String get icon => switch (this) {
-        ModelCapability.text => '📝',
-        ModelCapability.vision => '👁',
-      };
+    ModelCapability.text => '📝',
+    ModelCapability.vision => '👁',
+  };
 }
 
 class AIProvider {
@@ -93,39 +93,33 @@ class AIProvider {
   Map<String, String> authHeaders() {
     switch (protocol) {
       case ApiProtocol.openaiCompatible:
-        return apiKey != null
-            ? {'Authorization': 'Bearer $apiKey'}
-            : {};
+        return apiKey != null ? {'Authorization': 'Bearer $apiKey'} : {};
       case ApiProtocol.anthropic:
-        return {
-          'x-api-key': apiKey ?? '',
-          'anthropic-version': '2023-06-01',
-        };
+        return {'x-api-key': apiKey ?? '', 'anthropic-version': '2023-06-01'};
       case ApiProtocol.ollama:
         return {};
     }
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'protocol': protocol.index,
-        'baseUrl': baseUrl,
-        'isEnabled': isEnabled,
-      };
+    'id': id,
+    'name': name,
+    'protocol': protocol.index,
+    'baseUrl': baseUrl,
+    'isEnabled': isEnabled,
+  };
 
   factory AIProvider.fromJson(Map<String, dynamic> json) => AIProvider(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        protocol: ApiProtocol.values[json['protocol'] as int],
-        baseUrl: json['baseUrl'] as String,
-        isEnabled: json['isEnabled'] as bool? ?? true,
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    protocol: ApiProtocol.values[json['protocol'] as int],
+    baseUrl: json['baseUrl'] as String,
+    isEnabled: json['isEnabled'] as bool? ?? true,
+  );
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AIProvider && id == other.id;
+      identical(this, other) || other is AIProvider && id == other.id;
 
   @override
   int get hashCode => id.hashCode;
@@ -174,26 +168,26 @@ class AIModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'providerId': providerId,
-        'displayName': displayName,
-        'capabilities':
-            capabilities.map((c) => c.index).toList(),
-        'contextWindow': contextWindow,
-        'isCustom': isCustom,
-      };
+    'id': id,
+    'providerId': providerId,
+    'displayName': displayName,
+    'capabilities': capabilities.map((c) => c.index).toList(),
+    'contextWindow': contextWindow,
+    'isCustom': isCustom,
+  };
 
   factory AIModel.fromJson(Map<String, dynamic> json) => AIModel(
-        id: json['id'] as String,
-        providerId: json['providerId'] as String,
-        displayName: json['displayName'] as String,
-        capabilities: (json['capabilities'] as List?)
-                ?.map((i) => ModelCapability.values[i as int])
-                .toSet() ??
-            {ModelCapability.text},
-        contextWindow: json['contextWindow'] as int?,
-        isCustom: json['isCustom'] as bool? ?? false,
-      );
+    id: json['id'] as String,
+    providerId: json['providerId'] as String,
+    displayName: json['displayName'] as String,
+    capabilities:
+        (json['capabilities'] as List?)
+            ?.map((i) => ModelCapability.values[i as int])
+            .toSet() ??
+        {ModelCapability.text},
+    contextWindow: json['contextWindow'] as int?,
+    isCustom: json['isCustom'] as bool? ?? false,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -208,18 +202,15 @@ class ActiveAIConfig {
   final String providerId;
   final String modelId;
 
-  const ActiveAIConfig({
-    required this.providerId,
-    required this.modelId,
-  });
+  const ActiveAIConfig({required this.providerId, required this.modelId});
 
   Map<String, dynamic> toJson() => {
-        'providerId': providerId,
-        'modelId': modelId,
-      };
+    'providerId': providerId,
+    'modelId': modelId,
+  };
 
   factory ActiveAIConfig.fromJson(Map<String, dynamic> json) => ActiveAIConfig(
-        providerId: json['providerId'] as String,
-        modelId: json['modelId'] as String,
-      );
+    providerId: json['providerId'] as String,
+    modelId: json['modelId'] as String,
+  );
 }

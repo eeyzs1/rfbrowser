@@ -99,11 +99,7 @@ class AppTheme {
           height: 1.5,
           fontSize: fontSize,
         ),
-        bodySmall: TextStyle(
-          color: muted,
-          height: 1.4,
-          fontSize: fontSize - 2,
-        ),
+        bodySmall: TextStyle(color: muted, height: 1.4, fontSize: fontSize - 2),
         labelSmall: TextStyle(
           color: muted,
           fontWeight: FontWeight.w500,

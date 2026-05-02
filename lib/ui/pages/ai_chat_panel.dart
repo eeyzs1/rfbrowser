@@ -45,8 +45,9 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
 
     ref.listen<AIState>(aiProvider, (prev, next) {
       if (prev?.messages.length != next.messages.length ||
-          (prev?.messages.isNotEmpty == true && next.messages.isNotEmpty &&
-           prev!.messages.last.content != next.messages.last.content)) {
+          (prev?.messages.isNotEmpty == true &&
+              next.messages.isNotEmpty &&
+              prev!.messages.last.content != next.messages.last.content)) {
         _scrollToBottom();
       }
     });
@@ -168,7 +169,10 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                   icon: const Icon(Icons.auto_awesome, size: 12),
                   onPressed: () => _showSkillPicker(theme),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  constraints: const BoxConstraints(
+                    minWidth: 24,
+                    minHeight: 24,
+                  ),
                   tooltip: 'Skills',
                   style: IconButton.styleFrom(
                     backgroundColor: theme.colorScheme.surface,
@@ -318,9 +322,12 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
 
   Widget _buildModelSelector(ThemeData theme, AIState aiState) {
     final settingsNotifier = ref.read(settingsProvider.notifier);
-    final providers = settingsNotifier.providers.where((p) => p.isEnabled).toList();
+    final providers = settingsNotifier.providers
+        .where((p) => p.isEnabled)
+        .toList();
     final activeModel = aiState.activeModel ?? settingsNotifier.activeModel;
-    final activeProvider = aiState.activeProvider ?? settingsNotifier.activeProvider;
+    final activeProvider =
+        aiState.activeProvider ?? settingsNotifier.activeProvider;
 
     if (providers.isEmpty) {
       return TextButton.icon(
@@ -380,7 +387,9 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
             const SizedBox(width: 4),
             Text(
               model.displayName,
-              style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
             if (model.supportsVision) ...[
@@ -420,7 +429,9 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
 
   void _showModelPicker(ThemeData theme) {
     final settingsNotifier = ref.read(settingsProvider.notifier);
-    final providers = settingsNotifier.providers.where((p) => p.isEnabled).toList();
+    final providers = settingsNotifier.providers
+        .where((p) => p.isEnabled)
+        .toList();
     final activeConfig = settingsNotifier.activeConfig;
 
     showDialog(
@@ -438,49 +449,86 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
               return ExpansionTile(
                 initiallyExpanded: isActiveProvider,
                 tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-                childrenPadding: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
-                leading: Icon(provider.protocol.icon, size: 16, color: theme.hintColor),
+                childrenPadding: const EdgeInsets.only(
+                  left: 8,
+                  right: 8,
+                  bottom: 4,
+                ),
+                leading: Icon(
+                  provider.protocol.icon,
+                  size: 16,
+                  color: theme.hintColor,
+                ),
                 title: Text(
                   provider.name,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: isActiveProvider ? FontWeight.w600 : FontWeight.w400,
+                    fontWeight: isActiveProvider
+                        ? FontWeight.w600
+                        : FontWeight.w400,
                   ),
                 ),
                 trailing: models.isEmpty
-                    ? Text('0 models', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
+                    ? Text(
+                        '0 models',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      )
                     : null,
                 children: models.isEmpty
                     ? [
                         Padding(
                           padding: const EdgeInsets.all(8),
-                          child: Text('No models. Refresh in Settings.', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+                          child: Text(
+                            'No models. Refresh in Settings.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.hintColor,
+                            ),
+                          ),
                         ),
                       ]
                     : models.map((model) {
-                        final isActive = isActiveProvider && activeConfig?.modelId == model.id;
+                        final isActive =
+                            isActiveProvider &&
+                            activeConfig?.modelId == model.id;
                         return ListTile(
                           dense: true,
                           leading: Icon(
-                            isActive ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                            isActive
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_unchecked,
                             size: 16,
-                            color: isActive ? theme.colorScheme.primary : theme.hintColor,
+                            color: isActive
+                                ? theme.colorScheme.primary
+                                : theme.hintColor,
                           ),
                           title: Row(
                             children: [
-                              Flexible(child: Text(model.displayName, overflow: TextOverflow.ellipsis)),
+                              Flexible(
+                                child: Text(
+                                  model.displayName,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                               const SizedBox(width: 4),
-                              ...model.capabilities.map((cap) => Padding(
-                                    padding: const EdgeInsets.only(right: 2),
-                                    child: Icon(
-                                      cap == ModelCapability.vision ? Icons.visibility : Icons.text_fields,
-                                      size: 12,
-                                      color: theme.hintColor,
-                                    ),
-                                  )),
+                              ...model.capabilities.map(
+                                (cap) => Padding(
+                                  padding: const EdgeInsets.only(right: 2),
+                                  child: Icon(
+                                    cap == ModelCapability.vision
+                                        ? Icons.visibility
+                                        : Icons.text_fields,
+                                    size: 12,
+                                    color: theme.hintColor,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                           onTap: () {
-                            ref.read(aiProvider.notifier).setActiveModel(provider, model);
+                            ref
+                                .read(aiProvider.notifier)
+                                .setActiveModel(provider, model);
                             Navigator.pop(ctx);
                           },
                         );
@@ -501,7 +549,9 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
 
   void _showAddProviderDialog(ThemeData theme) {
     final nameController = TextEditingController();
-    final baseUrlController = TextEditingController(text: ApiProtocol.openaiCompatible.defaultBaseUrl);
+    final baseUrlController = TextEditingController(
+      text: ApiProtocol.openaiCompatible.defaultBaseUrl,
+    );
     final apiKeyController = TextEditingController();
     ApiProtocol selectedProtocol = ApiProtocol.openaiCompatible;
 
@@ -530,16 +580,24 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                       key: ValueKey(selectedProtocol),
                       value: selectedProtocol,
                       decoration: const InputDecoration(labelText: 'Protocol'),
-                      items: ApiProtocol.values.map((p) => DropdownMenuItem(
-                            value: p,
-                            child: Text(p.label),
-                          )).toList(),
+                      items: ApiProtocol.values
+                          .map(
+                            (p) => DropdownMenuItem(
+                              value: p,
+                              child: Text(p.label),
+                            ),
+                          )
+                          .toList(),
                       onChanged: (p) {
                         if (p != null) {
                           setState(() {
                             selectedProtocol = p;
                             if (baseUrlController.text.isEmpty ||
-                                ApiProtocol.values.any((proto) => baseUrlController.text == proto.defaultBaseUrl)) {
+                                ApiProtocol.values.any(
+                                  (proto) =>
+                                      baseUrlController.text ==
+                                      proto.defaultBaseUrl,
+                                )) {
                               baseUrlController.text = p.defaultBaseUrl;
                             }
                           });
@@ -561,7 +619,10 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                         obscureText: true,
                         decoration: InputDecoration(
                           labelText: 'API Key',
-                          hintText: selectedProtocol == ApiProtocol.openaiCompatible ? 'sk-...' : '',
+                          hintText:
+                              selectedProtocol == ApiProtocol.openaiCompatible
+                              ? 'sk-...'
+                              : '',
                         ),
                       ),
                     ],
@@ -582,8 +643,13 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                     id: 'provider_${DateTime.now().millisecondsSinceEpoch}',
                     name: name,
                     protocol: selectedProtocol,
-                    baseUrl: baseUrlController.text.trim().replaceAll(RegExp(r'/$'), ''),
-                    apiKey: selectedProtocol.requiresApiKey ? apiKeyController.text.trim() : null,
+                    baseUrl: baseUrlController.text.trim().replaceAll(
+                      RegExp(r'/$'),
+                      '',
+                    ),
+                    apiKey: selectedProtocol.requiresApiKey
+                        ? apiKeyController.text.trim()
+                        : null,
                   );
                   ref.read(settingsProvider.notifier).addProvider(provider);
                   Navigator.pop(ctx);
@@ -619,12 +685,16 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
 
     final browser = ref.read(browserProvider);
     final activeTab = browser.activeTab;
-    if (activeTab != null && activeTab.url.isNotEmpty && !activeTab.url.startsWith('about:blank')) {
+    if (activeTab != null &&
+        activeTab.url.isNotEmpty &&
+        !activeTab.url.startsWith('about:blank')) {
       contextBuffer.writeln('[Current Page: ${activeTab.title}]');
       contextBuffer.writeln('URL: ${activeTab.url}');
     }
 
-    final contextStr = contextBuffer.isNotEmpty ? contextBuffer.toString() : null;
+    final contextStr = contextBuffer.isNotEmpty
+        ? contextBuffer.toString()
+        : null;
 
     ref.read(aiProvider.notifier).sendMessage(text, context: contextStr);
   }
@@ -642,7 +712,11 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
       builder: (ctx) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.auto_awesome, size: 18, color: theme.colorScheme.primary),
+            Icon(
+              Icons.auto_awesome,
+              size: 18,
+              color: theme.colorScheme.primary,
+            ),
             const SizedBox(width: 8),
             const Text('Skills'),
           ],
@@ -658,7 +732,9 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                 leading: Icon(
                   skill.isBuiltin ? Icons.bolt : Icons.extension,
                   size: 16,
-                  color: skill.isBuiltin ? theme.colorScheme.primary : theme.hintColor,
+                  color: skill.isBuiltin
+                      ? theme.colorScheme.primary
+                      : theme.hintColor,
                 ),
                 title: Text(
                   skill.name,
@@ -702,13 +778,19 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
 
     var prompt = skill.prompt as String;
 
-    prompt = prompt.replaceAll('@note[current]', activeNote != null
-        ? 'Note "${activeNote.title}":\n${activeNote.content.length > 3000 ? '${activeNote.content.substring(0, 3000)}...(truncated)' : activeNote.content}'
-        : '(No note currently open)');
+    prompt = prompt.replaceAll(
+      '@note[current]',
+      activeNote != null
+          ? 'Note "${activeNote.title}":\n${activeNote.content.length > 3000 ? '${activeNote.content.substring(0, 3000)}...(truncated)' : activeNote.content}'
+          : '(No note currently open)',
+    );
 
-    prompt = prompt.replaceAll('@web[current]', activeTab != null && activeTab.url.isNotEmpty
-        ? 'Web page "${activeTab.title}" (${activeTab.url})'
-        : '(No web page currently open)');
+    prompt = prompt.replaceAll(
+      '@web[current]',
+      activeTab != null && activeTab.url.isNotEmpty
+          ? 'Web page "${activeTab.title}" (${activeTab.url})'
+          : '(No web page currently open)',
+    );
 
     prompt = prompt.replaceAll('@note[daily]', '(Daily note not loaded)');
 
@@ -722,10 +804,12 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
       if (activeTab != null && activeTab.url.isNotEmpty) {
         contextBuffer.writeln('[Current Page: ${activeTab.title}]');
       }
-      ref.read(aiProvider.notifier).sendMessage(
-        prompt,
-        context: contextBuffer.isNotEmpty ? contextBuffer.toString() : null,
-      );
+      ref
+          .read(aiProvider.notifier)
+          .sendMessage(
+            prompt,
+            context: contextBuffer.isNotEmpty ? contextBuffer.toString() : null,
+          );
     }
   }
 

@@ -147,7 +147,11 @@ class ComponentSettingsSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildPreviewButton(ThemeData theme, AppSettings settings, AppLocalizations l) {
+  Widget _buildPreviewButton(
+    ThemeData theme,
+    AppSettings settings,
+    AppLocalizations l,
+  ) {
     final br = settings.effectiveBorderRadius;
     return Container(
       width: double.infinity,
@@ -214,10 +218,7 @@ class ComponentSettingsSection extends ConsumerWidget {
       title: l.componentDensity,
       selectedValue: current,
       options: ComponentDensity.values
-          .map((d) => SelectionOption(
-                value: d,
-                label: _densityLabel(d, l),
-              ))
+          .map((d) => SelectionOption(value: d, label: _densityLabel(d, l)))
           .toList(),
     ).then((value) {
       if (value != null) {
