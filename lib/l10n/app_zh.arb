@@ -181,5 +181,14 @@
   "modelsRefreshed": "发现",
   "disabled": "已禁用",
   "enable": "启用",
-  "custom": "自定义"
+  "custom": "自定义",
+  "appSubtitle": "AI 驱动的知识浏览器",
+  "removeVault": "移除知识库",
+  "removeVaultConfirm": "从最近列表中移除「{name}」？",
+  "@removeVaultConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "remove": "移除"
 }

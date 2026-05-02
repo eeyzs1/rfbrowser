@@ -181,5 +181,14 @@
   "modelsRefreshed": "Found",
   "disabled": "Disabled",
   "enable": "Enable",
-  "custom": "Custom"
+  "custom": "Custom",
+  "appSubtitle": "AI-Powered Knowledge Browser",
+  "removeVault": "Remove Vault",
+  "removeVaultConfirm": "Remove \"{name}\" from recent vaults?",
+  "@removeVaultConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "remove": "Remove"
 }

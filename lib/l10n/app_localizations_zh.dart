@@ -527,4 +527,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get custom => '自定义';
+
+  @override
+  String get appSubtitle => 'AI 驱动的知识浏览器';
+
+  @override
+  String get removeVault => '移除知识库';
+
+  @override
+  String removeVaultConfirm(String name) {
+    return '从最近列表中移除「$name」？';
+  }
+
+  @override
+  String get remove => '移除';
 }

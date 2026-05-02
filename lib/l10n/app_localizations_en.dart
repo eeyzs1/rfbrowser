@@ -531,4 +531,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get custom => 'Custom';
+
+  @override
+  String get appSubtitle => 'AI-Powered Knowledge Browser';
+
+  @override
+  String get removeVault => 'Remove Vault';
+
+  @override
+  String removeVaultConfirm(String name) {
+    return 'Remove \"$name\" from recent vaults?';
+  }
+
+  @override
+  String get remove => 'Remove';
 }

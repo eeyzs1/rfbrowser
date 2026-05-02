@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../data/stores/vault_store.dart';
+import '../../l10n/app_localizations.dart';
 
 class WelcomePage extends ConsumerWidget {
   final VoidCallback onVaultOpened;
@@ -12,6 +13,7 @@ class WelcomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vaultState = ref.watch(vaultProvider);
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: Center(
@@ -31,7 +33,7 @@ class WelcomePage extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'AI-Powered Knowledge Browser',
+                l.appSubtitle,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.hintColor,
                 ),
@@ -43,7 +45,7 @@ class WelcomePage extends ConsumerWidget {
                   FilledButton.icon(
                     onPressed: () => _openVault(context, ref),
                     icon: const Icon(Icons.folder_open),
-                    label: const Text('Open Vault'),
+                    label: Text(l.openVault),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -55,7 +57,7 @@ class WelcomePage extends ConsumerWidget {
                   OutlinedButton.icon(
                     onPressed: () => _createVault(context, ref),
                     icon: const Icon(Icons.create_new_folder),
-                    label: const Text('Create Vault'),
+                    label: Text(l.createVault),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -68,29 +70,59 @@ class WelcomePage extends ConsumerWidget {
               if (vaultState.recentVaults.isNotEmpty) ...[
                 const SizedBox(height: 48),
                 Text(
-                  'Recent Vaults',
+                  l.recentVaults,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 12),
                 ...vaultState.recentVaults.map(
-                  (vault) => Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    child: ListTile(
-                      leading: const Icon(Icons.folder),
-                      title: Text(vault.name),
-                      subtitle: Text(vault.path),
-                      trailing: Text(
-                        _formatDate(vault.lastOpened),
-                        style: theme.textTheme.bodySmall,
+                  (vault) => Dismissible(
+                    key: ValueKey(vault.path),
+                    direction: DismissDirection.endToStart,
+                    confirmDismiss: (_) =>
+                        _confirmRemoveVault(context, vault.name),
+                    onDismissed: (_) {
+                      ref
+                          .read(vaultProvider.notifier)
+                          .removeFromRecent(vault.path);
+                    },
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.error,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      onTap: () async {
-                        await ref
-                            .read(vaultProvider.notifier)
-                            .openVault(vault.path);
-                        onVaultOpened();
-                      },
+                      child: Icon(
+                        Icons.delete_outline,
+                        color: theme.colorScheme.onError,
+                      ),
+                    ),
+                    child: Card(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      child: ListTile(
+                        leading: const Icon(Icons.folder),
+                        title: Text(vault.name),
+                        subtitle: Text(vault.path),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _formatDate(vault.lastOpened),
+                              style: theme.textTheme.bodySmall,
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.swipe, size: 14, color: theme.hintColor),
+                          ],
+                        ),
+                        onTap: () async {
+                          await ref
+                              .read(vaultProvider.notifier)
+                              .openVault(vault.path);
+                          onVaultOpened();
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -131,9 +163,38 @@ class WelcomePage extends ConsumerWidget {
     );
   }
 
+  Future<bool> _confirmRemoveVault(
+    BuildContext context,
+    String vaultName,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.removeVault),
+        content: Text(l.removeVaultConfirm(vaultName)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.remove),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   Future<void> _openVault(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context)!;
     final result = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Select Vault Location',
+      dialogTitle: l.selectVault,
     );
     if (result != null) {
       await ref.read(vaultProvider.notifier).openVault(result);
@@ -142,8 +203,9 @@ class WelcomePage extends ConsumerWidget {
   }
 
   Future<void> _createVault(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context)!;
     final result = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Select Vault Location',
+      dialogTitle: l.selectVault,
     );
     if (result != null) {
       await ref.read(vaultProvider.notifier).createVault(result);

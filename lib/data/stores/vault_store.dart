@@ -67,6 +67,7 @@ class VaultNotifier extends Notifier<VaultState> {
   Future<void> loadRecentVaults() async {
     final prefs = await SharedPreferences.getInstance();
     final vaultsJson = prefs.getStringList(_recentVaultsKey) ?? [];
+    final seen = <String>{};
     final vaults = vaultsJson
         .map((j) {
           try {
@@ -78,6 +79,7 @@ class VaultNotifier extends Notifier<VaultState> {
           }
         })
         .whereType<VaultConfig>()
+        .where((v) => seen.add(v.path))
         .toList();
     state = state.copyWith(recentVaults: vaults);
   }
@@ -165,6 +167,22 @@ class VaultNotifier extends Notifier<VaultState> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_currentVaultKey);
     state = state.copyWith(currentVault: null);
+  }
+
+  Future<void> removeFromRecent(String vaultPath) async {
+    final prefs = await SharedPreferences.getInstance();
+    final vaults = List<VaultConfig>.from(state.recentVaults)
+      ..removeWhere((v) => v.path == vaultPath);
+
+    final vaultsJson = vaults.map((v) => jsonEncode(v.toJson())).toList();
+    await prefs.setStringList(_recentVaultsKey, vaultsJson);
+
+    if (state.currentVault?.path == vaultPath) {
+      await prefs.remove(_currentVaultKey);
+      state = state.copyWith(currentVault: null, recentVaults: vaults);
+    } else {
+      state = state.copyWith(recentVaults: vaults);
+    }
   }
 }
 

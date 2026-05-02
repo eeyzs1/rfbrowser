@@ -1129,6 +1129,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Custom'**
   String get custom;
+
+  /// No description provided for @appSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI-Powered Knowledge Browser'**
+  String get appSubtitle;
+
+  /// No description provided for @removeVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Vault'**
+  String get removeVault;
+
+  /// No description provided for @removeVaultConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{name}\" from recent vaults?'**
+  String removeVaultConfirm(String name);
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
 }
 
 class _AppLocalizationsDelegate
