@@ -19,8 +19,6 @@ import '../pages/graph_page.dart';
 import '../pages/canvas_page.dart';
 import '../pages/settings_page.dart';
 
-enum LayoutPreset { browser, editor, notes, split, graph, canvas }
-
 class MainLayout extends ConsumerStatefulWidget {
   const MainLayout({super.key});
 
@@ -36,10 +34,10 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   @override
   void initState() {
     super.initState();
-    _rootNode = _splitPreset;
+    _rootNode = _defaultLayout();
   }
 
-  SplitNode get _splitPreset => SplitNode.split(
+  SplitNode _defaultLayout() => SplitNode.split(
     id: 'root',
     direction: SplitDirection.horizontal,
     children: [
@@ -57,40 +55,74 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     ],
   );
 
-  SplitNode _presetFor(LayoutPreset preset) {
-    final mainViewType = switch (preset) {
-      LayoutPreset.browser => ViewType.browser,
-      LayoutPreset.editor => ViewType.editor,
-      LayoutPreset.notes => ViewType.editor,
-      LayoutPreset.graph => ViewType.graph,
-      LayoutPreset.canvas => ViewType.canvas,
-      LayoutPreset.split => ViewType.browser,
-    };
+  bool _hasViewType(SplitNode node, ViewType vt) {
+    if (node.isLeaf) return node.viewType == vt;
+    return node.children.any((c) => _hasViewType(c, vt));
+  }
 
-    if (preset == LayoutPreset.split) {
-      return _splitPreset;
-    }
-
-    if (preset == LayoutPreset.notes) {
-      return SplitNode.split(
-        id: 'root',
-        direction: SplitDirection.horizontal,
-        children: [
-          SplitNode.leaf(id: 'notes', viewType: ViewType.notes, flex: 3),
-          SplitNode.leaf(id: 'editor', viewType: ViewType.editor, flex: 5),
-        ],
+  SplitNode _removeViewType(SplitNode node, ViewType vt) {
+    if (node.isLeaf) return node;
+    final newChildren = node.children
+        .where((c) => !_isOnlyLeafWithViewType(c, vt))
+        .map((c) => _removeViewType(c, vt))
+        .where((c) => c.isLeaf || c.children.isNotEmpty)
+        .toList();
+    if (newChildren.isEmpty) {
+      return SplitNode.leaf(
+        id: node.id,
+        viewType: ViewType.editor,
+        flex: node.flex,
       );
     }
-
+    if (newChildren.length == 1) {
+      final only = newChildren.first;
+      return SplitNode.leaf(
+        id: only.id,
+        viewType: only.viewType,
+        flex: node.flex,
+      );
+    }
     return SplitNode.split(
-      id: 'root',
-      direction: SplitDirection.horizontal,
-      children: [
-        SplitNode.leaf(id: 'notes', viewType: ViewType.notes, flex: 2),
-        SplitNode.leaf(id: 'main', viewType: mainViewType, flex: 5),
-        SplitNode.leaf(id: 'ai', viewType: ViewType.ai, flex: 2),
-      ],
+      id: node.id,
+      direction: node.direction,
+      children: newChildren,
+      flex: node.flex,
     );
+  }
+
+  bool _isOnlyLeafWithViewType(SplitNode node, ViewType vt) {
+    if (node.isLeaf) return node.viewType == vt;
+    return node.children.every((c) => _isOnlyLeafWithViewType(c, vt));
+  }
+
+  SplitNode _addViewType(SplitNode node, ViewType vt) {
+    if (!node.isLeaf && node.id == 'root') {
+      final newLeaf = SplitNode.leaf(
+        id: vt.name,
+        viewType: vt,
+        flex: vt == ViewType.ai ? 2 : (vt == ViewType.notes ? 2 : 5),
+      );
+      final insertIndex = vt == ViewType.notes ? 0 : node.children.length;
+      final newChildren = List<SplitNode>.from(node.children);
+      newChildren.insert(insertIndex, newLeaf);
+      return SplitNode.split(
+        id: node.id,
+        direction: node.direction,
+        children: newChildren,
+        flex: node.flex,
+      );
+    }
+    return node;
+  }
+
+  void _togglePanel(ViewType vt) {
+    setState(() {
+      if (_hasViewType(_rootNode, vt)) {
+        _rootNode = _removeViewType(_rootNode, vt);
+      } else {
+        _rootNode = _addViewType(_rootNode, vt);
+      }
+    });
   }
 
   @override
@@ -110,23 +142,25 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             ref.read(knowledgeProvider.notifier).saveActiveNote();
           },
           const SingleActivator(LogicalKeyboardKey.keyE, control: true): () {
-            setState(() => _rootNode = _presetFor(LayoutPreset.editor));
+            _togglePanel(ViewType.editor);
           },
           const SingleActivator(LogicalKeyboardKey.keyB, control: true): () {
-            setState(() => _rootNode = _presetFor(LayoutPreset.browser));
+            _togglePanel(ViewType.browser);
           },
           const SingleActivator(
             LogicalKeyboardKey.keyG,
             control: true,
             shift: true,
           ): () {
-            setState(() => _rootNode = _presetFor(LayoutPreset.graph));
+            _togglePanel(ViewType.graph);
           },
           const SingleActivator(LogicalKeyboardKey.keyD, control: true): () {
             ref
                 .read(knowledgeProvider.notifier)
                 .createDailyNote(DateTime.now());
-            setState(() => _rootNode = _presetFor(LayoutPreset.editor));
+            if (!_hasViewType(_rootNode, ViewType.editor)) {
+              _togglePanel(ViewType.editor);
+            }
           },
           const SingleActivator(LogicalKeyboardKey.keyP, control: true): () {
             setState(() => _isPreview = !_isPreview);
@@ -212,13 +246,19 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             ),
           ),
           const SizedBox(width: 20),
-          _buildPresetButton(Icons.language, 'Browser', LayoutPreset.browser),
-          _buildPresetButton(Icons.edit_note, 'Editor', LayoutPreset.editor),
-          _buildPresetButton(Icons.notes, 'Notes', LayoutPreset.notes),
-          _buildPresetButton(Icons.vertical_split, 'Split', LayoutPreset.split),
-          _buildPresetButton(Icons.hub, 'Graph', LayoutPreset.graph),
-          _buildPresetButton(Icons.dashboard, 'Canvas', LayoutPreset.canvas),
+          _buildPanelButton(Icons.description, 'Notes', ViewType.notes),
+          _buildPanelButton(Icons.language, 'Browser', ViewType.browser),
+          _buildPanelButton(Icons.edit_note, 'Editor', ViewType.editor),
+          _buildPanelButton(Icons.dashboard, 'Canvas', ViewType.canvas),
+          _buildPanelButton(Icons.smart_toy, 'AI', ViewType.ai),
           const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.folder_open, size: 18),
+            onPressed: () => ref.read(vaultProvider.notifier).closeVault(),
+            tooltip: 'Switch Vault',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          ),
           IconButton(
             icon: const Icon(Icons.search, size: 18),
             onPressed: () => setState(() => _showCommandBar = true),
@@ -241,28 +281,40 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     );
   }
 
-  Widget _buildPresetButton(IconData icon, String label, LayoutPreset preset) {
+  Widget _buildPanelButton(IconData icon, String label, ViewType vt) {
     final theme = Theme.of(context);
+    final isActive = _hasViewType(_rootNode, vt);
     return Padding(
       padding: const EdgeInsets.only(right: 2),
       child: Material(
-        color: Colors.transparent,
+        color: isActive
+            ? theme.colorScheme.primary.withValues(alpha: 0.12)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () => setState(() => _rootNode = _presetFor(preset)),
+          onTap: () => _togglePanel(vt),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 14, color: theme.iconTheme.color),
+                Icon(
+                  icon,
+                  size: 14,
+                  color: isActive
+                      ? theme.colorScheme.primary
+                      : theme.iconTheme.color,
+                ),
                 const SizedBox(width: 5),
                 Text(
                   label,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 12,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                    color: isActive
+                        ? theme.colorScheme.primary
+                        : theme.iconTheme.color,
                   ),
                 ),
               ],
@@ -341,12 +393,16 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       _createNewNote();
     } else if (lower.contains('new tab')) {
       ref.read(browserProvider.notifier).createTab(url: 'https://www.bing.com');
-      setState(() => _rootNode = _presetFor(LayoutPreset.browser));
+      if (!_hasViewType(_rootNode, ViewType.browser)) {
+        _togglePanel(ViewType.browser);
+      }
     } else if (lower.contains('daily note')) {
       ref.read(knowledgeProvider.notifier).createDailyNote(DateTime.now());
-      setState(() => _rootNode = _presetFor(LayoutPreset.editor));
+      if (!_hasViewType(_rootNode, ViewType.editor)) {
+        _togglePanel(ViewType.editor);
+      }
     } else if (lower.contains('graph')) {
-      setState(() => _rootNode = _presetFor(LayoutPreset.graph));
+      _togglePanel(ViewType.graph);
     } else if (lower.contains('settings')) {
       Navigator.push(
         context,
@@ -356,10 +412,14 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       ref.read(settingsProvider.notifier).toggleDarkMode();
     } else if (lower.contains('research')) {
       ref.read(agentServiceProvider).research(command);
-      setState(() => _rootNode = _splitPreset);
+      if (!_hasViewType(_rootNode, ViewType.ai)) {
+        _togglePanel(ViewType.ai);
+      }
     } else {
       ref.read(aiProvider.notifier).sendMessage(command);
-      setState(() => _rootNode = _splitPreset);
+      if (!_hasViewType(_rootNode, ViewType.ai)) {
+        _togglePanel(ViewType.ai);
+      }
     }
   }
 
@@ -391,7 +451,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     );
     if (title != null && title.isNotEmpty) {
       await ref.read(knowledgeProvider.notifier).createNote(title: title);
-      setState(() => _rootNode = _presetFor(LayoutPreset.editor));
+      if (!_hasViewType(_rootNode, ViewType.editor)) {
+        _togglePanel(ViewType.editor);
+      }
     }
   }
 }
