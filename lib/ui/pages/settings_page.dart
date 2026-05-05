@@ -6,7 +6,9 @@ import 'settings/component_settings_section.dart';
 import 'settings/language_settings_section.dart';
 import 'settings/ai_settings_section.dart';
 import 'settings/editor_settings_section.dart';
+import 'settings/shortcut_settings_section.dart';
 import 'settings/sync_settings_section.dart';
+import 'settings/quick_moves_settings_section.dart';
 import 'settings/about_section.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -21,6 +23,8 @@ class SettingsPage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: const [
+          QuickMovesSettingsSection(),
+          SizedBox(height: 20),
           ThemeSettingsSection(),
           SizedBox(height: 20),
           ComponentSettingsSection(),
@@ -30,6 +34,8 @@ class SettingsPage extends ConsumerWidget {
           AISettingsSection(),
           SizedBox(height: 20),
           EditorSettingsSection(),
+          SizedBox(height: 20),
+          ShortcutSettingsSection(),
           SizedBox(height: 20),
           SyncSettingsSection(),
           SizedBox(height: 20),

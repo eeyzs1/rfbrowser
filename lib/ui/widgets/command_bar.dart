@@ -1,6 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/embedding_service.dart';
 import '../../services/knowledge_service.dart';
+import '../../services/quick_move_service.dart';
+import '../../data/models/quick_move.dart';
+import 'create_quick_move_dialog.dart';
 
 class CommandBar extends ConsumerStatefulWidget {
   final ValueChanged<String> onCommand;
@@ -16,8 +21,11 @@ class _CommandBarState extends ConsumerState<CommandBar> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   List<_SearchResult> _results = [];
+  List<QuickMove> _quickMoves = [];
   bool _isSearching = false;
+  bool _isQuickMoveMode = false;
   int _selectedIndex = 0;
+  Timer? _debounceTimer;
 
   static const _commands = [
     _CommandDef('New Note', Icons.add, 'note'),
@@ -38,45 +46,82 @@ class _CommandBarState extends ConsumerState<CommandBar> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _controller.removeListener(_onQueryChanged);
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
+  bool get _isSlashMode => _controller.text.trim().startsWith('/');
+
+  String get _slashQuery {
+    final text = _controller.text.trim();
+    if (!text.startsWith('/')) return '';
+    return text.substring(1);
+  }
+
   void _onQueryChanged() {
+    _debounceTimer?.cancel();
     final query = _controller.text.trim();
+
     if (query.isEmpty) {
       setState(() {
         _results = [];
+        _quickMoves = [];
         _isSearching = false;
+        _isQuickMoveMode = false;
         _selectedIndex = 0;
       });
       return;
     }
 
-    setState(() => _isSearching = true);
-    _performSearch(query);
+    if (_isSlashMode) {
+      _updateQuickMoves();
+      return;
+    }
+
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      setState(() => _isSearching = true);
+      _performSearch(query);
+    });
+  }
+
+  void _updateQuickMoves() {
+    final quickMoveState = ref.read(quickMoveProvider);
+    final prefix = _slashQuery.split(' ').first;
+    final matches = quickMoveState.matching(prefix);
+
+    setState(() {
+      _quickMoves = matches;
+      _results = [];
+      _isQuickMoveMode = true;
+      _isSearching = false;
+      _selectedIndex = 0;
+    });
   }
 
   Future<void> _performSearch(String query) async {
-    await ref.read(knowledgeProvider.notifier).search(query);
+    final hybridSearch = ref.read(hybridSearchProvider);
+    final hybridResults = await hybridSearch.search(query);
     if (!mounted) return;
+
     final knowledge = ref.read(knowledgeProvider);
     final notes = knowledge.notes;
     final results = <_SearchResult>[];
 
-    for (final result in knowledge.searchResults) {
-      final noteId = result['id'] as String? ?? '';
-      final title = result['title'] as String? ?? '';
-      final filePath = result['file_path'] as String? ?? '';
-      final note = notes.where((n) => n.id == noteId).firstOrNull;
+    for (final hr in hybridResults) {
+      final note = notes.where((n) => n.id == hr.id).firstOrNull;
+      final title = (hr.metadata['title'] as String?) ?? note?.title ?? '';
+      final filePath =
+          (hr.metadata['file_path'] as String?) ?? note?.filePath ?? '';
       results.add(
         _SearchResult(
           title: title,
           filePath: filePath,
           tags: note?.tags ?? [],
           sourceUrl: note?.sourceUrl,
+          source: hr.source,
         ),
       );
     }
@@ -84,6 +129,8 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     if (mounted) {
       setState(() {
         _results = results;
+        _quickMoves = [];
+        _isQuickMoveMode = false;
         _isSearching = false;
         _selectedIndex = 0;
       });
@@ -93,6 +140,26 @@ class _CommandBarState extends ConsumerState<CommandBar> {
   void _handleSubmit() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+
+    if (_isQuickMoveMode) {
+      if (_quickMoves.isNotEmpty && _selectedIndex < _quickMoves.length) {
+        final move = _quickMoves[_selectedIndex];
+        _selectQuickMove(move);
+        return;
+      }
+
+      if (_quickMoves.isEmpty) {
+        final cmdName = _slashQuery.split(' ').first;
+        if (cmdName.isNotEmpty) {
+          _promptCreateQuickMove(cmdName);
+          return;
+        }
+      }
+
+      widget.onCommand(text);
+      widget.onClose();
+      return;
+    }
 
     if (_results.isNotEmpty && _selectedIndex < _results.length) {
       ref
@@ -114,7 +181,55 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     widget.onClose();
   }
 
+  void _selectQuickMove(QuickMove move) {
+    _controller.text = '/${move.name} ';
+    _controller.selection = TextSelection.collapsed(
+      offset: _controller.text.length,
+    );
+    _updateQuickMoves();
+    _focusNode.requestFocus();
+  }
+
+  void _promptCreateQuickMove(String cmdName) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('命令不存在'),
+        content: Text('命令 "/$cmdName" 不存在，是否创建？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _showCreateQuickMoveDialog(cmdName);
+            },
+            child: const Text('创建'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCreateQuickMoveDialog(String cmdName) {
+    showCreateQuickMoveDialog(
+      context,
+      ref,
+      prefillName: cmdName,
+    );
+  }
+
   void _selectItem(int index) {
+    if (_isQuickMoveMode) {
+      if (index < _quickMoves.length) {
+        final move = _quickMoves[index];
+        _selectQuickMove(move);
+      }
+      return;
+    }
+
     final totalItems = _commandResults.length + _results.length;
     if (index < 0 || index >= totalItems) return;
     setState(() => _selectedIndex = index);
@@ -132,6 +247,7 @@ class _CommandBarState extends ConsumerState<CommandBar> {
   }
 
   List<_CommandDef> get _commandResults {
+    if (_isQuickMoveMode) return [];
     final query = _controller.text.trim().toLowerCase();
     if (query.isEmpty) return _commands;
     return _commands
@@ -143,7 +259,8 @@ class _CommandBarState extends ConsumerState<CommandBar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final commands = _commandResults;
-    final showCommands = _controller.text.trim().isEmpty || commands.isNotEmpty;
+    final showCommands =
+        !_isQuickMoveMode && (_controller.text.trim().isEmpty || commands.isNotEmpty);
 
     return Center(
       child: Container(
@@ -168,8 +285,10 @@ class _CommandBarState extends ConsumerState<CommandBar> {
               child: Row(
                 children: [
                   Icon(
-                    Icons.search,
-                    color: theme.colorScheme.primary,
+                    _isQuickMoveMode ? Icons.bolt : Icons.search,
+                    color: _isQuickMoveMode
+                        ? const Color(0xFFF59E0B)
+                        : theme.colorScheme.primary,
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -179,7 +298,9 @@ class _CommandBarState extends ConsumerState<CommandBar> {
                       focusNode: _focusNode,
                       style: theme.textTheme.bodyLarge,
                       decoration: InputDecoration.collapsed(
-                        hintText: 'Search notes, commands...',
+                        hintText: _isQuickMoveMode
+                            ? 'Quick Move — type command name...'
+                            : 'Search notes, commands...',
                         hintStyle: theme.textTheme.bodyLarge?.copyWith(
                           color: theme.hintColor,
                         ),
@@ -214,9 +335,22 @@ class _CommandBarState extends ConsumerState<CommandBar> {
               child: ListView.builder(
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(vertical: 4),
-                itemCount:
-                    (showCommands ? commands.length : 0) + _results.length,
+                itemCount: _isQuickMoveMode
+                    ? _quickMoves.length
+                    : (showCommands ? commands.length : 0) + _results.length,
                 itemBuilder: (context, index) {
+                  if (_isQuickMoveMode) {
+                    final move = _quickMoves[index];
+                    return _buildQuickMoveTile(
+                      theme,
+                      move,
+                      index == _selectedIndex,
+                      () {
+                        setState(() => _selectedIndex = index);
+                        _selectQuickMove(move);
+                      },
+                    );
+                  }
                   if (showCommands && index < commands.length) {
                     final cmd = commands[index];
                     final globalIndex = index;
@@ -227,9 +361,8 @@ class _CommandBarState extends ConsumerState<CommandBar> {
                       () => _selectItem(globalIndex),
                     );
                   }
-                  final resultIndex = showCommands
-                      ? index - commands.length
-                      : index;
+                  final resultIndex =
+                      showCommands ? index - commands.length : index;
                   final globalIndex = index;
                   if (resultIndex < _results.length) {
                     final result = _results[resultIndex];
@@ -247,6 +380,57 @@ class _CommandBarState extends ConsumerState<CommandBar> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildQuickMoveTile(
+    ThemeData theme,
+    QuickMove move,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
+    return ListTile(
+      dense: true,
+      selected: isSelected,
+      selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+      leading: Icon(
+        move.icon,
+        size: 16,
+        color: move.color,
+      ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '/${move.name}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+      subtitle: move.promptTemplate.length > 60
+          ? Text(
+              '${move.promptTemplate.substring(0, 60)}...',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+                fontSize: 11,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            )
+          : null,
+      trailing: Text(
+        move.type == QuickMoveType.preset ? 'Preset' : 'Quick Move',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.hintColor,
+          fontSize: 10,
+        ),
+      ),
+      onTap: onTap,
     );
   }
 
@@ -322,9 +506,30 @@ class _CommandBarState extends ConsumerState<CommandBar> {
               ),
             )
           : null,
-      trailing: result.sourceUrl != null
-          ? Icon(Icons.language, size: 12, color: theme.hintColor)
-          : null,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (result.source.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                result.source == 'semantic' ? 'semantic' : 'keyword',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 9,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ),
+          if (result.sourceUrl != null) ...[
+            const SizedBox(width: 4),
+            Icon(Icons.language, size: 12, color: theme.hintColor),
+          ],
+        ],
+      ),
       onTap: onTap,
     );
   }
@@ -342,10 +547,12 @@ class _SearchResult {
   final String filePath;
   final List<String> tags;
   final String? sourceUrl;
+  final String source;
   const _SearchResult({
     required this.title,
     required this.filePath,
     this.tags = const [],
     this.sourceUrl,
+    this.source = '',
   });
 }

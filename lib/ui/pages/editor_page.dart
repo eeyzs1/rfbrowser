@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
+import '../../core/editor/highlighted_text_editing_controller.dart';
+import '../../core/editor/sync_scroll_controller.dart';
+import '../../data/models/drag_data.dart';
 import '../../services/knowledge_service.dart';
+import '../../services/quick_move_service.dart';
 import '../../services/settings_service.dart';
 import '../../data/stores/vault_store.dart';
+import '../../data/models/quick_move.dart';
+import '../widgets/create_note_dialog.dart';
 
 class EditorView extends ConsumerStatefulWidget {
   const EditorView({super.key});
@@ -14,16 +20,25 @@ class EditorView extends ConsumerStatefulWidget {
 }
 
 class _EditorViewState extends ConsumerState<EditorView> {
-  final _controller = TextEditingController();
-  final _scrollController = ScrollController();
+  final _controller = HighlightedTextEditingController();
+  final _editorScrollController = ScrollController();
+  final _previewScrollController = ScrollController();
   bool _isPreview = false;
+  bool _isSplitView = false;
   bool _isDirty = false;
+  bool _isDragOver = false;
   String? _lastLoadedNoteId;
+  final _dropHandler = DropHandler();
+  SyncScrollController? _syncScrollController;
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_onContentChanged);
+    _syncScrollController = SyncScrollController(
+      editorController: _editorScrollController,
+      previewController: _previewScrollController,
+    );
   }
 
   void _onContentChanged() {
@@ -38,8 +53,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
   @override
   void dispose() {
     _controller.removeListener(_onContentChanged);
+    _syncScrollController?.detach();
     _controller.dispose();
-    _scrollController.dispose();
+    _editorScrollController.dispose();
+    _previewScrollController.dispose();
     super.dispose();
   }
 
@@ -111,6 +128,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
       if (_isDirty) {
         _isDirty = false;
       }
+      _updateContext(note.content);
     }
 
     return Column(
@@ -144,11 +162,31 @@ class _EditorViewState extends ConsumerState<EditorView> {
                 ),
               IconButton(
                 icon: Icon(
-                  _isPreview ? Icons.edit : Icons.visibility,
+                  _isSplitView
+                      ? Icons.vertical_split
+                      : _isPreview
+                          ? Icons.edit
+                          : Icons.visibility,
                   size: 18,
                 ),
-                onPressed: () => setState(() => _isPreview = !_isPreview),
-                tooltip: _isPreview ? 'Edit' : 'Preview',
+                onPressed: () => setState(() {
+                  if (_isSplitView) {
+                    _isSplitView = false;
+                    _isPreview = false;
+                    _syncScrollController?.detach();
+                  } else if (_isPreview) {
+                    _isPreview = false;
+                    _isSplitView = true;
+                    _syncScrollController?.attach();
+                  } else {
+                    _isPreview = true;
+                  }
+                }),
+                tooltip: _isSplitView
+                    ? 'Edit'
+                    : _isPreview
+                        ? 'Edit'
+                        : 'Split View',
               ),
               IconButton(
                 icon: const Icon(Icons.save, size: 18),
@@ -159,9 +197,11 @@ class _EditorViewState extends ConsumerState<EditorView> {
           ),
         ),
         Expanded(
-          child: _isPreview
-              ? _buildMarkdownPreview(theme, note)
-              : _buildEditor(theme),
+          child: _isSplitView
+              ? _buildSplitView(theme, note)
+              : _isPreview
+                  ? _buildMarkdownPreview(theme, note)
+                  : _buildEditor(theme),
         ),
       ],
     );
@@ -169,26 +209,106 @@ class _EditorViewState extends ConsumerState<EditorView> {
 
   Widget _buildEditor(ThemeData theme) {
     final settings = ref.watch(settingsProvider);
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: TextField(
-        controller: _controller,
-        scrollController: _scrollController,
-        maxLines: null,
-        expands: true,
-        style: theme.textTheme.bodyLarge?.copyWith(
-          fontFamily: 'monospace',
-          fontSize: settings.editorFontSize,
-          height: 1.6,
-        ),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: 'Start writing... Use [[link]] to link notes',
-          hintStyle: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.hintColor,
+    return DragTarget<DragData>(
+      onWillAcceptWithDetails: (details) {
+        setState(() => _isDragOver = true);
+        return true;
+      },
+      onLeave: (data) {
+        setState(() => _isDragOver = false);
+      },
+      onAcceptWithDetails: (details) {
+        setState(() => _isDragOver = false);
+        final markdown = _dropHandler.handle(details.data);
+        final text = _controller.text;
+        final selection = _controller.selection;
+        final insertPos = selection.baseOffset.clamp(0, text.length);
+        _controller.text = text.substring(0, insertPos) + markdown + text.substring(insertPos);
+        _controller.selection = TextSelection.collapsed(offset: insertPos + markdown.length);
+      },
+      builder: (context, candidateData, rejectedData) {
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            border: _isDragOver
+                ? Border.all(color: theme.colorScheme.primary, width: 2)
+                : null,
+            borderRadius: BorderRadius.circular(4),
           ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: _buildHighlightedEditor(theme, settings),
+              ),
+              if (_isDragOver)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Drop here',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHighlightedEditor(ThemeData theme, AppSettings settings) {
+    _controller.setTheme(theme);
+    return TextField(
+      controller: _controller,
+      scrollController: _editorScrollController,
+      maxLines: null,
+      expands: true,
+      style: theme.textTheme.bodyLarge?.copyWith(
+        fontFamily: 'monospace',
+        fontSize: settings.editorFontSize,
+        height: 1.6,
+      ),
+      decoration: InputDecoration(
+        border: InputBorder.none,
+        hintText: 'Start writing... Use [[link]] to link notes',
+        hintStyle: theme.textTheme.bodyLarge?.copyWith(
+          color: theme.hintColor,
         ),
       ),
+    );
+  }
+
+  Widget _buildSplitView(ThemeData theme, dynamic note) {
+    final settings = ref.watch(settingsProvider);
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                right: BorderSide(color: theme.dividerColor),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: _buildHighlightedEditor(theme, settings),
+            ),
+          ),
+        ),
+        Expanded(
+          child: _buildMarkdownPreview(theme, note),
+        ),
+      ],
     );
   }
 
@@ -247,34 +367,23 @@ class _EditorViewState extends ConsumerState<EditorView> {
   }
 
   void _createNewNote() async {
-    final title = await showDialog<String>(
-      context: context,
-      builder: (ctx) {
-        final controller = TextEditingController();
-        return AlertDialog(
-          title: const Text('New Note'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(hintText: 'Note title'),
-            onSubmitted: (v) => Navigator.pop(ctx, v),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, controller.text),
-              child: const Text('Create'),
-            ),
-          ],
-        );
-      },
-    );
+    final title = await showCreateNoteDialog(context);
     if (title != null && title.isNotEmpty) {
       await ref.read(knowledgeProvider.notifier).createNote(title: title);
     }
+  }
+
+  void _updateContext(String content) {
+    final selection = _controller.selection;
+    String? selectedText;
+    if (selection.isValid && !selection.isCollapsed) {
+      selectedText = selection.textInside(content);
+    }
+    final ctx = QuickMoveContext(
+      noteContent: content,
+      selectedText: selectedText,
+    );
+    ref.read(quickMoveContextProvider.notifier).update(ctx);
   }
 }
 

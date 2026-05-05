@@ -5,7 +5,9 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/browser_service.dart';
 import '../../services/knowledge_service.dart';
+import '../../services/quick_move_service.dart';
 import '../../data/models/browser_tab.dart';
+import '../../data/models/quick_move.dart';
 
 class BrowserView extends ConsumerStatefulWidget {
   const BrowserView({super.key});
@@ -17,6 +19,7 @@ class BrowserView extends ConsumerStatefulWidget {
 class _BrowserViewState extends ConsumerState<BrowserView> {
   final _urlController = TextEditingController();
   final Map<String, InAppWebViewController> _controllers = {};
+  String? _lastActiveTabId;
 
   @override
   void dispose() {
@@ -70,7 +73,11 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
       );
     }
 
-    _urlController.text = activeTab.url == 'about:blank' ? '' : activeTab.url;
+    if (_lastActiveTabId != activeTab.id) {
+      _urlController.text =
+          activeTab.url == 'about:blank' ? '' : activeTab.url;
+      _lastActiveTabId = activeTab.id;
+    }
 
     return Column(
       children: [
@@ -135,6 +142,8 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
               ? _LinuxBrowserPlaceholder(
                   tab: activeTab,
                   onOpenExternal: () => _openExternal(activeTab.url),
+                  onNavigate: (url) => _navigateToUrl(url),
+                  onClip: () => _clipCurrentPage(),
                 )
               : InAppWebView(
                   key: ValueKey(activeTab.id),
@@ -172,6 +181,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                           .read(browserProvider.notifier)
                           .updateTabTitle(activeTab.id, title);
                     }
+                    _updateQuickMoveContext(controller, url, title);
                   },
                   shouldOverrideUrlLoading:
                       (controller, navigationAction) async {
@@ -317,44 +327,148 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
       await launchUrl(uri);
     }
   }
+
+  void _navigateToUrl(String url) {
+    if (url.isEmpty) return;
+    final normalizedUrl = url.startsWith('http') ? url : 'https://$url';
+    final activeTabId = ref.read(browserProvider).activeTabId;
+    if (activeTabId != null) {
+      ref
+          .read(browserProvider.notifier)
+          .updateTabUrl(activeTabId, normalizedUrl);
+    }
+  }
+
+  Future<void> _updateQuickMoveContext(
+    InAppWebViewController controller,
+    Uri? url,
+    String? title,
+  ) async {
+    try {
+      final pageText = await controller.evaluateJavascript(
+        source: 'document.body.innerText',
+      );
+      final textContent =
+          pageText is String ? pageText : pageText.toString();
+
+      final ctx = QuickMoveContext(
+        currentUrl: url?.toString(),
+        pageTitle: title,
+        pageContent: textContent,
+      );
+      ref.read(quickMoveContextProvider.notifier).update(ctx);
+    } catch (_) {
+      final ctx = QuickMoveContext(
+        currentUrl: url?.toString(),
+        pageTitle: title,
+      );
+      ref.read(quickMoveContextProvider.notifier).update(ctx);
+    }
+  }
+
+  void _clipCurrentPage() {
+    final activeTab = ref.read(browserProvider).activeTab;
+    if (activeTab != null) {
+      _clipPage(activeTab);
+    }
+  }
 }
 
-class _LinuxBrowserPlaceholder extends StatelessWidget {
+class _LinuxBrowserPlaceholder extends StatefulWidget {
   final BrowserTab tab;
   final VoidCallback onOpenExternal;
+  final ValueChanged<String> onNavigate;
+  final VoidCallback onClip;
 
   const _LinuxBrowserPlaceholder({
     required this.tab,
     required this.onOpenExternal,
+    required this.onNavigate,
+    required this.onClip,
   });
+
+  @override
+  State<_LinuxBrowserPlaceholder> createState() =>
+      _LinuxBrowserPlaceholderState();
+}
+
+class _LinuxBrowserPlaceholderState extends State<_LinuxBrowserPlaceholder> {
+  late TextEditingController _urlController;
+
+  @override
+  void initState() {
+    super.initState();
+    _urlController = TextEditingController(text: widget.tab.url);
+  }
+
+  @override
+  void didUpdateWidget(covariant _LinuxBrowserPlaceholder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.tab.url != widget.tab.url) {
+      _urlController.text = widget.tab.url;
+    }
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
+
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.open_in_browser, size: 48, color: theme.hintColor),
           const SizedBox(height: 16),
           Text(
-            'Embedded browser is not yet available on Linux',
+            'Embedded browser is not available on Linux',
             style: theme.textTheme.titleMedium,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
-          Text(
-            tab.url,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
+          const SizedBox(height: 16),
+          SizedBox(
+            width: 500,
+            child: TextField(
+              controller: _urlController,
+              decoration: InputDecoration(
+                hintText: 'Enter URL',
+                prefixIcon: const Icon(Icons.language),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.arrow_forward),
+                  onPressed: () => widget.onNavigate(_urlController.text),
+                ),
+                border: const OutlineInputBorder(),
+              ),
+              onSubmitted: widget.onNavigate,
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: onOpenExternal,
-            icon: const Icon(Icons.open_in_new),
-            label: const Text('Open in System Browser'),
+          Wrap(
+            spacing: 8,
+            children: [
+              FilledButton.icon(
+                onPressed: widget.onOpenExternal,
+                icon: const Icon(Icons.open_in_new),
+                label: const Text('Open in System Browser'),
+              ),
+              OutlinedButton.icon(
+                onPressed: widget.onClip,
+                icon: const Icon(Icons.content_cut),
+                label: const Text('Clip Page to Note'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Tip: Use the system browser for full web browsing, or clip pages to your vault for offline reading.',
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+            textAlign: TextAlign.center,
           ),
         ],
       ),

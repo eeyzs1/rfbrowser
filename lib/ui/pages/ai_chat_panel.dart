@@ -7,6 +7,8 @@ import '../../services/knowledge_service.dart';
 import '../../services/browser_service.dart';
 import '../../services/skill_service.dart';
 import '../../core/model/ai_provider.dart';
+import '../../core/context/assembler.dart';
+import '../../core/context/reference_parser.dart';
 
 class AIChatPanel extends ConsumerStatefulWidget {
   const AIChatPanel({super.key});
@@ -18,12 +20,127 @@ class AIChatPanel extends ConsumerStatefulWidget {
 class _AIChatPanelState extends ConsumerState<AIChatPanel> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  final _focusNode = FocusNode();
+  List<_AutocompleteItem> _autocompleteItems = [];
+  bool _showAutocomplete = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onTextChanged);
+  }
 
   @override
   void dispose() {
+    _controller.removeListener(_onTextChanged);
     _controller.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onTextChanged() {
+    final text = _controller.text;
+    final cursorPos = _controller.selection.baseOffset;
+    if (cursorPos < 0) {
+      setState(() => _showAutocomplete = false);
+      return;
+    }
+
+    final textBeforeCursor = text.substring(0, cursorPos);
+    final atMatch = RegExp(r'@(\w*)$').firstMatch(textBeforeCursor);
+
+    if (atMatch != null) {
+      final query = atMatch.group(1) ?? '';
+      _updateAutocomplete(query);
+    } else {
+      setState(() => _showAutocomplete = false);
+    }
+  }
+
+  void _updateAutocomplete(String query) {
+    final items = <_AutocompleteItem>[];
+
+    items.add(
+      _AutocompleteItem(
+        label: '@note[...]',
+        description: 'Reference a note',
+        type: ContextRefType.note,
+        insertText: '@note[]',
+        cursorOffset: -1,
+      ),
+    );
+    items.add(
+      _AutocompleteItem(
+        label: '@web[current]',
+        description: 'Reference current web page',
+        type: ContextRefType.web,
+        insertText: '@web[current]',
+        cursorOffset: 0,
+      ),
+    );
+    items.add(
+      _AutocompleteItem(
+        label: '@clip[...]',
+        description: 'Reference a web clip',
+        type: ContextRefType.clip,
+        insertText: '@clip[]',
+        cursorOffset: -1,
+      ),
+    );
+
+    if (query.isNotEmpty) {
+      final knowledge = ref.read(knowledgeProvider);
+      final noteResults = knowledge.notes
+          .where(
+            (n) =>
+                n.title.toLowerCase().contains(query.toLowerCase()),
+          )
+          .take(10)
+          .toList();
+      for (final note in noteResults) {
+        items.add(
+          _AutocompleteItem(
+            label: '@note[${note.title}]',
+            description: note.content.length > 50
+                ? '${note.content.substring(0, 50)}...'
+                : note.content,
+            type: ContextRefType.note,
+            insertText: '@note[${note.title}]',
+            cursorOffset: 0,
+          ),
+        );
+      }
+    }
+
+    setState(() {
+      _autocompleteItems = items;
+      _showAutocomplete = items.isNotEmpty;
+    });
+  }
+
+  void _applyAutocomplete(_AutocompleteItem item) {
+    final text = _controller.text;
+    final cursorPos = _controller.selection.baseOffset;
+    final textBeforeCursor = text.substring(0, cursorPos);
+    final atMatch = RegExp(r'@\w*$').firstMatch(textBeforeCursor);
+
+    if (atMatch != null) {
+      final before = text.substring(0, atMatch.start);
+      final after = text.substring(cursorPos);
+      final newText = '$before${item.insertText}$after';
+      _controller.text = newText;
+      final newCursorPos = atMatch.start + item.insertText.length + item.cursorOffset;
+      _controller.selection = TextSelection.collapsed(
+        offset: newCursorPos.clamp(0, newText.length),
+      );
+    }
+
+    setState(() {
+      _showAutocomplete = false;
+      _autocompleteItems = [];
+    });
+    _focusNode.requestFocus();
   }
 
   void _scrollToBottom() {
@@ -179,41 +296,98 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
           decoration: BoxDecoration(
             border: Border(top: BorderSide(color: theme.dividerColor)),
           ),
-          child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  style: theme.textTheme.bodyMedium,
-                  decoration: InputDecoration(
-                    hintText: 'Type a message...',
-                    hintStyle: theme.textTheme.bodySmall,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+              if (_showAutocomplete && _autocompleteItems.isNotEmpty)
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: theme.dividerColor),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    itemCount: _autocompleteItems.length,
+                    itemBuilder: (context, index) {
+                      final item = _autocompleteItems[index];
+                      return ListTile(
+                        dense: true,
+                        leading: Icon(
+                          _iconForRefType(item.type),
+                          size: 14,
+                          color: theme.colorScheme.primary,
+                        ),
+                        title: Text(
+                          item.label,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        subtitle: item.description.isNotEmpty
+                            ? Text(
+                                item.description,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.hintColor,
+                                  fontSize: 10,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            : null,
+                        onTap: () => _applyAutocomplete(item),
+                      );
+                    },
+                  ),
+                ),
+              if (_showAutocomplete) const SizedBox(height: 4),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      style: theme.textTheme.bodyMedium,
+                      decoration: InputDecoration(
+                        hintText: 'Type a message... (use @ to reference)',
+                        hintStyle: theme.textTheme.bodySmall,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      onSubmitted: (_) => _sendMessage(),
                     ),
                   ),
-                  onSubmitted: (_) => _sendMessage(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: aiState.isLoading
-                    ? SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: theme.colorScheme.onPrimary,
-                        ),
-                      )
-                    : const Icon(Icons.send, size: 18),
-                onPressed: aiState.isLoading ? null : _sendMessage,
-                style: IconButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: aiState.isLoading
+                        ? SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                          )
+                        : const Icon(Icons.send, size: 18),
+                    onPressed: aiState.isLoading ? null : _sendMessage,
+                    style: IconButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -279,6 +453,30 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                       ),
                     ),
                   ),
+                  if (msg.content.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: TextButton.icon(
+                        onPressed: () => _saveAsNote(msg.content),
+                        icon: const Icon(Icons.save, size: 12),
+                        label: Text(
+                          'Save as Note',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 10,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
+                    ),
                   if (msg.isStreaming)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
@@ -311,13 +509,13 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
   }
 
   Widget _buildModelSelector(ThemeData theme, AIState aiState) {
-    final settingsNotifier = ref.read(settingsProvider.notifier);
-    final providers = settingsNotifier.providers
+    final aiConfig = ref.read(aiConfigProvider);
+    final providers = aiConfig.providers
         .where((p) => p.isEnabled)
         .toList();
-    final activeModel = aiState.activeModel ?? settingsNotifier.activeModel;
+    final activeModel = aiState.activeModel ?? aiConfig.activeModel;
     final activeProvider =
-        aiState.activeProvider ?? settingsNotifier.activeProvider;
+        aiState.activeProvider ?? aiConfig.activeProvider;
 
     if (providers.isEmpty) {
       return TextButton.icon(
@@ -418,11 +616,11 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
   }
 
   void _showModelPicker(ThemeData theme) {
-    final settingsNotifier = ref.read(settingsProvider.notifier);
-    final providers = settingsNotifier.providers
+    final aiConfig = ref.read(aiConfigProvider);
+    final providers = aiConfig.providers
         .where((p) => p.isEnabled)
         .toList();
-    final activeConfig = settingsNotifier.activeConfig;
+    final activeConfig = aiConfig.activeConfig;
 
     showDialog(
       context: context,
@@ -434,7 +632,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
           child: ListView(
             shrinkWrap: true,
             children: providers.map((provider) {
-              final models = settingsNotifier.modelsForProvider(provider.id);
+              final models = aiConfig.modelsForProvider(provider.id);
               final isActiveProvider = activeConfig?.providerId == provider.id;
               return ExpansionTile(
                 initiallyExpanded: isActiveProvider,
@@ -640,7 +838,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                         ? apiKeyController.text.trim()
                         : null,
                   );
-                  ref.read(settingsProvider.notifier).addProvider(provider);
+                  ref.read(aiConfigProvider.notifier).addProvider(provider);
                   Navigator.pop(ctx);
                 },
                 child: const Text('Save'),
@@ -652,40 +850,39 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
     );
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     _controller.clear();
 
-    final contextBuffer = StringBuffer();
-
     final knowledge = ref.read(knowledgeProvider);
-    final activeNote = knowledge.activeNote;
-    if (activeNote != null) {
-      contextBuffer.writeln('[Current Note: ${activeNote.title}]');
-      final content = activeNote.content;
-      if (content.length > 2000) {
-        contextBuffer.writeln(content.substring(0, 2000));
-        contextBuffer.writeln('...(truncated)');
-      } else {
-        contextBuffer.writeln(content);
-      }
-    }
-
     final browser = ref.read(browserProvider);
-    final activeTab = browser.activeTab;
-    if (activeTab != null &&
-        activeTab.url.isNotEmpty &&
-        !activeTab.url.startsWith('about:blank')) {
-      contextBuffer.writeln('[Current Page: ${activeTab.title}]');
-      contextBuffer.writeln('URL: ${activeTab.url}');
+    final assembler = ref.read(assemblerProvider);
+
+    final assembly = await assembler.assemble(
+      text,
+      currentNote: knowledge.activeNote,
+      currentWebUrl: browser.activeTab?.url,
+      currentWebTitle: browser.activeTab?.title,
+      allNotes: knowledge.notes,
+    );
+
+    final contextStr = assembly.toPrompt();
+    final effectiveContext =
+        contextStr.isNotEmpty ? contextStr : null;
+
+    if (assembly.truncated && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Context truncated to fit token limit'),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Theme.of(context).colorScheme.tertiary,
+        ),
+      );
     }
 
-    final contextStr = contextBuffer.isNotEmpty
-        ? contextBuffer.toString()
-        : null;
-
-    ref.read(aiProvider.notifier).sendMessage(text, context: contextStr);
+    ref.read(aiProvider.notifier).sendMessage(text, context: effectiveContext);
   }
 
   void _showSkillPicker(ThemeData theme) async {
@@ -802,6 +999,23 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
     }
   }
 
+  void _saveAsNote(String content) async {
+    final browser = ref.read(browserProvider);
+    final activeTab = browser.activeTab;
+
+    await ref.read(knowledgeProvider.notifier).clipToNote(
+          url: activeTab?.url ?? '',
+          title: 'AI Response — ${DateTime.now().toString().substring(0, 16)}',
+          content: content,
+        );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Saved as note')),
+      );
+    }
+  }
+
   void _promptForParams(dynamic skill, String basePrompt) {
     final controllers = <String, TextEditingController>{};
     for (final param in skill.params.values) {
@@ -850,4 +1064,35 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
       ),
     );
   }
+
+  IconData _iconForRefType(ContextRefType type) {
+    switch (type) {
+      case ContextRefType.note:
+        return Icons.description;
+      case ContextRefType.web:
+        return Icons.language;
+      case ContextRefType.clip:
+        return Icons.content_cut;
+      case ContextRefType.file:
+        return Icons.insert_drive_file;
+      case ContextRefType.agent:
+        return Icons.smart_toy;
+    }
+  }
+}
+
+class _AutocompleteItem {
+  final String label;
+  final String description;
+  final ContextRefType type;
+  final String insertText;
+  final int cursorOffset;
+
+  _AutocompleteItem({
+    required this.label,
+    this.description = '',
+    required this.type,
+    required this.insertText,
+    this.cursorOffset = 0,
+  });
 }
