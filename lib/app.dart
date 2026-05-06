@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'l10n/app_localizations.dart';
 import 'services/settings_service.dart';
+import 'services/shortcut_service.dart';
 import 'services/knowledge_service.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/layout/main_layout.dart';
@@ -32,6 +33,8 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
 
   Future<void> _initApp() async {
     await ref.read(settingsProvider.notifier).loadSettings();
+    await ref.read(aiConfigProvider.notifier).loadConfig();
+    await ref.read(shortcutServiceProvider).load();
     await ref.read(vaultProvider.notifier).loadRecentVaults();
     final vaultState = ref.read(vaultProvider);
     final settings = ref.read(settingsProvider);
@@ -77,8 +80,12 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
       title: 'RFBrowser',
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      theme: AppTheme.lightTheme(settings),
-      darkTheme: AppTheme.darkTheme(settings),
+      theme: settings.highContrastMode
+          ? AppTheme.highContrastTheme(settings)
+          : AppTheme.lightTheme(settings),
+      darkTheme: settings.highContrastMode
+          ? AppTheme.highContrastTheme(settings)
+          : AppTheme.darkTheme(settings),
       themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       locale: RFBrowserApp._resolveLocale(settings.locale),
       home: showWelcome

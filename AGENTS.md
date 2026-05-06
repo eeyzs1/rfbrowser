@@ -1,84 +1,98 @@
-# Meta-Harness — AGENT OPERATING INSTRUCTIONS
+# RFBrowser — AGENT OPERATING INSTRUCTIONS
 
-## ⚠️ MANDATORY: Read This Before Taking Any Action
+## What This Project Is
 
-This project is a META-HARNESS — it does NOT do the work itself.
-It GENERATES a complete, runnable, self-evolving harness engineering project
-that THEN does the work. Your job is to run the generation pipeline.
+RFBrowser is a **Flutter desktop application** — an AI-powered knowledge browser.
+It is NOT a meta-harness generation pipeline. It IS the actual application.
+Your job is to help build, debug, and improve this Flutter app.
 
-## First Principles (Override Everything Else)
+## Project Context
 
-1. **Do not assume the user knows what they want.** When unclear, STOP and discuss.
-2. **If the goal is clear but the path isn't optimal, say so.** Suggest the better way.
-3. **Chase root causes, never patch symptoms.** Every decision must answer "why".
-4. **Output only what changes decisions.** Cut everything else.
+RFBrowser = Web Browser + Markdown Note Editor + Knowledge Graph + AI Chat + Infinite Canvas.
 
-## The Core Loop
+Key technical facts:
+- Flutter 3.27+ with Dart 3.11+
+- State management: Riverpod (with code generation via riverpod_generator)
+- WebView: flutter_inappwebview (Chromium-based on Windows/Android, WebKit on Linux)
+- Database: SQLite (sqflite) for search index, Hive for cache
+- File format: Pure Markdown (.md) with YAML frontmatter — compatible with Obsidian/Foam
+- Sync: Git CLI + WebDAV
+
+## First Principles
+
+1. **Understand before acting.** Read the relevant source files before making changes.
+2. **Chase root causes, never patch symptoms.** Every fix should answer "why".
+3. **Follow existing conventions.** Match code style, patterns, and library usage of adjacent files.
+4. **Write tests for new logic.** Test files go in `test/` mirroring the `lib/` structure.
+
+## Automated Harness Execution (AI Agent MUST Follow)
+
+The project has a self-evolving harness system at `seeds/`. As the AI agent, you MUST execute
+these steps **automatically** — the user should never need to type these commands.
+
+### Task Start Protocol (AUTOMATIC — before any code change)
+
+1. Run `python seeds/orchestrator.py --status` to load current project state.
+2. Run `python seeds/orchestrator.py --check-constraints` to scan for genome constraint violations.
+3. If violations exist with severity=high, they MUST be the first thing fixed.
+4. Read `seeds/evolution/genome.yaml` constraints relevant to the files you're about to touch.
+5. Check `seeds/memory/session-state.yaml` for any in-progress criteria.
+
+### During Task (AUTOMATIC — after each batch of file edits)
+
+1. Run `flutter analyze` after every logical batch of changes.
+2. If a change introduces a mistake, immediately add it to `seeds/memory/meta-mistakes.md`.
+3. Cross-reference AGENTS.md rules (P-1 through UX-7) for every method you write.
+4. Check `seeds/evolution/genome.yaml` constraint trigger_count — if you see a violation, increment it.
+
+### Task Completion Protocol (AUTOMATIC — before declaring done)
+
+1. Run `flutter analyze` — MUST pass with 0 issues.
+2. Run `python seeds/orchestrator.py --verify` to run verification layer.
+3. Update `seeds/memory/session-state.yaml`:
+   - Mark completed criteria as complete
+   - Update `completed` count
+   - Set status to "solid" if all criteria met
+4. Run `python seeds/orchestrator.py --status` to confirm 10/10 or explain why not.
+
+### Key Files the Agent Must Reference
+
+| File | When to Read |
+|------|-------------|
+| `seeds/evolution/genome.yaml` | Before touching any module — check constraints for that layer |
+| `seeds/memory/session-state.yaml` | At task start and completion |
+| `seeds/memory/meta-mistakes.md` | When you cause or discover an error |
+| `seeds/evolution/domain-advancements.yaml` | When proposing new features |
+| `task.yaml` | At task start — defines acceptance criteria |
+
+## Architecture (Quick Reference)
 
 ```
-┌─→ INTERPRET: What does the user actually need? (first principles)
-│       ↓
-│   GENERATE: Create a COMPLETE harness project (7 layers + 2 cross-cutting + evolution)
-│       ↓
-│   PROVE:   Does the generated project cover all 7 layers? Can it run? Can it evolve?
-│       ↓
-│   JUDGE:   Is the generated project sufficient? ──→ NO → root cause → loop back
-│       ↓
-│   YES
-│       ↓
-└── EVOLVE:  What did we learn about generation? Improve the meta-harness.
+UI (lib/ui/)        → pages (Browser, Editor, Graph, Canvas, Settings, AI Chat)
+                       widgets (CommandBar, Backlinks, NoteSidebar, SplitPane, etc.)
+Service (lib/services/) → ai_service, agent_service, browser_service, knowledge_service,
+                          git_sync_service, webdav_sync_service, clipper_service, etc.
+Core (lib/core/)       → graph algorithms, link extractor/resolver, context assembler,
+                          markdown highlighter, editor controllers
+Data (lib/data/)       → models (Note, Link, AgentTask, Skill, QuickMove, etc.)
+                          stores (IndexStore, SyncStore, VaultStore, HNSW, Vector)
+                          repositories (NoteRepository)
+Platform (lib/platform/) → WebView managers (inline agent_webview, headless_manager)
+Plugins (lib/plugins/) → Plugin host + API + builtin Dataview
 ```
-
-## Step-by-Step Protocol
-
-### Step 1: Interpret (First Principles)
-Read `meta/interpreter.md`. Understand the REAL need.
-Do NOT start from templates. Start from the problem.
-
-### Step 2: Generate Complete Harness Project
-Read `meta/harness-generator.md`. Generate ALL seven layers:
-1. Context Engineering (AGENTS.md, context loader, knowledge index)
-2. Tool Integration (schemas, sandbox, permissions, MCP)
-3. Memory & State (session state, long-term memory, snapshots, compression)
-4. Planning & Orchestration (DAG, flow control, sub-agents, budgets)
-5. Verification & Guardrails (format validators, consistency, security, self-check)
-6. Feedback & Self-Healing (error capture, retry, optimization loop, human interface)
-7. Constraints & Entropy (architecture rules, enforcement, entropy reduction, cost)
-
-Plus two cross-cutting systems:
-- Security & Isolation (sandbox, encryption, audit)
-- Observability & Governance (tracing, metrics, replay, versioning)
-
-Plus self-evolution system (evidence-driven).
-
-### Step 3: Generate Agent Topology
-Read `meta/agent-factory.md`. Generate topology from task analysis.
-
-### Step 4: Prove Completeness
-For each of the 7 layers + 2 cross-cutting systems:
-- Verify at least one concrete artifact was generated
-- Verify artifacts are executable, not just documentation
-- Verify evidence traceability exists
-
-### Step 5: Judge
-Can the generated project actually run and self-evolve?
-If NO → diagnose root cause, loop back.
-
-### Step 6: Evolve Meta-Harness
-What did we learn about the generation process? Improve `meta/` and `templates/`.
 
 ## Absolute Rules
 
-1. No execution without interpretation
-2. No agent without a harness
-3. No constraint without a reason
-4. No completion without EVIDENCE
-5. No single-pass execution — loop until proven
-6. No patching symptoms — chase root causes
-7. Generate EXECUTABLE systems, not just documents
-8. Every generated layer must have concrete artifacts
-9. Evolution never removes verification or itself
-10. All mutations reversible
+1. No execution without reading the relevant source first
+2. No Flutter widget changes without testing on the platform they target
+3. Follow the Riverpod pattern: Notifier + State + Provider
+4. Null-check API responses defensively at every level
+5. Destructive actions (delete, clear) MUST require confirmation
+6. API keys MUST NOT be stored in observable state objects — use flutter_secure_storage
+7. WebView MUST filter dangerous URL schemes (`file://`, `javascript:`, `data:`)
+8. Always run `flutter analyze` before committing — 0 issues is the hard threshold
+9. Before starting ANY task, run `python seeds/orchestrator.py --status` + `--check-constraints`
+10. New features need at least one user-accessible trigger (button, menu, shortcut, or command)
 
 ## Learned Lessons (Evidence-Driven Evolution)
 
@@ -88,42 +102,45 @@ What did we learn about the generation process? Improve `meta/` and `templates/`
 - **P-3**: Cache `SharedPreferences.getInstance()` rather than calling it in every setter.
 
 ### Correctness
-- **C-1**: API response parsing must be defensive — null-check every level of nested access (`data?['choices']?[0]?['message']?['content']`). Never assume API responses match the expected schema.
+- **C-1**: API response parsing must be defensive — null-check every level of nested access.
 - **C-2**: Concurrent state mutations must be guarded. Check `isLoading` before allowing new operations.
-- **C-3**: When closing a tab/item from a list, calculate the new active index BEFORE removing the item, not after.
+- **C-3**: When closing a tab/item from a list, calculate the new active index BEFORE removing the item.
 - **C-4**: `copyWith` cannot set nullable fields to null using `?? this.field`. Use sentinel values or explicit clear flags.
 
 ### Security
-- **S-1**: WebView must filter dangerous URL schemes (`file://`, `javascript:`, `data:`) in `shouldOverrideUrlLoading`.
-- **S-2**: API keys should not be stored in observable state objects. Read from secure storage only when needed for requests.
-- **S-3**: Path sanitization with `replaceAll('..', '')` is insufficient. Use path normalization + validation instead.
+- **S-1**: WebView must filter dangerous URL schemes in `shouldOverrideUrlLoading`.
+- **S-2**: API keys should not be stored in observable state objects. Read from secure storage only when needed.
+- **S-3**: Path sanitization with `replaceAll('..', '')` is insufficient. Use path normalization + validation.
 
 ### Architecture
-- **A-1**: Components must not be isolated silos. Every component should have at least one data flow path to another component. If a component has no incoming/outgoing connections, it's a design smell.
-- **A-2**: Shared utility functions (like protocol icons) belong on the model/enum as getters, not duplicated across UI files.
-- **A-3**: Dialog code that's identical across multiple pages should be extracted into a shared function or widget.
-- **A-4**: Separate concerns in state management — UI theme settings and AI configuration change for different reasons and should be in different notifiers.
+- **A-1**: Every component should have at least one data flow path to another component. Isolated silos are a design smell.
+- **A-2**: Shared utility functions belong on the model/enum as getters, not duplicated across UI files.
+- **A-3**: Dialog code identical across pages should be extracted into a shared function or widget.
+- **A-4**: Separate concerns in state management — UI theme and AI config change for different reasons.
+- **A-5**: Canvas cards with noteId should render live note data, not static snapshots.
+- **A-6**: Auto-discovered connections (wikilink) must be visually distinct from manual ones.
+- **A-7**: Canvas persistence should use file system (.json in vault/.rf/) for Git traceability.
 
 ### UI
-- **U-1**: Error dismiss buttons must actually clear the error state, not be no-ops.
-- **U-2**: Canvas clipping must happen BEFORE drawing, not after (save → clip → draw → restore).
+- **U-1**: Error dismiss buttons must actually clear the error state.
+- **U-2**: Canvas clipping must happen BEFORE drawing (save → clip → draw → restore).
 - **U-3**: Row overflow in constrained spaces must use `Flexible` + `TextOverflow.ellipsis`.
 
 ### Flutter-Specific
-- **F-1**: `DropdownButtonFormField.value` is deprecated in Flutter 3.41+. Use with `// ignore: deprecated_member_use` and `ValueKey` for proper rebuild in `StatefulBuilder`.
-- **F-2**: `Matrix4.translate()` and `Matrix4.scale()` are deprecated. Set matrix entries directly: `matrix[0]=scale, matrix[5]=scale, matrix[12]=tx, matrix[13]=ty`.
-- **F-3**: `Offset.toVector3()` doesn't exist. Use `Matrix4.inverted().entry(row, col)` for manual coordinate transforms.
-- **F-4**: `flutter_markdown` `ExtensionSet` has no `copyWith`. Create new `ExtensionSet(base.blockSyntaxes, [...base.inlineSyntaxes, newSyntax])` instead.
-- **F-5**: `MarkdownElementBuilder.visitElementAfterWithContext` returns `Widget?` (not `Widget`) and takes 4 params (context, element, preferredStyle, parentStyle), not 7.
-- **F-6**: `BoxDecoration.borderLeft` doesn't exist. Use nested `Container` with `Border(left: ...)` or `Container(decoration: BoxDecoration(border: Border(left: ...)))`.
-- **F-7**: Never assign `TextEditingController.text` inside `build()` unconditionally — it resets cursor on every rebuild. Use a note ID check (`_lastLoadedNoteId != note.id`) instead.
-- **F-8**: `Markdown` widget doesn't accept `scrollController`. Use `MarkdownBody` for inline or let `Markdown` manage its own scrolling.
+- **F-1**: `DropdownButtonFormField.value` deprecated in 3.41+. Use with ignore comment + `ValueKey`.
+- **F-2**: `Matrix4.translate()`/`scale()` deprecated. Set matrix entries directly.
+- **F-3**: `Offset.toVector3()` doesn't exist — use `Matrix4.inverted().entry(row, col)`.
+- **F-4**: `flutter_markdown` `ExtensionSet` has no `copyWith` — create new instance manually.
+- **F-5**: `MarkdownElementBuilder.visitElementAfterWithContext` takes 4 params, returns `Widget?`.
+- **F-6**: `BoxDecoration.borderLeft` doesn't exist — use `Border(left: ...)`.
+- **F-7**: Never assign `TextEditingController.text` inside `build()` unconditionally.
+- **F-8**: `Markdown` widget doesn't accept `scrollController` — use `MarkdownBody`.
 
 ### Product UX
-- **UX-1**: A service without a UI entry point is a dead feature. Every backend service must have at least one user-accessible trigger (button, menu, shortcut, or command).
-- **UX-2**: Empty states must guide the user toward the next action, not just say "nothing here". Show a call-to-action (e.g., "Create notes with [[links]] to see connections").
-- **UX-3**: Destructive actions (delete, clear) must require confirmation. One-click delete is a data loss risk.
-- **UX-4**: AI streaming output is a core UX expectation. Users should see tokens appear in real-time, not wait for the full response. Show a streaming indicator while in progress.
-- **UX-5**: The command bar / search bar is the primary navigation hub. It must search actual data (notes, commands), not just show hardcoded suggestions.
-- **UX-6**: Knowledge tools live or die by their link system. If LinkExtractor/LinkResolver exist but aren't called, the graph and backlinks are empty shells. Integration is not optional.
-- **UX-7**: Keyboard shortcuts must cover the top 5 user actions. At minimum: search, new note, save, switch view, daily note.
+- **UX-1**: Every backend service must have at least one user-accessible trigger.
+- **UX-2**: Empty states must guide the user toward the next action with a call-to-action.
+- **UX-3**: Destructive actions require confirmation.
+- **UX-4**: AI streaming output is a core UX expectation — users should see tokens in real-time.
+- **UX-5**: Command bar is the primary navigation hub — it must search actual data, not hardcoded suggestions.
+- **UX-6**: If LinkExtractor/LinkResolver exist but aren't called, graph and backlinks are empty.
+- **UX-7**: Keyboard shortcuts must cover top 5 actions: search, new note, save, switch view, daily note.

@@ -1183,6 +1183,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} days ago'**
   String daysAgo(int count);
+
+  /// No description provided for @shortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcuts'**
+  String get shortcuts;
+
+  /// No description provided for @pressNewShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Press new shortcut...'**
+  String get pressNewShortcut;
+
+  /// No description provided for @resetToDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to Defaults'**
+  String get resetToDefaults;
+
+  /// No description provided for @shortcutsReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcuts reset to defaults'**
+  String get shortcutsReset;
+
+  /// No description provided for @shortcutConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcut conflict'**
+  String get shortcutConflict;
+
+  /// No description provided for @shortcutConflictMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{shortcut}\" is already bound to \"{action}\"'**
+  String shortcutConflictMsg(String shortcut, String action);
+
+  /// No description provided for @offlineMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Mode'**
+  String get offlineMode;
+
+  /// No description provided for @offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get offline;
+
+  /// No description provided for @online.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get online;
+
+  /// No description provided for @aiDegradedToLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'AI switched to local model (offline)'**
+  String get aiDegradedToLocal;
+
+  /// No description provided for @noLocalModel.
+  ///
+  /// In en, this message translates to:
+  /// **'No local model available for offline use'**
+  String get noLocalModel;
+
+  /// No description provided for @syncPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} changes pending sync'**
+  String syncPending(int count);
+
+  /// No description provided for @dragDropHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag text or notes here'**
+  String get dragDropHint;
+
+  /// No description provided for @syncScroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Scroll'**
+  String get syncScroll;
+
+  /// No description provided for @markdownHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown Highlight'**
+  String get markdownHighlight;
 }
 
 class _AppLocalizationsDelegate

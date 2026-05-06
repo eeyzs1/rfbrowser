@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../core/model/ai_provider.dart';
+import '../data/models/ai_provider.dart';
 
 enum AppButtonStyle { rounded, sharp, pill }
 
@@ -36,6 +36,7 @@ class AppSettings {
   final int iconSize;
   final double borderRadius;
   final bool alwaysShowWelcomePage;
+  final bool highContrastMode;
 
   AppSettings({
     this.locale = 'system',
@@ -49,6 +50,7 @@ class AppSettings {
     this.iconSize = 18,
     this.borderRadius = 8.0,
     this.alwaysShowWelcomePage = false,
+    this.highContrastMode = false,
   });
 
   Color get accentColor => Color(accentColorValue);
@@ -87,6 +89,7 @@ class AppSettings {
     int? iconSize,
     double? borderRadius,
     bool? alwaysShowWelcomePage,
+    bool? highContrastMode,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
@@ -101,59 +104,24 @@ class AppSettings {
       borderRadius: borderRadius ?? this.borderRadius,
       alwaysShowWelcomePage:
           alwaysShowWelcomePage ?? this.alwaysShowWelcomePage,
+      highContrastMode: highContrastMode ?? this.highContrastMode,
     );
   }
 }
 
 class SettingsNotifier extends Notifier<AppSettings> {
-  final _secureStorage = const FlutterSecureStorage();
+  SharedPreferences? _prefs;
 
-  List<AIProvider> _providers = [];
-  List<AIModel> _models = [];
-  ActiveAIConfig? _activeConfig;
-
-  List<AIProvider> get providers => _providers;
-  List<AIModel> get models => _models;
-  ActiveAIConfig? get activeConfig => _activeConfig;
-
-  AIProvider? get activeProvider {
-    if (_activeConfig == null) return null;
-    try {
-      return _providers.firstWhere((p) => p.id == _activeConfig!.providerId);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  AIModel? get activeModel {
-    if (_activeConfig == null) return null;
-    try {
-      return _models.firstWhere(
-        (m) =>
-            m.id == _activeConfig!.modelId &&
-            m.providerId == _activeConfig!.providerId,
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
-  List<AIModel> modelsForProvider(String providerId) =>
-      _models.where((m) => m.providerId == providerId).toList();
-
-  AIProvider? providerById(String id) {
-    try {
-      return _providers.firstWhere((p) => p.id == id);
-    } catch (_) {
-      return null;
-    }
+  Future<SharedPreferences> get _ensurePrefs async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
   }
 
   @override
   AppSettings build() => AppSettings();
 
   Future<void> loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _ensurePrefs;
     final preset = prefs.getString('themePreset') ?? 'sky';
     final savedColor = prefs.getInt('accentColorValue');
     final colorValue = savedColor ?? getPresetColor(preset).toARGB32();
@@ -169,8 +137,162 @@ class SettingsNotifier extends Notifier<AppSettings> {
       iconSize: (prefs.getInt('iconSize') ?? 18).clamp(12, 36),
       borderRadius: prefs.getDouble('borderRadius') ?? 8.0,
       alwaysShowWelcomePage: prefs.getBool('alwaysShowWelcomePage') ?? false,
+      highContrastMode: prefs.getBool('highContrastMode') ?? false,
     );
+  }
 
+  Future<void> setLocale(String locale) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setString('locale', locale);
+    state = state.copyWith(locale: locale);
+  }
+
+  Future<void> toggleDarkMode() async {
+    final prefs = await _ensurePrefs;
+    await prefs.setBool('isDarkMode', !state.isDarkMode);
+    state = state.copyWith(isDarkMode: !state.isDarkMode);
+  }
+
+  Future<void> setEditorFontSize(double size) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setDouble('editorFontSize', size);
+    state = state.copyWith(editorFontSize: size);
+  }
+
+  Future<void> setThemePreset(String preset) async {
+    final color = getPresetColor(preset);
+    final prefs = await _ensurePrefs;
+    await prefs.setString('themePreset', preset);
+    await prefs.setInt('accentColorValue', color.toARGB32());
+    state = state.copyWith(
+      themePreset: preset,
+      accentColorValue: color.toARGB32(),
+    );
+  }
+
+  Future<void> setAccentColor(Color color) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setString('themePreset', 'custom');
+    await prefs.setInt('accentColorValue', color.toARGB32());
+    state = state.copyWith(
+      themePreset: 'custom',
+      accentColorValue: color.toARGB32(),
+    );
+  }
+
+  Future<void> setButtonStyle(AppButtonStyle style) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setInt('buttonStyle', style.index);
+    state = state.copyWith(buttonStyle: style);
+  }
+
+  Future<void> setDensity(ComponentDensity d) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setInt('density', d.index);
+    state = state.copyWith(density: d);
+  }
+
+  Future<void> setIconSize(int size) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setInt('iconSize', size);
+    state = state.copyWith(iconSize: size);
+  }
+
+  Future<void> setBorderRadius(double r) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setDouble('borderRadius', r);
+    state = state.copyWith(borderRadius: r);
+  }
+
+  Future<void> setAlwaysShowWelcomePage(bool value) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setBool('alwaysShowWelcomePage', value);
+    state = state.copyWith(alwaysShowWelcomePage: value);
+  }
+
+  Future<void> setHighContrastMode(bool value) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setBool('highContrastMode', value);
+    state = state.copyWith(highContrastMode: value);
+  }
+}
+
+final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
+  SettingsNotifier.new,
+);
+
+class AIConfigState {
+  final List<AIProvider> providers;
+  final List<AIModel> models;
+  final ActiveAIConfig? activeConfig;
+
+  AIConfigState({
+    this.providers = const [],
+    this.models = const [],
+    this.activeConfig,
+  });
+
+  AIProvider? get activeProvider {
+    if (activeConfig == null) return null;
+    try {
+      return providers.firstWhere((p) => p.id == activeConfig!.providerId);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  AIModel? get activeModel {
+    if (activeConfig == null) return null;
+    try {
+      return models.firstWhere(
+        (m) =>
+            m.id == activeConfig!.modelId &&
+            m.providerId == activeConfig!.providerId,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<AIModel> modelsForProvider(String providerId) =>
+      models.where((m) => m.providerId == providerId).toList();
+
+  AIProvider? providerById(String id) {
+    try {
+      return providers.firstWhere((p) => p.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  AIConfigState copyWith({
+    List<AIProvider>? providers,
+    List<AIModel>? models,
+    ActiveAIConfig? activeConfig,
+    bool clearActiveConfig = false,
+  }) {
+    return AIConfigState(
+      providers: providers ?? this.providers,
+      models: models ?? this.models,
+      activeConfig: clearActiveConfig ? null : (activeConfig ?? this.activeConfig),
+    );
+  }
+}
+
+class AIConfigNotifier extends Notifier<AIConfigState> {
+  final _secureStorage = const FlutterSecureStorage();
+  SharedPreferences? _prefs;
+
+  Future<SharedPreferences> get _ensurePrefs async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
+
+  @override
+  AIConfigState build() => AIConfigState();
+
+  Future<void> loadConfig() async {
+    final prefs = await _ensurePrefs;
     await _loadProviders(prefs);
     await _loadModels(prefs);
     await _loadActiveConfig(prefs);
@@ -182,11 +304,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
     if (json != null) {
       try {
         final list = jsonDecode(json) as List;
-        _providers = list
+        final providers = list
             .map((e) => AIProvider.fromJson(e as Map<String, dynamic>))
             .toList();
+        state = state.copyWith(providers: providers);
       } catch (_) {
-        _providers = [];
+        debugPrint('AI config: failed to parse providers JSON');
       }
     }
   }
@@ -196,11 +319,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
     if (json != null) {
       try {
         final list = jsonDecode(json) as List;
-        _models = list
+        final models = list
             .map((e) => AIModel.fromJson(e as Map<String, dynamic>))
             .toList();
+        state = state.copyWith(models: models);
       } catch (_) {
-        _models = [];
+        debugPrint('AI config: failed to parse models JSON');
       }
     }
   }
@@ -209,18 +333,19 @@ class SettingsNotifier extends Notifier<AppSettings> {
     final json = prefs.getString('ai_active_config');
     if (json != null) {
       try {
-        _activeConfig = ActiveAIConfig.fromJson(
+        final config = ActiveAIConfig.fromJson(
           jsonDecode(json) as Map<String, dynamic>,
         );
+        state = state.copyWith(activeConfig: config);
       } catch (_) {
-        _activeConfig = null;
+        debugPrint('AI config: failed to parse active config JSON');
       }
     }
   }
 
   Future<void> _loadApiKeys() async {
     final updatedProviders = <AIProvider>[];
-    for (final provider in _providers) {
+    for (final provider in state.providers) {
       if (provider.protocol.requiresApiKey) {
         final key = await _secureStorage.read(key: 'ai_key_${provider.id}');
         updatedProviders.add(provider.copyWith(apiKey: key));
@@ -228,27 +353,27 @@ class SettingsNotifier extends Notifier<AppSettings> {
         updatedProviders.add(provider);
       }
     }
-    _providers = updatedProviders;
+    state = state.copyWith(providers: updatedProviders);
   }
 
   Future<void> _saveProviders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final json = jsonEncode(_providers.map((p) => p.toJson()).toList());
+    final prefs = await _ensurePrefs;
+    final json = jsonEncode(state.providers.map((p) => p.toJson()).toList());
     await prefs.setString('ai_providers', json);
   }
 
   Future<void> _saveModels() async {
-    final prefs = await SharedPreferences.getInstance();
-    final json = jsonEncode(_models.map((m) => m.toJson()).toList());
+    final prefs = await _ensurePrefs;
+    final json = jsonEncode(state.models.map((m) => m.toJson()).toList());
     await prefs.setString('ai_models', json);
   }
 
   Future<void> _saveActiveConfig() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (_activeConfig != null) {
+    final prefs = await _ensurePrefs;
+    if (state.activeConfig != null) {
       await prefs.setString(
         'ai_active_config',
-        jsonEncode(_activeConfig!.toJson()),
+        jsonEncode(state.activeConfig!.toJson()),
       );
     } else {
       await prefs.remove('ai_active_config');
@@ -260,20 +385,21 @@ class SettingsNotifier extends Notifier<AppSettings> {
   }
 
   Future<void> addProvider(AIProvider provider) async {
-    _providers.removeWhere((p) => p.id == provider.id);
+    var providers = List<AIProvider>.from(state.providers);
+    providers.removeWhere((p) => p.id == provider.id);
     if (provider.protocol.requiresApiKey && provider.apiKey != null) {
       await _secureStorage.write(
         key: 'ai_key_${provider.id}',
         value: provider.apiKey,
       );
     }
-    _providers.add(provider.copyWith(apiKey: null));
+    providers.add(provider.copyWith(apiKey: null));
+    state = state.copyWith(providers: providers);
     await _saveProviders();
-    state = state.copyWith();
   }
 
   Future<void> updateProvider(AIProvider provider) async {
-    final idx = _providers.indexWhere((p) => p.id == provider.id);
+    final idx = state.providers.indexWhere((p) => p.id == provider.id);
     if (idx >= 0) {
       if (provider.protocol.requiresApiKey && provider.apiKey != null) {
         await _secureStorage.write(
@@ -281,31 +407,31 @@ class SettingsNotifier extends Notifier<AppSettings> {
           value: provider.apiKey,
         );
       }
-      _providers[idx] = provider.copyWith(apiKey: null);
+      final providers = List<AIProvider>.from(state.providers);
+      providers[idx] = provider.copyWith(apiKey: null);
+      state = state.copyWith(providers: providers);
       await _saveProviders();
-      state = state.copyWith();
     }
   }
 
   Future<void> removeProvider(String providerId) async {
-    _providers.removeWhere((p) => p.id == providerId);
-    _models.removeWhere((m) => m.providerId == providerId);
+    final providers = state.providers.where((p) => p.id != providerId).toList();
+    final models = state.models.where((m) => m.providerId != providerId).toList();
     await _secureStorage.delete(key: 'ai_key_$providerId');
-    if (_activeConfig?.providerId == providerId) {
-      _activeConfig = null;
-      await _saveActiveConfig();
-    }
+    final clearActive = state.activeConfig?.providerId == providerId;
+    state = state.copyWith(providers: providers, models: models, clearActiveConfig: clearActive);
+    if (clearActive) await _saveActiveConfig();
     await _saveProviders();
     await _saveModels();
-    state = state.copyWith();
   }
 
   Future<void> setProviderEnabled(String providerId, bool enabled) async {
-    final idx = _providers.indexWhere((p) => p.id == providerId);
+    final idx = state.providers.indexWhere((p) => p.id == providerId);
     if (idx >= 0) {
-      _providers[idx] = _providers[idx].copyWith(isEnabled: enabled);
+      final providers = List<AIProvider>.from(state.providers);
+      providers[idx] = providers[idx].copyWith(isEnabled: enabled);
+      state = state.copyWith(providers: providers);
       await _saveProviders();
-      state = state.copyWith();
     }
   }
 
@@ -313,114 +439,44 @@ class SettingsNotifier extends Notifier<AppSettings> {
     String providerId,
     List<AIModel> newModels,
   ) async {
-    _models.removeWhere((m) => m.providerId == providerId && !m.isCustom);
-    _models.addAll(newModels);
+    var models = state.models.where((m) => m.providerId != providerId || m.isCustom).toList();
+    models.addAll(newModels);
+    state = state.copyWith(models: models);
     await _saveModels();
-    state = state.copyWith();
   }
 
   Future<void> addCustomModel(AIModel model) async {
-    _models.removeWhere(
+    var models = List<AIModel>.from(state.models);
+    models.removeWhere(
       (m) => m.id == model.id && m.providerId == model.providerId,
     );
-    _models.add(model);
+    models.add(model);
+    state = state.copyWith(models: models);
     await _saveModels();
-    state = state.copyWith();
   }
 
   Future<void> removeModel(String modelId, String providerId) async {
-    _models.removeWhere((m) => m.id == modelId && m.providerId == providerId);
-    if (_activeConfig?.modelId == modelId &&
-        _activeConfig?.providerId == providerId) {
-      _activeConfig = null;
-      await _saveActiveConfig();
-    }
+    final models = state.models.where(
+      (m) => !(m.id == modelId && m.providerId == providerId),
+    ).toList();
+    final clearActive = state.activeConfig?.modelId == modelId &&
+        state.activeConfig?.providerId == providerId;
+    state = state.copyWith(models: models, clearActiveConfig: clearActive);
+    if (clearActive) await _saveActiveConfig();
     await _saveModels();
-    state = state.copyWith();
   }
 
   Future<void> setActiveConfig(ActiveAIConfig config) async {
-    _activeConfig = config;
+    state = state.copyWith(activeConfig: config);
     await _saveActiveConfig();
-    state = state.copyWith();
   }
 
   Future<void> clearActiveConfig() async {
-    _activeConfig = null;
+    state = state.copyWith(clearActiveConfig: true);
     await _saveActiveConfig();
-    state = state.copyWith();
-  }
-
-  Future<void> setLocale(String locale) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('locale', locale);
-    state = state.copyWith(locale: locale);
-  }
-
-  Future<void> toggleDarkMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isDarkMode', !state.isDarkMode);
-    state = state.copyWith(isDarkMode: !state.isDarkMode);
-  }
-
-  Future<void> setEditorFontSize(double size) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('editorFontSize', size);
-    state = state.copyWith(editorFontSize: size);
-  }
-
-  Future<void> setThemePreset(String preset) async {
-    final color = getPresetColor(preset);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('themePreset', preset);
-    await prefs.setInt('accentColorValue', color.toARGB32());
-    state = state.copyWith(
-      themePreset: preset,
-      accentColorValue: color.toARGB32(),
-    );
-  }
-
-  Future<void> setAccentColor(Color color) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('themePreset', 'custom');
-    await prefs.setInt('accentColorValue', color.toARGB32());
-    state = state.copyWith(
-      themePreset: 'custom',
-      accentColorValue: color.toARGB32(),
-    );
-  }
-
-  Future<void> setButtonStyle(AppButtonStyle style) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('buttonStyle', style.index);
-    state = state.copyWith(buttonStyle: style);
-  }
-
-  Future<void> setDensity(ComponentDensity d) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('density', d.index);
-    state = state.copyWith(density: d);
-  }
-
-  Future<void> setIconSize(int size) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('iconSize', size);
-    state = state.copyWith(iconSize: size);
-  }
-
-  Future<void> setBorderRadius(double r) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('borderRadius', r);
-    state = state.copyWith(borderRadius: r);
-  }
-
-  Future<void> setAlwaysShowWelcomePage(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('alwaysShowWelcomePage', value);
-    state = state.copyWith(alwaysShowWelcomePage: value);
   }
 }
 
-final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
-  SettingsNotifier.new,
+final aiConfigProvider = NotifierProvider<AIConfigNotifier, AIConfigState>(
+  AIConfigNotifier.new,
 );

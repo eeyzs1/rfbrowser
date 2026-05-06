@@ -200,5 +200,31 @@
     "placeholders": {
       "count": {"type": "int"}
     }
-  }
+  },
+  "shortcuts": "Shortcuts",
+  "pressNewShortcut": "Press new shortcut...",
+  "resetToDefaults": "Reset to Defaults",
+  "shortcutsReset": "Shortcuts reset to defaults",
+  "shortcutConflict": "Shortcut conflict",
+  "shortcutConflictMsg": "\"{shortcut}\" is already bound to \"{action}\"",
+  "@shortcutConflictMsg": {
+    "placeholders": {
+      "shortcut": {"type": "String"},
+      "action": {"type": "String"}
+    }
+  },
+  "offlineMode": "Offline Mode",
+  "offline": "Offline",
+  "online": "Online",
+  "aiDegradedToLocal": "AI switched to local model (offline)",
+  "noLocalModel": "No local model available for offline use",
+  "syncPending": "{count} changes pending sync",
+  "@syncPending": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "dragDropHint": "Drag text or notes here",
+  "syncScroll": "Sync Scroll",
+  "markdownHighlight": "Markdown Highlight"
 }

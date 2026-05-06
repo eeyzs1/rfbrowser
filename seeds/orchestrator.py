@@ -23,7 +23,7 @@ from pathlib import Path
 
 import yaml
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 def run_script(script_path: Path, args: list = None) -> subprocess.CompletedProcess:
@@ -44,7 +44,7 @@ def load_task() -> dict:
 
 
 def load_session_state() -> dict:
-    state_file = PROJECT_ROOT / "memory" / "session-state.yaml"
+    state_file = PROJECT_ROOT / "seeds" / "memory" / "session-state.yaml"
     if not state_file.exists():
         return {"status": "not_started", "progress": {"completed_criteria": [], "failed_criteria": []}}
     with open(state_file, "r", encoding="utf-8") as f:
@@ -52,7 +52,7 @@ def load_session_state() -> dict:
 
 
 def save_session_state(state: dict) -> None:
-    state_file = PROJECT_ROOT / "memory" / "session-state.yaml"
+    state_file = PROJECT_ROOT / "seeds" / "memory" / "session-state.yaml"
     state["updated_at"] = datetime.now().isoformat()
     with open(state_file, "w", encoding="utf-8") as f:
         yaml.dump(state, f, default_flow_style=False, allow_unicode=True)
@@ -82,9 +82,18 @@ def step_execute(task: dict) -> dict:
 
     print(f"\nNext criterion to implement:")
     print(f"  → {pending[0]}")
-    print(f"\nAction required: Implement this criterion in src/")
-    print(f"Follow the workflow in planning/flow-control.yaml")
-    print(f"Respect constraints in constraints/architecture-rules.yaml")
+    print(f"\nAction required: Implement this criterion in lib/")
+    print(f"Follow the workflow in seeds/planning/flow-control.yaml")
+    print(f"Respect constraints in seeds/constraints/architecture-rules.yaml")
+
+    task_runner = PROJECT_ROOT / "seeds" / "execution" / "task-runner.py"
+    if task_runner.exists():
+        print(f"\n  Running: python {task_runner.relative_to(PROJECT_ROOT)} --analyze-only")
+        proc = run_script(task_runner, ["--analyze-only"])
+        if proc.returncode == 0:
+            print("  ✅ flutter analyze passed")
+        else:
+            print("  ⚠️  flutter analyze found issues — check output above")
 
     return {"status": "pending", "next_criterion": pending[0], "pending": pending}
 
@@ -139,10 +148,10 @@ def step_judge(prove_result: dict) -> dict:
         for e in unsatisfied:
             print(f"  ❌ {e['criterion']}")
         print(f"\nRoot cause analysis needed. Check:")
-        print(f"  - Are the constraints in constraints/ being followed?")
-        print(f"  - Is the workflow in planning/flow-control.yaml being followed?")
-        print(f"  - Run: python feedback/error-capture.py to analyze errors")
-        print(f"  - Run: python feedback/mistake-to-constraint.py to propose new constraints")
+        print(f"  - Are the constraints in seeds/constraints/ being followed?")
+        print(f"  - Is the workflow in seeds/planning/flow-control.yaml being followed?")
+        print(f"  - Run: python seeds/feedback/error-capture.py to analyze errors")
+        print(f"  - Run: python seeds/feedback/mistake-to-constraint.py to propose new constraints")
 
     return {"verdict": verdict, "satisfied": satisfied, "total": total}
 
@@ -163,7 +172,7 @@ def step_evolve() -> dict:
             return {"status": "evolution_failed"}
     else:
         print("Evolution script not found in this project.")
-        print("Run: python scripts/evolve.py --project-root . (from meta-harness)")
+        print("Run: python scripts/evolve.py --project-root .")
         return {"status": "no_evolve_script"}
 
 
@@ -172,7 +181,7 @@ def step_innovate() -> dict:
     print("STEP: INNOVATE — 推陈出新")
     print("=" * 60)
 
-    innovation_engine = PROJECT_ROOT / "evolution" / "innovation-engine.py"
+    innovation_engine = PROJECT_ROOT / "seeds" / "evolution" / "innovation-engine.py"
     if innovation_engine.exists():
         proc = run_script(innovation_engine, ["--project-root", str(PROJECT_ROOT)])
         if proc.returncode == 0:
@@ -188,7 +197,7 @@ def step_innovate() -> dict:
 
 def run_verification() -> dict:
     print("\n--- Running Verification ---")
-    self_check = PROJECT_ROOT / "verification" / "self-check.py"
+    self_check = PROJECT_ROOT / "seeds" / "verification" / "self-check.py"
     if self_check.exists():
         proc = run_script(self_check, ["--project-root", str(PROJECT_ROOT)])
         if proc.returncode == 0:
@@ -239,11 +248,154 @@ def run_loop(task: dict, max_iterations: int = 10) -> dict:
     return load_session_state()
 
 
+def load_genome() -> dict:
+    genome_file = PROJECT_ROOT / "seeds" / "evolution" / "genome.yaml"
+    if not genome_file.exists():
+        return {}
+    with open(genome_file, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+
+def check_constraints_against_codebase() -> dict:
+    genome = load_genome()
+    constraints = genome.get("harness_genome", {}).get("constraints", [])
+    active_constraints = [c for c in constraints if c.get("status") != "dormant"]
+    dormant_count = len([c for c in constraints if c.get("status") == "dormant"])
+    violations = []
+
+    for c in active_constraints:
+        rule = c.get("rule", "")
+        cid = c.get("id", "")
+        if c.get("trigger_count", 0) > 0:
+            continue
+
+        check = _check_single_constraint(cid, rule)
+        if check.get("violated"):
+            violations.append({"constraint_id": cid, "rule": rule, "evidence": check.get("evidence", ""), "severity": "high"})
+
+    unmet = [c for c in active_constraints if c.get("trigger_count", 0) == 0 and not any(v["constraint_id"] == c["id"] for v in violations)]
+    for c in unmet[:5]:
+        violations.append({"constraint_id": c["id"], "rule": c["rule"], "evidence": "not yet verified in this codebase", "severity": "medium"})
+
+    return {
+        "total_constraints": len(constraints),
+        "active_constraints": len(active_constraints),
+        "dormant_constraints": dormant_count,
+        "violations": violations,
+        "violation_count": len(violations)
+    }
+
+
+def _check_single_constraint(cid: str, rule: str) -> dict:
+    lib_dir = PROJECT_ROOT / "lib"
+    evidence = ""
+
+    if cid == "C004":
+        for dart_file in lib_dir.rglob("*.dart"):
+            try:
+                content = dart_file.read_text(encoding="utf-8")
+                if "bool shouldRepaint" in content and "return true;" in content.split("bool shouldRepaint")[-1][:100]:
+                    evidence = f"Found shouldRepaint returning true in {dart_file.name}"
+                    return {"violated": True, "evidence": evidence}
+            except Exception:
+                pass
+
+    if cid == "C006":
+        for dart_file in lib_dir.rglob("*.dart"):
+            try:
+                content = dart_file.read_text(encoding="utf-8")
+                import re
+                if re.search(r'catch\s*\(\s*_\s*\)\s*\{\s*\}', content):
+                    evidence = f"Found empty catch block in {dart_file.name}"
+                    return {"violated": True, "evidence": evidence}
+            except Exception:
+                pass
+
+    if cid == "C015":
+        for dart_file in lib_dir.rglob("*.dart"):
+            try:
+                content = dart_file.read_text(encoding="utf-8")
+                if "webview" in dart_file.name.lower() or "web_view" in dart_file.name.lower():
+                    if "shouldOverrideUrlLoading" not in content:
+                        evidence = f"WebView file {dart_file.name} missing shouldOverrideUrlLoading"
+                        return {"violated": True, "evidence": evidence}
+            except Exception:
+                pass
+
+    if cid == "C033":
+        for dart_file in lib_dir.rglob("*.dart"):
+            try:
+                content = dart_file.read_text(encoding="utf-8")
+                if ("delete" in dart_file.name.lower() or "remove" in dart_file.name.lower()) and "confirm" not in content.lower() and "showDialog" not in content:
+                    evidence = f"Destructive action in {dart_file.name} may lack confirmation"
+                    return {"violated": True, "evidence": evidence}
+            except Exception:
+                pass
+
+    return {"violated": False, "evidence": ""}
+
+
+def generate_next_task() -> dict:
+    check_result = check_constraints_against_codebase()
+    violations = check_result.get("violations", [])
+    high_severity = [v for v in violations if v["severity"] == "high"]
+
+    genome = load_genome()
+    innovations = []
+    innovation_log = PROJECT_ROOT / "seeds" / "evolution" / "innovation-log.yaml"
+    if innovation_log.exists():
+        with open(innovation_log, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+        innovations = [p for p in data.get("proposals", []) if p.get("status") == "applied"]
+
+    advancements = {}
+    adv_file = PROJECT_ROOT / "seeds" / "evolution" / "domain-advancements.yaml"
+    if adv_file.exists():
+        with open(adv_file, "r", encoding="utf-8") as f:
+            advancements = yaml.safe_load(f) or {}
+
+    next_innovations = []
+    stages = advancements.get("stages", [])
+    current_idx = 0
+    for i, s in enumerate(stages):
+        if s.get("name") == "Solid":
+            current_idx = i
+            break
+    if current_idx < len(stages):
+        stage = stages[current_idx]
+        next_innovations = [inv for inv in stage.get("innovations", []) if not any(
+            i.get("name") == inv.get("name") and i.get("status") == "applied" for i in innovations
+        )]
+
+    task_card = {
+        "generated_at": datetime.now().isoformat(),
+        "priority_constraints_to_fix": high_severity[:3],
+        "all_pending_constraints": violations[:5],
+        "next_innovations": next_innovations[:3],
+        "suggested_workflow": "bugfix" if high_severity else "feature",
+        "pre_check_command": "python seeds/orchestrator.py --verify",
+        "post_check_command": "python seeds/orchestrator.py --verify",
+        "mandatory_rules": [
+            "Run `flutter analyze` before and after every change",
+            "Check genome.yaml constraints for the module being modified",
+            "If a mistake is made, add it to seeds/memory/meta-mistakes.md",
+            "After completion, run: python seeds/orchestrator.py --mark-complete \"<criterion>\"",
+        ],
+    }
+
+    return task_card
+
+
 def show_status() -> None:
     task = load_task()
     state = load_session_state()
     criteria = task.get("acceptance_criteria", [])
     completed = state.get("progress", {}).get("completed_criteria", [])
+    genome = load_genome()
+    constraints = genome.get("harness_genome", {}).get("constraints", [])
+    active_count = len([c for c in constraints if c.get("status") == "active"])
+    dormant_count = len([c for c in constraints if c.get("status") == "dormant"])
+    verified_needed_count = len([c for c in constraints if c.get("status") == "verified-needed"])
 
     print(f"\n{'='*60}")
     print(f"PROJECT STATUS")
@@ -255,6 +407,9 @@ def show_status() -> None:
     for c in criteria:
         status = "✅" if c in completed else "❌"
         print(f"  {status} {c}")
+
+    print(f"\nGenome Constraints: {len(constraints)} total")
+    print(f"  active: {active_count} | dormant: {dormant_count} | verified-needed: {verified_needed_count}")
 
     print(f"\nNext steps:")
     pending = [c for c in criteria if c not in completed]
@@ -273,6 +428,8 @@ def main():
     parser.add_argument("--verify", action="store_true", help="Run verification only")
     parser.add_argument("--evolve", action="store_true", help="Run evolution cycle only")
     parser.add_argument("--innovate", action="store_true", help="Run innovation cycle (推陈出新)")
+    parser.add_argument("--check-constraints", action="store_true", help="Check genome constraints against codebase")
+    parser.add_argument("--next-task", action="store_true", help="Generate next actionable task card")
     parser.add_argument("--max-iterations", type=int, default=10, help="Max loop iterations")
     parser.add_argument("--mark-complete", default=None, help="Mark a criterion as complete")
     args = parser.parse_args()
@@ -291,6 +448,16 @@ def main():
 
     if args.innovate:
         step_innovate()
+        return
+
+    if args.check_constraints:
+        result = check_constraints_against_codebase()
+        print(yaml.dump(result, default_flow_style=False, allow_unicode=True))
+        return
+
+    if args.next_task:
+        task_card = generate_next_task()
+        print(yaml.dump(task_card, default_flow_style=False, allow_unicode=True))
         return
 
     if args.mark_complete:

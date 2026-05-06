@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -17,15 +18,21 @@ class NoteRepository {
   NoteRepository(this.vaultPath);
 
   void _validatePath(String relativePath) {
-    final canonical = File(p.join(vaultPath, relativePath)).absolute.path;
+    final normalized = p.normalize(relativePath);
+    final canonical = File(p.join(vaultPath, normalized)).absolute.path;
     final vaultCanonical = Directory(vaultPath).absolute.path;
     if (!canonical.startsWith(vaultCanonical)) {
       throw PathTraversalException('Path traversal detected: $relativePath');
     }
   }
 
-  String _sanitizeRelativePath(String relativePath) {
-    return relativePath.replaceAll('..', '').replaceAll(RegExp(r'[/\\]+'), '/');
+  String _normalizeRelativePath(String relativePath) {
+    var normalized = p.normalize(relativePath);
+    if (normalized == '.' || normalized == './') normalized = '';
+    if (normalized.startsWith('..') || p.isAbsolute(normalized)) {
+      throw PathTraversalException('Invalid relative path: $relativePath');
+    }
+    return normalized;
   }
 
   Future<List<Note>> getAllNotes() async {
@@ -44,14 +51,16 @@ class NoteRepository {
           final relativePath = p.relative(entity.path, from: vaultPath);
           final note = Note.fromMarkdown(relativePath, content);
           notes.add(note);
-        } catch (_) {}
+        } catch (_) {
+          print('NoteRepo: failed to parse note file: ${entity.path}');
+        }
       }
     }
     return notes;
   }
 
   Future<Note?> getNoteByPath(String relativePath) async {
-    final safePath = _sanitizeRelativePath(relativePath);
+    final safePath = _normalizeRelativePath(relativePath);
     _validatePath(safePath);
     final filePath = p.join(vaultPath, safePath);
     final file = File(filePath);
@@ -66,7 +75,7 @@ class NoteRepository {
     String? template,
   }) async {
     final fileName = _sanitizeFileName(title);
-    final safeFolder = _sanitizeRelativePath(folder);
+    final safeFolder = _normalizeRelativePath(folder);
     final relativePath = safeFolder.isEmpty
         ? '$fileName.md'
         : p.join(safeFolder, '$fileName.md');
@@ -98,7 +107,7 @@ class NoteRepository {
   }
 
   Future<void> deleteNote(String relativePath) async {
-    final safePath = _sanitizeRelativePath(relativePath);
+    final safePath = _normalizeRelativePath(relativePath);
     _validatePath(safePath);
     final filePath = p.join(vaultPath, safePath);
     final file = File(filePath);

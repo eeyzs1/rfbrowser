@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/settings_service.dart';
+import 'design_tokens.dart';
 
 class AppTheme {
   static ThemeData darkTheme(AppSettings settings) {
@@ -20,23 +21,48 @@ class AppTheme {
     return _buildTheme(cs, Brightness.light, settings);
   }
 
+  static ThemeData highContrastTheme(AppSettings settings) {
+    const cs = ColorScheme.highContrastDark(
+      primary: Color(0xFF00E5FF),
+      onPrimary: Color(0xFF000000),
+      secondary: Color(0xFFFFF176),
+      onSecondary: Color(0xFF000000),
+      surface: Color(0xFF000000),
+      onSurface: Color(0xFFFFFFFF),
+      error: Color(0xFFFF5252),
+      onError: Color(0xFF000000),
+    );
+    return _buildTheme(cs, Brightness.dark, settings, highContrast: true);
+  }
+
   static ThemeData _buildTheme(
     ColorScheme cs,
     Brightness brightness,
-    AppSettings s,
-  ) {
+    AppSettings s, {
+    bool highContrast = false,
+  }) {
     final isDark = brightness == Brightness.dark;
-    final surface = isDark ? const Color(0xFF0F172A) : const Color(0xFFFAFCFF);
-    final surfaceContainer = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final onSurface = isDark
-        ? const Color(0xFFE2E8F0)
-        : const Color(0xFF1E293B);
-    final onSurfaceVariant = isDark
-        ? const Color(0xFFCBD5E1)
-        : const Color(0xFF475569);
-    final muted = isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
-    final divider = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
-    final inputBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
+    final surface = highContrast
+        ? const Color(0xFF000000)
+        : (isDark ? DesignColors.sceneCaptureBg : const Color(0xFFFAFCFF));
+    final surfaceContainer = highContrast
+        ? const Color(0xFF1A1A1A)
+        : (isDark ? const Color(0xFF1E293B) : Colors.white);
+    final onSurface = highContrast
+        ? const Color(0xFFFFFFFF)
+        : (isDark ? DesignColors.textPrimary : const Color(0xFF1E293B));
+    final onSurfaceVariant = highContrast
+        ? const Color(0xFFE0E0E0)
+        : (isDark ? DesignColors.textSecondary : const Color(0xFF475569));
+    final muted = highContrast
+        ? const Color(0xFFBDBDBD)
+        : (isDark ? DesignColors.textMuted : const Color(0xFF94A3B8));
+    final divider = highContrast
+        ? const Color(0xFF444444)
+        : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9));
+    final inputBg = highContrast
+        ? const Color(0xFF1A1A1A)
+        : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC));
     final br = s.effectiveBorderRadius;
     final iconSz = s.iconSize.toDouble();
     final fontSize = s.editorFontSize;

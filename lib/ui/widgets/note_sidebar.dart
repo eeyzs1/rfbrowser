@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../services/knowledge_service.dart';
 import '../../data/stores/vault_store.dart';
+import 'create_note_dialog.dart';
 
 class NoteSidebar extends ConsumerStatefulWidget {
   const NoteSidebar({super.key});
@@ -242,31 +243,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   }
 
   void _createNewNote() async {
-    final title = await showDialog<String>(
-      context: context,
-      builder: (ctx) {
-        final controller = TextEditingController();
-        return AlertDialog(
-          title: const Text('New Note'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(hintText: 'Note title'),
-            onSubmitted: (v) => Navigator.pop(ctx, v),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, controller.text),
-              child: const Text('Create'),
-            ),
-          ],
-        );
-      },
-    );
+    final title = await showCreateNoteDialog(context);
     if (title != null && title.isNotEmpty) {
       await ref.read(knowledgeProvider.notifier).createNote(title: title);
     }

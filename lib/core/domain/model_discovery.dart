@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'ai_provider.dart';
+import '../../data/models/ai_provider.dart';
 
 class ModelDiscovery {
   final Dio _dio = Dio(
@@ -23,7 +24,8 @@ class ModelDiscovery {
         case ApiProtocol.ollama:
           return _fetchOllamaModels(provider);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Model discovery error: $e');
       return [];
     }
   }

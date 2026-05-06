@@ -4,9 +4,15 @@ import '../models/quick_move.dart';
 
 class QuickMoveStore {
   static const _key = 'quick_moves_state';
+  SharedPreferences? _prefs;
+
+  Future<SharedPreferences> get _ensurePrefs async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
 
   Future<QuickMoveState> load() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _ensurePrefs;
     final jsonStr = prefs.getString(_key);
     if (jsonStr == null || jsonStr.isEmpty) {
       return QuickMoveState.initial();
@@ -20,7 +26,7 @@ class QuickMoveStore {
   }
 
   Future<void> save(QuickMoveState state) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _ensurePrefs;
     final jsonStr = jsonEncode(state.toJson());
     await prefs.setString(_key, jsonStr);
   }

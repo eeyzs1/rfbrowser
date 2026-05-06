@@ -5,8 +5,7 @@ import '../../services/ai_service.dart';
 import '../../services/settings_service.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/browser_service.dart';
-import '../../services/skill_service.dart';
-import '../../core/model/ai_provider.dart';
+import '../../data/models/ai_provider.dart';
 import '../../core/context/assembler.dart';
 import '../../core/context/reference_parser.dart';
 
@@ -886,10 +885,9 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
   }
 
   void _showSkillPicker(ThemeData theme) async {
-    final skillService = ref.read(skillServiceProvider);
-    if (skillService == null) return;
+    final knowledgeNotifier = ref.read(knowledgeProvider.notifier);
 
-    final skills = await skillService.getAllSkills();
+    final skills = await knowledgeNotifier.getAllSkills();
 
     if (!mounted) return;
 

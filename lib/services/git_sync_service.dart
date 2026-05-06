@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -94,7 +95,9 @@ class GitSyncService {
       await _runGit(['add', '-A']);
       try {
         await _runGit(['commit', '-m', message]);
-      } catch (_) {}
+      } catch (_) {
+        print('Git sync: no changes to commit');
+      }
       return SyncState(status: SyncStatus.success, lastSync: DateTime.now());
     } catch (e) {
       return SyncState(status: SyncStatus.error, message: e.toString());

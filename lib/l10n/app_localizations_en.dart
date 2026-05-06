@@ -563,4 +563,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String daysAgo(int count) {
     return '$count days ago';
   }
+
+  @override
+  String get shortcuts => 'Shortcuts';
+
+  @override
+  String get pressNewShortcut => 'Press new shortcut...';
+
+  @override
+  String get resetToDefaults => 'Reset to Defaults';
+
+  @override
+  String get shortcutsReset => 'Shortcuts reset to defaults';
+
+  @override
+  String get shortcutConflict => 'Shortcut conflict';
+
+  @override
+  String shortcutConflictMsg(String shortcut, String action) {
+    return '\"$shortcut\" is already bound to \"$action\"';
+  }
+
+  @override
+  String get offlineMode => 'Offline Mode';
+
+  @override
+  String get offline => 'Offline';
+
+  @override
+  String get online => 'Online';
+
+  @override
+  String get aiDegradedToLocal => 'AI switched to local model (offline)';
+
+  @override
+  String get noLocalModel => 'No local model available for offline use';
+
+  @override
+  String syncPending(int count) {
+    return '$count changes pending sync';
+  }
+
+  @override
+  String get dragDropHint => 'Drag text or notes here';
+
+  @override
+  String get syncScroll => 'Sync Scroll';
+
+  @override
+  String get markdownHighlight => 'Markdown Highlight';
 }

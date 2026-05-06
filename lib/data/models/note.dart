@@ -1,4 +1,6 @@
+// ignore_for_file: avoid_print
 import 'package:uuid/uuid.dart';
+import 'package:yaml/yaml.dart';
 
 class Note {
   final String id;
@@ -107,44 +109,40 @@ class Note {
     List<String> aliases = [];
     String? sourceUrl;
     String? sourceTitle;
+    String? agentTaskId;
 
     if (markdown.startsWith('---')) {
       final endIndex = markdown.indexOf('---', 3);
       if (endIndex > 0) {
         final fmText = markdown.substring(3, endIndex).trim();
         content = markdown.substring(endIndex + 3).trim();
-        for (final line in fmText.split('\n')) {
-          final colonIdx = line.indexOf(':');
-          if (colonIdx > 0) {
-            final key = line.substring(0, colonIdx).trim();
-            final value = line.substring(colonIdx + 1).trim();
-            switch (key) {
-              case 'title':
-                title = value.replaceAll('"', '');
-              case 'tags':
-                tags = value
-                    .replaceAll('[', '')
-                    .replaceAll(']', '')
-                    .split(',')
-                    .map((s) => s.trim().replaceAll('"', ''))
-                    .where((s) => s.isNotEmpty)
-                    .toList();
-              case 'aliases':
-                aliases = value
-                    .replaceAll('[', '')
-                    .replaceAll(']', '')
-                    .split(',')
-                    .map((s) => s.trim().replaceAll('"', ''))
-                    .where((s) => s.isNotEmpty)
-                    .toList();
-              case 'source':
-                sourceUrl = value;
-              case 'source-title':
-                sourceTitle = value.replaceAll('"', '');
-              default:
-                frontMatter[key] = value;
+        try {
+          final parsed = loadYaml(fmText);
+          if (parsed is YamlMap) {
+            title = (parsed['title'] ?? '').toString();
+            tags = _parseStringList(parsed['tags']);
+            aliases = _parseStringList(parsed['aliases']);
+            sourceUrl = parsed['source']?.toString();
+            sourceTitle = parsed['source-title']?.toString();
+            agentTaskId = parsed['agent-task']?.toString();
+            for (final entry in parsed.entries) {
+              final key = entry.key.toString();
+              if (![
+                'title',
+                'created',
+                'modified',
+                'tags',
+                'aliases',
+                'source',
+                'source-title',
+                'agent-task',
+              ].contains(key)) {
+                frontMatter[key] = entry.value;
+              }
             }
           }
+        } catch (_) {
+          print('Note: failed to parse frontmatter');
         }
       }
     }
@@ -174,6 +172,24 @@ class Note {
           : DateTime.now(),
       sourceUrl: sourceUrl,
       sourceTitle: sourceTitle,
+      agentTaskId: agentTaskId,
     );
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((e) => e.toString()).where((s) => s.isNotEmpty).toList();
+    }
+    if (value is String) {
+      return value
+          .replaceAll('[', '')
+          .replaceAll(']', '')
+          .split(',')
+          .map((s) => s.trim().replaceAll('"', ''))
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    return [value.toString()];
   }
 }

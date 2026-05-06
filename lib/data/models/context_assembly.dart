@@ -14,22 +14,46 @@ class ContextItem {
     this.summary,
     this.metadata = const {},
   });
+
+  ContextItem copyWith({
+    ContextType? type,
+    String? id,
+    String? content,
+    String? summary,
+    Map<String, dynamic>? metadata,
+  }) {
+    return ContextItem(
+      type: type ?? this.type,
+      id: id ?? this.id,
+      content: content ?? this.content,
+      summary: summary ?? this.summary,
+      metadata: metadata ?? this.metadata,
+    );
+  }
 }
 
 class ContextAssembly {
   final List<ContextItem> items;
+  final bool truncated;
 
-  ContextAssembly({List<ContextItem>? items}) : items = items ?? [];
+  ContextAssembly({List<ContextItem>? items, this.truncated = false})
+    : items = items ?? [];
 
   ContextAssembly addItem(ContextItem item) {
-    return ContextAssembly(items: [...items, item]);
+    return ContextAssembly(
+      items: [...items, item],
+      truncated: truncated,
+    );
   }
 
   String toPrompt() {
     final buffer = StringBuffer();
     for (final item in items) {
-      buffer.writeln('[${item.type.name}: ${item.id}]');
+      if (item.content.isEmpty) continue;
+      final title = item.metadata['title'] ?? item.id;
+      buffer.writeln('[Context: ${item.type.name} "$title"]');
       buffer.writeln(item.content);
+      buffer.writeln('[End Context]');
       buffer.writeln();
     }
     return buffer.toString();

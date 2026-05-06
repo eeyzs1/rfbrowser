@@ -171,7 +171,6 @@ void main() {
     test('AC-3-6: reorder changes positions', () {
       final a = QuickMove(id: 'a', name: 'A', promptTemplate: '');
       final b = QuickMove(id: 'b', name: 'B', promptTemplate: '');
-      final state = QuickMoveState(moves: [a, b]);
       final newState = QuickMoveState(moves: [b, a]);
       expect(newState.moves[0].id, 'b');
       expect(newState.moves[1].id, 'a');

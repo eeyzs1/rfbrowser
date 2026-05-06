@@ -1,0 +1,13 @@
+name: "TestTask"
+domain: "content_system"
+real_need: "A developer needs to verify the Meta-Harness generation pipeline produces complete, executable artifacts"
+goal: "Verify the 7+2 layer generation pipeline works end-to-end"
+scale: "small"
+acceptance_criteria:
+  - "AGENTS.md is generated"
+  - "All 7+2 layers have concrete artifacts"
+  - "orchestrator.py is present"
+  - "generation log is updated"
+hard_constraints:
+  - "Must produce executable artifacts"
+  - "Must complete without errors"

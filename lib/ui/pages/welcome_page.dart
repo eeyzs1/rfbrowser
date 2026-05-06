@@ -204,6 +204,7 @@ class _RecentVaultsList extends StatelessWidget {
             thickness: 6,
             radius: const Radius.circular(3),
             child: ListView.separated(
+              primary: true,
               shrinkWrap: false,
               padding: EdgeInsets.zero,
               itemCount: vaults.length,

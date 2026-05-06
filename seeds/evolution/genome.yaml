@@ -1,27 +1,233 @@
-version: 1
-description: Initial evolution genome seed
+version: 2
+description: "Evolved genome for RFBrowser — integrates AGENTS.md evidence-driven rules"
 harness_genome:
   constraints:
     - id: C001
       rule: "every task must have acceptance criteria"
       source: "initial design"
-      last_triggered: null
-      trigger_count: 0
+      last_triggered: "2026-05-06"
+      trigger_count: 1
+      status: active
     - id: C002
       rule: "no agent self-certifies"
       source: "initial design"
       last_triggered: null
       trigger_count: 0
+      status: verified-needed
     - id: C003
       rule: "every mistake produces a new constraint"
       source: "initial design"
+      last_triggered: "2026-05-06"
+      trigger_count: 1
+      status: active
+    - id: C004
+      rule: "CustomPainter.shouldRepaint must compare actual data, not just return true"
+      source: "meta-mistake: P-2 evidence"
+      last_triggered: "2026-05-06"
+      trigger_count: 1
+      status: active
+    - id: C005
+      rule: "every class using SharedPreferences must cache the instance (lazy singleton)"
+      source: "meta-mistake: P-3 evidence"
+      last_triggered: "2026-05-06"
+      trigger_count: 1
+      status: active
+    - id: C006
+      rule: "no empty catch blocks — every catch must log or rethrow"
+      source: "meta-mistake: silent error swallowing"
+      last_triggered: "2026-05-06"
+      trigger_count: 17
+      status: active
+    - id: C007
+      rule: "use dart:convert for JSON — never write manual parsers"
+      source: "meta-mistake: manual JSON parser"
+      last_triggered: "2026-05-06"
+      trigger_count: 1
+      status: active
+    - id: C008
+      rule: "no duplicate business logic between UI and service layers — extract to model"
+      source: "meta-mistake: A-2 evidence"
+      last_triggered: "2026-05-06"
+      trigger_count: 1
+      status: active
+    - id: C009
+      rule: "after harness generation, run domain-adaptation pass"
+      source: "meta-mistake: generic paths in Flutter project"
+      last_triggered: "2026-05-06"
+      trigger_count: 1
+      status: active
+    - id: C010
+      rule: "never persist to disk on every frame (drag/resize) — use in-memory updates + debounced save (500ms) + explicit persist on end (P-1)"
+      source: "AGENTS.md P-1"
       last_triggered: null
       trigger_count: 0
+      status: dormant
+    - id: C011
+      rule: "API response parsing must be defensive — null-check every level of nested access (C-1)"
+      source: "AGENTS.md C-1"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C012
+      rule: "concurrent state mutations must be guarded — check isLoading before new operations (C-2)"
+      source: "AGENTS.md C-2"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C013
+      rule: "when closing a tab/item from a list, calculate new active index BEFORE removing the item (C-3)"
+      source: "AGENTS.md C-3"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C014
+      rule: "copyWith cannot set nullable fields to null using ?? this.field — use sentinel values or explicit clear flags (C-4)"
+      source: "AGENTS.md C-4"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C015
+      rule: "WebView must filter dangerous URL schemes (file://, javascript:, data:) in shouldOverrideUrlLoading (S-1)"
+      source: "AGENTS.md S-1"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C016
+      rule: "API keys must not be stored in observable state objects — use flutter_secure_storage (S-2)"
+      source: "AGENTS.md S-2"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C017
+      rule: "path sanitization with replaceAll('..', '') is insufficient — use path normalization + validation (S-3)"
+      source: "AGENTS.md S-3"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C018
+      rule: "every component must have at least one data flow path to another component (A-1)"
+      source: "AGENTS.md A-1"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C019
+      rule: "shared utility functions belong on the model/enum as getters, not duplicated across UI files (A-2)"
+      source: "AGENTS.md A-2"
+      last_triggered: "2026-05-06"
+      trigger_count: 1
+      status: active
+    - id: C020
+      rule: "dialog code identical across pages must be extracted into a shared function or widget (A-3)"
+      source: "AGENTS.md A-3"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C021
+      rule: "separate concerns in state management — UI theme and AI config change for different reasons (A-4)"
+      source: "AGENTS.md A-4"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C022
+      rule: "canvas cards with noteId must render live note data, not static snapshots (A-5)"
+      source: "AGENTS.md A-5"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C023
+      rule: "auto-discovered connections (wikilink) must be visually distinct from manual ones (A-6)"
+      source: "AGENTS.md A-6"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C024
+      rule: "canvas persistence should use file system (.json in vault/.rf/) for Git traceability (A-7)"
+      source: "AGENTS.md A-7"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C025
+      rule: "error dismiss buttons must actually clear the error state (U-1)"
+      source: "AGENTS.md U-1"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C026
+      rule: "canvas clipping must happen BEFORE drawing — save → clip → draw → restore (U-2)"
+      source: "AGENTS.md U-2"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C027
+      rule: "row overflow in constrained spaces must use Flexible + TextOverflow.ellipsis (U-3)"
+      source: "AGENTS.md U-3"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C028
+      rule: "DropDownButtonFormField.value deprecated in 3.41+ — use with ignore comment + ValueKey (F-1)"
+      source: "AGENTS.md F-1"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C029
+      rule: "Matrix4.translate()/scale() deprecated — set matrix entries directly (F-2)"
+      source: "AGENTS.md F-2"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C030
+      rule: "never assign TextEditingController.text inside build() unconditionally (F-7)"
+      source: "AGENTS.md F-7"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C031
+      rule: "every backend service must have at least one user-accessible trigger (UX-1)"
+      source: "AGENTS.md UX-1"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C032
+      rule: "empty states must guide the user toward the next action with a call-to-action (UX-2)"
+      source: "AGENTS.md UX-2"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C033
+      rule: "destructive actions require confirmation (UX-3)"
+      source: "AGENTS.md UX-3"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C034
+      rule: "AI streaming output is core UX expectation — users should see tokens in real-time (UX-4)"
+      source: "AGENTS.md UX-4"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C035
+      rule: "command bar must search actual data, not hardcoded suggestions (UX-5)"
+      source: "AGENTS.md UX-5"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
+    - id: C036
+      rule: "keyboard shortcuts must cover top 5 actions: search, new note, save, switch view, daily note (UX-7)"
+      source: "AGENTS.md UX-7"
+      last_triggered: null
+      trigger_count: 0
+      status: dormant
   workflows:
     - id: W001
       name: "base flow"
       steps: [define, plan, execute, verify, record]
       source: "initial design"
+    - id: W002
+      name: "harness-evolution"
+      steps: [analyze_gaps, create_layers, adapt_paths, update_genome, verify_completeness]
+      source: "harness-evolution-cycle"
+      enabled: true
   skills:
     - id: S001
       name: "self-verify"
@@ -29,6 +235,16 @@ harness_genome:
     - id: S002
       name: "task-decompose"
       source: "initial design"
+    - id: S003
+      name: "flutter-analyze"
+      source: "execution layer: task-runner.py"
+    - id: S004
+      name: "flutter-test"
+      source: "execution layer: task-runner.py"
+    - id: S005
+      name: "genome-evolution"
+      source: "harness-evolution: integrate AGENTS.md rules as constraints"
+      status: "applied"
 agent_genome:
   topology_rules:
     - "always add verifier"
@@ -37,6 +253,13 @@ agent_genome:
   default_scope:
     max_context_lines: 60
     handoff_format: "structured YAML"
+  domain_specific_roles:
+    planner:
+      responsibilities: ["design Flutter widget contracts", "define component structure", "create task decomposition"]
+    executor:
+      responsibilities: ["implement Flutter widgets", "write Dart code", "fix bugs", "run flutter analyze"]
+    verifier:
+      responsibilities: ["run flutter test", "check consistency", "validate AGENTS.md rule compliance"]
 evolution_genome:
   fitness_weights:
     evidence_satisfaction_rate: 0.35
@@ -50,3 +273,16 @@ evolution_genome:
     - "never remove evolution system"
     - "mutation rate <= 30%"
     - "all mutations reversible"
+  evidence_log:
+    - date: "2026-05-06"
+      type: "code_quality_fix"
+      details: "Fixed 17 lint issues → 0; all catch blocks now log; SharedPreferences cached; shouldRepaint compares data; duplicate code extracted; manual JSON parser replaced"
+      fitness_delta: 0.35
+    - date: "2026-05-06"
+      type: "harness_evolution"
+      details: "Created execution layer; adapted paths to Flutter; evolved genome with 36 constraints from AGENTS.md; created domain advancement roadmap with 12 innovations"
+      fitness_delta: 0.25
+    - date: "2026-05-06"
+      type: "genome_breathing"
+      details: "Epic F: Added status field to all 36 constraints; classified 9 active, 1 verified-needed, 26 dormant; created dormant-constraints.yaml archive"
+      fitness_delta: 0.05

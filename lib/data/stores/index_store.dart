@@ -1,13 +1,19 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/note.dart';
 import '../models/link.dart';
 import '../models/link_type.dart';
+import 'vault_store.dart';
 
 class IndexStore {
+  final String _dbPath;
   Database? _db;
   Completer<Database>? _initCompleter;
+
+  IndexStore(this._dbPath);
 
   Future<Database> get database async {
     if (_db != null) return _db!;
@@ -20,16 +26,20 @@ class IndexStore {
   }
 
   Future<Database> _initDb() async {
-    final dbPath = await getDatabasesPath();
+    final dir = Directory(p.dirname(_dbPath));
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
     return openDatabase(
-      p.join(dbPath, 'rfbrowser_index.db'),
-      version: 1,
+      _dbPath,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE notes (
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             file_path TEXT NOT NULL,
+            content TEXT,
             tags TEXT,
             source_url TEXT,
             created TEXT,
@@ -38,8 +48,7 @@ class IndexStore {
         ''');
         await db.execute('''
           CREATE VIRTUAL TABLE notes_fts USING fts5(
-            id, title, content, tags,
-            content=notes, content_rowid=rowid
+            id, title, content, tags
           )
         ''');
         await db.execute('''
@@ -60,6 +69,16 @@ class IndexStore {
             count INTEGER DEFAULT 1
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('DROP TABLE IF EXISTS notes_fts');
+          await db.execute('''
+            CREATE VIRTUAL TABLE notes_fts USING fts5(
+              id, title, content, tags
+            )
+          ''');
+        }
       },
     );
   }
@@ -100,6 +119,28 @@ class IndexStore {
     );
   }
 
+  Future<void> updateNote(Note note) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('notes_fts', where: 'id = ?', whereArgs: [note.id]);
+      await txn.insert('notes', {
+        'id': note.id,
+        'title': note.title,
+        'file_path': note.filePath,
+        'tags': note.tags.join(','),
+        'source_url': note.sourceUrl,
+        'created': note.created.toIso8601String(),
+        'modified': note.modified.toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await txn.insert('notes_fts', {
+        'id': note.id,
+        'title': note.title,
+        'content': note.content,
+        'tags': note.tags.join(' '),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
+  }
+
   Future<List<Map<String, dynamic>>> searchNotes(
     String query, {
     int limit = 50,
@@ -111,8 +152,7 @@ class IndexStore {
     if (sanitized.isEmpty) return [];
     return db.rawQuery(
       '''
-      SELECT n.* FROM notes n
-      JOIN notes_fts fts ON n.id = fts.id
+      SELECT * FROM notes_fts
       WHERE notes_fts MATCH ?
       ORDER BY rank
       LIMIT ?
@@ -201,3 +241,16 @@ class IndexStore {
     _initCompleter = null;
   }
 }
+
+final indexStoreProvider = Provider<IndexStore>((ref) {
+  final vaultState = ref.watch(vaultProvider);
+  if (vaultState.currentVault != null) {
+    final dbPath = p.join(
+      vaultState.currentVault!.path,
+      '.rfbrowser',
+      'index.db',
+    );
+    return IndexStore(dbPath);
+  }
+  return IndexStore(p.join('rfbrowser_default', 'index.db'));
+});

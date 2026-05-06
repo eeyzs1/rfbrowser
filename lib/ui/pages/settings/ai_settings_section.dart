@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/settings_service.dart';
 import '../../../services/ai_service.dart';
-import '../../../core/model/ai_provider.dart';
-import '../../../core/model/model_discovery.dart';
+import '../../../data/models/ai_provider.dart';
+import '../../../core/domain/model_discovery.dart';
 import '../../widgets/settings_section.dart';
 
 class AISettingsSection extends ConsumerWidget {
@@ -14,10 +14,10 @@ class AISettingsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
-    final settingsNotifier = ref.read(settingsProvider.notifier);
-    final providers = settingsNotifier.providers;
-    final activeProvider = settingsNotifier.activeProvider;
-    final activeModel = settingsNotifier.activeModel;
+    final aiConfig = ref.read(aiConfigProvider);
+    final providers = aiConfig.providers;
+    final activeProvider = aiConfig.activeProvider;
+    final activeModel = aiConfig.activeModel;
 
     final children = <Widget>[];
 
@@ -98,7 +98,7 @@ class AISettingsSection extends ConsumerWidget {
   ) {
     final isActive = activeProvider?.id == provider.id;
     final models = ref
-        .read(settingsProvider.notifier)
+        .read(aiConfigProvider)
         .modelsForProvider(provider.id);
 
     return ExpansionTile(
@@ -285,7 +285,7 @@ class AISettingsSection extends ConsumerWidget {
           ? IconButton(
               icon: const Icon(Icons.close, size: 14),
               onPressed: () => ref
-                  .read(settingsProvider.notifier)
+                  .read(aiConfigProvider.notifier)
                   .removeModel(model.id, model.providerId),
             )
           : null,
@@ -301,12 +301,12 @@ class AISettingsSection extends ConsumerWidget {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final discovery = ref.read(modelDiscoveryProvider);
     final apiKey = await ref
-        .read(settingsProvider.notifier)
+        .read(aiConfigProvider.notifier)
         .getApiKeyForProvider(provider.id);
     final models = await discovery.fetchModels(provider, apiKey: apiKey);
     if (models.isNotEmpty) {
       await ref
-          .read(settingsProvider.notifier)
+          .read(aiConfigProvider.notifier)
           .setModelsForProvider(provider.id, models);
       scaffoldMessenger.showSnackBar(
         SnackBar(
@@ -337,8 +337,8 @@ class AISettingsSection extends ConsumerWidget {
         break;
       case 'toggle':
         ref
-            .read(settingsProvider.notifier)
-            .setProviderEnabled(provider.id, !provider.isEnabled);
+            .read(aiConfigProvider.notifier)
+        .setProviderEnabled(provider.id, !provider.isEnabled);
         break;
       case 'addModel':
         _showAddCustomModelDialog(context, ref, provider, l);
@@ -456,7 +456,7 @@ class AISettingsSection extends ConsumerWidget {
                         ? apiKeyController.text.trim()
                         : null,
                   );
-                  ref.read(settingsProvider.notifier).addProvider(provider);
+                  ref.read(aiConfigProvider.notifier).addProvider(provider);
                   Navigator.pop(ctx);
                 },
                 child: Text(l.save),
@@ -552,7 +552,7 @@ class AISettingsSection extends ConsumerWidget {
                         : null,
                   );
                   await ref
-                      .read(settingsProvider.notifier)
+                      .read(aiConfigProvider.notifier)
                       .updateProvider(updated);
                   if (ctx.mounted) Navigator.pop(ctx);
                 },
@@ -586,7 +586,7 @@ class AISettingsSection extends ConsumerWidget {
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () {
-              ref.read(settingsProvider.notifier).removeProvider(provider.id);
+              ref.read(aiConfigProvider.notifier).removeProvider(provider.id);
               Navigator.pop(ctx);
             },
             child: Text(l.delete),
@@ -673,7 +673,7 @@ class AISettingsSection extends ConsumerWidget {
                     capabilities: Set.from(selectedCapabilities),
                     isCustom: true,
                   );
-                  ref.read(settingsProvider.notifier).addCustomModel(model);
+                  ref.read(aiConfigProvider.notifier).addCustomModel(model);
                   Navigator.pop(ctx);
                 },
                 child: Text(l.save),
@@ -690,11 +690,11 @@ class AISettingsSection extends ConsumerWidget {
     WidgetRef ref,
     AppLocalizations l,
   ) {
-    final settingsNotifier = ref.read(settingsProvider.notifier);
-    final providers = settingsNotifier.providers
+    final aiConfig = ref.read(aiConfigProvider);
+    final providers = aiConfig.providers
         .where((p) => p.isEnabled)
         .toList();
-    final activeConfig = settingsNotifier.activeConfig;
+    final activeConfig = aiConfig.activeConfig;
 
     showDialog(
       context: context,
@@ -712,7 +712,7 @@ class AISettingsSection extends ConsumerWidget {
                   itemCount: providers.length,
                   itemBuilder: (ctx, index) {
                     final provider = providers[index];
-                    final models = settingsNotifier.modelsForProvider(
+                    final models = aiConfig.modelsForProvider(
                       provider.id,
                     );
                     return ExpansionTile(

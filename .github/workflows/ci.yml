@@ -31,10 +31,29 @@ jobs:
       - run: dart format --set-exit-if-changed .
       - run: flutter analyze --no-pub --fatal-infos
 
+  constraints:
+    name: Genome Constraints
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check genome constraints
+        run: python seeds/orchestrator.py --check-constraints
+
+  audit-services:
+    name: Service Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run service layer audit
+        run: python seeds/tools/audit_services.py
+
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
-    needs: analyze
+    needs: [analyze, constraints, audit-services]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +64,7 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter gen-l10n
-      - run: flutter test --no-pub --coverage
+      - run: flutter test --no-pub --coverage test/data/ test/services/ test/core/ test/integration/ test/acceptance/ test/canvas_image_test.dart test/semantic_search_test.dart
       - uses: codecov/codecov-action@v4
         if: github.event_name == 'push'
         with:

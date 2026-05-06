@@ -61,6 +61,13 @@ class VaultState {
 }
 
 class VaultNotifier extends Notifier<VaultState> {
+  SharedPreferences? _prefs;
+
+  Future<SharedPreferences> get _ensurePrefs async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
+
   @override
   VaultState build() => VaultState();
 
@@ -68,7 +75,7 @@ class VaultNotifier extends Notifier<VaultState> {
   static const _currentVaultKey = 'current_vault';
 
   Future<void> loadRecentVaults() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _ensurePrefs;
     final vaultsJson = prefs.getStringList(_recentVaultsKey) ?? [];
     final seen = <String>{};
     final vaults = vaultsJson
@@ -106,7 +113,7 @@ class VaultNotifier extends Notifier<VaultState> {
   }
 
   String _normalizePath(String path) =>
-      p.absolute(path).toLowerCase().replaceAll('\\', '/');
+      p.normalize(p.absolute(path));
 
   Future<void> openVault(String vaultPath) async {
     state = state.copyWith(isLoading: true, clearError: true);
@@ -174,7 +181,7 @@ class VaultNotifier extends Notifier<VaultState> {
   }
 
   Future<void> _saveToRecent(VaultConfig config) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _ensurePrefs;
     final rawJson = prefs.getStringList(_recentVaultsKey) ?? [];
     final seen = <String>{};
     final existing = rawJson
@@ -205,13 +212,13 @@ class VaultNotifier extends Notifier<VaultState> {
   }
 
   Future<void> closeVault() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _ensurePrefs;
     await prefs.remove(_currentVaultKey);
     state = state.copyWith(clearCurrentVault: true);
   }
 
   Future<void> removeFromRecent(String vaultPath) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _ensurePrefs;
     final vaults = List<VaultConfig>.from(state.recentVaults)
       ..removeWhere((v) => _normalizePath(v.path) == _normalizePath(vaultPath));
 

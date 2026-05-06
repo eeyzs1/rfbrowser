@@ -571,3 +571,21 @@ entries:
   task_name: Layer Test
   template: api-service
   timestamp: '2026-05-01T11:34:58.079053'
+- all_complete: true
+  completeness:
+    constraints: true
+    context: true
+    evolution: true
+    feedback: true
+    memory: true
+    observability: true
+    planning: true
+    security: true
+    tools: true
+    verification: true
+  domain_constraints_applied: 6
+  domain_workflows_applied: 1
+  output_dir: generated\test-harness
+  task_name: TestTask
+  template: content-system
+  timestamp: '2026-05-05T01:01:11.896868'

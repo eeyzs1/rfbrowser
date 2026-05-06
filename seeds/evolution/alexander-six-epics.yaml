@@ -1,0 +1,1203 @@
+version: 1
+description: >
+  克里斯托弗·亚历山大的六个重构史诗 —— 从"施工脚手架"到"活着的建筑"。
+  每个史诗包含完整的 User Story、可自动化验证的验收标准（AC）、
+  文件变更清单、实施步骤与依赖关系。
+created_at: "2026-05-06"
+status: proposed
+
+# ============================================================================
+# 概览：六个史诗的依赖关系
+# ============================================================================
+dependency_graph:
+  order:
+    - id: Epic-D
+      name: "统一模型层"
+      reason: "最先做，因为它纯属移动/重命名，无行为变更，建立后续 Epic 的干净基础"
+      risk: low
+      estimated_files: 8
+    - id: Epic-F
+      name: "让基因组呼吸"
+      reason: "与 D 无代码依赖，可并行；清理 genome.yaml 中的休眠约束"
+      risk: low
+      estimated_files: 2
+    - id: Epic-E
+      name: "修剪服务层"
+      reason: "在 B（分解KnowledgeNotifier）之前做，先删除死代码再拆分活代码"
+      risk: medium
+      estimated_files: 12
+    - id: Epic-B
+      name: "分解 KnowledgeNotifier"
+      reason: "在 C 之前做，因为 C（场景独立房间）会调用 B 拆分后的细分 Notifier"
+      risk: medium
+      estimated_files: 10
+    - id: Epic-C
+      name: "给每个场景独立的房间"
+      reason: "纯结构重构，将 MainLayout 拆分为独立场景文件"
+      risk: medium
+      estimated_files: 8
+    - id: Epic-A
+      name: "将 AI 编织进每个场景"
+      reason: "最后做，因为它依赖 C 的场景结构和 B 的细分 Notifier"
+      risk: high
+      estimated_files: 14
+
+# ============================================================================
+# Epic D: 统一模型层 —— "正空间"
+# ============================================================================
+Epic_D:
+  id: Epic-D
+  name: "统一模型层"
+  alexander_principle: "正空间 —— 每一个形状都应该是有意为之的，不是别的形状的剩余"
+  alexander_quote: >
+    "当两个目录并存而没有清晰的原则区分时，这不是材料的诚实——
+    这是施工过程中的脚手架没有被拆除。"
+  problem: |
+    lib/core/model/ 和 lib/data/models/ 两个目录同时存放"模型"类，
+    分裂没有结构性理由，只是历史的偶然。
+    具体问题：
+    - canvas_model.dart 在 core/model/
+    - ai_provider.dart 在 core/model/
+    - model_discovery.dart 在 core/model/
+    - note.dart, link.dart 等在 data/models/
+    消费者需记住"这个模型在哪个目录？"
+  target: |
+    建立清晰的分类原则并执行迁移：
+    - lib/data/models/ — 可被持久化的数据结构（可以被序列化到文件/数据库）
+    - lib/core/domain/ — 纯领域逻辑对象（算法、策略、值对象）
+    所有模型文件按此原则归类，删除 core/model/ 目录。
+
+  user_stories:
+    - id: US-D-1
+      name: "开发者能在一个目录找到所有数据模型"
+      story: |
+        作为 RFBrowser 开发者，
+        我希望所有可持久化的数据模型在 lib/data/models/ 下，
+        这样我不需要在两个目录之间切换来理解数据层。
+      acceptance_criteria:
+        - id: AC-D-1-1
+          description: "canvas_model.dart 出现在 lib/data/models/ 中"
+          verification: |
+            test('AC-D-1-1: canvas_model.dart is in data/models/', () {
+              final file = File('lib/data/models/canvas_model.dart');
+              expect(file.existsSync(), isTrue);
+            });
+        - id: AC-D-1-2
+          description: "ai_provider.dart 出现在 lib/data/models/ 中"
+          verification: |
+            test('AC-D-1-2: ai_provider.dart is in data/models/', () {
+              final file = File('lib/data/models/ai_provider.dart');
+              expect(file.existsSync(), isTrue);
+            });
+        - id: AC-D-1-3
+          description: "lib/core/model/ 目录不再存在"
+          verification: |
+            test('AC-D-1-3: core/model/ directory no longer exists', () {
+              final dir = Directory('lib/core/model');
+              expect(dir.existsSync(), isFalse);
+            });
+        - id: AC-D-1-4
+          description: "所有 import 引用已更新，flutter analyze 通过"
+          verification: "Run: flutter analyze → 0 issues"
+
+    - id: US-D-2
+      name: "model_discovery.dart 归入正确的领域层"
+      story: |
+        作为 RFBrowser 开发者，
+        我希望 model_discovery.dart（AI 模型发现逻辑）放在领域层，
+        因为它不是持久化数据结构，而是纯领域算法。
+      acceptance_criteria:
+        - id: AC-D-2-1
+          description: "model_discovery.dart 在 lib/core/domain/ 中"
+          verification: |
+            test('AC-D-2-1: model_discovery.dart is in core/domain/', () {
+              final file = File('lib/core/domain/model_discovery.dart');
+              expect(file.existsSync(), isTrue);
+            });
+        - id: AC-D-2-2
+          description: "所有对 model_discovery.dart 的 import 已更新"
+          verification: "Run: flutter analyze → 0 issues"
+
+  file_changes:
+    moves:
+      - from: "lib/core/model/canvas_model.dart"
+        to: "lib/data/models/canvas_model.dart"
+        reason: "CanvasCard/CanvasConnection/CanvasData 均持久化到 .canvas.json 文件"
+      - from: "lib/core/model/ai_provider.dart"
+        to: "lib/data/models/ai_provider.dart"
+        reason: "AIProvider/AIModel 持久化到 SharedPreferences"
+      - from: "lib/core/model/model_discovery.dart"
+        to: "lib/core/domain/model_discovery.dart"
+        reason: "纯领域逻辑，无持久化"
+    deletes:
+      - "lib/core/model/" (directory, after moves)
+    import_updates:
+      - "lib/services/canvas_service.dart: update canvas_model import"
+      - "lib/services/ai_service.dart: update ai_provider import"
+      - "lib/services/settings_service.dart: update ai_provider import"
+      - "lib/services/connectivity_service.dart: update ai_provider import"
+      - "lib/ui/pages/canvas_page.dart: update canvas_model import"
+      - "lib/ui/pages/settings/ai_settings_section.dart: update ai_provider import"
+      - "lib/core/model/canvas_model.dart → any file importing it"
+      - "All test files referencing these paths"
+
+  implementation_steps:
+    - step: 1
+      action: "创建 lib/core/domain/ 目录"
+    - step: 2
+      action: "移动 model_discovery.dart → lib/core/domain/model_discovery.dart"
+    - step: 3
+      action: "移动 ai_provider.dart → lib/data/models/ai_provider.dart"
+    - step: 4
+      action: "移动 canvas_model.dart → lib/data/models/canvas_model.dart"
+    - step: 5
+      action: "删除空的 lib/core/model/ 目录"
+    - step: 6
+      action: "全局搜索替换所有受影响的 import 路径"
+    - step: 7
+      action: "运行 flutter analyze → 确保 0 issues"
+    - step: 8
+      action: "运行所有测试 → flutter test → 确保全部通过"
+
+# ============================================================================
+# Epic F: 让基因组呼吸 —— "有机秩序"
+# ============================================================================
+Epic_F:
+  id: Epic-F
+  name: "让基因组呼吸"
+  alexander_principle: "有机秩序 —— 规则只应在被需要时出现，而非预先书写整棵树的蓝图"
+  alexander_quote: >
+    "一个种子如果包含了整棵树的蓝图，它就不是种子了——它是树的木乃伊。"
+  problem: |
+    genome.yaml 中 36 条约束，大部分从未被触发（last_triggered: null）。
+    这些未经验的规则制造了"虚假的完整感"，让活着的系统开始窒息。
+    实际被触发过的约束 < 10 条，许多可能是过度工程化的。
+  target: |
+    - genome.yaml 中只有"活的"约束（曾触发过或已验证需要）
+    - 休眠约束归档到单独文件
+    - 建立每月审查机制
+
+  user_stories:
+    - id: US-F-1
+      name: "活着的约束保持活跃，休眠的约束归档"
+      story: |
+        作为项目维护者，
+        我希望 genome.yaml 只包含被实际触发过的约束，
+        这样 Agent 在执行时不会被无关规则干扰。
+      acceptance_criteria:
+        - id: AC-F-1-1
+          description: "genome.yaml 中的活跃约束 ≤ 20 条"
+          verification: |
+            test('AC-F-1-1: active constraints <= 20', () {
+              final genome = loadYaml(File('seeds/evolution/genome.yaml').readAsStringSync());
+              final constraints = (genome['harness_genome']['constraints'] as List)
+                  .where((c) => c['status'] != 'dormant');
+              expect(constraints.length, lessThanOrEqualTo(20));
+            });
+        - id: AC-F-1-2
+          description: "每条活跃约束的 trigger_count >= 1 或 status='verified-needed'"
+          verification: |
+            test('AC-F-1-2: every active constraint has trigger_count >= 1 or is verified-needed', () {
+              final genome = loadYaml(File('seeds/evolution/genome.yaml').readAsStringSync());
+              final constraints = (genome['harness_genome']['constraints'] as List)
+                  .where((c) => c['status'] != 'dormant' && c['status'] != null);
+              for (final c in constraints) {
+                final count = c['trigger_count'] as int? ?? 0;
+                final status = c['status'] as String? ?? '';
+                expect(count >= 1 || status == 'verified-needed', isTrue,
+                    reason: 'Constraint ${c['id']} is active but has trigger_count=0 and status="$status"');
+              }
+            });
+        - id: AC-F-1-3
+          description: "休眠约束归档文件存在"
+          verification: |
+            test('AC-F-1-3: dormant constraints archive exists', () {
+              final file = File('seeds/evolution/dormant-constraints.yaml');
+              expect(file.existsSync(), isTrue);
+            });
+
+    - id: US-F-2
+      name: "约束有明确的状态标记"
+      story: |
+        作为 AI Agent，
+        我希望每条约束有 status 字段（active/dormant/verified-needed/archived），
+        这样我能快速判断应该关注哪些规则。
+      acceptance_criteria:
+        - id: AC-F-2-1
+          description: "所有约束都有 status 字段"
+          verification: |
+            test('AC-F-2-1: every constraint has a status field', () {
+              final genome = loadYaml(File('seeds/evolution/genome.yaml').readAsStringSync());
+              final constraints = genome['harness_genome']['constraints'] as List;
+              for (final c in constraints) {
+                expect(c.containsKey('status'), isTrue,
+                    reason: 'Constraint ${c['id']} is missing status field');
+              }
+            });
+        - id: AC-F-2-2
+          description: "status 值在允许范围内"
+          verification: |
+            test('AC-F-2-2: status values are valid', () {
+              final validStatuses = ['active', 'dormant', 'verified-needed', 'archived'];
+              final genome = loadYaml(File('seeds/evolution/genome.yaml').readAsStringSync());
+              final constraints = genome['harness_genome']['constraints'] as List;
+              for (final c in constraints) {
+                expect(validStatuses.contains(c['status']), isTrue,
+                    reason: 'Constraint ${c['id']} has invalid status: ${c['status']}');
+              }
+            });
+
+    - id: US-F-3
+      name: "orchestrator.py 支持休眠约束过滤"
+      story: |
+        作为项目维护者，
+        我希望 --check-constraints 只报告活跃约束的违规，
+        不被休眠约束的噪声淹没。
+      acceptance_criteria:
+        - id: AC-F-3-1
+          description: "--check-constraints 只报告 status=active 的违规"
+          verification: |
+            test('AC-F-3-1: --check-constraints only reports active constraint violations', () {
+              final result = Process.runSync('python', ['seeds/orchestrator.py', '--check-constraints']);
+              final output = result.stdout as String;
+              // 确保没有 dormant 约束出现在违规报告中
+              // 注意：这不是 dart 测试，这是 shell 验证命令
+              expect(result.exitCode, 0);
+            });
+            验证命令: python seeds/orchestrator.py --check-constraints | grep -c "dormant"
+            预期结果: 0 (没有 dormant 约束出现在违规报告)
+
+  file_changes:
+    modify:
+      - file: "seeds/evolution/genome.yaml"
+        changes:
+          - "为每条约束添加 status 字段"
+          - "从未触发且非关键约束 → status: dormant"
+          - "已触发过的约束 → status: active"
+          - "标记为 verified-needed 但未验证的 → status: verified-needed"
+    create:
+      - file: "seeds/evolution/dormant-constraints.yaml"
+        content: "归档的休眠约束及其归档原因和日期"
+    modify:
+      - file: "seeds/orchestrator.py"
+        changes:
+          - "--check-constraints 过滤 status!=active 的约束"
+          - "--status 显示 active/dormant/verified-needed 计数"
+
+  implementation_steps:
+    - step: 1
+      action: "审查 36 条约束，分类为 active / dormant / verified-needed"
+    - step: 2
+      action: "为 genome.yaml 每条约束添加 status 字段"
+    - step: 3
+      action: "创建 seeds/evolution/dormant-constraints.yaml 归档休眠约束"
+    - step: 4
+      action: "修改 orchestrator.py --check-constraints 过滤逻辑"
+    - step: 5
+      action: "运行 python seeds/orchestrator.py --check-constraints → 确认只报告活跃违规"
+    - step: 6
+      action: "运行 python seeds/orchestrator.py --status → 确认状态显示正确"
+
+# ============================================================================
+# Epic E: 修剪服务层 —— "房间不是墙内的空洞"
+# ============================================================================
+Epic_E:
+  id: Epic-E
+  name: "修剪服务层"
+  alexander_principle: "一栋有 19 个房间的房子并不比一栋有 6 个的宜居 —— 空的房间只是墙内的空洞"
+  alexander_quote: >
+    "如果有些房间从来没有人进入，它们就不是'房间'——它们是墙内的空洞。"
+  problem: |
+    lib/services/ 有 19 个服务文件。根据 AGENTS.md UX-1 规则：
+    "每一个后端服务必须至少有一个用户可访问的触发器"。
+    怀疑 template_service, update_check_service, plugin_registry_service,
+    skill_service 等没有实际用户触发器或功能未被调用。
+  target: |
+    - 每个服务文件必须 (1) 被实际调用 + (2) 有用户触发器
+    - 未使用的服务删除或归档
+    - 功能重叠的服务合并
+    - 通过静态分析脚本可验证
+
+  user_stories:
+    - id: US-E-1
+      name: "审计所有服务的使用状态"
+      story: |
+        作为项目维护者，
+        我希望知道哪些服务被实际使用、哪些是死代码，
+        这样我才能决定删除或保留。
+      acceptance_criteria:
+        - id: AC-E-1-1
+          description: "存在自动化的服务使用审计脚本"
+          verification: |
+            test('AC-E-1-1: service audit script exists and is runnable', () {
+              final result = Process.runSync('python', ['seeds/tools/audit_services.py']);
+              expect(result.exitCode, 0);
+            });
+        - id: AC-E-1-2
+          description: "审计报告列出每个服务文件的使用状态"
+          verification: |
+            test('AC-E-1-2: audit report contains all service files', () {
+              final serviceDir = Directory('lib/services');
+              final serviceFiles = serviceDir.listSync()
+                  .whereType<File>()
+                  .where((f) => f.path.endsWith('.dart'))
+                  .map((f) => p.basename(f.path))
+                  .toList();
+              final report = File('seeds/memory/service-audit.yaml');
+              final content = loadYaml(report.readAsStringSync());
+              for (final svc in serviceFiles) {
+                expect(content.containsKey(svc), isTrue,
+                    reason: 'Service $svc not found in audit report');
+              }
+            });
+
+    - id: US-E-2
+      name: "删除未使用且无用户触发器的服务"
+      story: |
+        作为 RFBrowser 开发者，
+        我希望代码库中没有死代码服务，
+        这样导航和理解代码库的成本更低。
+      acceptance_criteria:
+        - id: AC-E-2-1
+          description: "每个保留的服务文件至少有 1 个用户触发器和 1 个调用方"
+          verification: "通过审计脚本验证：每个服务 → referenced_by >= 1 AND has_user_trigger == true"
+        - id: AC-E-2-2
+          description: "删除后 flutter analyze 通过"
+          verification: "Run: flutter analyze → 0 issues"
+        - id: AC-E-2-3
+          description: "删除后所有现有测试通过"
+          verification: "Run: flutter test → all pass"
+
+    - id: US-E-3
+      name: "合并功能重叠的服务"
+      story: |
+        作为 RFBrowser 开发者，
+        我希望 thin-wrapper 服务被合并到核心服务中，
+        以减少文件切换和理解成本。
+      acceptance_criteria:
+        - id: AC-E-3-1
+          description: "服务数量 ≤ 14 个（从 19 减少至少 5 个）"
+          verification: |
+            test('AC-E-3-1: at most 14 service files remain', () {
+              final serviceDir = Directory('lib/services');
+              final count = serviceDir.listSync()
+                  .whereType<File>()
+                  .where((f) => f.path.endsWith('.dart') && !f.path.endsWith('_stub.dart'))
+                  .length;
+              expect(count, lessThanOrEqualTo(14));
+            });
+
+  service_audit_plan:
+    # 对每一个服务文件的三问审查
+    questions:
+      - "是否被 lib/ 中任何代码 import？（静态引用检查）"
+      - "是否有用户可访问的触发器？（按钮/菜单/快捷键/命令栏）"
+      - "是否可以合并到另一个服务？（薄封装 / 功能重叠）"
+
+    # 审查结果（待验证）
+    candidates_for_deletion:
+      - file: "template_service.dart"
+        reason: "UX-1: 是否有用户触发器可创建/使用模板？若无，删除"
+      - file: "update_check_service.dart"
+        reason: "功能可能未实现或未被调用；桌面应用更新检查可能不属于核心"
+      - file: "plugin_registry_service.dart"
+        reason: "插件系统中的注册逻辑可能属于 plugin_host"
+
+    candidates_for_merge:
+      - from: "clipper_service.dart"
+        into: "knowledge_service.dart"
+        reason: "clipper_service 的功能（clipToNote）实际在 knowledge_service 中实现"
+      - from: "quick_move_service.dart"
+        into: "独立保持（功能完整，有 US + AC 覆盖）"
+        reason: "quick move 有完整的 CRUD + UI，功能自治"
+
+    confirmed_keep:
+      - "knowledge_service.dart"
+      - "ai_service.dart"
+      - "browser_service.dart"
+      - "canvas_service.dart"
+      - "settings_service.dart"
+      - "shortcut_service.dart"
+      - "git_sync_service.dart"
+      - "webdav_sync_service.dart"
+      - "agent_service.dart"
+      - "connectivity_service.dart"
+      - "embedding_service.dart"
+      - "database_init.dart"
+      - "tantivy_bridge.dart"
+
+  file_changes:
+    create:
+      - file: "seeds/tools/audit_services.py"
+        content: "Python 脚本：扫描所有服务文件的 import 关系和用户触发器"
+    delete:
+      - "lib/services/template_service.dart" (待审计确认)
+      - "lib/services/update_check_service.dart" (待审计确认)
+      - "lib/services/plugin_registry_service.dart" (待审计确认)
+      - "lib/services/clipper_service.dart" (功能已迁移到 knowledge_service)
+      - "lib/services/skill_service.dart" (待审计确认)
+    modify:
+      - "lib/services/knowledge_service.dart"
+        changes: "吸收 clipper_service 和 skill_service 的有效功能"
+      - "lib/plugins/host/plugin_host.dart"
+        changes: "吸收 plugin_registry_service 的注册逻辑"
+
+  implementation_steps:
+    - step: 1
+      action: "编写 seeds/tools/audit_services.py 审计脚本"
+    - step: 2
+      action: "运行审计脚本 → 生成 seeds/memory/service-audit.yaml"
+    - step: 3
+      action: "根据审计结果，逐个确认要删除的服务"
+    - step: 4
+      action: "将合并目标的代码迁移到目标文件"
+    - step: 5
+      action: "删除确认无用的服务文件"
+    - step: 6
+      action: "更新所有受影响的 import"
+    - step: 7
+      action: "运行 flutter analyze → 确保 0 issues"
+    - step: 8
+      action: "运行 flutter test → 确保全部通过"
+
+# ============================================================================
+# Epic B: 分解 KnowledgeNotifier —— "层级中心"
+# ============================================================================
+Epic_B:
+  id: Epic-B
+  name: "分解 KnowledgeNotifier"
+  alexander_principle: "每一个活着的结构都有层次分明的尺度 —— 当一个中心过大而缺乏内部子中心时，它就死了"
+  alexander_quote: >
+    "一个真正有活力的建筑，它的中心应该像俄罗斯套娃一样——
+    一个大中心内部包含着若干次级中心。"
+  problem: |
+    KnowledgeNotifier（270 行）是一个神对象。
+    它同时处理：笔记 CRUD、链接解析与索引、全文搜索、本地图计算、
+    未链接提及发现、每日笔记、网页剪藏。
+    问题：
+    1. 单一 state 对象导致无关更新（搜索触发笔记列表重建）
+    2. 难以独立测试各个子功能
+    3. 新增功能不断挤进同一个 Notifier
+  target: |
+    拆分为 3 个独立 Notifier，各自管理自己的 state：
+    - NoteNotifier — 笔记 CRUD、加载、活动笔记管理
+    - LinkNotifier — 链接提取、解析、反向链接、出链、图谱
+    - SearchNotifier — 全文搜索、混合搜索、搜索结果
+
+  user_stories:
+    - id: US-B-1
+      name: "笔记管理独立于链接和搜索"
+      story: |
+        作为 RFBrowser 开发者，
+        我希望笔记的创建/加载/保存/删除在独立的 NoteNotifier 中，
+        这样修改笔记功能时不会意外影响搜索。
+      acceptance_criteria:
+        - id: AC-B-1-1
+          description: "noteProvider (NoteNotifier) 存在且可工作"
+          verification: |
+            test('AC-B-1-1: noteProvider exists and creates notes', () async {
+              SharedPreferences.setMockInitialValues({});
+              final container = ProviderContainer();
+              // 模拟 vault 已打开
+              final noteNotifier = container.read(noteProvider.notifier);
+              expect(noteNotifier, isA<NoteNotifier>());
+              container.dispose();
+            });
+        - id: AC-B-1-2
+          description: "NoteState 只有 notes, activeNote, isLoading, error"
+          verification: |
+            test('AC-B-1-2: NoteState has exactly expected fields', () {
+              final state = NoteState();
+              expect(state.notes, isEmpty);
+              expect(state.activeNote, isNull);
+              expect(state.isLoading, isFalse);
+              expect(state.error, isNull);
+              // NoteState 不应该有 backlinks/outlinks/searchResults
+            });
+        - id: AC-B-1-3
+          description: "创建笔记后 NoteState.notes 包含该笔记"
+          verification: |
+            test('AC-B-1-3: creating a note adds it to NoteState', () async {
+              // 验证 NoteNotifier.createNote() 的正确性
+            });
+
+    - id: US-B-2
+      name: "链接解析和反向链接独立管理"
+      story: |
+        作为 RFBrowser 开发者，
+        我希望链接的反向链接/出链/图谱计算在独立的 LinkNotifier 中，
+        这样打开笔记时链接自动解析，不需要手动触发。
+      acceptance_criteria:
+        - id: AC-B-2-1
+          description: "linkProvider (LinkNotifier) 存在"
+          verification: |
+            test('AC-B-2-1: linkProvider exists', () {
+              final container = ProviderContainer();
+              expect(container.read(linkProvider.notifier), isA<LinkNotifier>());
+              container.dispose();
+            });
+        - id: AC-B-2-2
+          description: "LinkState 包含 backlinks, outlinks, allLinks（当前活动笔记的）"
+          verification: |
+            test('AC-B-2-2: LinkState has expected structure', () {
+              final state = LinkState();
+              expect(state.backlinks, isEmpty);
+              expect(state.outlinks, isEmpty);
+            });
+        - id: AC-B-2-3
+          description: "getLocalGraph 返回正确深度的子图"
+          verification: |
+            test('AC-B-2-3: getLocalGraph with depth=2 returns subgraph', () {
+              // 准备测试数据 → 调用 linkNotifier.getLocalGraph(centerId, depth: 2)
+              // 验证返回的子图节点数量 ≥ 1
+            });
+
+    - id: US-B-3
+      name: "搜索功能独立管理"
+      story: |
+        作为 RFBrowser 开发者，
+        我希望全文搜索在独立的 SearchNotifier 中，
+        这样搜索结果更新不影响笔记列表 UI。
+      acceptance_criteria:
+        - id: AC-B-3-1
+          description: "searchProvider (SearchNotifier) 存在"
+          verification: |
+            test('AC-B-3-1: searchProvider exists', () {
+              final container = ProviderContainer();
+              expect(container.read(searchProvider.notifier), isA<SearchNotifier>());
+              container.dispose();
+            });
+        - id: AC-B-3-2
+          description: "SearchState 包含 searchResults, isSearching, query, error"
+          verification: |
+            test('AC-B-3-2: SearchState has expected structure', () {
+              final state = SearchState();
+              expect(state.searchResults, isEmpty);
+              expect(state.isSearching, isFalse);
+              expect(state.query, isEmpty);
+            });
+        - id: AC-B-3-3
+          description: "搜索 'hello' 返回匹配结果"
+          verification: |
+            test('AC-B-3-3: search returns matching results', () async {
+              // 准备索引数据 → searchNotifier.search('hello')
+              // 验证 searchResults 非空且包含匹配项
+            });
+
+    - id: US-B-4
+      name: "旧 knowledgeProvider 标记为 deprecated 并委托到新 Provider"
+      story: |
+        作为 RFBrowser 开发者，
+        我希望存在一个过渡期，旧 knowledgeProvider 仍然可用但标记为 deprecated，
+        这样可以在所有消费者迁移完成后再删除。
+      acceptance_criteria:
+        - id: AC-B-4-1
+          description: "旧 knowledgeProvider 添加 @Deprecated 注解"
+          verification: |
+            test('AC-B-4-1: old knowledgeProvider has @Deprecated annotation', () {
+              // 通过反射或代码扫描验证 knowledgeProvider 声明有 @Deprecated
+              final source = File('lib/services/knowledge_service.dart').readAsStringSync();
+              expect(source.contains('@Deprecated') || source.contains('deprecated'), isTrue);
+            });
+        - id: AC-B-4-2
+          description: "UI 层所有消费者迁移到新 Provider"
+          verification: |
+            test('AC-B-4-2: no UI file imports knowledge_service except deprecated references', () {
+              // 扫描 lib/ui/ 下的所有 .dart 文件
+              // 确认没有对 knowledgeProvider 的非 deprecated 引用
+            });
+
+  state_design:
+    NoteState:
+      fields:
+        - notes: List<Note> (default: [])
+        - activeNote: Note? (default: null)
+        - isLoading: bool (default: false)
+        - error: String? (default: null)
+      methods:
+        - loadAllNotes()
+        - openNote(path)
+        - createNote(title, folder)
+        - saveActiveNote()
+        - updateActiveNoteContent(content)
+        - deleteNote(path)
+        - createDailyNote(date)
+        - clipToNote(url, title, content, selectedText)
+
+    LinkState:
+      fields:
+        - backlinks: List<Link> (default: [])
+        - outlinks: List<Link> (default: [])
+        - isComputing: bool (default: false)
+        - error: String? (default: null)
+      methods:
+        - resolveLinksForActiveNote(noteId)
+        - getLocalGraph(centerNoteId, depth)
+        - getUnlinkedMentions(noteId)
+        - linkMention(noteId, title, position)
+
+    SearchState:
+      fields:
+        - searchResults: List<Map<String, dynamic>> (default: [])
+        - query: String (default: '')
+        - isSearching: bool (default: false)
+        - error: String? (default: null)
+      methods:
+        - search(query)
+        - clearResults()
+
+  file_changes:
+    create:
+      - file: "lib/services/note_service.dart"
+        content: "NoteNotifier + NoteState + noteProvider"
+      - file: "lib/services/link_service.dart"
+        content: "LinkNotifier + LinkState + linkProvider"
+      - file: "lib/services/search_service.dart"
+        content: "SearchNotifier + SearchState + searchProvider"
+    modify:
+      - file: "lib/services/knowledge_service.dart"
+        changes:
+          - "KnowledgeNotifier 标记 @Deprecated"
+          - "内部委托到 NoteNotifier / LinkNotifier / SearchNotifier"
+    update_imports:
+      - "lib/ui/layout/main_layout.dart"
+      - "lib/ui/widgets/command_bar.dart"
+      - "lib/ui/widgets/backlinks_panel.dart"
+      - "lib/ui/widgets/note_sidebar.dart"
+      - "lib/ui/widgets/inline_ai_editor.dart"
+      - "lib/ui/pages/editor_page.dart"
+      - "lib/ui/pages/graph_page.dart"
+      - "lib/ui/widgets/filter_panel.dart"
+      - "lib/ui/widgets/node_detail_panel.dart"
+      - "lib/ui/widgets/quick_search_bar.dart"
+      - "lib/ui/widgets/empty_vault_guide.dart"
+      - "lib/app.dart"
+
+  implementation_steps:
+    - step: 1
+      action: "创建 NoteState + NoteNotifier + noteProvider in note_service.dart"
+    - step: 2
+      action: "创建 LinkState + LinkNotifier + linkProvider in link_service.dart"
+    - step: 3
+      action: "创建 SearchState + SearchNotifier + searchProvider in search_service.dart"
+    - step: 4
+      action: "迁移 KnowledgeNotifier 逻辑到三个新 Notifier"
+    - step: 5
+      action: "添加三个新 Provider 的单元测试"
+    - step: 6
+      action: "将 UI 层消费者逐个迁移到新 Provider"
+    - step: 7
+      action: "标记旧 knowledgeProvider 为 @Deprecated"
+    - step: 8
+      action: "运行 flutter analyze → 0 issues"
+    - step: 9
+      action: "运行 flutter test → 全部通过"
+
+# ============================================================================
+# Epic C: 给每个场景独立的"房间" —— "房间的壁炉"
+# ============================================================================
+Epic_C:
+  id: Epic-C
+  name: "给每个场景独立的\"房间\""
+  alexander_principle: "房间 —— 每个场景应该有自己的空间、自己的光线、自己的气氛"
+  alexander_quote: >
+    "每一个房间都需要有它的壁炉——那个让人们自然聚集的中心。
+    MainLayout 把太多东西吞并到了同一个尺度上。"
+  problem: |
+    MainLayout（555 行）掌管了三个场景的全部渲染逻辑。
+    _buildCaptureScene、_buildThinkScene、_buildConnectScene、_buildStatusBar
+    全在同一个类中。SceneScaffold 只是一个薄壳。
+    问题：
+    1. 单个文件 555 行超出认知负荷
+    2. 修改任一场景需要理解整个 MainLayout
+    3. 快捷键绑定、QuickMove 执行、命令处理全混在一起
+  target: |
+    - MainLayout 缩减至 ~100 行：只负责 ProviderScope + SceneSwitcher + 快捷键
+    - 每个场景有独立文件，自己管理布局、空状态、工具栏
+    - SceneScaffold 的 builder 回调替换为具体的 Scene Widget
+
+  user_stories:
+    - id: US-C-1
+      name: "Capture 场景有自己的房间"
+      story: |
+        作为 RFBrowser 用户，
+        当我进入"捕捉"场景时，
+        我看到浏览器、左侧笔记侧栏、右侧 AI 摘要面板和底部剪藏工具栏，
+        所有这些都在一个独立的、有凝聚力的空间中。
+      acceptance_criteria:
+        - id: AC-C-1-1
+          description: "lib/ui/scenes/capture/capture_scene.dart 存在"
+          verification: |
+            test('AC-C-1-1: capture_scene.dart exists', () {
+              final file = File('lib/ui/scenes/capture/capture_scene.dart');
+              expect(file.existsSync(), isTrue);
+            });
+        - id: AC-C-1-2
+          description: "CaptureScene 渲染浏览器 + NoteSidebar + ClipToolbar"
+          verification: |
+            testWidgets('AC-C-1-2: CaptureScene renders browser area + sidebar + toolbar', (tester) async {
+              await tester.pumpWidget(
+                ProviderScope(child: MaterialApp(home: Scaffold(body: CaptureScene()))),
+              );
+              // 验证浏览器占位符存在
+              expect(find.byIcon(Icons.language), findsOneWidget);
+              // 验证 ClipToolbar 存在
+              expect(find.byType(ClipToolbar), findsOneWidget);
+            });
+        - id: AC-C-1-3
+          description: "CaptureScene 有空状态（无 URL 时显示引导）"
+          verification: |
+            testWidgets('AC-C-1-3: CaptureScene shows empty state when no URL', (tester) async {
+              // 模拟 browserProvider 无活跃标签
+              await tester.pumpWidget(
+                ProviderScope(child: MaterialApp(home: Scaffold(body: CaptureScene()))),
+              );
+              expect(find.text('输入网址或搜索...'), findsOneWidget);
+            });
+
+    - id: US-C-2
+      name: "Think 场景有自己的房间"
+      story: |
+        作为 RFBrowser 用户，
+        当我进入"思考"场景时，
+        我看到搜索栏、编辑器（或空状态引导）、反向链接面板，
+        所有这些在一个独立的空间中。
+      acceptance_criteria:
+        - id: AC-C-2-1
+          description: "lib/ui/scenes/think/think_scene.dart 存在"
+          verification: |
+            test('AC-C-2-1: think_scene.dart exists', () {
+              final file = File('lib/ui/scenes/think/think_scene.dart');
+              expect(file.existsSync(), isTrue);
+            });
+        - id: AC-C-2-2
+          description: "ThinkScene 渲染 QuickSearchBar + 编辑器 + BacklinksPanel"
+          verification: |
+            testWidgets('AC-C-2-2: ThinkScene renders search + editor + backlinks', (tester) async {
+              await tester.pumpWidget(
+                ProviderScope(child: MaterialApp(home: Scaffold(body: ThinkScene()))),
+              );
+              expect(find.byType(QuickSearchBar), findsOneWidget);
+              expect(find.byType(BacklinksPanel), findsOneWidget);
+            });
+        - id: AC-C-2-3
+          description: "ThinkScene 空状态显示'选择一条笔记' + 新建笔记CTA按钮"
+          verification: |
+            testWidgets('AC-C-2-3: ThinkScene empty state has CTA button', (tester) async {
+              // 模拟无活动笔记
+              await tester.pumpWidget(
+                ProviderScope(child: MaterialApp(home: Scaffold(body: ThinkScene()))),
+              );
+              expect(find.text('新建笔记'), findsOneWidget);
+              expect(find.byType(ElevatedButton), findsOneWidget);
+            });
+
+    - id: US-C-3
+      name: "Connect 场景有自己的房间"
+      story: |
+        作为 RFBrowser 用户，
+        当我进入"连接"场景时，
+        我看到筛选面板、知识图谱、节点详情面板，
+        所有这些在一个独立的空间中。
+      acceptance_criteria:
+        - id: AC-C-3-1
+          description: "lib/ui/scenes/connect/connect_scene.dart 存在"
+          verification: |
+            test('AC-C-3-1: connect_scene.dart exists', () {
+              final file = File('lib/ui/scenes/connect/connect_scene.dart');
+              expect(file.existsSync(), isTrue);
+            });
+        - id: AC-C-3-2
+          description: "ConnectScene 渲染 FilterPanel + GraphView + NodeDetailPanel"
+          verification: |
+            testWidgets('AC-C-3-2: ConnectScene renders filter + graph + detail', (tester) async {
+              await tester.pumpWidget(
+                ProviderScope(child: MaterialApp(home: Scaffold(body: ConnectScene()))),
+              );
+              expect(find.byType(FilterPanel), findsOneWidget);
+              expect(find.byType(NodeDetailPanel), findsOneWidget);
+            });
+        - id: AC-C-3-3
+          description: "ConnectScene 空状态显示'知识图谱将在创建笔记后显示'"
+          verification: |
+            testWidgets('AC-C-3-3: ConnectScene shows empty state with guide text', (tester) async {
+              await tester.pumpWidget(
+                ProviderScope(child: MaterialApp(home: Scaffold(body: ConnectScene()))),
+              );
+              expect(find.textContaining('知识图谱'), findsOneWidget);
+            });
+
+    - id: US-C-4
+      name: "MainLayout 瘦身至核心编排"
+      story: |
+        作为 RFBrowser 开发者，
+        我希望 MainLayout 只负责顶层编排（场景切换 + 快捷键 + 命令栏），
+        不超过 150 行，这样我能快速理解顶层架构。
+      acceptance_criteria:
+        - id: AC-C-4-1
+          description: "MainLayout 行数 ≤ 150"
+          verification: |
+            test('AC-C-4-1: MainLayout is <= 150 lines', () {
+              final content = File('lib/ui/layout/main_layout.dart').readAsStringSync();
+              final lines = content.split('\n').length;
+              expect(lines, lessThanOrEqualTo(150));
+            });
+        - id: AC-C-4-2
+          description: "MainLayout 不包含 _buildCaptureScene / _buildThinkScene / _buildConnectScene"
+          verification: |
+            test('AC-C-4-2: MainLayout does not contain scene builder methods', () {
+              final content = File('lib/ui/layout/main_layout.dart').readAsStringSync();
+              expect(content.contains('_buildCaptureScene'), isFalse);
+              expect(content.contains('_buildThinkScene'), isFalse);
+              expect(content.contains('_buildConnectScene'), isFalse);
+            });
+        - id: AC-C-4-3
+          description: "场景切换仍然工作（Ctrl+1/2/3 快捷键）"
+          verification: "Run: flutter test test/ui/scene_navigation_test.dart → all pass"
+
+  file_changes:
+    create:
+      - file: "lib/ui/scenes/capture/capture_scene.dart"
+        content: "CaptureScene Widget — 浏览器+侧边栏+工具栏布局"
+      - file: "lib/ui/scenes/think/think_scene.dart"
+        content: "ThinkScene Widget — 搜索栏+编辑器+反向链接布局"
+      - file: "lib/ui/scenes/connect/connect_scene.dart"
+        content: "ConnectScene Widget — 筛选+图谱+详情布局"
+    modify:
+      - file: "lib/ui/layout/main_layout.dart"
+        changes:
+          - "移除 _buildCaptureScene / _buildThinkScene / _buildConnectScene"
+          - "移除 _buildStatusBar（提取到独立 widget）"
+          - "SceneScaffold 的 builder 回调替换为具体 Scene Widget"
+          - "保留快捷键绑定 + 命令栏逻辑 + QuickMove 执行"
+    create:
+      - file: "lib/ui/widgets/status_bar.dart"
+        content: "StatusBar widget，从 MainLayout 提取"
+
+  implementation_steps:
+    - step: 1
+      action: "创建 lib/ui/scenes/{capture,think,connect}/ 目录"
+    - step: 2
+      action: "将 _buildCaptureScene 逻辑提取到 CaptureScene widget"
+    - step: 3
+      action: "将 _buildThinkScene 逻辑提取到 ThinkScene widget"
+    - step: 4
+      action: "将 _buildConnectScene 逻辑提取到 ConnectScene widget"
+    - step: 5
+      action: "将 _buildStatusBar 逻辑提取到 StatusBar widget"
+    - step: 6
+      action: "更新 SceneScaffold 调用，使用新的 Scene Widget"
+    - step: 7
+      action: "更新 main_layout.dart 的 import"
+    - step: 8
+      action: "运行 flutter analyze → 0 issues"
+    - step: 9
+      action: "运行 flutter test → 全部通过（特别是 scene_navigation_test）"
+
+# ============================================================================
+# Epic A: 将 AI 编织进每个场景 —— "壁炉中的火焰"
+# ============================================================================
+Epic_A:
+  id: Epic-A
+  name: "将 AI 编织进每个场景"
+  alexander_principle: "织入 —— 每一个房间都需要它的壁炉，AI 应该是三个场景各自的壁炉"
+  alexander_quote: >
+    "AI 当前是一个浮动的 FAB 按钮——一个漂浮在所有场景之上的孤岛。
+    它不在捕捉中帮你理解网页，不在思考中帮你打磨文字，不在连接中发现隐藏的关系。
+    它是一个无根的幽灵。"
+  problem: |
+    当前 AI 以 AIFloat（floating FAB + 弹出面板）形式存在，
+    与场景完全脱离。每个场景的真正"壁炉"应该是 AI：
+    - Capture: 网页摘要、智能摘录、页面问答
+    - Think: 内联改写、续写、翻译、建议
+    - Connect: 隐藏关联发现、阅读路径推荐、笔记合成
+  target: |
+    - 移除 AIFloat 全局浮动按钮
+    - 为每个场景设计专属的 AI 交互入口
+    - AI 流式输出在所有场景都能看到（UX-4）
+    - 每个场景的 AI 功能有对应的快捷键
+
+  user_stories:
+    - id: US-A-1
+      name: "Capture 场景：AI 帮助理解网页"
+      story: |
+        作为 RFBrowser 用户，
+        当我在浏览器中阅读网页时，
+        我希望能用 AI 快速总结页面内容、提取关键信息、基于页面提问，
+        而不需要切换到其他场景。
+      acceptance_criteria:
+        - id: AC-A-1-1
+          description: "Capture 场景有 AI 交互入口（工具按钮或快捷键）"
+          verification: |
+            testWidgets('AC-A-1-1: Capture scene has an AI button', (tester) async {
+              await tester.pumpWidget(
+                ProviderScope(child: MaterialApp(home: Scaffold(body: CaptureScene()))),
+              );
+              // AI 按钮存在于 Capture 场景的工具栏中
+              expect(find.byIcon(Icons.psychology), findsAtLeastNWidgets(1));
+            });
+        - id: AC-A-1-2
+          description: "快捷键 Ctrl+Shift+S 触发当前页面摘要"
+          verification: |
+            testWidgets('AC-A-1-2: Ctrl+Shift+S triggers page summarization', (tester) async {
+              // 模拟浏览器有活跃页面
+              // 发送 Ctrl+Shift+S 快捷键
+              // 验证 aiProvider.sendMessage 被调用，包含页面 URL/内容
+            });
+        - id: AC-A-1-3
+          description: "AI 摘要面板出现在 Capture 场景右侧（替换当前占位符）"
+          verification: |
+            testWidgets('AC-A-1-3: AI summary panel replaces placeholder in Capture', (tester) async {
+              await tester.pumpWidget(
+                ProviderScope(child: MaterialApp(home: Scaffold(body: CaptureScene()))),
+              );
+              // 右侧不应只是占位符文字"AI 摘要"
+              // 应该有交互能力（输入框或按钮）
+              expect(find.byType(TextField), findsAtLeastNWidgets(1));
+            });
+
+    - id: US-A-2
+      name: "Think 场景：AI 深度融入编辑器"
+      story: |
+        作为 RFBrowser 用户，
+        当我在编辑笔记时，
+        我希望 AI 能内联地帮我：改进当前段落、续写思路、翻译选中文本、
+        修复语法，而不是在一个弹出面板中对话。
+      acceptance_criteria:
+        - id: AC-A-2-1
+          description: "选中文本后显示 AI 操作菜单（改进/翻译/续写/语法）"
+          verification: |
+            testWidgets('AC-A-2-1: text selection shows inline AI actions', (tester) async {
+              // 模拟 Think 场景中有活动笔记，选中一段文本
+              // 验证出现内联 AI 操作按钮
+            });
+        - id: AC-A-2-2
+          description: "快捷键 Ctrl+K 直接触发'AI 改进当前段落'"
+          verification: |
+            testWidgets('AC-A-2-2: Ctrl+K triggers AI improve paragraph', (tester) async {
+              // 发送 Ctrl+K → 验证 aiProvider.sendMessage 被调用
+              // 内容包含'改进以下段落' + 当前段落文本
+            });
+        - id: AC-A-2-3
+          description: "AI 改进结果以内联 diff 形式显示（接受/拒绝）"
+          verification: |
+            testWidgets('AC-A-2-3: AI suggestion shows accept/reject buttons', (tester) async {
+              // 模拟 AI 返回建议
+              // 验证出现 ✅/❌ 按钮
+              // 点击 ✅ → 替换原文
+              // 点击 ❌ → 消失
+            });
+
+    - id: US-A-3
+      name: "Connect 场景：AI 发现隐藏关联"
+      story: |
+        作为 RFBrowser 用户，
+        当我在知识图谱中浏览时，
+        我希望 AI 能帮我：发现未连接但相关的笔记、推荐阅读路径、
+        自动合成多篇笔记的摘要。
+      acceptance_criteria:
+        - id: AC-A-3-1
+          description: "Connect 场景有'发现隐藏关联'按钮"
+          verification: |
+            testWidgets('AC-A-3-1: Connect scene has discover connections button', (tester) async {
+              await tester.pumpWidget(
+                ProviderScope(child: MaterialApp(home: Scaffold(body: ConnectScene()))),
+              );
+              expect(find.textContaining('发现'), findsAtLeastNWidgets(1));
+            });
+        - id: AC-A-3-2
+          description: "AI 推荐结果以虚线/高亮边显示在图谱中"
+          verification: |
+            test('AC-A-3-2: AI suggestions rendered as dashed edges in graph', () {
+              // 验证 GraphEdge 有 isAISuggestion 属性
+              // 验证 AI 建议的边用虚线渲染，颜色不同于普通边
+            });
+        - id: AC-A-3-3
+          description: "Ctrl+Shift+D 触发'AI 发现当前节点的隐藏关联'"
+          verification: "快捷键功能测试"
+
+    - id: US-A-4
+      name: "移除旧的 AIFloat，所有 AI 入口场景化"
+      story: |
+        作为 RFBrowser 用户，
+        我不再看到右下角浮动的 FAB AI 按钮，
+        因为 AI 已经自然地融入每个场景中。
+      acceptance_criteria:
+        - id: AC-A-4-1
+          description: "AIFloat widget 不再被 SceneScaffold 引用"
+          verification: |
+            test('AC-A-4-1: AIFloat is no longer referenced in SceneScaffold', () {
+              final content = File('lib/ui/layout/scene_scaffold.dart').readAsStringSync();
+              expect(content.contains('AIFloat'), isFalse);
+            });
+        - id: AC-A-4-2
+          description: "每个场景有且只有一个 AI 入口（无冗余按钮）"
+          verification: "视觉审查：Capture/Think/Connect 各有一个 AI 触发点"
+        - id: AC-A-4-3
+          description: "AI 对话历史仍然可从任意场景通过快捷键 Ctrl+J 打开"
+          verification: |
+            testWidgets('AC-A-4-3: Ctrl+J opens AI chat history from any scene', (tester) async {
+              await tester.sendKeyDownEvent(LogicalKeyboardKey.control);
+              await tester.sendKeyEvent(LogicalKeyboardKey.keyJ);
+              await tester.sendKeyUpEvent(LogicalKeyboardKey.control);
+              await tester.pumpAndSettle();
+              // 验证 AI 聊天面板出现
+              expect(find.byType(AIChatPanel), findsOneWidget);
+            });
+
+    - id: US-A-5
+      name: "AI 流式输出在所有场景可见（UX-4）"
+      story: |
+        作为 RFBrowser 用户，
+        当我触发 AI 功能时，
+        无论在哪个场景，我都能看到 token 实时流式输出。
+      acceptance_criteria:
+        - id: AC-A-5-1
+          description: "AI 响应使用流式 SSE，每个 token 更新 UI"
+          verification: |
+            test('AC-A-5-1: AI responses stream tokens in real-time', () async {
+              // 验证 ai_service.dart 使用 stream: true
+              final content = File('lib/services/ai_service.dart').readAsStringSync();
+              expect(content.contains("stream: true"), isTrue);
+            });
+        - id: AC-A-5-2
+          description: "流式输出过程中显示 typing 指示器"
+          verification: |
+            testWidgets('AC-A-5-2: typing indicator visible during streaming', (tester) async {
+              // 模拟 aiProvider.isLoading = true
+              // 验证出现三个跳动点的动画指示器
+            });
+        - id: AC-A-5-3
+          description: "流式结束后 typing 指示器消失，显示完整响应"
+          verification: |
+            testWidgets('AC-A-5-3: typing indicator disappears when streaming ends', (tester) async {
+              // 模拟流式结束
+              // 验证指示器消失，完整文本显示
+            });
+
+  file_changes:
+    create:
+      - file: "lib/ui/scenes/capture/capture_ai_toolbar.dart"
+        content: "Capture 场景的 AI 工具按钮：摘要/提问/摘录"
+      - file: "lib/ui/scenes/think/think_inline_ai_menu.dart"
+        content: "Think 场景的内联 AI 菜单：改进/翻译/续写/语法"
+      - file: "lib/ui/scenes/connect/connect_ai_discovery.dart"
+        content: "Connect 场景的 AI 发现面板：隐藏关联/路径推荐/合成"
+    modify:
+      - file: "lib/ui/scenes/capture/capture_scene.dart"
+        changes: "集成 capture_ai_toolbar，替换右侧占位符为真实 AI 摘要面板"
+      - file: "lib/ui/scenes/think/think_scene.dart"
+        changes: "内联 AI 菜单替换当前的 InlineAIEditor FAB 按钮"
+      - file: "lib/ui/scenes/connect/connect_scene.dart"
+        changes: "添加'发现隐藏关联'按钮和 AI 结果展示"
+      - file: "lib/ui/layout/scene_scaffold.dart"
+        changes: "移除 aiFloat 参数和相关渲染逻辑"
+      - file: "lib/ui/layout/main_layout.dart"
+        changes:
+          - "不再传递 AIFloat 给 SceneScaffold"
+          - "添加 Ctrl+Shift+S (Capture AI), Ctrl+K (Think AI), Ctrl+Shift+D (Connect AI) 快捷键"
+    delete_or_deprecate:
+      - file: "lib/ui/widgets/ai_float.dart"
+        action: "标记 @Deprecated，保留至所有消费者迁移完成"
+      - file: "lib/ui/widgets/inline_ai_editor.dart"
+        action: "标记 @Deprecated，功能迁移到 think_inline_ai_menu.dart"
+
+  implementation_steps:
+    - step: 1
+      action: "创建 Capture 场景的 AI 摘要面板（替换右侧占位符）"
+    - step: 2
+      action: "添加 Ctrl+Shift+S（Capture AI 摘要）快捷键"
+    - step: 3
+      action: "创建 Think 场景的内联 AI 菜单（选中文本后显示）"
+    - step: 4
+      action: "添加 Ctrl+K（Think AI 改进）快捷键"
+    - step: 5
+      action: "创建 Connect 场景的 AI 发现面板"
+    - step: 6
+      action: "添加 Ctrl+Shift+D（Connect AI 发现）快捷键"
+    - step: 7
+      action: "从 SceneScaffold 移除 AIFloat 引用"
+    - step: 8
+      action: "为每个新 AI 组件编写 widget 测试"
+    - step: 9
+      action: "运行 flutter analyze → 0 issues"
+    - step: 10
+      action: "运行 flutter test → 全部通过"
+
+# ============================================================================
+# 全局质量门禁（所有 Epic 完成后）
+# ============================================================================
+global_acceptance_criteria:
+  - id: GLOBAL-AC-1
+    description: "flutter analyze passes with 0 issues"
+    command: "flutter analyze"
+    expected: "0 issues found"
+
+  - id: GLOBAL-AC-2
+    description: "all existing tests still pass"
+    command: "flutter test"
+    expected: "All tests passed"
+
+  - id: GLOBAL-AC-3
+    description: "lib/core/model/ directory no longer exists (Epic D)"
+    verification: "Directory check"
+
+  - id: GLOBAL-AC-4
+    description: "lib/ui/scenes/ directory contains capture/think/connect subdirs (Epic C)"
+    verification: "Directory check"
+
+  - id: GLOBAL-AC-5
+    description: "lib/services/ has <= 14 non-stub .dart files (Epic E)"
+    verification: "File count check"
+
+  - id: GLOBAL-AC-6
+    description: "genome.yaml active constraints <= 20 (Epic F)"
+    verification: "YAML count check"
+
+  - id: GLOBAL-AC-7
+    description: "noteProvider, linkProvider, searchProvider exist (Epic B)"
+    verification: "Provider existence check"
+
+  - id: GLOBAL-AC-8
+    description: "AIFloat no longer referenced in SceneScaffold (Epic A)"
+    verification: "Grep check"
+
+  - id: GLOBAL-AC-9
+    description: "every scene has exactly one AI entry point (Epic A)"
+    verification: "Widget test"
+
+  - id: GLOBAL-AC-10
+    description: "orchestrator --status reports status=solid"
+    command: "python seeds/orchestrator.py --status"
+    expected: "Status: solid"
+
+# ============================================================================
+# 实施建议
+# ============================================================================
+implementation_notes:
+  order_rationale: |
+    D → F → E → B → C → A 的顺序确保了：
+    1. 基础先行（D: 文件移动, F: 配置整理）
+    2. 死代码先清（E: 服务删减，不在死代码上重构）
+    3. 核心拆分（B: 知识层拆分，为 C 准备干净的 API）
+    4. 结构重组（C: 场景独立，为 A 准备场景边界）
+    5. 体验升华（A: AI 融入，在所有场景都对位之后）
+  
+  rollback_safety: |
+    每个 Epic 独立可回滚（通过 git revert）。
+    如果 B-Epic 引入 bug，可以回到 B-Epic 之前的状态而保留 D, F, E 的成果。
+  
+  testing_strategy: |
+    每个 Epic 完成后运行完整测试套件。
+    在 Epic 之间不积累已知失败的测试。
+    所有 AC 格式的验收标准可以用 dart test 自动化验证。
+  
+  estimated_total_effort: |
+    Epic D: ~1 hour (纯文件移动)
+    Epic F: ~1 hour (YAML 编辑 + Python 脚本修改)
+    Epic E: ~3 hours (需人工审计 + 代码迁移)
+    Epic B: ~5 hours (新建 3 个 Notifier + 迁移消费者)
+    Epic C: ~3 hours (提取 Scene Widget + 简化 MainLayout)
+    Epic A: ~6 hours (3 个场景的 AI 交互 + UI 测试)
+    Total: ~19 hours
+    (以上基于 AI 辅助估算, 实际取决于人工审查决策时间)

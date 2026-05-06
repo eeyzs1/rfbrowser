@@ -123,6 +123,7 @@ class CanvasConnection {
   final ConnectionSide fromSide;
   final ConnectionSide toSide;
   final String label;
+  final bool isAuto;
 
   const CanvasConnection({
     required this.id,
@@ -131,15 +132,29 @@ class CanvasConnection {
     this.fromSide = ConnectionSide.right,
     this.toSide = ConnectionSide.left,
     this.label = '',
+    this.isAuto = false,
   });
 
-  CanvasConnection copyWith({String? label}) => CanvasConnection(
+  static (ConnectionSide, ConnectionSide) computeSides(CanvasCard from, CanvasCard to) {
+    final dx = to.center.dx - from.center.dx;
+    final dy = to.center.dy - from.center.dy;
+    final fromSide = dx.abs() > dy.abs()
+        ? (dx > 0 ? ConnectionSide.right : ConnectionSide.left)
+        : (dy > 0 ? ConnectionSide.bottom : ConnectionSide.top);
+    final toSide = dx.abs() > dy.abs()
+        ? (dx > 0 ? ConnectionSide.left : ConnectionSide.right)
+        : (dy > 0 ? ConnectionSide.top : ConnectionSide.bottom);
+    return (fromSide, toSide);
+  }
+
+  CanvasConnection copyWith({String? label, bool? isAuto}) => CanvasConnection(
     id: id,
     fromCardId: fromCardId,
     toCardId: toCardId,
     fromSide: fromSide,
     toSide: toSide,
     label: label ?? this.label,
+    isAuto: isAuto ?? this.isAuto,
   );
 
   Map<String, dynamic> toJson() => {
@@ -149,6 +164,7 @@ class CanvasConnection {
     'fromSide': fromSide.index,
     'toSide': toSide.index,
     'label': label,
+    'isAuto': isAuto,
   };
 
   factory CanvasConnection.fromJson(Map<String, dynamic> json) =>
@@ -159,28 +175,95 @@ class CanvasConnection {
         fromSide: ConnectionSide.values[json['fromSide'] as int? ?? 3],
         toSide: ConnectionSide.values[json['toSide'] as int? ?? 2],
         label: json['label'] as String? ?? '',
+        isAuto: json['isAuto'] as bool? ?? false,
       );
+}
+
+class CanvasSettings {
+  final bool autoConnectionsEnabled;
+  final DateTime lastModified;
+
+  CanvasSettings({
+    this.autoConnectionsEnabled = true,
+    DateTime? lastModified,
+  }) : lastModified = lastModified ?? DateTime.now();
+
+  CanvasSettings copyWith({
+    bool? autoConnectionsEnabled,
+    DateTime? lastModified,
+  }) {
+    return CanvasSettings(
+      autoConnectionsEnabled: autoConnectionsEnabled ?? this.autoConnectionsEnabled,
+      lastModified: lastModified ?? this.lastModified,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'autoConnectionsEnabled': autoConnectionsEnabled,
+    'lastModified': lastModified.toIso8601String(),
+  };
+
+  factory CanvasSettings.fromJson(Map<String, dynamic> json) => CanvasSettings(
+    autoConnectionsEnabled: json['autoConnectionsEnabled'] as bool? ?? true,
+    lastModified: json['lastModified'] != null
+        ? DateTime.tryParse(json['lastModified'] as String)
+        : null,
+  );
+}
+
+class CanvasSearchState {
+  final String query;
+  final List<String> matchedCardIds;
+  final int activeIndex;
+
+  const CanvasSearchState({
+    this.query = '',
+    this.matchedCardIds = const [],
+    this.activeIndex = 0,
+  });
+
+  bool get isActive => query.isNotEmpty;
+
+  CanvasSearchState copyWith({
+    String? query,
+    List<String>? matchedCardIds,
+    int? activeIndex,
+  }) {
+    return CanvasSearchState(
+      query: query ?? this.query,
+      matchedCardIds: matchedCardIds ?? this.matchedCardIds,
+      activeIndex: activeIndex ?? this.activeIndex,
+    );
+  }
 }
 
 class CanvasData {
   final List<CanvasCard> cards;
   final List<CanvasConnection> connections;
+  final CanvasSettings settings;
 
-  const CanvasData({this.cards = const [], this.connections = const []});
+  CanvasData({
+    this.cards = const [],
+    this.connections = const [],
+    CanvasSettings? settings,
+  }) : settings = settings ?? CanvasSettings();
 
   CanvasData copyWith({
     List<CanvasCard>? cards,
     List<CanvasConnection>? connections,
+    CanvasSettings? settings,
   }) {
     return CanvasData(
       cards: cards ?? this.cards,
       connections: connections ?? this.connections,
+      settings: settings ?? this.settings,
     );
   }
 
   String toJsonString() => jsonEncode({
     'cards': cards.map((c) => c.toJson()).toList(),
     'connections': connections.map((c) => c.toJson()).toList(),
+    'settings': settings.toJson(),
   });
 
   factory CanvasData.fromJsonString(String json) {
@@ -199,9 +282,13 @@ class CanvasData {
                 )
                 .toList() ??
             [],
+        settings: data['settings'] != null
+            ? CanvasSettings.fromJson(data['settings'] as Map<String, dynamic>)
+            : CanvasSettings(),
       );
     } catch (_) {
-      return const CanvasData();
+      debugPrint('CanvasData: failed to parse JSON');
+      return CanvasData();
     }
   }
 }

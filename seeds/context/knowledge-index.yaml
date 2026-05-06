@@ -1,12 +1,55 @@
 version: 1
-description: Maps file paths to knowledge domains for context loading
-mappings:
-  src/api/: API contracts and endpoint definitions
-  src/components/: UI component patterns
-  src/services/: Business logic and service layer
-  src/repositories/: Data access and repository layer
-  src/models/: Data models and type definitions
-  src/utils/: Utility functions and helpers
-  tests/: Test specifications and fixtures
-  config/: Configuration files
-  schemas/: Data schema definitions
+description: "Knowledge index — maps RFBrowser modules to their domains for context loading"
+lib/ui/:
+  domain: "presentation"
+  subdomains:
+    - "pages: Browser, Editor, Graph, Canvas, Settings, AI Chat"
+    - "widgets: CommandBar, Backlinks, NoteSidebar, SplitPane"
+lib/services/:
+  domain: "business_logic"
+  subdomains:
+    - "ai_service: AI model interaction"
+    - "agent_service: Agent orchestration"
+    - "browser_service: Web browsing"
+    - "canvas_service: Infinite canvas state"
+    - "embedding_service: Vector embeddings"
+    - "git_sync_service: Git-based sync"
+    - "knowledge_service: Knowledge management"
+    - "settings_service: App configuration"
+    - "shortcut_service: Keyboard shortcuts"
+    - "skill_service: Skill management"
+    - "tantivy_bridge: Full-text search FFI"
+lib/core/:
+  domain: "domain_logic"
+  subdomains:
+    - "graph: Graph algorithms"
+    - "context: Content extraction, assembler"
+    - "editor: Markdown highlighting, controllers"
+    - "model: Canvas data models"
+lib/data/:
+  domain: "data_layer"
+  subdomains:
+    - "models: Note, Link, AgentTask, Skill, QuickMove"
+    - "stores: IndexStore, SyncStore, VaultStore, HNSW, Vector"
+    - "repositories: NoteRepository"
+lib/platform/:
+  domain: "platform_abstraction"
+  subdomains:
+    - "webview: Inline agent webview, headless manager"
+lib/plugins/:
+  domain: "extensibility"
+  subdomains:
+    - "host: Plugin host and API"
+    - "builtin: Dataview plugin"
+seeds/:
+  domain: "meta_harness"
+  subdomains:
+    - "constraints: Architecture rules"
+    - "planning: Flow control, DAG builder"
+    - "execution: Task runner"
+    - "verification: Self-check, consistency"
+    - "memory: Session state, snapshot"
+    - "feedback: Error capture, retry"
+    - "observability: Metrics, tracing"
+    - "security: Audit, encryption"
+    - "evolution: Innovation engine, genome"

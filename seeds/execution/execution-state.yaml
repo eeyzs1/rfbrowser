@@ -1,0 +1,9 @@
+version: 1
+description: "Execution state tracking for RFBrowser harness"
+last_execution: null
+history: []
+current_batch:
+  batch_id: null
+  work_units: []
+  started_at: null
+  status: "idle"

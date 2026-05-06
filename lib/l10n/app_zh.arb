@@ -200,5 +200,31 @@
     "placeholders": {
       "count": {"type": "int"}
     }
-  }
+  },
+  "shortcuts": "快捷键",
+  "pressNewShortcut": "按下新快捷键...",
+  "resetToDefaults": "恢复默认",
+  "shortcutsReset": "快捷键已恢复默认",
+  "shortcutConflict": "快捷键冲突",
+  "shortcutConflictMsg": "「{shortcut}」已绑定到「{action}」",
+  "@shortcutConflictMsg": {
+    "placeholders": {
+      "shortcut": {"type": "String"},
+      "action": {"type": "String"}
+    }
+  },
+  "offlineMode": "离线模式",
+  "offline": "离线",
+  "online": "在线",
+  "aiDegradedToLocal": "AI 已切换到本地模型（离线）",
+  "noLocalModel": "无本地模型可用",
+  "syncPending": "{count} 项变更待同步",
+  "@syncPending": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "dragDropHint": "拖拽文本或笔记到此处",
+  "syncScroll": "同步滚动",
+  "markdownHighlight": "Markdown 高亮"
 }

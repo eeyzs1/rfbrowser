@@ -1,171 +1,164 @@
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import '../data/models/note.dart';
 import '../data/models/link.dart';
-import '../data/repositories/note_repository.dart';
+import '../data/models/skill.dart';
+import '../data/models/unlinked_mention.dart';
 import '../data/stores/index_store.dart';
-import '../core/link/link_extractor.dart';
-import '../core/link/link_resolver.dart';
+import '../data/stores/vault_store.dart';
+import '../core/graph/filter_engine.dart';
+import 'note_service.dart';
+import 'link_service.dart';
+import 'search_service.dart';
+
+export 'note_service.dart';
+export 'link_service.dart';
+export 'search_service.dart';
 
 class KnowledgeState {
   final List<Note> notes;
-  final Note? activeNote;
-  final List<Link> backlinks;
-  final List<Link> outlinks;
+  final String? activeNoteId;
+  final List<Link> links;
+  final Map<String, List<Link>> backlinksCache;
   final List<Map<String, dynamic>> searchResults;
-  final bool isIndexing;
-  final String? error;
+  final bool isSearching;
+  final List<String> selectedTags;
 
-  KnowledgeState({
+  const KnowledgeState({
     this.notes = const [],
-    this.activeNote,
-    this.backlinks = const [],
-    this.outlinks = const [],
+    this.activeNoteId,
+    this.links = const [],
+    this.backlinksCache = const {},
     this.searchResults = const [],
-    this.isIndexing = false,
-    this.error,
+    this.isSearching = false,
+    this.selectedTags = const [],
   });
 
   KnowledgeState copyWith({
     List<Note>? notes,
-    Note? activeNote,
-    List<Link>? backlinks,
-    List<Link>? outlinks,
+    String? activeNoteId,
+    List<Link>? links,
+    Map<String, List<Link>>? backlinksCache,
     List<Map<String, dynamic>>? searchResults,
-    bool? isIndexing,
-    String? error,
-    bool clearError = false,
-    bool clearActiveNote = false,
+    bool? isSearching,
+    List<String>? selectedTags,
   }) {
     return KnowledgeState(
       notes: notes ?? this.notes,
-      activeNote: clearActiveNote ? null : (activeNote ?? this.activeNote),
-      backlinks: backlinks ?? this.backlinks,
-      outlinks: outlinks ?? this.outlinks,
+      activeNoteId: activeNoteId ?? this.activeNoteId,
+      links: links ?? this.links,
+      backlinksCache: backlinksCache ?? this.backlinksCache,
       searchResults: searchResults ?? this.searchResults,
-      isIndexing: isIndexing ?? this.isIndexing,
-      error: clearError ? null : (error ?? this.error),
+      isSearching: isSearching ?? this.isSearching,
+      selectedTags: selectedTags ?? this.selectedTags,
     );
+  }
+
+  Note? get activeNote {
+    if (activeNoteId == null) return null;
+    try {
+      return notes.firstWhere((n) => n.id == activeNoteId);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<Link> get outlinks {
+    if (activeNoteId == null) return [];
+    return links.where((l) => l.sourceId == activeNoteId).toList();
+  }
+
+  List<Link> get backlinks {
+    if (activeNoteId == null) return [];
+    return links.where((l) => l.targetId == activeNoteId).toList();
   }
 }
 
 class KnowledgeNotifier extends Notifier<KnowledgeState> {
-  final LinkExtractor _linkExtractor = LinkExtractor();
-
   @override
-  KnowledgeState build() => KnowledgeState();
+  KnowledgeState build() {
+    _init();
+    return KnowledgeState();
+  }
 
-  NoteRepository? get _noteRepo => ref.read(noteRepositoryProvider);
-  IndexStore get _indexStore => ref.read(indexStoreProvider);
-  LinkResolver? get _linkResolver => ref.read(linkResolverProvider);
+  void _init() {
+    loadAllNotes();
+  }
 
-  NoteRepository get _repo {
-    final r = _noteRepo;
-    if (r == null) throw Exception('No vault open');
-    return r;
+  NoteNotifier get _noteSvc => ref.read(noteServiceProvider.notifier);
+  LinkNotifier get _linkSvc => ref.read(linkServiceProvider.notifier);
+  SearchNotifier get _searchSvc => ref.read(searchServiceProvider.notifier);
+
+  void _syncLinks() {
+    final linkState = ref.read(linkServiceProvider);
+    state = state.copyWith(
+      links: linkState.links,
+      backlinksCache: linkState.backlinksCache,
+    );
   }
 
   Future<void> loadAllNotes() async {
-    final repo = _noteRepo;
-    if (repo == null) return;
-    state = state.copyWith(isIndexing: true);
-    try {
-      final notes = await repo.getAllNotes();
-      await _indexStore.rebuildIndex(notes);
-      _linkResolver?.rebuildTitleIndex(notes);
-      await _rebuildAllLinks(notes);
-      state = state.copyWith(notes: notes, isIndexing: false);
-    } catch (e) {
-      state = state.copyWith(isIndexing: false, error: e.toString());
+    await _noteSvc.loadAllNotes();
+    final noteState = ref.read(noteServiceProvider);
+    state = state.copyWith(notes: noteState.notes);
+    if (noteState.notes.isNotEmpty) {
+      _linkSvc.rebuildAllLinks(noteState.notes);
+      _syncLinks();
     }
   }
 
-  Future<void> openNote(String relativePath) async {
-    final repo = _noteRepo;
-    if (repo == null) return;
-    try {
-      final note = await repo.getNoteByPath(relativePath);
-      if (note != null) {
-        final backlinks = await _indexStore.getBacklinks(note.id);
-        final outlinks = await _resolveOutlinks(note);
-        state = state.copyWith(
-          activeNote: note,
-          backlinks: backlinks,
-          outlinks: outlinks,
-        );
-      }
-    } catch (e) {
-      state = state.copyWith(error: e.toString());
-    }
+  Note? getNote(String id) => _noteSvc.getNote(id);
+
+  Future<void> saveNote(Note note) async {
+    await _noteSvc.saveNote(note);
+    state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
+    _linkSvc.rebuildAllLinks(state.notes);
+    _syncLinks();
   }
 
-  Future<Note> createNote({required String title, String folder = ''}) async {
-    final note = await _repo.createNote(title: title, folder: folder);
-    await _indexStore.indexNote(note);
-    await _indexLinksForNote(note);
-    _linkResolver?.rebuildTitleIndex([...state.notes, note]);
-    state = state.copyWith(notes: [...state.notes, note], activeNote: note);
+  Future<Note> createNote({
+    required String title,
+    String content = '',
+  }) async {
+    final note = await _noteSvc.createNote(title: title, content: content);
+    state = state.copyWith(
+      notes: ref.read(noteServiceProvider).notes,
+      activeNoteId: note.id,
+    );
+    _linkSvc.rebuildAllLinks(state.notes);
+    _syncLinks();
     return note;
   }
 
-  Future<void> saveActiveNote() async {
-    final note = state.activeNote;
-    final repo = _noteRepo;
-    if (note == null || repo == null) return;
-    await repo.saveNote(note);
-    await _indexStore.indexNote(note);
-    await _indexLinksForNote(note);
-    final backlinks = await _indexStore.getBacklinks(note.id);
-    final outlinks = await _resolveOutlinks(note);
-    state = state.copyWith(backlinks: backlinks, outlinks: outlinks);
+  Future<void> deleteNote(String id) async {
+    await _noteSvc.deleteNote(id);
+    state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
+    _linkSvc.rebuildAllLinks(state.notes);
+    _syncLinks();
   }
 
-  Future<void> updateActiveNoteContent(String content) async {
-    final note = state.activeNote;
-    if (note == null) return;
-    final tags = _linkExtractor.extractTags(content);
-    final updated = note.copyWith(content: content, tags: tags);
-    state = state.copyWith(activeNote: updated);
+  Future<Note> renameNote(String oldPath, String newName) async {
+    final renamed = await _noteSvc.renameNote(oldPath, newName);
+    state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
+    _linkSvc.rebuildAllLinks(state.notes);
+    _syncLinks();
+    return renamed;
   }
 
-  Future<void> deleteNote(String relativePath) async {
-    final repo = _noteRepo;
-    if (repo == null) return;
-    final note = await repo.getNoteByPath(relativePath);
-    if (note != null) {
-      await repo.deleteNote(relativePath);
-      await _indexStore.removeNote(note.id);
-      final remaining = state.notes
-          .where((n) => n.filePath != relativePath)
-          .toList();
-      _linkResolver?.rebuildTitleIndex(remaining);
-      state = state.copyWith(
-        notes: remaining,
-        clearActiveNote: state.activeNote?.filePath == relativePath,
-      );
-    }
+  Future<String> getUniqueTitle(String baseTitle) =>
+      _noteSvc.getUniqueTitle(baseTitle);
+
+  Future<void> moveNote(String noteId, String folder) async {
+    await _noteSvc.moveNote(noteId, folder);
+    state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
   }
 
-  Future<void> search(String query) async {
-    if (query.isEmpty) {
-      state = state.copyWith(searchResults: []);
-      return;
-    }
-    try {
-      final results = await _indexStore.searchNotes(query);
-      state = state.copyWith(searchResults: results);
-    } catch (e) {
-      state = state.copyWith(error: e.toString());
-    }
-  }
+  List<String> getAllTags() => _noteSvc.getAllTags();
 
-  Future<Note> createDailyNote(DateTime date) async {
-    final note = await _repo.createDailyNote(date);
-    await _indexStore.indexNote(note);
-    await _indexLinksForNote(note);
-    _linkResolver?.rebuildTitleIndex([...state.notes, note]);
-    state = state.copyWith(activeNote: note);
-    return note;
-  }
+  List<Note> getDailyNotes(int days) => _noteSvc.getDailyNotes(days);
+
+  List<Note> getNotesByTag(String tag) => _noteSvc.getNotesByTag(tag);
 
   Future<Note> clipToNote({
     required String url,
@@ -173,49 +166,168 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     required String content,
     String? selectedText,
   }) async {
-    final note = await _repo.clipToNote(
+    final note = await _noteSvc.clipToNote(
       url: url,
       title: title,
       content: content,
       selectedText: selectedText,
     );
-    await _indexStore.indexNote(note);
-    await _indexLinksForNote(note);
-    _linkResolver?.rebuildTitleIndex([...state.notes, note]);
-    state = state.copyWith(notes: [...state.notes, note], activeNote: note);
+    state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
+    _linkSvc.rebuildAllLinks(state.notes);
+    _syncLinks();
     return note;
   }
 
-  Future<void> _rebuildAllLinks(List<Note> notes) async {
-    final resolver = _linkResolver;
-    if (resolver == null) return;
-    for (final note in notes) {
-      await _indexLinksForNote(note);
+  Future<Note> clipFullPage({
+    required String url,
+    required String title,
+    required String htmlContent,
+    required String textContent,
+  }) async {
+    final note = await _noteSvc.clipFullPage(
+      url: url,
+      title: title,
+      htmlContent: htmlContent,
+      textContent: textContent,
+    );
+    state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
+    _linkSvc.rebuildAllLinks(state.notes);
+    _syncLinks();
+    return note;
+  }
+
+  Future<Note> clipSelection({
+    required String url,
+    required String title,
+    required String selectedText,
+  }) async {
+    final note = await _noteSvc.clipSelection(
+      url: url,
+      title: title,
+      selectedText: selectedText,
+    );
+    state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
+    _linkSvc.rebuildAllLinks(state.notes);
+    _syncLinks();
+    return note;
+  }
+
+  Future<Note> clipBookmark({
+    required String url,
+    required String title,
+  }) async {
+    final note = await _noteSvc.clipBookmark(url: url, title: title);
+    state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
+    _linkSvc.rebuildAllLinks(state.notes);
+    _syncLinks();
+    return note;
+  }
+
+  Future<List<Skill>> getAllSkills() => _noteSvc.getAllSkills();
+
+  Future<void> createSkill(Skill skill) => _noteSvc.createSkill(skill);
+
+  Future<void> deleteSkill(String skillId) => _noteSvc.deleteSkill(skillId);
+
+  List<Link> getNoteLinks(String noteId) => _linkSvc.getNoteLinks(noteId);
+
+  List<Link> getBacklinks(String noteId) => _linkSvc.getBacklinks(noteId);
+
+  List<UnlinkedMentionResult> getUnlinkedMentions(String noteId) =>
+      _linkSvc.getUnlinkedMentions(noteId, state.notes);
+
+  List<Map<String, dynamic>> getGraphData() =>
+      _linkSvc.getGraphData(state.notes);
+
+  LocalGraphResult getLocalGraph(String centerNoteId, {int depth = 1}) =>
+      _linkSvc.getLocalGraph(centerNoteId, state.notes, depth: depth);
+
+  Future<void> linkMention(String sourceNoteId, String targetTitle, int position) async {
+    await _linkSvc.linkMention(sourceNoteId, targetTitle, position, state.notes);
+    _syncLinks();
+  }
+
+  void openNote(String noteId) {
+    state = state.copyWith(activeNoteId: noteId);
+  }
+
+  void updateActiveNoteContent(String content) {
+    final activeId = state.activeNoteId;
+    if (activeId == null) return;
+    final note = state.activeNote;
+    if (note == null) return;
+    final updated = note.copyWith(content: content);
+    final notes = state.notes.toList();
+    final idx = notes.indexWhere((n) => n.id == activeId);
+    if (idx >= 0) notes[idx] = updated;
+    state = state.copyWith(notes: notes);
+  }
+
+  Future<void> saveActiveNote() async {
+    final note = state.activeNote;
+    if (note != null) {
+      await saveNote(note);
     }
   }
 
-  Future<void> _indexLinksForNote(Note note) async {
-    final resolver = _linkResolver;
-    if (resolver == null) return;
-    final links = await resolver.resolveLinksForNote(note);
-    for (final link in links) {
-      await _indexStore.indexLink(link);
+  Future<void> createDailyNote(DateTime date) async {
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final relativePath = 'daily-notes/$dateStr.md';
+
+    final existing = state.notes.where((n) => n.filePath == relativePath);
+    if (existing.isNotEmpty) {
+      state = state.copyWith(activeNoteId: existing.first.id);
+      return;
     }
-    final tags = _linkExtractor.extractTags(note.content);
-    if (tags.isNotEmpty) {
-      final updated = note.copyWith(tags: tags);
-      await _indexStore.indexNote(updated);
+
+    final note = Note(
+      title: dateStr,
+      filePath: relativePath,
+      content: '# $dateStr\n\n',
+      tags: ['daily-note'],
+    );
+
+    final vaultState = ref.read(vaultProvider);
+    if (vaultState.currentVault != null) {
+      final file = File(p.join(vaultState.currentVault!.path, relativePath));
+      final dir = Directory(p.dirname(file.path));
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+      await file.writeAsString(note.toMarkdown());
     }
+
+    final idx = ref.read(indexStoreProvider);
+    await idx.indexNote(note);
+
+    final notes = state.notes.toList()..add(note);
+    state = state.copyWith(notes: notes, activeNoteId: note.id);
+
+    _linkSvc.rebuildAllLinks(state.notes);
+    _syncLinks();
   }
 
-  Future<List<Link>> _resolveOutlinks(Note note) async {
-    final resolver = _linkResolver;
-    if (resolver == null) return [];
-    return resolver.resolveLinksForNote(note);
+  Future<List<Map<String, dynamic>>> search(String query) async {
+    final results = await _searchSvc.search(query);
+    state = state.copyWith(searchResults: results, isSearching: false);
+    return results;
+  }
+
+  Future<List<Map<String, dynamic>>> hybridSearch(String query) async {
+    final results = await _searchSvc.hybridSearch(query);
+    state = state.copyWith(searchResults: results, isSearching: false);
+    return results;
+  }
+
+  void toggleTag(String tag) {
+    _searchSvc.toggleTag(tag);
+  }
+
+  void clearTags() {
+    _searchSvc.clearTags();
   }
 }
-
-final indexStoreProvider = Provider<IndexStore>((ref) => IndexStore());
 
 final knowledgeProvider = NotifierProvider<KnowledgeNotifier, KnowledgeState>(
   KnowledgeNotifier.new,

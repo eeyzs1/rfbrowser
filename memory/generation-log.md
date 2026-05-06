@@ -24,4 +24,12 @@ companion and manual entry point.
 
 ## Generations
 
-(No generations yet. Run `python scripts/generate.py --task <task-file>` to start.)
+### Generation 1
+- Date: 2026-05-05
+- Intent: Verify Meta-Harness pipeline produces complete, executable artifacts
+- Task Name: TestTask
+- Domain: content_system
+- Template Used: content-system
+- Output: generated/test-harness
+- Status: Success — ALL 10/10 layers complete (context, tools, memory, planning, verification, feedback, constraints, security, observability, evolution)
+- Notes: 34 seed artifacts copied across all layers. AGENTS.md, orchestrator.py, format validators generated. 6 domain constraints and 1 workflow applied.

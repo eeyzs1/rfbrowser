@@ -558,4 +558,53 @@ class AppLocalizationsZh extends AppLocalizations {
   String daysAgo(int count) {
     return '$count 天前';
   }
+
+  @override
+  String get shortcuts => '快捷键';
+
+  @override
+  String get pressNewShortcut => '按下新快捷键...';
+
+  @override
+  String get resetToDefaults => '恢复默认';
+
+  @override
+  String get shortcutsReset => '快捷键已恢复默认';
+
+  @override
+  String get shortcutConflict => '快捷键冲突';
+
+  @override
+  String shortcutConflictMsg(String shortcut, String action) {
+    return '「$shortcut」已绑定到「$action」';
+  }
+
+  @override
+  String get offlineMode => '离线模式';
+
+  @override
+  String get offline => '离线';
+
+  @override
+  String get online => '在线';
+
+  @override
+  String get aiDegradedToLocal => 'AI 已切换到本地模型（离线）';
+
+  @override
+  String get noLocalModel => '无本地模型可用';
+
+  @override
+  String syncPending(int count) {
+    return '$count 项变更待同步';
+  }
+
+  @override
+  String get dragDropHint => '拖拽文本或笔记到此处';
+
+  @override
+  String get syncScroll => '同步滚动';
+
+  @override
+  String get markdownHighlight => 'Markdown 高亮';
 }

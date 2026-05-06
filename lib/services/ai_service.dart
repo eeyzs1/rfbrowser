@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/model/ai_provider.dart';
+import '../data/models/ai_provider.dart';
+import 'connectivity_service.dart';
 import 'settings_service.dart';
 
 class ChatMessage {
@@ -79,11 +81,11 @@ class AINotifier extends Notifier<AIState> {
   }
 
   void _syncActiveConfig() {
-    final settings = ref.read(settingsProvider.notifier);
-    final config = settings.activeConfig;
+    final aiConfig = ref.read(aiConfigProvider);
+    final config = aiConfig.activeConfig;
     if (config != null) {
-      final provider = settings.activeProvider;
-      final model = settings.activeModel;
+      final provider = aiConfig.activeProvider;
+      final model = aiConfig.activeModel;
       if (provider != null && model != null) {
         state = state.copyWith(activeProvider: provider, activeModel: model);
       }
@@ -92,7 +94,7 @@ class AINotifier extends Notifier<AIState> {
 
   void setActiveModel(AIProvider provider, AIModel model) {
     ref
-        .read(settingsProvider.notifier)
+        .read(aiConfigProvider.notifier)
         .setActiveConfig(
           ActiveAIConfig(providerId: provider.id, modelId: model.id),
         );
@@ -106,11 +108,28 @@ class AINotifier extends Notifier<AIState> {
   }) async {
     if (state.isLoading) return;
 
-    final provider =
+    var provider =
         state.activeProvider ??
-        ref.read(settingsProvider.notifier).activeProvider;
-    final model =
-        state.activeModel ?? ref.read(settingsProvider.notifier).activeModel;
+        ref.read(aiConfigProvider).activeProvider;
+    var model =
+        state.activeModel ?? ref.read(aiConfigProvider).activeModel;
+
+    final connectivity = ref.read(connectivityProvider);
+    if (!connectivity.isOnline) {
+      if (provider != null && provider.protocol != ApiProtocol.ollama) {
+        final offlineProvider = ref.read(connectivityProvider.notifier).getOfflineProvider();
+        final offlineModel = ref.read(connectivityProvider.notifier).getOfflineModel(offlineProvider);
+        if (offlineProvider != null && offlineModel != null) {
+          provider = offlineProvider;
+          model = offlineModel;
+        } else {
+          state = state.copyWith(
+            error: OfflineNoModelError().toString(),
+          );
+          return;
+        }
+      }
+    }
 
     if (provider == null || model == null) {
       state = state.copyWith(
@@ -121,7 +140,7 @@ class AINotifier extends Notifier<AIState> {
 
     if (provider.protocol.requiresApiKey) {
       final apiKey = await ref
-          .read(settingsProvider.notifier)
+          .read(aiConfigProvider.notifier)
           .getApiKeyForProvider(provider.id);
       if (apiKey == null || apiKey.isEmpty) {
         state = state.copyWith(
@@ -148,7 +167,7 @@ class AINotifier extends Notifier<AIState> {
       final messages = _buildMessages(systemPrompt, context);
       final apiKey = provider.protocol.requiresApiKey
           ? await ref
-                .read(settingsProvider.notifier)
+                .read(aiConfigProvider.notifier)
                 .getApiKeyForProvider(provider.id)
           : null;
 
@@ -192,7 +211,9 @@ class AINotifier extends Notifier<AIState> {
                   isStreaming: true,
                 );
               }
-            } catch (_) {}
+            } catch (e) {
+              debugPrint('Stream chunk parse error: $e');
+            }
           }
         }
       }
@@ -340,7 +361,8 @@ class AINotifier extends Notifier<AIState> {
         case ApiProtocol.ollama:
           return data?['message']?['content'] as String? ?? '';
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Extract content error: $e');
       return '';
     }
   }
@@ -377,7 +399,9 @@ class AINotifier extends Notifier<AIState> {
             return data['error'] as String? ?? e.message ?? 'Unknown error';
         }
       }
-    } catch (_) {}
+    } catch (_) {
+      debugPrint('AI: failed to extract error message from response');
+    }
     return e.message ?? 'Unknown error';
   }
 }
