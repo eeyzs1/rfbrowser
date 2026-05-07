@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
@@ -56,7 +57,9 @@ class NoteNotifier extends Notifier<NoteState> {
           final relativePath = p.relative(entity.path, from: vault.path);
           final note = Note.fromMarkdown(relativePath, content);
           notes.add(note);
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('NoteService: failed to load ${entity.path}: $e');
+        }
       }
     }
     state = state.copyWith(notes: notes);
@@ -305,7 +308,9 @@ class NoteNotifier extends Notifier<NoteState> {
                 isBuiltin: false,
               ),
             );
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('NoteService: failed to load skill ${entity.path}: $e');
+          }
         }
       }
     }
@@ -337,11 +342,13 @@ class NoteNotifier extends Notifier<NoteState> {
   }
 
   String _sanitizeFileName(String name) {
-    return name
+    var sanitized = name
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-        .replaceAll(RegExp(r'\s+'), '-')
-        .replaceAll('..', '')
-        .substring(0, name.length > 100 ? 100 : name.length);
+        .replaceAll(RegExp(r'\s+'), '-');
+    sanitized = p.basename(p.normalize(sanitized));
+    if (sanitized.isEmpty || sanitized == '.') sanitized = 'untitled';
+    if (sanitized.length > 100) sanitized = sanitized.substring(0, 100);
+    return sanitized;
   }
 
   List<Skill> _getBuiltinSkills() {

@@ -162,9 +162,14 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     }
 
     if (_results.isNotEmpty && _selectedIndex < _results.length) {
-      ref
-          .read(knowledgeProvider.notifier)
-          .openNote(_results[_selectedIndex].filePath);
+      final selected = _results[_selectedIndex];
+      final knowledge = ref.read(knowledgeProvider);
+      final noteMatch = knowledge.notes.where(
+        (n) => n.filePath == selected.filePath || n.id == selected.filePath,
+      ).firstOrNull;
+      if (noteMatch != null) {
+        ref.read(knowledgeProvider.notifier).openNote(noteMatch.id);
+      }
       widget.onClose();
       return;
     }
@@ -194,19 +199,19 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('命令不存在'),
-        content: Text('命令 "/$cmdName" 不存在，是否创建？'),
+        title: const Text('Command not found'),
+        content: Text('Command "/$cmdName" does not exist. Create it?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
               _showCreateQuickMoveDialog(cmdName);
             },
-            child: const Text('创建'),
+            child: const Text('Create'),
           ),
         ],
       ),
@@ -239,9 +244,16 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       widget.onClose();
     } else {
       final resultIndex = index - _commandResults.length;
-      ref
-          .read(knowledgeProvider.notifier)
-          .openNote(_results[resultIndex].filePath);
+      if (resultIndex < _results.length) {
+        final selected = _results[resultIndex];
+        final knowledge = ref.read(knowledgeProvider);
+        final noteMatch = knowledge.notes.where(
+          (n) => n.filePath == selected.filePath || n.id == selected.filePath,
+        ).firstOrNull;
+        if (noteMatch != null) {
+          ref.read(knowledgeProvider.notifier).openNote(noteMatch.id);
+        }
+      }
       widget.onClose();
     }
   }

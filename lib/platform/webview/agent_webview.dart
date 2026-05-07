@@ -4,7 +4,7 @@ import '../../platform/webview/headless_manager.dart';
 class AgentWebView {
   final HeadlessWebView _webView;
 
-  static const _dangerousSchemes = {'file', 'javascript', 'data'};
+  static const _allowedSchemes = {'http', 'https', 'about'};
 
   AgentWebView(this._webView);
 
@@ -15,8 +15,8 @@ class AgentWebView {
   bool shouldOverrideUrlLoading(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null) return true;
-    if (_dangerousSchemes.contains(uri.scheme)) {
-      print('AgentWebView: blocked dangerous URL scheme: ${uri.scheme}');
+    if (!_allowedSchemes.contains(uri.scheme)) {
+      print('AgentWebView: blocked non-HTTP URL scheme: ${uri.scheme}');
       return true;
     }
     return false;

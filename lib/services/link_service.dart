@@ -63,6 +63,39 @@ class LinkNotifier extends Notifier<LinkState> {
     state = LinkState(links: allLinks, backlinksCache: backlinks);
   }
 
+  void updateLinksForNote(Note changedNote, List<Note> allNotes) {
+    final existingLinks = state.links.toList();
+    existingLinks.removeWhere((l) => l.sourceId == changedNote.id);
+
+    final resolver = LinkResolver('');
+    resolver.rebuildTitleIndex(allNotes);
+
+    final extracted = resolver.extractLinksFromContent(changedNote.content);
+    for (final link in extracted) {
+      final targetPath = resolver.resolveTitleToPath(link.target);
+      if (targetPath != null) {
+        existingLinks.add(
+          Link(
+            sourceId: changedNote.id,
+            targetId: _pathToId(targetPath),
+            type: link.type,
+            context: link.context,
+            position: link.position,
+          ),
+        );
+      }
+    }
+
+    final backlinks = <String, List<Link>>{};
+    for (final note in allNotes) {
+      backlinks[note.id] = existingLinks
+          .where((l) => l.targetId == note.id)
+          .toList();
+    }
+
+    state = LinkState(links: existingLinks, backlinksCache: backlinks);
+  }
+
   List<Link> getNoteLinks(String noteId) {
     return state.links.where((l) => l.sourceId == noteId).toList();
   }

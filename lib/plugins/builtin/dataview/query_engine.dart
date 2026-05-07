@@ -9,6 +9,8 @@ class QueryResult {
 }
 
 class QueryEngine {
+  static const experimentalWarning = DqlParser.experimentalWarning;
+
   final List<Note> _notes;
 
   QueryEngine(this._notes);

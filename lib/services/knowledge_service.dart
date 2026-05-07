@@ -113,7 +113,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
   Future<void> saveNote(Note note) async {
     await _noteSvc.saveNote(note);
     state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
-    _linkSvc.rebuildAllLinks(state.notes);
+    _linkSvc.updateLinksForNote(note, state.notes);
     _syncLinks();
   }
 
@@ -126,7 +126,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
       notes: ref.read(noteServiceProvider).notes,
       activeNoteId: note.id,
     );
-    _linkSvc.rebuildAllLinks(state.notes);
+    _linkSvc.updateLinksForNote(note, state.notes);
     _syncLinks();
     return note;
   }
@@ -141,7 +141,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
   Future<Note> renameNote(String oldPath, String newName) async {
     final renamed = await _noteSvc.renameNote(oldPath, newName);
     state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
-    _linkSvc.rebuildAllLinks(state.notes);
+    _linkSvc.updateLinksForNote(renamed, state.notes);
     _syncLinks();
     return renamed;
   }
@@ -173,7 +173,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
       selectedText: selectedText,
     );
     state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
-    _linkSvc.rebuildAllLinks(state.notes);
+    _linkSvc.updateLinksForNote(note, state.notes);
     _syncLinks();
     return note;
   }
@@ -191,7 +191,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
       textContent: textContent,
     );
     state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
-    _linkSvc.rebuildAllLinks(state.notes);
+    _linkSvc.updateLinksForNote(note, state.notes);
     _syncLinks();
     return note;
   }
@@ -207,7 +207,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
       selectedText: selectedText,
     );
     state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
-    _linkSvc.rebuildAllLinks(state.notes);
+    _linkSvc.updateLinksForNote(note, state.notes);
     _syncLinks();
     return note;
   }
@@ -218,7 +218,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
   }) async {
     final note = await _noteSvc.clipBookmark(url: url, title: title);
     state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
-    _linkSvc.rebuildAllLinks(state.notes);
+    _linkSvc.updateLinksForNote(note, state.notes);
     _syncLinks();
     return note;
   }

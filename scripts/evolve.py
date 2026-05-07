@@ -3,7 +3,7 @@
 Evolution Engine: Evidence-driven self-evolution for the harness.
 
 Implements the evolution loop:
-  Collect evidence → Measure fitness → Propose mutation → Test → Select or reject
+  Collect evidence -> Measure fitness -> Propose mutation -> Test -> Select or reject
 
 Safety constraints:
   - Never remove verification (cancer prevention)
@@ -191,10 +191,10 @@ def check_safety(mutation: dict, genome: dict) -> bool:
     if mutation["type"] in ("REMOVE_CONSTRAINT", "WEAKEN_CONSTRAINT"):
         target = mutation.get("target", "")
         if "verification" in target.lower():
-            print(f"  ❌ SAFETY: Cannot remove/weaken verification constraint")
+            print(f"  [REJECTED] SAFETY: Cannot remove/weaken verification constraint")
             return False
         if "evolution" in target.lower():
-            print(f"  ❌ SAFETY: Cannot remove/weaken evolution constraint")
+            print(f"  [REJECTED] SAFETY: Cannot remove/weaken evolution constraint")
             return False
     return True
 
@@ -223,7 +223,7 @@ def apply_mutation(genome: dict, mutation: dict) -> dict:
         target_id = mutation.get("target", "")
         for c in constraints:
             if c.get("id", "") in target_id and c.get("trigger_count", 0) == 0:
-                c["rule"] = c["rule"] + " (weakened — low trigger rate)"
+                c["rule"] = c["rule"] + " (weakened - low trigger rate)"
 
     new_genome["harness_genome"]["constraints"] = constraints
     new_genome["total_mutations"] = new_genome.get("total_mutations", 0) + 1
@@ -233,7 +233,7 @@ def apply_mutation(genome: dict, mutation: dict) -> dict:
 
 def run_evolution(project_root: Path, trigger: str = "periodic", dry_run: bool = False) -> dict:
     print(f"\n{'='*60}")
-    print(f"EVOLUTION CYCLE — Trigger: {trigger}")
+    print(f"EVOLUTION CYCLE - Trigger: {trigger}")
     print(f"{'='*60}")
 
     genome = load_genome(project_root)
@@ -247,7 +247,7 @@ def run_evolution(project_root: Path, trigger: str = "periodic", dry_run: bool =
     print(f"\nProposed mutations: {len(mutations)}")
 
     if not mutations:
-        print("No mutations proposed — system is stable.")
+        print("No mutations proposed - system is stable.")
         return {"fitness": fitness, "mutations_proposed": 0, "mutations_applied": 0}
 
     max_mutations = max(1, int(len(genome.get("harness_genome", {}).get("constraints", [])) * 0.3))
@@ -255,7 +255,7 @@ def run_evolution(project_root: Path, trigger: str = "periodic", dry_run: bool =
 
     applied = []
     for mutation in mutations:
-        print(f"\n  Mutation: {mutation['type']} — {mutation['description']}")
+        print(f"\n  Mutation: {mutation['type']} - {mutation['description']}")
         print(f"  Evidence: {mutation['evidence']}")
         print(f"  Expected: {mutation['expected_outcome']}")
 
@@ -263,20 +263,20 @@ def run_evolution(project_root: Path, trigger: str = "periodic", dry_run: bool =
             continue
 
         if dry_run:
-            print(f"  🔄 DRY RUN — would apply")
+            print(f"  🔄 DRY RUN - would apply")
             applied.append({**mutation, "status": "dry_run"})
         else:
             new_genome = apply_mutation(genome, mutation)
             new_fitness = measure_fitness(new_genome, evidence)
 
             if new_fitness >= fitness:
-                print(f"  ✅ ACCEPTED — fitness: {fitness} → {new_fitness}")
+                print(f"  [ACCEPTED] ACCEPTED - fitness: {fitness} -> {new_fitness}")
                 delta = new_fitness - fitness
                 genome = new_genome
                 fitness = new_fitness
                 applied.append({**mutation, "status": "accepted", "fitness_delta": delta})
             else:
-                print(f"  ❌ REJECTED — fitness would decrease: {fitness} → {new_fitness}")
+                print(f"  [REJECTED] REJECTED - fitness would decrease: {fitness} -> {new_fitness}")
                 applied.append({**mutation, "status": "rejected", "fitness_delta": new_fitness - fitness})
 
     if not dry_run and applied:
@@ -296,7 +296,7 @@ def run_evolution(project_root: Path, trigger: str = "periodic", dry_run: bool =
         save_evolution_log(project_root, log)
 
     print(f"\n{'='*60}")
-    print(f"Evolution complete — Fitness: {fitness}, Applied: {len(applied)}")
+    print(f"Evolution complete - Fitness: {fitness}, Applied: {len(applied)}")
     print(f"{'='*60}")
 
     return {"fitness": fitness, "mutations_proposed": len(mutations), "mutations_applied": len(applied)}

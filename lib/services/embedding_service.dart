@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/ai_provider.dart';
+import 'dio_factory.dart';
 import '../data/stores/vector_store.dart' hide SearchResult;
 import '../data/stores/hnsw_index.dart';
 import '../data/stores/index_store.dart';
@@ -14,12 +15,18 @@ import 'tantivy_bridge_stub.dart'
 typedef FtsSearchFn = Future<List<Map<String, dynamic>>> Function(String query, {int limit});
 
 class EmbeddingService {
-  final Dio _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 30)));
+  final Dio _dio = DioFactory.instance;
   HnswIndex? _hnswIndex;
   VectorStore? _vectorStore;
 
   HnswIndex get hnswIndex => _hnswIndex ??= HnswIndex(M: 16, efConstruction: 200);
   VectorStore get store => _vectorStore ??= VectorStore();
+
+  String _ollamaBaseUrl = 'http://localhost:11434';
+
+  void setOllamaBaseUrl(String url) {
+    _ollamaBaseUrl = url;
+  }
 
   Future<List<double>> embed(String text, {
     AIProvider? provider,
@@ -67,7 +74,7 @@ class EmbeddingService {
   Future<List<double>> _embedViaOllama(String text) async {
     try {
       final response = await _dio.post(
-        'http://localhost:11434/api/embed',
+        '$_ollamaBaseUrl/api/embed',
         options: Options(headers: {'Content-Type': 'application/json'}),
         data: jsonEncode({
           'model': 'nomic-embed-text',
@@ -121,8 +128,17 @@ class EmbeddingService {
         embedding[i] /= sqrtNorm;
       }
     }
+
+    if (!_hasWarnedLocalEmbedding) {
+      _hasWarnedLocalEmbedding = true;
+      debugPrint('EmbeddingService: WARNING - Using local n-gram hashing fallback. '
+          'Semantic search quality will be degraded. '
+          'Configure Ollama (http://localhost:11434) or an API-based embedding model for accurate results.');
+    }
     return embedding;
   }
+
+  static bool _hasWarnedLocalEmbedding = false;
 
   Future<void> onNoteSaved(Note note, {
     AIProvider? provider,

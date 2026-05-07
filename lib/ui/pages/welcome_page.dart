@@ -1,8 +1,13 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../data/stores/vault_store.dart';
 import '../../l10n/app_localizations.dart';
+
+// ignore: unused_element
+bool get _isDesktop => !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
 class WelcomePage extends ConsumerWidget {
   final VoidCallback onVaultOpened;

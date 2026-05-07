@@ -357,11 +357,14 @@ class Sandbox {
 
     final response = await completer.future.timeout(
       const Duration(seconds: 30),
-      onTimeout: () => _ApiResponse(
-        id: requestId,
-        success: false,
-        error: 'API call timeout',
-      ),
+      onTimeout: () {
+        _pendingRequests.remove(requestId);
+        return _ApiResponse(
+          id: requestId,
+          success: false,
+          error: 'API call timeout',
+        );
+      },
     );
 
     _pendingRequests.remove(requestId);

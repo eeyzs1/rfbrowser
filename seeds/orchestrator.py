@@ -332,6 +332,179 @@ def _check_single_constraint(cid: str, rule: str) -> dict:
             except Exception:
                 pass
 
+    if cid == "C016":
+        for dart_file in lib_dir.rglob("*.dart"):
+            try:
+                content = dart_file.read_text(encoding="utf-8")
+                if "apiKey" in content or "api_key" in content or "secretKey" in content or "secret_key" in content:
+                    if "flutter_secure_storage" not in content.lower() and "secure_storage" not in content.lower():
+                        if "state" in dart_file.name.lower() or "provider" in dart_file.name.lower() or "notifier" in dart_file.name.lower():
+                            evidence = f"{dart_file.name}: API key may be in observable state (S-2)"
+                            return {"violated": True, "evidence": evidence}
+            except Exception:
+                pass
+
+    if cid == "C017":
+        for dart_file in lib_dir.rglob("*.dart"):
+            try:
+                content = dart_file.read_text(encoding="utf-8")
+                if "replaceAll('..'" in content or 'replaceAll(".."' in content:
+                    if "normalize" not in content.lower() and "resolve" not in content.lower():
+                        evidence = f"{dart_file.name}: uses replaceAll('..') without path normalization (S-3)"
+                        return {"violated": True, "evidence": evidence}
+            except Exception:
+                pass
+
+    if cid == "C020":
+        dialog_widgets = list((PROJECT_ROOT / "lib" / "ui" / "widgets").rglob("*.dart")) if (PROJECT_ROOT / "lib" / "ui" / "widgets").exists() else []
+        shared_dialog_count = sum(1 for f in dialog_widgets if "dialog" in f.name.lower())
+        if shared_dialog_count == 0 and dialog_widgets:
+            return {"violated": True, "evidence": "No shared dialog widgets found (A-3)"}
+
+    if cid == "C010":
+        canvas_service = lib_dir / "services" / "canvas_service.dart"
+        if canvas_service.exists():
+            content = canvas_service.read_text(encoding="utf-8")
+            has_timer = "Timer(" in content or "_debounceTimer" in content
+            has_persist = "_persistToDisk" in content or "persistToDisk" in content or "_saveToFile" in content
+            if not has_timer or not has_persist:
+                evidence = "canvas_service.dart missing debounced save pattern (P-1)"
+                return {"violated": True, "evidence": evidence}
+
+    if cid == "C011":
+        ai_service = lib_dir / "services" / "ai_service.dart"
+        if ai_service.exists():
+            content = ai_service.read_text(encoding="utf-8")
+            has_null_checks = ("as?" in content or "tryParse" in content or
+                               "if (" in content and "== null" in content)
+            has_defensive = "data?" in content or "embeddings?" in content or "['data']" in content
+            if not has_defensive and not has_null_checks:
+                evidence = "ai_service.dart missing defensive API response parsing (C-1)"
+                return {"violated": True, "evidence": evidence}
+
+    if cid == "C012":
+        ai_service = lib_dir / "services" / "ai_service.dart"
+        if ai_service.exists():
+            content = ai_service.read_text(encoding="utf-8")
+            if "isLoading" not in content or "if (state.isLoading) return" not in content:
+                evidence = "ai_service.dart missing isLoading guard before operations (C-2)"
+                return {"violated": True, "evidence": evidence}
+
+    if cid == "C013":
+        browser_service = lib_dir / "services" / "browser_service.dart"
+        if browser_service.exists():
+            content = browser_service.read_text(encoding="utf-8")
+            has_close_tab = "closeTab" in content or "removeTab" in content
+            has_index_before = ("indexOf" in content or "activeId" in content)
+            if has_close_tab and not has_index_before:
+                evidence = "browser_service.dart closeTab may calculate index AFTER removal (C-3)"
+                return {"violated": True, "evidence": evidence}
+
+    if cid == "C014":
+        note_model = lib_dir / "data" / "models" / "note.dart"
+        if note_model.exists():
+            content = note_model.read_text(encoding="utf-8")
+            if "copyWith" in content and "clearError" in content:
+                return {"violated": False, "evidence": "copyWith uses clearError sentinel in note.dart"}
+        return {"violated": True, "evidence": "copyWith sentinel pattern missing (C-4)"}
+
+    if cid == "C002":
+        return _check_c002_no_self_certify()
+
+    return {"violated": False, "evidence": ""}
+
+
+def _check_c002_no_self_certify() -> dict:
+    state = load_session_state()
+    completed = state.get("progress", {}).get("completed_criteria", [])
+
+    if not completed:
+        return {"violated": False, "evidence": ""}
+
+    test_dir = PROJECT_ROOT / "test"
+    test_files = []
+    if test_dir.exists():
+        for tf in test_dir.rglob("*.dart"):
+            try:
+                content = tf.read_text(encoding="utf-8").lower()
+                test_files.append({
+                    "path": str(tf.relative_to(PROJECT_ROOT)),
+                    "content": content,
+                    "name": tf.stem.lower(),
+                })
+            except Exception:
+                pass
+
+    verif_dir = PROJECT_ROOT / "seeds" / "verification"
+    if verif_dir.exists():
+        for vf in verif_dir.rglob("*.py"):
+            try:
+                content = vf.read_text(encoding="utf-8").lower()
+                test_files.append({
+                    "path": str(vf.relative_to(PROJECT_ROOT)),
+                    "content": content,
+                    "name": vf.stem.lower(),
+                })
+            except Exception:
+                pass
+
+    exec_layer = PROJECT_ROOT / "seeds" / "execution"
+    if exec_layer.exists():
+        test_files.append({
+            "path": "seeds/execution/",
+            "content": "execution layer exists",
+            "name": "execution_layer",
+        })
+
+    if not test_files:
+        return {
+            "violated": True,
+            "evidence": f"No test files found, but {len(completed)} criteria marked complete: self-certification",
+        }
+
+    keyword_map = {
+        "search": ["search", "query", "index", "fulltext"],
+        "note": ["note", "markdown", "editor", "title", "content"],
+        "link": ["link", "backlink", "graph", "wikilink", "resolve"],
+        "ai": ["ai", "assistant", "chat", "agent", "llm", "stream"],
+        "browse": ["browser", "webview", "url", "tab"],
+        "canvas": ["canvas", "card", "draggable", "zoom"],
+        "sync": ["sync", "webdav", "git", "push", "pull"],
+        "plugin": ["plugin", "dataview", "extension"],
+        "clip": ["clip", "clipper", "bookmark"],
+        "quick_move": ["quick_move", "quickmove", "shortcut"],
+        "settings": ["settings", "preference", "config"],
+        "vault": ["vault", "folder", "directory", "file"],
+        "embedding": ["embedding", "vector", "hnsw", "semantic"],
+        "theme": ["theme", "design", "token", "style"],
+        "infra": ["flutter analyze", "catch block", "empty catch", "dart:convert",
+                   "execution layer", "execution/", "task-runner",
+                   "verify_criteria", "self-certif", "manual json"],
+    }
+
+    self_certified = []
+    for criterion in completed:
+        criterion_lower = criterion.lower()
+        matched = False
+
+        for domain, keywords in keyword_map.items():
+            if any(kw in criterion_lower for kw in keywords):
+                for tf in test_files:
+                    if any(kw in tf["content"] or kw in tf["name"] for kw in keywords):
+                        matched = True
+                        break
+                if matched:
+                    break
+
+        if not matched:
+            self_certified.append(criterion)
+
+    if self_certified:
+        return {
+            "violated": True,
+            "evidence": f"Self-certified criteria (no matching test coverage): {self_certified}",
+        }
+
     return {"violated": False, "evidence": ""}
 
 

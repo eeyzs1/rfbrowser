@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:math' as math;
 import '../../data/models/note.dart';
 import '../../data/models/link.dart';
 import '../../data/models/graph_stat.dart';
@@ -213,14 +214,14 @@ class GraphAlgorithm {
         if (visited[v] != true) {
           parent[v] = u;
           dfs(v);
-          low[u] = min(low[u]!, low[v]!);
+          low[u] = math.min(low[u]!, low[v]!);
 
           if (low[v]! > discovery[u]!) {
             bridgeSet.add(u);
             bridgeSet.add(v);
           }
         } else if (v != parent[u]) {
-          low[u] = min(low[u]!, discovery[v]!);
+          low[u] = math.min(low[u]!, discovery[v]!);
         }
       }
     }
@@ -258,8 +259,6 @@ class GraphAlgorithm {
       maxComponentSize: cc.maxComponentSize,
     );
   }
-
-  int min(int a, int b) => a < b ? a : b;
 }
 
 class ConnectedComponentsResult {

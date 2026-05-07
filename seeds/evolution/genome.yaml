@@ -11,8 +11,8 @@ harness_genome:
     - id: C002
       rule: "no agent self-certifies"
       source: "initial design"
-      last_triggered: null
-      trigger_count: 0
+      last_triggered: "2026-05-07"
+      trigger_count: 1
       status: verified-needed
     - id: C003
       rule: "every mistake produces a new constraint"
@@ -59,57 +59,57 @@ harness_genome:
     - id: C010
       rule: "never persist to disk on every frame (drag/resize) — use in-memory updates + debounced save (500ms) + explicit persist on end (P-1)"
       source: "AGENTS.md P-1"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C011
       rule: "API response parsing must be defensive — null-check every level of nested access (C-1)"
       source: "AGENTS.md C-1"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C012
       rule: "concurrent state mutations must be guarded — check isLoading before new operations (C-2)"
       source: "AGENTS.md C-2"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C013
       rule: "when closing a tab/item from a list, calculate new active index BEFORE removing the item (C-3)"
       source: "AGENTS.md C-3"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C014
       rule: "copyWith cannot set nullable fields to null using ?? this.field — use sentinel values or explicit clear flags (C-4)"
       source: "AGENTS.md C-4"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C015
       rule: "WebView must filter dangerous URL schemes (file://, javascript:, data:) in shouldOverrideUrlLoading (S-1)"
       source: "AGENTS.md S-1"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C016
       rule: "API keys must not be stored in observable state objects — use flutter_secure_storage (S-2)"
       source: "AGENTS.md S-2"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C017
       rule: "path sanitization with replaceAll('..', '') is insufficient — use path normalization + validation (S-3)"
       source: "AGENTS.md S-3"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C018
       rule: "every component must have at least one data flow path to another component (A-1)"
       source: "AGENTS.md A-1"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C019
       rule: "shared utility functions belong on the model/enum as getters, not duplicated across UI files (A-2)"
       source: "AGENTS.md A-2"
@@ -119,105 +119,105 @@ harness_genome:
     - id: C020
       rule: "dialog code identical across pages must be extracted into a shared function or widget (A-3)"
       source: "AGENTS.md A-3"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C021
       rule: "separate concerns in state management — UI theme and AI config change for different reasons (A-4)"
       source: "AGENTS.md A-4"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C022
       rule: "canvas cards with noteId must render live note data, not static snapshots (A-5)"
       source: "AGENTS.md A-5"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C023
       rule: "auto-discovered connections (wikilink) must be visually distinct from manual ones (A-6)"
       source: "AGENTS.md A-6"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C024
       rule: "canvas persistence should use file system (.json in vault/.rf/) for Git traceability (A-7)"
       source: "AGENTS.md A-7"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C025
       rule: "error dismiss buttons must actually clear the error state (U-1)"
       source: "AGENTS.md U-1"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C026
       rule: "canvas clipping must happen BEFORE drawing — save → clip → draw → restore (U-2)"
       source: "AGENTS.md U-2"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C027
       rule: "row overflow in constrained spaces must use Flexible + TextOverflow.ellipsis (U-3)"
       source: "AGENTS.md U-3"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C028
       rule: "DropDownButtonFormField.value deprecated in 3.41+ — use with ignore comment + ValueKey (F-1)"
       source: "AGENTS.md F-1"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C029
       rule: "Matrix4.translate()/scale() deprecated — set matrix entries directly (F-2)"
       source: "AGENTS.md F-2"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C030
       rule: "never assign TextEditingController.text inside build() unconditionally (F-7)"
       source: "AGENTS.md F-7"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C031
       rule: "every backend service must have at least one user-accessible trigger (UX-1)"
       source: "AGENTS.md UX-1"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C032
       rule: "empty states must guide the user toward the next action with a call-to-action (UX-2)"
       source: "AGENTS.md UX-2"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C033
       rule: "destructive actions require confirmation (UX-3)"
       source: "AGENTS.md UX-3"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C034
       rule: "AI streaming output is core UX expectation — users should see tokens in real-time (UX-4)"
       source: "AGENTS.md UX-4"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C035
       rule: "command bar must search actual data, not hardcoded suggestions (UX-5)"
       source: "AGENTS.md UX-5"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
     - id: C036
       rule: "keyboard shortcuts must cover top 5 actions: search, new note, save, switch view, daily note (UX-7)"
       source: "AGENTS.md UX-7"
-      last_triggered: null
-      trigger_count: 0
-      status: dormant
+      last_triggered: "2026-05-07"
+      trigger_count: 1
+      status: active
   workflows:
     - id: W001
       name: "base flow"
@@ -282,7 +282,7 @@ evolution_genome:
       type: "harness_evolution"
       details: "Created execution layer; adapted paths to Flutter; evolved genome with 36 constraints from AGENTS.md; created domain advancement roadmap with 12 innovations"
       fitness_delta: 0.25
-    - date: "2026-05-06"
-      type: "genome_breathing"
-      details: "Epic F: Added status field to all 36 constraints; classified 9 active, 1 verified-needed, 26 dormant; created dormant-constraints.yaml archive"
-      fitness_delta: 0.05
+    - date: "2026-05-07"
+      type: "genome_activation"
+      details: "Activated all 26 dormant constraints (C010-C018, C020-C036) — full genome now active with 35 active + 1 verified-needed = all 36 constraints operational"
+      fitness_delta: 0.20

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/ai_provider.dart';
+import 'dio_factory.dart';
 import 'connectivity_service.dart';
 import 'settings_service.dart';
 
@@ -67,12 +68,7 @@ class AIState {
 }
 
 class AINotifier extends Notifier<AIState> {
-  final Dio _dio = Dio(
-    BaseOptions(
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 120),
-    ),
-  );
+  static final _dio = DioFactory.instance;
 
   @override
   AIState build() {

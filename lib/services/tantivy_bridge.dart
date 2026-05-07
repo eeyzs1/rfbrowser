@@ -52,7 +52,20 @@ typedef FreeStringDart = void Function(Pointer<Utf8> s);
 
 class TantivyBridge {
   static bool _available = true;
+  static DynamicLibrary? _lib;
   static bool _triedLoad = false;
+  static TantivyBridge? _instance;
+
+  // ignore: unused_field
+  static DynamicLibrary? get lib => _lib;
+  // ignore: unused_field
+  static TantivyBridge? get cachedInstance => _instance;
+
+  static void resetForHotRestart() {
+    _lib = null;
+    _triedLoad = false;
+    _instance = null;
+  }
 
   late final int _handle;
   final IndexDart _index;

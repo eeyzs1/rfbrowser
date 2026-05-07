@@ -46,6 +46,10 @@ class DqlQuery {
 }
 
 class DqlParser {
+  static const experimentalWarning = 'DQL is experimental: limited syntax support. '
+      'Only TABLE/LIST/TASK with basic WHERE and SORT clauses are supported. '
+      'Complex filters, OR conditions, and nested expressions are not yet implemented.';
+
   static final _tagFilterRegex = RegExp(r'tag\s*=\s*#(\w+)', caseSensitive: false);
   static final _dateFilterRegex =
       RegExp(r'(\w+)\s*(>=|<=|>|<|=)\s*(\d{4}-\d{2}-\d{2})', caseSensitive: false);
