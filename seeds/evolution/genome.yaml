@@ -218,6 +218,78 @@ harness_genome:
       last_triggered: "2026-05-07"
       trigger_count: 1
       status: active
+    - id: C037
+      rule: "Windows path.relative() returns backslash separators — always replaceAll('\\\\', '/') before splitting by '/' (C-5)"
+      source: "AGENTS.md C-5"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
+    - id: C038
+      rule: "Tree structures with parentId must prevent self-referencing — root node parentId must be empty, add cycle detection in recursive traversals (C-6)"
+      source: "AGENTS.md C-6"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
+    - id: C039
+      rule: "After moveNote or file-system mutation, call loadAllNotes() to refresh in-memory state (P-5)"
+      source: "AGENTS.md P-5"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
+    - id: C040
+      rule: "Bookmark and vault data must be persisted to disk (JSON in vault/.rfbrowser/), not kept only in memory (S-4)"
+      source: "AGENTS.md S-4"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
+    - id: C041
+      rule: "Vault-specific data must live in <vault>/.rfbrowser/, app config in <ApplicationSupport>/ (A-8)"
+      source: "AGENTS.md A-8"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
+    - id: C042
+      rule: "Disk folder scanning must filter hidden directories (.rfbrowser, .rf) and system directories (attachments) (A-9)"
+      source: "AGENTS.md A-9"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
+    - id: C043
+      rule: "Font sizes in sidebars must follow user settings, not hardcoded values (U-4)"
+      source: "AGENTS.md U-4"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
+    - id: C044
+      rule: "AI panels must always have a back/reset button visible after generating content (U-5)"
+      source: "AGENTS.md U-5"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
+    - id: C045
+      rule: "Bookmark clicks must actually navigate the WebView — use createTab(url:) or loadUrl(), not just updateTabUrl() (U-6)"
+      source: "AGENTS.md U-6"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
+    - id: C046
+      rule: "Vault switching must be accessible from main layout, not just welcome page (UX-8)"
+      source: "AGENTS.md UX-8"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
+    - id: C047
+      rule: "AI summary should support both web pages and notes with a toggle (UX-9)"
+      source: "AGENTS.md UX-9"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
+    - id: C048
+      rule: "AI-generated content must have a save-as-note action button (UX-10)"
+      source: "AGENTS.md UX-10"
+      last_triggered: "2026-05-08"
+      trigger_count: 1
+      status: active
   workflows:
     - id: W001
       name: "base flow"
@@ -286,3 +358,7 @@ evolution_genome:
       type: "genome_activation"
       details: "Activated all 26 dormant constraints (C010-C018, C020-C036) — full genome now active with 35 active + 1 verified-needed = all 36 constraints operational"
       fitness_delta: 0.20
+    - date: "2026-05-08"
+      type: "ux_storage_refactor"
+      details: "Major UX and storage refactor: Chrome-style bookmark folders with parentId, note folder tree with Trie, bookmark persistence to vault/.rfbrowser/bookmarks.json, vault config migration from SharedPreferences to JSON files, AI summary supports notes + save-as-note, vault switcher in title bar, Windows path separator fix, cycle detection in tree traversal, font sizes follow settings. Added 12 new constraints (C037-C048)."
+      fitness_delta: 0.30

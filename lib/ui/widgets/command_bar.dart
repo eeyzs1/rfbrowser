@@ -28,13 +28,13 @@ class _CommandBarState extends ConsumerState<CommandBar> {
   Timer? _debounceTimer;
 
   static const _commands = [
-    _CommandDef('New Note', Icons.add, 'note'),
-    _CommandDef('New Tab', Icons.language, 'tab'),
-    _CommandDef('Open Daily Note', Icons.today, 'daily'),
-    _CommandDef('Toggle Theme', Icons.dark_mode, 'theme'),
-    _CommandDef('Settings', Icons.settings, 'settings'),
-    _CommandDef('Graph View', Icons.hub, 'graph'),
-    _CommandDef('Canvas View', Icons.dashboard, 'canvas'),
+    _CommandDef('新笔记', Icons.add, 'note'),
+    _CommandDef('新标签页', Icons.language, 'tab'),
+    _CommandDef('打开每日笔记', Icons.today, 'daily'),
+    _CommandDef('切换主题', Icons.dark_mode, 'theme'),
+    _CommandDef('设置', Icons.settings, 'settings'),
+    _CommandDef('图谱视图', Icons.hub, 'graph'),
+    _CommandDef('画布视图', Icons.dashboard, 'canvas'),
   ];
 
   @override

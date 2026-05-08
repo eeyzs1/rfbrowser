@@ -16,6 +16,8 @@ export 'note_service.dart';
 export 'link_service.dart';
 export 'search_service.dart';
 
+enum NoteFilter { all, hasLinks, hasAttachments, hasTags }
+
 class KnowledgeState {
   final List<Note> notes;
   final String? activeNoteId;
@@ -24,6 +26,7 @@ class KnowledgeState {
   final List<Map<String, dynamic>> searchResults;
   final bool isSearching;
   final List<String> selectedTags;
+  final NoteFilter noteFilter;
 
   const KnowledgeState({
     this.notes = const [],
@@ -33,6 +36,7 @@ class KnowledgeState {
     this.searchResults = const [],
     this.isSearching = false,
     this.selectedTags = const [],
+    this.noteFilter = NoteFilter.all,
   });
 
   KnowledgeState copyWith({
@@ -43,6 +47,7 @@ class KnowledgeState {
     List<Map<String, dynamic>>? searchResults,
     bool? isSearching,
     List<String>? selectedTags,
+    NoteFilter? noteFilter,
   }) {
     return KnowledgeState(
       notes: notes ?? this.notes,
@@ -52,6 +57,7 @@ class KnowledgeState {
       searchResults: searchResults ?? this.searchResults,
       isSearching: isSearching ?? this.isSearching,
       selectedTags: selectedTags ?? this.selectedTags,
+      noteFilter: noteFilter ?? this.noteFilter,
     );
   }
 
@@ -108,6 +114,10 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     }
   }
 
+  void setFilter(NoteFilter filter) {
+    state = state.copyWith(noteFilter: filter);
+  }
+
   Note? getNote(String id) => _noteSvc.getNote(id);
 
   Future<void> saveNote(Note note) async {
@@ -151,7 +161,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
 
   Future<void> moveNote(String noteId, String folder) async {
     await _noteSvc.moveNote(noteId, folder);
-    state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
+    await loadAllNotes();
   }
 
   List<String> getAllTags() => _noteSvc.getAllTags();
@@ -206,17 +216,6 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
       title: title,
       selectedText: selectedText,
     );
-    state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
-    _linkSvc.updateLinksForNote(note, state.notes);
-    _syncLinks();
-    return note;
-  }
-
-  Future<Note> clipBookmark({
-    required String url,
-    required String title,
-  }) async {
-    final note = await _noteSvc.clipBookmark(url: url, title: title);
     state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
     _linkSvc.updateLinksForNote(note, state.notes);
     _syncLinks();

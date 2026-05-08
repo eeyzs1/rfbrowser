@@ -58,10 +58,10 @@ class _GraphViewState extends ConsumerState<GraphView> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Knowledge Graph', style: theme.textTheme.headlineMedium),
+            Text('知识图谱', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 8),
             Text(
-              'Create notes with [[links]] to see connections',
+              '创建带有 [[链接]] 的笔记以查看关联',
               style: theme.textTheme.bodySmall,
             ),
           ],
@@ -139,7 +139,34 @@ class _GraphViewState extends ConsumerState<GraphView> {
       color: theme.colorScheme.surface,
       child: Stack(
         children: [
-          GestureDetector(
+          MouseRegion(
+            onHover: (details) {
+              final size =
+                  (_graphKey.currentContext?.findRenderObject() as RenderBox?)
+                      ?.size ??
+                  Size.zero;
+              final nodeRadius = 6.0 * _scale;
+              final layout = _cachedLayout;
+
+              String? hovered;
+              if (layout != null) {
+                for (final entry in layout.entries) {
+                  final pos = Offset(
+                    entry.value.dx * _scale + size.width / 2 + _offset.dx,
+                    entry.value.dy * _scale + size.height / 2 + _offset.dy,
+                  );
+                  final dist = (pos - details.localPosition).distance;
+                  if (dist < nodeRadius * 3) {
+                    hovered = entry.key;
+                    break;
+                  }
+                }
+              }
+              if (hovered != _hoveredNode) {
+                setState(() => _hoveredNode = hovered);
+              }
+            },
+            child: GestureDetector(
             onScaleUpdate: (details) {
               setState(() {
                 _scale = (_scale * details.scale).clamp(0.3, 3.0);
@@ -172,7 +199,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
               if (tappedNoteId != null) {
                 final note = displayNotes.where((n) => n.id == tappedNoteId).firstOrNull;
                 if (note != null) {
-                  ref.read(knowledgeProvider.notifier).openNote(note.filePath);
+                  ref.read(knowledgeProvider.notifier).openNote(note.id);
                 }
               }
             },
@@ -197,6 +224,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
               size: Size.infinite,
             ),
           ),
+          ),
           Positioned(
             top: 12,
             left: 12,
@@ -218,7 +246,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
                   Icon(Icons.hub, size: 16, color: theme.colorScheme.primary),
                   const SizedBox(width: 6),
                   Text(
-                    '${displayNotes.length} notes',
+                    '${displayNotes.length} 条笔记',
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(width: 8),
@@ -240,7 +268,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
                     constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                     tooltip: _layoutMode == GraphLayoutMode.forceDirected
                         ? 'Switch to circular'
-                        : 'Switch to force-directed',
+                        : '切换为力导向布局',
                   ),
                   IconButton(
                     icon: Icon(
@@ -261,7 +289,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                     tooltip: _viewMode == GraphViewMode.full
-                        ? 'Local graph'
+                        ? '局部图谱'
                         : 'Full graph',
                   ),
                   const SizedBox(width: 4),

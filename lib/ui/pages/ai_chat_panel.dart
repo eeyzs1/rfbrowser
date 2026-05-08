@@ -192,9 +192,9 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Text('AI Assistant', style: theme.textTheme.titleMedium),
+                      Text('AI 助手', style: theme.textTheme.titleMedium),
                       const SizedBox(height: 4),
-                      Text('Ask me anything', style: theme.textTheme.bodySmall),
+                      Text('问我任何问题', style: theme.textTheme.bodySmall),
                     ],
                   ),
                 )
@@ -268,6 +268,26 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                 ),
               ),
               const Spacer(),
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: IconButton(
+                  icon: const Icon(Icons.refresh, size: 12),
+                  onPressed: () =>
+                      ref.read(aiProvider.notifier).clearMessages(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 24,
+                    minHeight: 24,
+                  ),
+                  tooltip: '新对话',
+                  style: IconButton.styleFrom(
+                    backgroundColor: theme.colorScheme.surface,
+                    side: BorderSide(color: theme.dividerColor),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
               SizedBox(
                 width: 24,
                 height: 24,
@@ -357,7 +377,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                       focusNode: _focusNode,
                       style: theme.textTheme.bodyMedium,
                       decoration: InputDecoration(
-                        hintText: 'Type a message... (use @ to reference)',
+                        hintText: '输入消息...（使用 @ 引用）',
                         hintStyle: theme.textTheme.bodySmall,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
@@ -459,7 +479,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                         onPressed: () => _saveAsNote(msg.content),
                         icon: const Icon(Icons.save, size: 12),
                         label: Text(
-                          'Save as Note',
+                          '保存为笔记',
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 10,
                             color: theme.colorScheme.primary,
@@ -492,7 +512,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Streaming...',
+                            '生成中...',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.hintColor,
                               fontSize: 10,

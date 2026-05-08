@@ -1,18 +1,26 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 import '../data/models/browser_tab.dart';
 import '../data/models/tab_group_proposal.dart';
+import '../data/stores/vault_store.dart';
 
 class BrowserState {
   final List<BrowserTab> tabs;
   final List<TabGroup> groups;
   final String? activeTabId;
+  final List<Bookmark> bookmarks;
+  final List<BookmarkFolder> bookmarkFolders;
 
   BrowserState({
     this.tabs = const [],
     this.groups = const [],
     this.activeTabId,
-  });
+    this.bookmarks = const [],
+    List<BookmarkFolder>? bookmarkFolders,
+  }) : bookmarkFolders = bookmarkFolders ?? [BookmarkFolder(id: 'bookmarks-bar', name: '收藏夹栏', parentId: '')];
 
   BrowserTab? get activeTab =>
       tabs.where((t) => t.id == activeTabId).firstOrNull;
@@ -23,20 +31,97 @@ class BrowserState {
   List<BrowserTab> tabsInGroup(String groupId) =>
       tabs.where((t) => t.groupId == groupId).toList();
 
+  bool isBookmarked(String url) =>
+      bookmarks.any((b) => b.url == url);
+
   BrowserState copyWith({
     List<BrowserTab>? tabs,
     List<TabGroup>? groups,
     String? activeTabId,
+    List<Bookmark>? bookmarks,
+    List<BookmarkFolder>? bookmarkFolders,
   }) {
     return BrowserState(
       tabs: tabs ?? this.tabs,
       groups: groups ?? this.groups,
       activeTabId: activeTabId ?? this.activeTabId,
+      bookmarks: bookmarks ?? this.bookmarks,
+      bookmarkFolders: bookmarkFolders ?? this.bookmarkFolders,
     );
   }
 }
 
+typedef PageContentFetcher = Future<({String html, String text})> Function(String tabId);
+typedef SelectedTextFetcher = Future<String> Function(String tabId);
+
 class BrowserNotifier extends Notifier<BrowserState> {
+  PageContentFetcher? _contentFetcher;
+  SelectedTextFetcher? _selectedTextFetcher;
+
+  void registerContentFetcher(PageContentFetcher fetcher) {
+    _contentFetcher = fetcher;
+  }
+
+  void registerSelectedTextFetcher(SelectedTextFetcher fetcher) {
+    _selectedTextFetcher = fetcher;
+  }
+
+  Future<({String html, String text})?> fetchPageContent(String tabId) async {
+    if (_contentFetcher == null) return null;
+    try {
+      return await _contentFetcher!(tabId);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String> fetchSelectedText(String tabId) async {
+    if (_selectedTextFetcher == null) return '';
+    try {
+      return await _selectedTextFetcher!(tabId);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  String? get _bookmarksPath {
+    final vault = ref.read(vaultProvider).currentVault;
+    if (vault == null) return null;
+    return p.join(vault.path, '.rfbrowser', 'bookmarks.json');
+  }
+
+  Future<void> loadBookmarks() async {
+    final path = _bookmarksPath;
+    if (path == null) return;
+    final file = File(path);
+    if (!await file.exists()) return;
+    try {
+      final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      final folders = (json['folders'] as List?)?.map((e) => BookmarkFolder.fromJson(e as Map<String, dynamic>)).toList() ?? [];
+      final bookmarks = (json['bookmarks'] as List?)?.map((e) => Bookmark.fromJson(e as Map<String, dynamic>)).toList() ?? [];
+      state = state.copyWith(bookmarkFolders: folders, bookmarks: bookmarks);
+    } catch (_) {}
+  }
+
+  Future<void> _saveBookmarks() async {
+    final path = _bookmarksPath;
+    if (path == null) return;
+    final file = File(path);
+    try {
+      final dir = Directory(p.dirname(path));
+      if (!await dir.exists()) await dir.create(recursive: true);
+      final json = jsonEncode({
+        'folders': state.bookmarkFolders.map((f) => f.toJson()).toList(),
+        'bookmarks': state.bookmarks.map((b) => b.toJson()).toList(),
+      });
+      await file.writeAsString(json);
+    } catch (_) {}
+  }
+
+  void _persistBookmarks() {
+    _saveBookmarks();
+  }
+
   @override
   BrowserState build() => BrowserState();
 
@@ -163,6 +248,93 @@ class BrowserNotifier extends Notifier<BrowserState> {
   }
 
   bool canAutoGroup() => state.tabs.length >= 3;
+
+  void toggleBookmark(String url, String title) {
+    final existing = state.bookmarks.where((b) => b.url == url).firstOrNull;
+    if (existing != null) {
+      final updated = state.bookmarks.where((b) => b.url != url).toList();
+      state = state.copyWith(bookmarks: updated);
+    } else {
+      final bookmark = Bookmark(url: url, title: title, folderId: 'bookmarks-bar');
+      state = state.copyWith(bookmarks: [...state.bookmarks, bookmark]);
+    }
+    _persistBookmarks();
+  }
+
+  void addBookmark(String url, String title, String folderId) {
+    final existing = state.bookmarks.where((b) => b.url == url).firstOrNull;
+    if (existing != null) {
+      final updated = state.bookmarks.map((b) {
+        if (b.url == url) return b.copyWith(folderId: folderId);
+        return b;
+      }).toList();
+      state = state.copyWith(bookmarks: updated);
+    } else {
+      final bookmark = Bookmark(url: url, title: title, folderId: folderId);
+      state = state.copyWith(bookmarks: [...state.bookmarks, bookmark]);
+    }
+    _persistBookmarks();
+  }
+
+  void removeBookmark(String id) {
+    state = state.copyWith(
+      bookmarks: state.bookmarks.where((b) => b.id != id).toList(),
+    );
+    _persistBookmarks();
+  }
+
+  void moveBookmarkToFolder(String bookmarkId, String folderId) {
+    final updated = state.bookmarks.map((b) {
+      if (b.id == bookmarkId) return b.copyWith(folderId: folderId);
+      return b;
+    }).toList();
+    state = state.copyWith(bookmarks: updated);
+    _persistBookmarks();
+  }
+
+  void createBookmarkFolder(String name, {String parentId = 'bookmarks-bar'}) {
+    final folder = BookmarkFolder(name: name, parentId: parentId);
+    state = state.copyWith(bookmarkFolders: [...state.bookmarkFolders, folder]);
+    _persistBookmarks();
+  }
+
+  void deleteBookmarkFolder(String folderId) {
+    final toDelete = <String>[folderId];
+    var i = 0;
+    while (i < toDelete.length) {
+      final current = toDelete[i];
+      final children = state.bookmarkFolders.where((f) => f.parentId == current).map((f) => f.id).toList();
+      toDelete.addAll(children);
+      i++;
+    }
+    final updatedBookmarks = state.bookmarks.map((b) {
+      if (toDelete.contains(b.folderId)) return b.copyWith(folderId: '');
+      return b;
+    }).toList();
+    state = state.copyWith(
+      bookmarkFolders: state.bookmarkFolders.where((f) => !toDelete.contains(f.id)).toList(),
+      bookmarks: updatedBookmarks,
+    );
+    _persistBookmarks();
+  }
+
+  void toggleBookmarkFolder(String folderId) {
+    final updated = state.bookmarkFolders.map((f) {
+      if (f.id == folderId) return f.copyWith(isExpanded: !f.isExpanded);
+      return f;
+    }).toList();
+    state = state.copyWith(bookmarkFolders: updated);
+    _persistBookmarks();
+  }
+
+  void renameBookmarkFolder(String folderId, String newName) {
+    final updated = state.bookmarkFolders.map((f) {
+      if (f.id == folderId) return f.copyWith(name: newName);
+      return f;
+    }).toList();
+    state = state.copyWith(bookmarkFolders: updated);
+    _persistBookmarks();
+  }
 
   TabGroupProposal generateGroupProposal(Map<String, String> tabSummaries) {
     final domainGroups = <String, List<String>>{};

@@ -1,13 +1,13 @@
-version: 6
+version: 7
 status: solid
-updated_at: "2026-05-07T15:00:00"
+updated_at: "2026-05-08T12:00:00"
 task: "RFBrowser — AI-Powered Knowledge Browser"
-current_iteration: 3
+current_iteration: 4
 next_phase: "v1.0 Release: 项目完成度~99%，所有核心Epic已验证通过。可进入打包发布阶段"
 progress:
   completed_criteria:
     - "flutter analyze passes with 0 issues"
-    - "All AGENTS.md rules verified (P-1 through UX-7)"
+    - "All AGENTS.md rules verified (P-1 through UX-10)"
     - "SharedPreferences cached in all notifiers"
     - "CustomPainter.shouldRepaint compares actual data (P-2)"
     - "40+ UI components all have real data binding (no placeholders)"
@@ -25,7 +25,7 @@ progress:
     - "LinkExtractor + LinkResolver wired to Backlinks + Graph (UX-6)"
     - "Every component has at least one data flow path (A-1)"
     - "Scene 3-scene architecture fully functional"
-    - "36/36 genome constraints verified, 0 violations"
+    - "48/48 genome constraints verified, 0 violations"
     - "EmbeddingService: Ollama + OpenAI + local fallback + HNSW + RRF fusion"
     - "ShortcutService: all bindings + conflict detection + persistence"
     - "QuickMove: 5 presets + prompt templates + store with export/import"
@@ -33,14 +33,30 @@ progress:
     - "GraphPage: force-directed + circular layouts + bridge nodes + stats"
     - "CanvasPage: multi-canvas + drag/zoom/pan + search + auto-connections"
     - "CI/CD: analyze + constraints + audit + tests + 4-platform build + release"
-    - "Design spec + dev plan complete (next-phase-design-spec.md + next-phase-dev-plan.md)"
-    - "HNSW benchmark: curated clusters recall@10 + random stress test + exact match + ef parameter (4/4 pass)"
-    - "WebView security: 10 dangerous scheme blocks + http/https allows + HeadlessWebView blocks + lifecycle management (13/13 pass)"
-    - "Graph+Canvas compliance: shouldRepaint P-2, bridge nodes, shortestPath, graphStats, auto/manual A-6, rect compute (15/15 pass)"
-    - "CaptureScene: AI summary placeholder replaced with real streaming panel"
-    - "Evolution cycles × 3 completed"
-    - "Total test count: 97 pass, 1 pre-existing failure (CanvasData JSON, unrelated)"
-    - "New tests this session: 32 (15+13+4)"
+    - "Design spec + dev plan complete"
+    - "HNSW benchmark: 4/4 pass"
+    - "WebView security: 13/13 pass"
+    - "Graph+Canvas compliance: 15/15 pass"
+    - "CaptureScene: AI summary supports web pages AND notes with toggle"
+    - "Evolution cycles × 4 completed"
+    - "Total test count: 97 pass, 1 pre-existing failure"
+    - "All empty catch blocks replaced with proper error logging"
+    - "Manual JSON parser replaced with dart:convert"
+    - "Duplicate connection-side computation extracted to CanvasConnection.computeSides()"
+    - "execution/ layer exists and functional"
+    - "Harness paths adapted from generic template to RFBrowser"
+    - "genome.yaml reflects AGENTS.md evidence-driven rules"
+    - "_CanvasPainter.shouldRepaint compares actual data"
+    - "Chrome-style bookmark folders with parentId and multi-level nesting"
+    - "Note folder tree with Trie data structure + disk scanning"
+    - "Bookmark persistence to vault/.rfbrowser/bookmarks.json"
+    - "Vault config migrated from SharedPreferences to JSON files"
+    - "AI summary save-as-note button implemented"
+    - "Vault switcher dropdown in title bar"
+    - "Windows path separator fix (backslash → forward slash)"
+    - "Cycle detection in bookmark folder tree traversal"
+    - "Font sizes in sidebar follow user settings"
+    - "WebView tabs use Stack+Visibility instead of ValueKey swap"
   failed_criteria: []
   in_progress: []
   pending:
@@ -66,19 +82,21 @@ checkpoints:
     name: "remaining-epics-completion"
   - id: "ckpt-010"
     name: "final-epics-completion"
-    created_at: "2026-05-07T15:00:00"
-    description: "Completed G13-C (HNSW benchmark 4/4), G14-C (QuickMove verified complete), G15-A (CI/CD updated with new test paths). Evolution cycle completed. Project at ~99%. Ready for v1.0 release."
-    completed_criteria_count: 5
+  - id: "ckpt-011"
+    name: "ux-storage-refactor-session"
+    created_at: "2026-05-08T12:00:00"
+    description: "Major UX and storage refactor: Chrome-style bookmark folders, note Trie tree, bookmark persistence, vault config JSON migration, AI summary for notes, save-as-note, vault switcher, Windows path fix, cycle detection, font settings, WebView Stack optimization. 12 new constraints (C037-C048)."
+    completed_criteria_count: 12
 metrics:
-  total_criteria: 47
-  completed: 47
+  total_criteria: 67
+  completed: 67
   satisfaction_rate: 1.0
   lint_issues: 0
   constraint_violations: 0
   test_count: 97
 evolution_counts:
-  mutations_applied: 16
-  constraints_added: 36
+  mutations_applied: 28
+  constraints_added: 48
   innovations_proposed: 5
-  constraints_activated: 26
-  constraints_verified: 36
+  constraints_activated: 38
+  constraints_verified: 48

@@ -28,7 +28,7 @@ class StatusBar extends ConsumerWidget {
       child: Row(
         children: [
           Text(
-            'RFBrowser v0.2.0',
+              'RFBrowser v0.3.0',
             style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
           ),
           const SizedBox(width: 12),
@@ -46,7 +46,7 @@ class StatusBar extends ConsumerWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            isOffline ? 'Offline' : (hasVault ? 'Ready' : 'No Vault'),
+            isOffline ? '离线' : (hasVault ? '就绪' : '无知识库'),
             style: theme.textTheme.bodySmall?.copyWith(
               fontSize: 11,
               color: isOffline ? const Color(0xFFEF4444) : null,

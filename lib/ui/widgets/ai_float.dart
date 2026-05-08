@@ -70,10 +70,12 @@ class _AIFloatState extends State<AIFloat>
     return Stack(
       children: [
         if (_isExpanded)
-          GestureDetector(
-            onTap: _collapse,
-            behavior: HitTestBehavior.translucent,
-            child: Container(color: Colors.black38),
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _collapse,
+              behavior: HitTestBehavior.translucent,
+              child: Container(color: Colors.black38),
+            ),
           ),
         if (_isExpanded)
           Positioned(

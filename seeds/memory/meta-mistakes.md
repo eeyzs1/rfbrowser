@@ -37,3 +37,42 @@ Status: Resolved
 Root Cause: Meta-harness generates for generic projects, doesn't adapt to domain
 Lesson: After harness generation, adapt all paths to project-specific structure
 Constraint Added: C009 — "After harness generation, run domain-adaptation pass"
+
+## Meta-Mistake 007: Windows path separators broke note folder tree
+Status: Resolved
+Root Cause: On Windows, `path.relative()` returns backslash separators (e.g., `eeee\1.md`), but Trie tree splits by `/`, resulting in single-element paths that place all notes in root
+Lesson: Always normalize path separators to forward slashes before splitting. Cross-platform path handling requires explicit normalization.
+Constraint Added: C037 — "Windows path.relative() returns backslash — always replaceAll('\\', '/') before splitting by '/'"
+Evidence: Notes in `eeee/` and `tttt/` folders displayed in root directory on Windows
+
+## Meta-Mistake 008: BookmarkFolder self-reference caused Stack Overflow
+Status: Resolved
+Root Cause: Default `bookmarks-bar` folder had `parentId = 'bookmarks-bar'` (pointing to itself), causing `_countBookmarksInFolder` to recurse infinitely
+Lesson: Tree structures with parentId must prevent self-referencing. Root nodes must have empty parentId. Always add cycle detection (visited set) in recursive tree traversals.
+Constraint Added: C038 — "Tree structures with parentId must prevent self-referencing — add cycle detection in recursive traversals"
+Evidence: StackOverflowError at `_countBookmarksInFolder` line 522, 8000+ recursive calls
+
+## Meta-Mistake 009: Bookmark data lost on app restart
+Status: Resolved
+Root Cause: `BrowserNotifier` was pure in-memory state — no persistence mechanism. Bookmarks and folders disappeared on every restart.
+Lesson: All user data must be persisted to disk. Vault-specific data goes in `<vault>/.rfbrowser/`, not in SharedPreferences or memory-only state.
+Constraint Added: C040 — "Bookmark and vault data must be persisted to disk (JSON in vault/.rfbrowser/)"
+Evidence: Every app restart showed empty bookmarks list
+
+## Meta-Mistake 010: moveNote updated memory but UI didn't refresh
+Status: Resolved
+Root Cause: `KnowledgeNotifier.moveNote` only updated `state.notes` reference without calling `loadAllNotes()`, so the Trie tree in sidebar still showed old folder structure
+Lesson: After any file-system mutation (move, rename, delete), must call `loadAllNotes()` to fully refresh the in-memory state and trigger UI rebuild.
+Constraint Added: C039 — "After moveNote or file-system mutation, call loadAllNotes() to refresh in-memory state"
+
+## Meta-Mistake 011: Bookmark clicks didn't navigate WebView
+Status: Resolved
+Root Cause: `onBookmarkOpened` callback used `updateTabUrl()` which only updates the in-memory URL string, but doesn't call `controller.loadUrl()` to actually navigate the WebView
+Lesson: URL changes in browser state must be accompanied by actual WebView navigation. Use `createTab(url:)` for new tabs or `controller.loadUrl()` for existing tabs.
+Constraint Added: C045 — "Bookmark clicks must actually navigate the WebView — use createTab(url:) or loadUrl()"
+
+## Meta-Mistake 012: Hidden directories appeared in note folder tree
+Status: Resolved
+Root Cause: `_collectFolders` scanned all directories including `.rfbrowser`, `.rf`, and `attachments`, polluting the note tree with system directories
+Lesson: Disk scanning must filter hidden directories (starting with `.`) and known system directories (`attachments`) to show only user-relevant folders.
+Constraint Added: C042 — "Disk folder scanning must filter hidden directories and system directories"

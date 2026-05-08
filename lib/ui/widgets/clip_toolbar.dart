@@ -21,14 +21,17 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
 
     setState(() => _isClipping = true);
     try {
+      final content = await ref.read(browserProvider.notifier).fetchPageContent(tab.id);
+      final htmlContent = content?.html ?? '';
+      final textContent = content?.text ?? '';
       final knowledgeNotifier = ref.read(knowledgeProvider.notifier);
-      await knowledgeNotifier.clipFullPage(
+      final note = await knowledgeNotifier.clipFullPage(
         url: tab.url,
         title: tab.title,
-        htmlContent: '',
-        textContent: '',
+        htmlContent: htmlContent,
+        textContent: textContent.isNotEmpty ? textContent : htmlContent,
       );
-      _showToast('已保存到知识库');
+      _showClipSuccess(note.title, note.id);
     } catch (e) {
       _showToast('剪辑失败: $e', isError: true);
     } finally {
@@ -43,13 +46,18 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
 
     setState(() => _isClipping = true);
     try {
+      final selectedText = await ref.read(browserProvider.notifier).fetchSelectedText(tab.id);
+      if (selectedText.isEmpty) {
+        _showToast('请先在网页中选中要剪辑的文本', isError: true);
+        return;
+      }
       final knowledgeNotifier = ref.read(knowledgeProvider.notifier);
-      await knowledgeNotifier.clipSelection(
+      final note = await knowledgeNotifier.clipSelection(
         url: tab.url,
         title: '${tab.title} · 片段',
-        selectedText: '',
+        selectedText: selectedText,
       );
-      _showToast('已保存到知识库');
+      _showClipSuccess(note.title, note.id);
     } catch (e) {
       _showToast('剪辑失败: $e', isError: true);
     } finally {
@@ -57,24 +65,53 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
     }
   }
 
-  Future<void> _clipBookmark() async {
+  void _toggleBookmark() {
     final browserState = ref.read(browserProvider);
     final tab = browserState.activeTab;
     if (tab == null) return;
 
-    setState(() => _isClipping = true);
-    try {
-      final knowledgeNotifier = ref.read(knowledgeProvider.notifier);
-      await knowledgeNotifier.clipBookmark(
-        url: tab.url,
-        title: tab.title,
-      );
-      _showToast('已保存到知识库');
-    } catch (e) {
-      _showToast('剪辑失败: $e', isError: true);
-    } finally {
-      if (mounted) setState(() => _isClipping = false);
-    }
+    final isBookmarked = browserState.isBookmarked(tab.url);
+    ref.read(browserProvider.notifier).toggleBookmark(tab.url, tab.title);
+    _showToast(isBookmarked ? '已取消收藏' : '已收藏: ${tab.title}');
+  }
+
+  void _showClipSuccess(String title, String noteId) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 6),
+        backgroundColor: DesignColors.semanticSuccess,
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('已保存到知识库', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  Text(
+                    title,
+                    style: const TextStyle(fontSize: 11),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        action: SnackBarAction(
+          label: '查看',
+          textColor: Colors.white,
+          onPressed: () {
+            ref.read(knowledgeProvider.notifier).openNote(noteId);
+          },
+        ),
+      ),
+    );
   }
 
   void _showToast(String message, {bool isError = false}) {
@@ -126,9 +163,13 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
             ),
             const SizedBox(width: DesignSpacing.sm),
             _ClipButton(
-              icon: Icons.bookmark_outline,
-              label: '书签',
-              onPressed: hasPage ? _clipBookmark : null,
+              icon: browserState.isBookmarked(browserState.activeTab?.url ?? '')
+                  ? Icons.bookmark
+                  : Icons.bookmark_outline,
+              label: browserState.isBookmarked(browserState.activeTab?.url ?? '')
+                  ? '已收藏'
+                  : '收藏',
+              onPressed: hasPage ? _toggleBookmark : null,
             ),
           ],
         ],

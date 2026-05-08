@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
+import 'package:html2md/html2md.dart' as html2md;
 import '../data/models/note.dart';
 import '../data/models/skill.dart';
 import '../data/stores/index_store.dart';
@@ -185,12 +186,32 @@ class NoteNotifier extends Notifier<NoteState> {
   }
 
   Future<void> moveNote(String noteId, String folder) async {
+    final vault = ref.read(vaultProvider).currentVault;
+    if (vault == null) return;
     final note = getNote(noteId);
     if (note == null) return;
     final fileName = p.basename(note.filePath);
     final newPath = folder.isEmpty ? fileName : p.join(folder, fileName);
+    if (newPath == note.filePath) return;
+
+    final oldFile = File(p.join(vault.path, note.filePath));
+    final newFile = File(p.join(vault.path, newPath));
+    if (await oldFile.exists()) {
+      final newDir = Directory(p.dirname(newFile.path));
+      if (!await newDir.exists()) {
+        await newDir.create(recursive: true);
+      }
+      await oldFile.rename(newFile.path);
+    }
+
     final updated = note.copyWith(filePath: newPath);
-    await saveNote(updated);
+    final notes = state.notes.toList();
+    final idx = notes.indexWhere((n) => n.id == noteId);
+    if (idx >= 0) notes[idx] = updated;
+    state = state.copyWith(notes: notes);
+
+    final idxStore = ref.read(indexStoreProvider);
+    await idxStore.indexNote(updated);
   }
 
   List<String> getAllTags() {
@@ -227,10 +248,23 @@ class NoteNotifier extends Notifier<NoteState> {
     final dateStr = DateTime.now().toIso8601String().substring(0, 10);
     final relativePath = p.join('clippings', '$fileName-$dateStr.md');
 
+    final body = StringBuffer();
+    body.writeln('> 来源: [$title]($url)');
+    body.writeln('>');
+    body.writeln('> 剪辑于 $dateStr');
+    body.writeln();
+    body.writeln(content);
+    if (selectedText != null && selectedText.isNotEmpty) {
+      body.writeln();
+      body.writeln('## 选中片段');
+      body.writeln();
+      body.writeln(selectedText);
+    }
+
     final note = Note(
       title: title,
       filePath: relativePath,
-      content: '# $title\n\n$content\n\n${selectedText != null ? '## Selected\n\n$selectedText\n' : ''}',
+      content: body.toString(),
       sourceUrl: url,
       sourceTitle: title,
       tags: ['clipping'],
@@ -258,7 +292,28 @@ class NoteNotifier extends Notifier<NoteState> {
     required String htmlContent,
     required String textContent,
   }) async {
-    return clipToNote(url: url, title: title, content: textContent);
+    String markdownContent;
+    if (htmlContent.isNotEmpty) {
+      try {
+        markdownContent = html2md.convert(
+          htmlContent,
+          styleOptions: {
+            'headingStyle': 'atx',
+            'bulletListMarker': '-',
+            'codeBlockStyle': 'fenced',
+            'fence': '```',
+            'emDelimiter': '*',
+            'strongDelimiter': '**',
+          },
+          ignore: ['script', 'style', 'nav', 'footer', 'header', 'noscript'],
+        );
+      } catch (_) {
+        markdownContent = textContent.isNotEmpty ? textContent : htmlContent;
+      }
+    } else {
+      markdownContent = textContent;
+    }
+    return clipToNote(url: url, title: title, content: markdownContent);
   }
 
   Future<Note> clipSelection({

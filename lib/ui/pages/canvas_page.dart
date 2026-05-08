@@ -355,17 +355,17 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
           const SizedBox(width: 4),
           _buildCanvasSwitcher(theme),
           const SizedBox(width: 12),
-          _toolbarButton(theme, Icons.add, 'Add Card', () {
+          _toolbarButton(theme, Icons.add, '添加卡片', () {
             final worldPos = Offset(_cameraX, _cameraY);
             _addCardAt(worldPos);
           }),
-          _toolbarButton(theme, Icons.link, 'Connect', () {
+          _toolbarButton(theme, Icons.link, '连接', () {
             if (_selectedCardId != null) {
               setState(() => _connectingFromCardId = _selectedCardId);
             }
           }),
           _toolbarButton(theme, autoEnabled ? Icons.auto_fix_high : Icons.auto_fix_off,
-            autoEnabled ? 'Auto-connect: ON' : 'Auto-connect: OFF',
+            autoEnabled ? '自动连接: 开' : '自动连接: 关',
             () => ref.read(canvasProvider.notifier).toggleAutoConnections(),
           ),
           const SizedBox(width: 4),
@@ -399,8 +399,18 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
           const SizedBox(width: 8),
           _toolbarButton(theme, Icons.fit_screen, 'Fit', _fitToContent),
           _toolbarButton(theme, Icons.delete_outline, 'Clear', () {
-            ref.read(canvasProvider.notifier).clearCanvas();
-            setState(() { _selectedCardId = null; _connectingFromCardId = null; });
+            showDialog(context: context, builder: (ctx) => AlertDialog(
+              title: const Text('清除画布'),
+              content: const Text('移除所有卡片和连接？此操作无法撤销。'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+                FilledButton(style: FilledButton.styleFrom(backgroundColor: Colors.red), onPressed: () {
+                  Navigator.pop(ctx);
+                  ref.read(canvasProvider.notifier).clearCanvas();
+                  setState(() { _selectedCardId = null; _connectingFromCardId = null; });
+                }, child: const Text('清除')),
+              ],
+            ));
           }),
         ],
       ),

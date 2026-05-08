@@ -11,6 +11,12 @@ class FilterPanel extends ConsumerWidget {
     final theme = Theme.of(context);
     final knowledgeState = ref.watch(knowledgeProvider);
     final noteCount = knowledgeState.notes.length;
+    final links = knowledgeState.links;
+    final notesWithLinks = knowledgeState.notes
+        .where((n) => links.any((l) => l.sourceId == n.id || l.targetId == n.id))
+        .length;
+    final notesWithTags = knowledgeState.notes.where((n) => n.tags.isNotEmpty).length;
+    final currentFilter = knowledgeState.noteFilter;
 
     return Container(
       padding: const EdgeInsets.all(DesignSpacing.md),
@@ -32,22 +38,29 @@ class FilterPanel extends ConsumerWidget {
             icon: Icons.description_outlined,
             label: '所有笔记',
             count: noteCount,
-            isActive: true,
+            isActive: currentFilter == NoteFilter.all,
+            onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.all),
           ),
           _FilterOption(
             icon: Icons.link,
             label: '有链接',
-            count: -1,
+            count: notesWithLinks,
+            isActive: currentFilter == NoteFilter.hasLinks,
+            onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.hasLinks),
           ),
           _FilterOption(
             icon: Icons.attach_file,
             label: '有附件',
-            count: -1,
+            count: 0,
+            isActive: currentFilter == NoteFilter.hasAttachments,
+            onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.hasAttachments),
           ),
           _FilterOption(
             icon: Icons.tag,
             label: '标签',
-            count: -1,
+            count: notesWithTags,
+            isActive: currentFilter == NoteFilter.hasTags,
+            onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.hasTags),
           ),
           const Spacer(),
           Text(
@@ -68,12 +81,14 @@ class _FilterOption extends StatelessWidget {
   final String label;
   final int count;
   final bool isActive;
+  final VoidCallback? onTap;
 
   const _FilterOption({
     required this.icon,
     required this.label,
     required this.count,
     this.isActive = false,
+    this.onTap,
   });
 
   @override
@@ -90,7 +105,7 @@ class _FilterOption extends StatelessWidget {
         borderRadius: BorderRadius.circular(DesignRadius.sm),
         child: InkWell(
           borderRadius: BorderRadius.circular(DesignRadius.sm),
-          onTap: () {},
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: DesignSpacing.sm,
@@ -98,7 +113,7 @@ class _FilterOption extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, size: 14, color: theme.hintColor),
+                Icon(icon, size: 14, color: isActive ? theme.colorScheme.primary : theme.hintColor),
                 const SizedBox(width: DesignSpacing.sm),
                 Text(
                   label,

@@ -123,10 +123,10 @@ def run_all_verifications() -> int:
     for name, verify_fn in verifications:
         success, msg = verify_fn()
         if success:
-            print(f"  ✅ {name}")
+            print(f"  [PASS] {name}")
             passed += 1
         else:
-            print(f"  ❌ {name}")
+            print(f"  [FAIL] {name}")
             print(f"     {msg}")
             failed += 1
 

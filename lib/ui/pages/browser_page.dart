@@ -19,11 +19,52 @@ class BrowserView extends ConsumerStatefulWidget {
 class _BrowserViewState extends ConsumerState<BrowserView> {
   final _urlController = TextEditingController();
   final Map<String, InAppWebViewController> _controllers = {};
+  final Set<String> _initializedTabs = {};
   String? _lastActiveTabId;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(browserProvider.notifier).registerContentFetcher(_fetchPageContent);
+      ref.read(browserProvider.notifier).registerSelectedTextFetcher(_fetchSelectedText);
+    });
+  }
+
+  Future<({String html, String text})> _fetchPageContent(String tabId) async {
+    final controller = _controllers[tabId];
+    if (controller == null) return (html: '', text: '');
+    try {
+      final html = await controller.getHtml() ?? '';
+      final textResult = await controller.evaluateJavascript(
+        source: 'document.body.innerText',
+      ) ?? '';
+      final text = textResult is String ? textResult : textResult.toString();
+      return (html: html, text: text);
+    } catch (_) {
+      return (html: '', text: '');
+    }
+  }
+
+  Future<String> _fetchSelectedText(String tabId) async {
+    final controller = _controllers[tabId];
+    if (controller == null) return '';
+    try {
+      final result = await controller.evaluateJavascript(
+        source: 'window.getSelection().toString()',
+      );
+      if (result is String && result.isNotEmpty) return result;
+      return '';
+    } catch (_) {
+      return '';
+    }
+  }
 
   @override
   void dispose() {
     _urlController.dispose();
+    _controllers.clear();
+    _initializedTabs.clear();
     super.dispose();
   }
 
@@ -52,10 +93,10 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
               ),
             ),
             const SizedBox(height: 20),
-            Text('Start Browsing', style: theme.textTheme.headlineMedium),
+            Text('开始浏览', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 6),
             Text(
-              'Open a new tab to explore the web',
+              '打开新标签页探索网络',
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 24),
@@ -66,7 +107,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                     .createTab(url: 'https://www.bing.com');
               },
               icon: const Icon(Icons.add, size: 16),
-              label: const Text('New Tab'),
+              label: const Text('新标签页'),
             ),
           ],
         ),
@@ -81,6 +122,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
 
     return Column(
       children: [
+        _buildTabBar(theme, browserState),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
@@ -111,7 +153,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                     controller: _urlController,
                     style: theme.textTheme.bodyMedium,
                     decoration: InputDecoration(
-                      hintText: 'Search or enter URL...',
+                      hintText: '搜索或输入网址...',
                       hintStyle: theme.textTheme.bodySmall,
                       prefixIcon: Icon(
                         Icons.search,
@@ -129,11 +171,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                 ),
               ),
               const SizedBox(width: 8),
-              _buildNavButton(
-                Icons.bookmark_add_outlined,
-                () => _clipPage(activeTab),
-                tooltip: 'Clip Page',
-              ),
+              _buildBookmarkButton(theme, browserState, activeTab),
             ],
           ),
         ),
@@ -145,59 +183,82 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                   onNavigate: (url) => _navigateToUrl(url),
                   onClip: () => _clipCurrentPage(),
                 )
-              : InAppWebView(
-                  key: ValueKey(activeTab.id),
-                  initialUrlRequest: URLRequest(url: WebUri(activeTab.url)),
-                  initialSettings: InAppWebViewSettings(
-                    useShouldOverrideUrlLoading: true,
-                    mediaPlaybackRequiresUserGesture: false,
-                    allowsInlineMediaPlayback: true,
-                  ),
-                  onWebViewCreated: (controller) {
-                    _controllers[activeTab.id] = controller;
-                  },
-                  onLoadStart: (controller, url) {
-                    ref
-                        .read(browserProvider.notifier)
-                        .setTabLoading(activeTab.id, true);
-                    if (url != null) {
-                      ref
-                          .read(browserProvider.notifier)
-                          .updateTabUrl(activeTab.id, url.toString());
-                    }
-                  },
-                  onLoadStop: (controller, url) async {
-                    ref
-                        .read(browserProvider.notifier)
-                        .setTabLoading(activeTab.id, false);
-                    if (url != null) {
-                      ref
-                          .read(browserProvider.notifier)
-                          .updateTabUrl(activeTab.id, url.toString());
-                    }
-                    final title = await controller.getTitle();
-                    if (title != null) {
-                      ref
-                          .read(browserProvider.notifier)
-                          .updateTabTitle(activeTab.id, title);
-                    }
-                    _updateQuickMoveContext(controller, url, title);
-                  },
-                  shouldOverrideUrlLoading:
-                      (controller, navigationAction) async {
-                        final url =
-                            navigationAction.request.url?.toString() ?? '';
-                        if (url.startsWith('file://') ||
-                            url.startsWith('javascript:') ||
-                            url.startsWith('data:')) {
-                          return NavigationActionPolicy.CANCEL;
-                        }
-                        return NavigationActionPolicy.ALLOW;
-                      },
-                ),
+              : _buildWebViewStack(browserState, activeTab),
         ),
       ],
     );
+  }
+
+  Widget _buildWebViewStack(BrowserState browserState, BrowserTab activeTab) {
+    final closedTabIds = _initializedTabs.difference(
+      browserState.tabs.map((t) => t.id).toSet(),
+    );
+    for (final id in closedTabIds) {
+      _controllers.remove(id);
+      _initializedTabs.remove(id);
+    }
+
+    final webViews = <Widget>[];
+    for (final tab in browserState.tabs) {
+      final isActive = tab.id == activeTab.id;
+      if (!_initializedTabs.contains(tab.id)) {
+        _initializedTabs.add(tab.id);
+      }
+      webViews.add(
+        Visibility(
+          visible: isActive,
+          maintainState: true,
+          maintainSize: false,
+          maintainAnimation: false,
+          child: InAppWebView(
+            key: ValueKey(tab.id),
+            initialUrlRequest: URLRequest(url: WebUri(tab.url)),
+            initialSettings: InAppWebViewSettings(
+              useShouldOverrideUrlLoading: true,
+              mediaPlaybackRequiresUserGesture: false,
+              allowsInlineMediaPlayback: true,
+            ),
+            onWebViewCreated: (controller) {
+              _controllers[tab.id] = controller;
+            },
+            onLoadStart: (controller, url) {
+              ref.read(browserProvider.notifier).setTabLoading(tab.id, true);
+              if (url != null) {
+                ref.read(browserProvider.notifier).updateTabUrl(tab.id, url.toString());
+                if (mounted && tab.id == ref.read(browserProvider).activeTabId) {
+                  _urlController.text =
+                      url.toString() == 'about:blank' ? '' : url.toString();
+                }
+              }
+            },
+            onLoadStop: (controller, url) async {
+              ref.read(browserProvider.notifier).setTabLoading(tab.id, false);
+              if (url != null) {
+                ref.read(browserProvider.notifier).updateTabUrl(tab.id, url.toString());
+              }
+              final title = await controller.getTitle();
+              if (title != null) {
+                ref.read(browserProvider.notifier).updateTabTitle(tab.id, title);
+              }
+              if (tab.id == ref.read(browserProvider).activeTabId) {
+                _updateQuickMoveContext(controller, url, title);
+              }
+            },
+            shouldOverrideUrlLoading: (controller, navigationAction) async {
+              final url = navigationAction.request.url?.toString() ?? '';
+              if (url.startsWith('file://') ||
+                  url.startsWith('javascript:') ||
+                  url.startsWith('data:')) {
+                return NavigationActionPolicy.CANCEL;
+              }
+              return NavigationActionPolicy.ALLOW;
+            },
+          ),
+        ),
+      );
+    }
+
+    return Stack(children: webViews);
   }
 
   void _navigateTo(String tabId, String input) {
@@ -211,6 +272,122 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     }
     ref.read(browserProvider.notifier).updateTabUrl(tabId, url);
     _controllers[tabId]?.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+  }
+
+  Widget _buildTabBar(ThemeData theme, BrowserState browserState) {
+    final tabs = browserState.tabs;
+    if (tabs.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: theme.appBarTheme.backgroundColor,
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
+      ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: tabs.length + 1,
+        itemBuilder: (context, index) {
+          if (index == tabs.length) {
+            return IconButton(
+              icon: Icon(Icons.add, size: 16, color: theme.hintColor),
+              onPressed: () => ref.read(browserProvider.notifier).createTab(url: 'https://www.bing.com'),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              tooltip: '新建标签页',
+            );
+          }
+          final tab = tabs[index];
+          final isActive = tab.id == browserState.activeTabId;
+          return GestureDetector(
+            onTap: () => ref.read(browserProvider.notifier).setActiveTab(tab.id),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: isActive ? theme.colorScheme.primary.withValues(alpha: 0.08) : Colors.transparent,
+                border: Border(right: BorderSide(color: theme.dividerColor, width: 0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (tab.isLoading)
+                    SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(strokeWidth: 1.5, color: theme.colorScheme.primary),
+                    )
+                  else
+                    Icon(Icons.language, size: 12, color: isActive ? theme.colorScheme.primary : theme.hintColor),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      tab.title.isNotEmpty ? tab.title : tab.url,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: isActive ? theme.colorScheme.primary : null,
+                        fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () => ref.read(browserProvider.notifier).closeTab(tab.id),
+                    child: Icon(Icons.close, size: 12, color: theme.hintColor),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBookmarkButton(ThemeData theme, BrowserState browserState, BrowserTab activeTab) {
+    final isBookmarked = browserState.isBookmarked(activeTab.url);
+    return IconButton(
+      icon: Icon(
+        isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+        size: 18,
+        color: isBookmarked ? theme.colorScheme.primary : theme.hintColor,
+      ),
+      onPressed: () {
+        if (isBookmarked) {
+          ref.read(browserProvider.notifier).removeBookmark(
+            browserState.bookmarks.firstWhere((b) => b.url == activeTab.url).id,
+          );
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(duration: Duration(seconds: 2), content: Text('已取消收藏')),
+          );
+        } else {
+          _showAddBookmarkDialog(browserState, activeTab);
+        }
+      },
+      tooltip: isBookmarked ? '取消收藏' : '收藏此页',
+      padding: const EdgeInsets.all(4),
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+    );
+  }
+
+  void _showAddBookmarkDialog(BrowserState browserState, BrowserTab activeTab) async {
+    final folders = browserState.bookmarkFolders;
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return _AddBookmarkDialog(folders: folders, pageTitle: activeTab.title, pageUrl: activeTab.url);
+      },
+    );
+    if (result != null && mounted) {
+      ref.read(browserProvider.notifier).addBookmark(activeTab.url, activeTab.title, result);
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(duration: const Duration(seconds: 2), content: Text('已收藏: ${activeTab.title}')),
+      );
+    }
   }
 
   Widget _buildNavButton(
@@ -472,6 +649,86 @@ class _LinuxBrowserPlaceholderState extends State<_LinuxBrowserPlaceholder> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AddBookmarkDialog extends StatefulWidget {
+  final List<BookmarkFolder> folders;
+  final String pageTitle;
+  final String pageUrl;
+
+  const _AddBookmarkDialog({
+    required this.folders,
+    required this.pageTitle,
+    required this.pageUrl,
+  });
+
+  @override
+  State<_AddBookmarkDialog> createState() => _AddBookmarkDialogState();
+}
+
+class _AddBookmarkDialogState extends State<_AddBookmarkDialog> {
+  String _selectedFolderId = 'bookmarks-bar';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: const Text('添加收藏'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.pageTitle,
+            style: theme.textTheme.bodyMedium,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            widget.pageUrl,
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 16),
+          Text('收藏到:', style: theme.textTheme.bodySmall),
+          const SizedBox(height: 8),
+          RadioGroup<String>(
+            groupValue: _selectedFolderId,
+            onChanged: (String? value) {
+              if (value != null) setState(() => _selectedFolderId = value);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: widget.folders.map((f) => ListTile(
+                leading: Icon(
+                  f.isExpanded ? Icons.folder_open : Icons.folder,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+                title: Text(f.name),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                trailing: Radio<String>(value: f.id),
+                onTap: () => setState(() => _selectedFolderId = f.id),
+              )).toList(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _selectedFolderId),
+          child: const Text('收藏'),
+        ),
+      ],
     );
   }
 }

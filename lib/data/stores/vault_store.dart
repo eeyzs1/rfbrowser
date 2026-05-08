@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
 
 class VaultConfig {
   final String path;
@@ -61,28 +61,49 @@ class VaultState {
 }
 
 class VaultNotifier extends Notifier<VaultState> {
-  SharedPreferences? _prefs;
-
-  Future<SharedPreferences> get _ensurePrefs async {
-    _prefs ??= await SharedPreferences.getInstance();
-    return _prefs!;
-  }
-
   @override
   VaultState build() => VaultState();
+
+  Future<String> get _vaultConfigPath async {
+    final dir = await getApplicationSupportDirectory();
+    return p.join(dir.path, 'vaults.json');
+  }
+
+  Future<Map<String, dynamic>> _loadVaultConfig() async {
+    final path = await _vaultConfigPath;
+    final file = File(path);
+    if (await file.exists()) {
+      try {
+        return Map<String, dynamic>.from(
+          jsonDecode(await file.readAsString()) as Map,
+        );
+      } catch (_) {}
+    }
+    return {};
+  }
+
+  Future<void> _saveVaultConfig(Map<String, dynamic> config) async {
+    final path = await _vaultConfigPath;
+    final file = File(path);
+    final dir = Directory(p.dirname(path));
+    if (!await dir.exists()) await dir.create(recursive: true);
+    await file.writeAsString(
+      JsonEncoder.withIndent('  ').convert(config),
+    );
+  }
 
   static const _recentVaultsKey = 'recent_vaults';
   static const _currentVaultKey = 'current_vault';
 
   Future<void> loadRecentVaults() async {
-    final prefs = await _ensurePrefs;
-    final vaultsJson = prefs.getStringList(_recentVaultsKey) ?? [];
+    final config = await _loadVaultConfig();
+    final vaultsJson = (config[_recentVaultsKey] as List?) ?? [];
     final seen = <String>{};
     final vaults = vaultsJson
         .map((j) {
           try {
             return VaultConfig.fromJson(
-              Map<String, dynamic>.from(jsonDecode(j)),
+              Map<String, dynamic>.from(j as Map),
             );
           } catch (_) {
             return null;
@@ -92,21 +113,14 @@ class VaultNotifier extends Notifier<VaultState> {
         .where((v) => seen.add(_normalizePath(v.path)))
         .toList();
 
-    if (vaults.length != vaultsJson.length) {
-      final dedupedJson = vaults.map((v) => jsonEncode(v.toJson())).toList();
-      await prefs.setStringList(_recentVaultsKey, dedupedJson);
-    }
-
     VaultConfig? currentVault;
-    final currentVaultPath = prefs.getString(_currentVaultKey);
+    final currentVaultPath = config[_currentVaultKey] as String?;
     if (currentVaultPath != null) {
       try {
         currentVault = vaults.firstWhere(
           (v) => _normalizePath(v.path) == _normalizePath(currentVaultPath),
         );
-      } catch (_) {
-        await prefs.remove(_currentVaultKey);
-      }
+      } catch (_) {}
     }
 
     state = state.copyWith(recentVaults: vaults, currentVault: currentVault);
@@ -180,15 +194,15 @@ class VaultNotifier extends Notifier<VaultState> {
     }
   }
 
-  Future<void> _saveToRecent(VaultConfig config) async {
-    final prefs = await _ensurePrefs;
-    final rawJson = prefs.getStringList(_recentVaultsKey) ?? [];
+  Future<void> _saveToRecent(VaultConfig vaultConfig) async {
+    final config = await _loadVaultConfig();
+    final vaultsJson = (config[_recentVaultsKey] as List?) ?? [];
     final seen = <String>{};
-    final existing = rawJson
+    final existing = vaultsJson
         .map((j) {
           try {
             return VaultConfig.fromJson(
-              Map<String, dynamic>.from(jsonDecode(j)),
+              Map<String, dynamic>.from(j as Map),
             );
           } catch (_) {
             return null;
@@ -199,37 +213,39 @@ class VaultNotifier extends Notifier<VaultState> {
         .toList();
 
     existing.removeWhere(
-      (v) => _normalizePath(v.path) == _normalizePath(config.path),
+      (v) => _normalizePath(v.path) == _normalizePath(vaultConfig.path),
     );
-    existing.insert(0, config);
+    existing.insert(0, vaultConfig);
     if (existing.length > 10) existing.removeRange(10, existing.length);
 
-    final vaultsJson = existing.map((v) => jsonEncode(v.toJson())).toList();
-    await prefs.setStringList(_recentVaultsKey, vaultsJson);
-    await prefs.setString(_currentVaultKey, config.path);
+    config[_recentVaultsKey] = existing.map((v) => v.toJson()).toList();
+    config[_currentVaultKey] = vaultConfig.path;
+    await _saveVaultConfig(config);
 
     state = state.copyWith(recentVaults: existing);
   }
 
   Future<void> closeVault() async {
-    final prefs = await _ensurePrefs;
-    await prefs.remove(_currentVaultKey);
+    final config = await _loadVaultConfig();
+    config.remove(_currentVaultKey);
+    await _saveVaultConfig(config);
     state = state.copyWith(clearCurrentVault: true);
   }
 
   Future<void> removeFromRecent(String vaultPath) async {
-    final prefs = await _ensurePrefs;
     final vaults = List<VaultConfig>.from(state.recentVaults)
       ..removeWhere((v) => _normalizePath(v.path) == _normalizePath(vaultPath));
 
-    final vaultsJson = vaults.map((v) => jsonEncode(v.toJson())).toList();
-    await prefs.setStringList(_recentVaultsKey, vaultsJson);
+    final config = await _loadVaultConfig();
+    config[_recentVaultsKey] = vaults.map((v) => v.toJson()).toList();
 
     if (_normalizePath(state.currentVault?.path ?? '') ==
         _normalizePath(vaultPath)) {
-      await prefs.remove(_currentVaultKey);
+      config.remove(_currentVaultKey);
+      await _saveVaultConfig(config);
       state = state.copyWith(clearCurrentVault: true, recentVaults: vaults);
     } else {
+      await _saveVaultConfig(config);
       state = state.copyWith(recentVaults: vaults);
     }
   }

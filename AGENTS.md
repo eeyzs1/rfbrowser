@@ -14,9 +14,11 @@ Key technical facts:
 - Flutter 3.27+ with Dart 3.11+
 - State management: Riverpod (with code generation via riverpod_generator)
 - WebView: flutter_inappwebview (Chromium-based on Windows/Android, WebKit on Linux)
-- Database: SQLite (sqflite) for search index, Hive for cache
+- Database: SQLite (sqflite) for search index (in vault/.rfbrowser/index.db)
 - File format: Pure Markdown (.md) with YAML frontmatter — compatible with Obsidian/Foam
 - Sync: Git CLI + WebDAV
+- App config: JSON files in ApplicationSupport directory (not SharedPreferences)
+- Vault data: All vault-specific data stored in <vault>/.rfbrowser/ directory
 
 ## First Principles
 
@@ -74,11 +76,34 @@ Service (lib/services/) → ai_service, agent_service, browser_service, knowledg
                           git_sync_service, webdav_sync_service, clipper_service, etc.
 Core (lib/core/)       → graph algorithms, link extractor/resolver, context assembler,
                           markdown highlighter, editor controllers
-Data (lib/data/)       → models (Note, Link, AgentTask, Skill, QuickMove, etc.)
-                          stores (IndexStore, SyncStore, VaultStore, HNSW, Vector)
+Data (lib/data/)       → models (Note, Link, AgentTask, Skill, QuickMove, Bookmark, BookmarkFolder, etc.)
+                          stores (IndexStore, SyncStore, VaultStore, AppConfigStore, HNSW, Vector)
                           repositories (NoteRepository)
 Platform (lib/platform/) → WebView managers (inline agent_webview, headless_manager)
 Plugins (lib/plugins/) → Plugin host + API + builtin Dataview
+```
+
+### Storage Architecture
+
+```
+<ApplicationSupport>/              ← App data directory (cross-platform)
+├── vaults.json                    ← Vault list + current vault (replaces SharedPreferences)
+├── rfbrowser_config.json          ← App-wide config (UI theme, AI config, shortcuts, etc.)
+└── ...
+
+<vault>/.rfbrowser/                ← Vault-specific data
+├── index.db                       ← SQLite full-text index
+├── bookmarks.json                 ← Bookmark folders + bookmarks
+├── cache/                         ← Index cache
+├── plugins/                       ← Plugin data
+└── ...
+
+<vault>/                           ← User data
+├── *.md                           ← Markdown notes
+├── daily-notes/                   ← Daily notes
+├── clippings/                     ← Web clippings
+├── attachments/                   ← Attachments
+└── <user folders>/                ← User-created folders
 ```
 
 ## Absolute Rules
@@ -100,17 +125,23 @@ Plugins (lib/plugins/) → Plugin host + API + builtin Dataview
 - **P-1**: Never persist to disk on every frame (drag/resize). Use in-memory updates + debounced save (500ms) + explicit persist on end.
 - **P-2**: `CustomPainter.shouldRepaint` must compare actual data, not just return `true`. Otherwise continuous 60fps repaints waste CPU.
 - **P-3**: Cache `SharedPreferences.getInstance()` rather than calling it in every setter.
+- **P-4**: Use `Stack` + `Visibility` for WebView tabs instead of `ValueKey` swap — avoids dealloc/realloc on every tab switch.
+- **P-5**: After `moveNote` or any file-system mutation, call `loadAllNotes()` to refresh the in-memory state. Never assume state auto-syncs.
 
 ### Correctness
 - **C-1**: API response parsing must be defensive — null-check every level of nested access.
 - **C-2**: Concurrent state mutations must be guarded. Check `isLoading` before allowing new operations.
 - **C-3**: When closing a tab/item from a list, calculate the new active index BEFORE removing the item.
 - **C-4**: `copyWith` cannot set nullable fields to null using `?? this.field`. Use sentinel values or explicit clear flags.
+- **C-5**: On Windows, `path.relative()` returns backslash separators. Always `replaceAll('\\', '/')` before splitting by `/` for cross-platform path handling.
+- **C-6**: Tree structures with `parentId` must prevent self-referencing (e.g., root node's `parentId` must be empty, not its own `id`). Always add cycle detection in recursive traversals.
+- **C-7**: After mutating state in a Notifier, ensure the UI rebuilds by using `ref.watch` on the correct provider. `ref.read` won't trigger rebuilds.
 
 ### Security
 - **S-1**: WebView must filter dangerous URL schemes in `shouldOverrideUrlLoading`.
 - **S-2**: API keys should not be stored in observable state objects. Read from secure storage only when needed.
 - **S-3**: Path sanitization with `replaceAll('..', '')` is insufficient. Use path normalization + validation.
+- **S-4**: Bookmark and vault data must be persisted to disk (JSON in vault/.rfbrowser/), not kept only in memory.
 
 ### Architecture
 - **A-1**: Every component should have at least one data flow path to another component. Isolated silos are a design smell.
@@ -120,11 +151,16 @@ Plugins (lib/plugins/) → Plugin host + API + builtin Dataview
 - **A-5**: Canvas cards with noteId should render live note data, not static snapshots.
 - **A-6**: Auto-discovered connections (wikilink) must be visually distinct from manual ones.
 - **A-7**: Canvas persistence should use file system (.json in vault/.rf/) for Git traceability.
+- **A-8**: Vault-specific data (bookmarks, index) must live in `<vault>/.rfbrowser/`, not in app-wide config. App config (theme, AI keys) goes in `<ApplicationSupport>/`.
+- **A-9**: Disk folder scanning must filter hidden directories (`.rfbrowser`, `.rf`) and system directories (`attachments`) to avoid polluting the note tree.
 
 ### UI
 - **U-1**: Error dismiss buttons must actually clear the error state.
 - **U-2**: Canvas clipping must happen BEFORE drawing (save → clip → draw → restore).
 - **U-3**: Row overflow in constrained spaces must use `Flexible` + `TextOverflow.ellipsis`.
+- **U-4**: Font sizes in sidebars must follow user settings (e.g., `editorFontSize * 0.75`), not hardcoded values.
+- **U-5**: AI panels must always have a "back/reset" button visible after generating content, not just a close button.
+- **U-6**: Bookmark clicks must actually navigate the WebView — use `createTab(url:)` or `loadUrl()`, not just `updateTabUrl()`.
 
 ### Flutter-Specific
 - **F-1**: `DropdownButtonFormField.value` deprecated in 3.41+. Use with ignore comment + `ValueKey`.
@@ -144,3 +180,6 @@ Plugins (lib/plugins/) → Plugin host + API + builtin Dataview
 - **UX-5**: Command bar is the primary navigation hub — it must search actual data, not hardcoded suggestions.
 - **UX-6**: If LinkExtractor/LinkResolver exist but aren't called, graph and backlinks are empty.
 - **UX-7**: Keyboard shortcuts must cover top 5 actions: search, new note, save, switch view, daily note.
+- **UX-8**: Vault switching must be accessible from the main layout (not just welcome page). Use a dropdown in the title bar.
+- **UX-9**: AI summary should support both web pages and notes, with a toggle to switch between them.
+- **UX-10**: AI-generated content (summaries) should have a "save as note" action button.

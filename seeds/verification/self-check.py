@@ -66,14 +66,15 @@ def run_verification(project_root: Path) -> dict:
             if captured:
                 result["errors"][-1]["parsed_errors"] = captured
 
+    flutter_cmd = "flutter.bat" if sys.platform == "win32" else "flutter"
     lint_result = subprocess.run(
-        ["python", "-m", "ruff", "check", str(project_root / "src")],
-        capture_output=True, text=True, cwd=str(project_root),
+        [flutter_cmd, "analyze"],
+        capture_output=True, text=True, cwd=str(project_root), shell=(sys.platform == "win32"),
     )
     if lint_result.returncode != 0:
         result["passed"] = False
-        result["errors"].append({"source": "lint", "output": lint_result.stdout})
-        captured = run_error_capture(project_root, lint_result.stdout, "lint")
+        result["errors"].append({"source": "flutter-analyze", "output": lint_result.stdout})
+        captured = run_error_capture(project_root, lint_result.stdout, "flutter-analyze")
         if captured:
             result["errors"][-1]["parsed_errors"] = captured
 
@@ -121,16 +122,16 @@ def self_check_loop(project_root: Path, max_iterations: int) -> dict:
         history.append({"iteration": iteration, "result": result})
 
         if result["passed"]:
-            print(f"✅ All checks passed at iteration {iteration}")
+            print(f"[PASS] All checks passed at iteration {iteration}")
             return {"passed": True, "iterations": iteration, "history": history}
 
-        print(f"❌ Checks failed. Errors: {len(result['errors'])}")
+        print(f"[FAIL] Checks failed. Errors: {len(result['errors'])}")
         fixes = reflect_on_errors(result["errors"], retry_config)
         print(f"   Proposed fixes: {len(fixes)}")
         for fix in fixes:
             print(f"   - [{fix['type']}] {fix['action']}")
 
-    print(f"\n⚠️  Self-check loop exhausted ({max_iterations} iterations)")
+    print(f"\n[WARN] Self-check loop exhausted ({max_iterations} iterations)")
     return {"passed": False, "iterations": max_iterations, "history": history}
 
 

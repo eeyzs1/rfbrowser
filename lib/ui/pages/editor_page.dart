@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -30,6 +31,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
   String? _lastLoadedNoteId;
   final _dropHandler = DropHandler();
   SyncScrollController? _syncScrollController;
+  Timer? _autoSaveTimer;
 
   @override
   void initState() {
@@ -48,10 +50,15 @@ class _EditorViewState extends ConsumerState<EditorView> {
     ref
         .read(knowledgeProvider.notifier)
         .updateActiveNoteContent(_controller.text);
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(const Duration(seconds: 3), () {
+      if (_isDirty) _saveNote();
+    });
   }
 
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _controller.removeListener(_onContentChanged);
     _syncScrollController?.detach();
     _controller.dispose();
@@ -85,10 +92,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
               ),
             ),
             const SizedBox(height: 20),
-            Text('No Vault Connected', style: theme.textTheme.headlineMedium),
+            Text('未连接知识库', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 6),
             Text(
-              'Open a vault to start writing notes',
+              '打开知识库开始撰写笔记',
               style: theme.textTheme.bodySmall,
             ),
           ],
@@ -105,17 +112,17 @@ class _EditorViewState extends ConsumerState<EditorView> {
           children: [
             Icon(Icons.edit_note, size: 64, color: theme.hintColor),
             const SizedBox(height: 16),
-            Text('No note selected', style: theme.textTheme.headlineMedium),
+            Text('未选择笔记', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 8),
             Text(
-              'Create a new note or select one from the sidebar',
+              '创建新笔记或从侧边栏选择',
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () => _createNewNote(),
               icon: const Icon(Icons.add),
-              label: const Text('New Note'),
+              label: const Text('新笔记'),
             ),
           ],
         ),
@@ -123,12 +130,15 @@ class _EditorViewState extends ConsumerState<EditorView> {
     }
 
     if (_lastLoadedNoteId != note.id) {
-      _controller.text = note.content;
       _lastLoadedNoteId = note.id;
-      if (_isDirty) {
-        _isDirty = false;
-      }
-      _updateContext(note.content);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _controller.text = note.content;
+        if (_isDirty) {
+          _isDirty = false;
+        }
+        _updateContext(note.content);
+      });
     }
 
     return Column(
@@ -183,9 +193,9 @@ class _EditorViewState extends ConsumerState<EditorView> {
                   }
                 }),
                 tooltip: _isSplitView
-                    ? 'Edit'
+                    ? '编辑'
                     : _isPreview
-                        ? 'Edit'
+                        ? '编辑'
                         : 'Split View',
               ),
               IconButton(
@@ -448,7 +458,7 @@ class _WikiLinkBuilder extends MarkdownElementBuilder {
                 n.aliases.any((a) => a.toLowerCase() == target.toLowerCase());
           }).firstOrNull;
           if (note != null) {
-            ref.read(knowledgeProvider.notifier).openNote(note.filePath);
+            ref.read(knowledgeProvider.notifier).openNote(note.id);
           }
         },
         child: Container(

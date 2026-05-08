@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,8 +30,17 @@ class MainLayout extends ConsumerStatefulWidget {
 class _MainLayoutState extends ConsumerState<MainLayout> {
   bool _showCommandBar = false;
   SceneType _currentScene = SceneType.capture;
+  bool _leftPanelExpanded = true;
+  bool _rightPanelExpanded = true;
 
   void _switchScene(SceneType scene) => setState(() => _currentScene = scene);
+  void _toggleLeftPanel() => setState(() => _leftPanelExpanded = !_leftPanelExpanded);
+  void _toggleRightPanel() => setState(() => _rightPanelExpanded = !_rightPanelExpanded);
+  void _onNoteOpened() {
+    if (_currentScene != SceneType.think) {
+      _switchScene(SceneType.think);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +48,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     if (vaultState.currentVault == null && !vaultState.isLoading) {
       return Scaffold(
         body: EmptyVaultGuide(
-          onCreateVault: () => ref.read(vaultProvider.notifier).closeVault(),
+          onCreateVault: () => _openVaultDialog(),
         ),
       );
     }
@@ -51,9 +61,27 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             children: [
               SceneScaffold(
                 initialScene: _currentScene,
-                captureView: (_) => const CaptureScene(),
-                thinkView: (_) => ThinkScene(onCreateNote: _createNewNote),
-                connectView: (_) => const ConnectScene(),
+                captureView: (_) => CaptureScene(
+                  leftPanelExpanded: _leftPanelExpanded,
+                  rightPanelExpanded: _rightPanelExpanded,
+                  onToggleLeftPanel: _toggleLeftPanel,
+                  onToggleRightPanel: _toggleRightPanel,
+                  onNoteOpened: _onNoteOpened,
+                ),
+                thinkView: (_) => ThinkScene(
+                  leftPanelExpanded: _leftPanelExpanded,
+                  rightPanelExpanded: _rightPanelExpanded,
+                  onToggleLeftPanel: _toggleLeftPanel,
+                  onToggleRightPanel: _toggleRightPanel,
+                  onCreateNote: _createNewNote,
+                  onNoteOpened: _onNoteOpened,
+                ),
+                connectView: (_) => ConnectScene(
+                  leftPanelExpanded: _leftPanelExpanded,
+                  rightPanelExpanded: _rightPanelExpanded,
+                  onToggleLeftPanel: _toggleLeftPanel,
+                  onToggleRightPanel: _toggleRightPanel,
+                ),
                 statusBar: const StatusBar(),
                 onSceneChanged: _switchScene,
               ),
@@ -164,5 +192,16 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       if (ctx.noteContent != null) 'noteContent': ctx.noteContent!.length > 8000 ? ctx.noteContent!.substring(0, 8000) : ctx.noteContent!,
     };
     ref.read(aiProvider.notifier).sendMessage(match.resolvePrompt(args));
+  }
+
+  Future<void> _openVaultDialog() async {
+    final result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: '选择知识库位置',
+    );
+    if (result != null) {
+      await ref.read(vaultProvider.notifier).openVault(result);
+      ref.read(knowledgeProvider.notifier).loadAllNotes();
+      ref.read(browserProvider.notifier).loadBookmarks();
+    }
   }
 }

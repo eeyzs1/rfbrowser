@@ -4,6 +4,7 @@ import 'l10n/app_localizations.dart';
 import 'services/settings_service.dart';
 import 'services/shortcut_service.dart';
 import 'services/knowledge_service.dart';
+import 'services/browser_service.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/layout/main_layout.dart';
 import 'ui/pages/welcome_page.dart';
@@ -43,6 +44,7 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
         _enteredMainLayout = true;
       }
       ref.read(knowledgeProvider.notifier).loadAllNotes();
+      ref.read(browserProvider.notifier).loadBookmarks();
     }
     setState(() => _initialized = true);
   }

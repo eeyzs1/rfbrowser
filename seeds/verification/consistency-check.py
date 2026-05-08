@@ -34,8 +34,8 @@ def check_architecture_rules(project_root: Path) -> list:
         rule_id = rule.get("id", "unknown")
         pattern = rule.get("pattern", "")
         if pattern:
-            for src_file in project_root.rglob("*.py"):
-                if ".git" in str(src_file) or "node_modules" in str(src_file):
+            for src_file in project_root.rglob("*.dart"):
+                if ".git" in str(src_file) or "node_modules" in str(src_file) or ".dart_tool" in str(src_file) or "build" in str(src_file):
                     continue
                 try:
                     content = src_file.read_text(encoding="utf-8")
@@ -54,19 +54,19 @@ def check_architecture_rules(project_root: Path) -> list:
 
 def check_orphaned_references(project_root: Path) -> list:
     orphans = []
-    src_dir = project_root / "src"
+    src_dir = project_root / "lib"
     if not src_dir.exists():
         return orphans
 
     imports = set()
     definitions = set()
 
-    for py_file in src_dir.rglob("*.py"):
+    for dart_file in src_dir.rglob("*.dart"):
         try:
-            content = py_file.read_text(encoding="utf-8")
-            for match in re.finditer(r"(?:from|import)\s+(\w+)", content):
+            content = dart_file.read_text(encoding="utf-8")
+            for match in re.finditer(r"import\s+['\"]([^'\"]+)['\"]", content):
                 imports.add(match.group(1))
-            for match in re.finditer(r"(?:class|def)\s+(\w+)", content):
+            for match in re.finditer(r"(?:class|mixin|enum|extension)\s+(\w+)", content):
                 definitions.add(match.group(1))
         except Exception:
             pass

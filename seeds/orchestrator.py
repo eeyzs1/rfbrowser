@@ -206,6 +206,7 @@ def run_verification() -> dict:
         else:
             print("❌ Verification failed")
             print(proc.stdout)
+            print(proc.stderr)
             return {"passed": False}
     else:
         print("⚠️  self-check.py not found, skipping verification")

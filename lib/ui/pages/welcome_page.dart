@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../data/stores/vault_store.dart';
+import '../../services/browser_service.dart';
 import '../../l10n/app_localizations.dart';
 
 // ignore: unused_element
@@ -146,6 +147,7 @@ class WelcomePage extends ConsumerWidget {
     );
     if (result != null) {
       await ref.read(vaultProvider.notifier).openVault(result);
+      ref.read(browserProvider.notifier).loadBookmarks();
       onVaultOpened();
     }
   }
@@ -180,7 +182,6 @@ class _RecentVaultsList extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
@@ -192,36 +193,37 @@ class _RecentVaultsList extends StatelessWidget {
             ),
           ),
         ),
-        Container(
-          constraints: const BoxConstraints(maxHeight: 360),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(
-              alpha: 0.3,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: theme.dividerColor.withValues(alpha: 0.3),
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Scrollbar(
-            thumbVisibility: true,
-            thickness: 6,
-            radius: const Radius.circular(3),
-            child: ListView.separated(
-              primary: true,
-              shrinkWrap: false,
-              padding: EdgeInsets.zero,
-              itemCount: vaults.length,
-              separatorBuilder: (_, _) => Divider(
-                height: 1,
-                indent: 52,
-                color: theme.dividerColor.withValues(alpha: 0.2),
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
               ),
-              itemBuilder: (context, index) => _VaultListItem(
-                vault: vaults[index],
-                onTap: () => onSelect(vaults[index]),
-                onRemove: () => onRemove(vaults[index]),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.dividerColor.withValues(alpha: 0.3),
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Scrollbar(
+              thumbVisibility: true,
+              thickness: 6,
+              radius: const Radius.circular(3),
+              child: ListView.separated(
+                primary: true,
+                shrinkWrap: false,
+                padding: EdgeInsets.zero,
+                itemCount: vaults.length,
+                separatorBuilder: (_, _) => Divider(
+                  height: 1,
+                  indent: 52,
+                  color: theme.dividerColor.withValues(alpha: 0.2),
+                ),
+                itemBuilder: (context, index) => _VaultListItem(
+                  vault: vaults[index],
+                  onTap: () => onSelect(vaults[index]),
+                  onRemove: () => onRemove(vaults[index]),
+                ),
               ),
             ),
           ),

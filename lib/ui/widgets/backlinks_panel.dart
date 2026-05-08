@@ -5,7 +5,8 @@ import '../../data/models/link_type.dart';
 import '../../data/models/unlinked_mention.dart';
 
 class BacklinksPanel extends ConsumerWidget {
-  const BacklinksPanel({super.key});
+  final VoidCallback? onClose;
+  const BacklinksPanel({super.key, this.onClose});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,7 +29,7 @@ class BacklinksPanel extends ConsumerWidget {
               Icon(Icons.link, size: 14, color: theme.colorScheme.primary),
               const SizedBox(width: 6),
               Text(
-                'Backlinks',
+                '反向链接',
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -48,6 +49,15 @@ class BacklinksPanel extends ConsumerWidget {
                   ),
                 ),
               ),
+              const Spacer(),
+              if (onClose != null)
+                IconButton(
+                  icon: Icon(Icons.chevron_right, size: 16, color: theme.hintColor),
+                  onPressed: onClose,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  tooltip: '关闭面板',
+                ),
             ],
           ),
         ),
@@ -56,7 +66,7 @@ class BacklinksPanel extends ConsumerWidget {
               ? Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(
-                    'No note selected',
+                    '未选择笔记',
                     style: theme.textTheme.bodySmall,
                   ),
                 )
@@ -64,7 +74,7 @@ class BacklinksPanel extends ConsumerWidget {
               ? Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(
-                    'No backlinks yet',
+                    '暂无反向链接',
                     style: theme.textTheme.bodySmall,
                   ),
                 )
@@ -94,7 +104,7 @@ class BacklinksPanel extends ConsumerWidget {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Unlinked Mentions',
+                              '未链接提及',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: theme.colorScheme.tertiary,
@@ -163,7 +173,7 @@ class _BacklinkItem extends ConsumerWidget {
     return InkWell(
       onTap: () {
         if (sourceNote != null) {
-          ref.read(knowledgeProvider.notifier).openNote(sourceNote.filePath);
+          ref.read(knowledgeProvider.notifier).openNote(sourceNote.id);
         }
       },
       child: Container(
@@ -239,7 +249,7 @@ class _UnlinkedMentionItem extends ConsumerWidget {
             .where((n) => n.title.toLowerCase() == mention.targetTitle.toLowerCase())
             .firstOrNull;
         if (note != null) {
-          ref.read(knowledgeProvider.notifier).openNote(note.filePath);
+          ref.read(knowledgeProvider.notifier).openNote(note.id);
         }
       },
       child: Container(
@@ -282,7 +292,7 @@ class _UnlinkedMentionItem extends ConsumerWidget {
                   onPressed: onLink,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-                  tooltip: 'Link',
+                  tooltip: '链接',
                 ),
               ],
             ),
