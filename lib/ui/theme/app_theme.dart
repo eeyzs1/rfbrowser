@@ -7,18 +7,18 @@ class AppTheme {
     final cs = ColorScheme.fromSeed(
       seedColor: settings.accentColor,
       brightness: Brightness.dark,
-      surface: const Color(0xFF0F172A),
+      surface: settings.scaffoldBgColor,
     );
-    return _buildTheme(cs, Brightness.dark, settings);
+    return _buildTheme(cs, settings);
   }
 
   static ThemeData lightTheme(AppSettings settings) {
     final cs = ColorScheme.fromSeed(
       seedColor: settings.accentColor,
       brightness: Brightness.light,
-      surface: const Color(0xFFFAFCFF),
+      surface: settings.scaffoldBgColor,
     );
-    return _buildTheme(cs, Brightness.light, settings);
+    return _buildTheme(cs, settings);
   }
 
   static ThemeData highContrastTheme(AppSettings settings) {
@@ -32,53 +32,53 @@ class AppTheme {
       error: Color(0xFFFF5252),
       onError: Color(0xFF000000),
     );
-    return _buildTheme(cs, Brightness.dark, settings, highContrast: true);
+    return _buildTheme(cs, settings, highContrast: true);
   }
+
+  static bool _isLight(Color c) =>
+      c.r * 0.299 + c.g * 0.587 + c.b * 0.114 > 128;
 
   static ThemeData _buildTheme(
     ColorScheme cs,
-    Brightness brightness,
     AppSettings s, {
     bool highContrast = false,
   }) {
-    final isDark = brightness == Brightness.dark;
-    final surface = highContrast
-        ? const Color(0xFF000000)
-        : (isDark ? DesignColors.sceneCaptureBg : const Color(0xFFFAFCFF));
-    final surfaceContainer = highContrast
+    final surface = s.scaffoldBgColor;
+    final surfaceC = highContrast
         ? const Color(0xFF1A1A1A)
-        : (isDark ? const Color(0xFF1E293B) : Colors.white);
+        : s.surfaceColor;
+    final surfaceIsLight = !highContrast && _isLight(surfaceC);
     final onSurface = highContrast
         ? const Color(0xFFFFFFFF)
-        : (isDark ? DesignColors.textPrimary : const Color(0xFF1E293B));
+        : (surfaceIsLight ? const Color(0xFF1E293B) : DesignColors.textPrimary);
     final onSurfaceVariant = highContrast
         ? const Color(0xFFE0E0E0)
-        : (isDark ? DesignColors.textSecondary : const Color(0xFF475569));
+        : (surfaceIsLight ? const Color(0xFF475569) : DesignColors.textSecondary);
     final muted = highContrast
         ? const Color(0xFFBDBDBD)
-        : (isDark ? DesignColors.textMuted : const Color(0xFF94A3B8));
+        : (surfaceIsLight ? const Color(0xFF94A3B8) : DesignColors.textMuted);
     final divider = highContrast
         ? const Color(0xFF444444)
-        : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9));
+        : (surfaceIsLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B));
     final inputBg = highContrast
         ? const Color(0xFF1A1A1A)
-        : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC));
+        : surfaceC;
     final br = s.effectiveBorderRadius;
     final iconSz = s.iconSize.toDouble();
     final fontSize = s.editorFontSize;
 
     return ThemeData(
-      brightness: brightness,
+      brightness: s.isDarkMode ? Brightness.dark : Brightness.light,
       colorScheme: cs,
       scaffoldBackgroundColor: surface,
       visualDensity: s.effectiveVisualDensity,
       appBarTheme: AppBarTheme(
-        backgroundColor: surfaceContainer,
+        backgroundColor: surfaceC,
         foregroundColor: onSurface,
         elevation: 0,
       ),
       cardTheme: CardThemeData(
-        color: surfaceContainer,
+        color: surfaceC,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
       ),
@@ -140,7 +140,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: surfaceContainer,
+        backgroundColor: surfaceC,
         contentTextStyle: TextStyle(color: onSurface),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
         behavior: SnackBarBehavior.floating,

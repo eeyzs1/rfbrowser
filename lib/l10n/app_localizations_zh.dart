@@ -150,6 +150,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accentColor => '强调色';
 
   @override
+  String get themeColor => '主题色';
+
+  @override
+  String get backgroundColor => '背景色';
+
+  @override
+  String get surfaceColor => '面板色';
+
+  @override
   String get customColor => '自定义颜色';
 
   @override
@@ -607,4 +616,91 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get markdownHighlight => 'Markdown 高亮';
+
+  @override
+  String get unsaved => '未保存';
+
+  @override
+  String get saved => '已保存';
+
+  @override
+  String get editMode => '编辑';
+
+  @override
+  String get previewMode => '预览';
+
+  @override
+  String get splitView => '分栏';
+
+  @override
+  String get heading => '标题';
+
+  @override
+  String get bold => '粗体';
+
+  @override
+  String get italic => '斜体';
+
+  @override
+  String get strikethrough => '删除线';
+
+  @override
+  String get inlineCode => '行内代码';
+
+  @override
+  String get codeBlock => '代码块';
+
+  @override
+  String get bulletList => '无序列表';
+
+  @override
+  String get numberedList => '有序列表';
+
+  @override
+  String get quote => '引用';
+
+  @override
+  String get taskList => '任务列表';
+
+  @override
+  String get link => '链接';
+
+  @override
+  String get wikiLink => '笔记链接';
+
+  @override
+  String get embedNote => '嵌入笔记';
+
+  @override
+  String get horizontalRule => '分割线';
+
+  @override
+  String get table => '表格';
+
+  @override
+  String charCount(Object count) {
+    return '$count 字符';
+  }
+
+  @override
+  String wordCount(Object count) {
+    return '$count 词';
+  }
+
+  @override
+  String get hasUnsavedChanges => '有未保存的修改';
+
+  @override
+  String get dropHere => '拖放到此处';
+
+  @override
+  String get startWritingHint => '开始写作... 使用 [[笔记标题]] 链接其他笔记';
+
+  @override
+  String embedTarget(Object target) {
+    return '嵌入: $target';
+  }
+
+  @override
+  String get backToNotePreview => '返回笔记预览';
 }

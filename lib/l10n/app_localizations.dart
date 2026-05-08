@@ -380,6 +380,24 @@ abstract class AppLocalizations {
   /// **'Accent Color'**
   String get accentColor;
 
+  /// No description provided for @themeColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme Color'**
+  String get themeColor;
+
+  /// No description provided for @backgroundColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get backgroundColor;
+
+  /// No description provided for @surfaceColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Surface'**
+  String get surfaceColor;
+
   /// No description provided for @customColor.
   ///
   /// In en, this message translates to:
@@ -1273,6 +1291,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Markdown Highlight'**
   String get markdownHighlight;
+
+  /// No description provided for @unsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved'**
+  String get unsaved;
+
+  /// No description provided for @saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get saved;
+
+  /// No description provided for @editMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editMode;
+
+  /// No description provided for @previewMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get previewMode;
+
+  /// No description provided for @splitView.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get splitView;
+
+  /// No description provided for @heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get heading;
+
+  /// No description provided for @bold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get bold;
+
+  /// No description provided for @italic.
+  ///
+  /// In en, this message translates to:
+  /// **'Italic'**
+  String get italic;
+
+  /// No description provided for @strikethrough.
+  ///
+  /// In en, this message translates to:
+  /// **'Strikethrough'**
+  String get strikethrough;
+
+  /// No description provided for @inlineCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Inline Code'**
+  String get inlineCode;
+
+  /// No description provided for @codeBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Code Block'**
+  String get codeBlock;
+
+  /// No description provided for @bulletList.
+  ///
+  /// In en, this message translates to:
+  /// **'Bullet List'**
+  String get bulletList;
+
+  /// No description provided for @numberedList.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbered List'**
+  String get numberedList;
+
+  /// No description provided for @quote.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote'**
+  String get quote;
+
+  /// No description provided for @taskList.
+  ///
+  /// In en, this message translates to:
+  /// **'Task List'**
+  String get taskList;
+
+  /// No description provided for @link.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get link;
+
+  /// No description provided for @wikiLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Wiki Link'**
+  String get wikiLink;
+
+  /// No description provided for @embedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Embed Note'**
+  String get embedNote;
+
+  /// No description provided for @horizontalRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Horizontal Rule'**
+  String get horizontalRule;
+
+  /// No description provided for @table.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get table;
+
+  /// No description provided for @charCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} characters'**
+  String charCount(Object count);
+
+  /// No description provided for @wordCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} words'**
+  String wordCount(Object count);
+
+  /// No description provided for @hasUnsavedChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Has unsaved changes'**
+  String get hasUnsavedChanges;
+
+  /// No description provided for @dropHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop here'**
+  String get dropHere;
+
+  /// No description provided for @startWritingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start writing... Use [[note title]] to link other notes'**
+  String get startWritingHint;
+
+  /// No description provided for @embedTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Embed: {target}'**
+  String embedTarget(Object target);
+
+  /// No description provided for @backToNotePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to note preview'**
+  String get backToNotePreview;
 }
 
 class _AppLocalizationsDelegate

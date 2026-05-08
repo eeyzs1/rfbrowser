@@ -84,11 +84,9 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
       supportedLocales: AppLocalizations.supportedLocales,
       theme: settings.highContrastMode
           ? AppTheme.highContrastTheme(settings)
-          : AppTheme.lightTheme(settings),
-      darkTheme: settings.highContrastMode
-          ? AppTheme.highContrastTheme(settings)
-          : AppTheme.darkTheme(settings),
-      themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          : settings.isDarkMode
+              ? AppTheme.darkTheme(settings)
+              : AppTheme.lightTheme(settings),
       locale: RFBrowserApp._resolveLocale(settings.locale),
       home: showWelcome
           ? WelcomePage(

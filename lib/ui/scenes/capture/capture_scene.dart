@@ -127,6 +127,9 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
                         pageTitle: browserState.activeTab?.title,
                         activeNote: knowledgeState.activeNote,
                         onClose: widget.onToggleRightPanel,
+                        onBack: knowledgeState.activeNote != null
+                            ? () => setState(() => _rightPanelMode = _RightPanelMode.notePreview)
+                            : null,
                       ),
               ),
           ],
@@ -144,8 +147,9 @@ class _AiSummaryPanel extends ConsumerStatefulWidget {
   final String? pageTitle;
   final Note? activeNote;
   final VoidCallback? onClose;
+  final VoidCallback? onBack;
 
-  const _AiSummaryPanel({this.url, this.pageTitle, this.activeNote, this.onClose});
+  const _AiSummaryPanel({this.url, this.pageTitle, this.activeNote, this.onClose, this.onBack});
 
   @override
   ConsumerState<_AiSummaryPanel> createState() => _AiSummaryPanelState();
@@ -293,6 +297,14 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               tooltip: '返回',
+            ),
+          if (widget.onBack != null)
+            IconButton(
+              icon: Icon(Icons.arrow_back, size: 16, color: theme.hintColor),
+              onPressed: widget.onBack,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+              tooltip: '返回笔记预览',
             ),
           if (widget.onClose != null)
             IconButton(

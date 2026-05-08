@@ -150,6 +150,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accentColor => 'Accent Color';
 
   @override
+  String get themeColor => 'Theme Color';
+
+  @override
+  String get backgroundColor => 'Background';
+
+  @override
+  String get surfaceColor => 'Surface';
+
+  @override
   String get customColor => 'Custom Color';
 
   @override
@@ -612,4 +621,92 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get markdownHighlight => 'Markdown Highlight';
+
+  @override
+  String get unsaved => 'Unsaved';
+
+  @override
+  String get saved => 'Saved';
+
+  @override
+  String get editMode => 'Edit';
+
+  @override
+  String get previewMode => 'Preview';
+
+  @override
+  String get splitView => 'Split';
+
+  @override
+  String get heading => 'Heading';
+
+  @override
+  String get bold => 'Bold';
+
+  @override
+  String get italic => 'Italic';
+
+  @override
+  String get strikethrough => 'Strikethrough';
+
+  @override
+  String get inlineCode => 'Inline Code';
+
+  @override
+  String get codeBlock => 'Code Block';
+
+  @override
+  String get bulletList => 'Bullet List';
+
+  @override
+  String get numberedList => 'Numbered List';
+
+  @override
+  String get quote => 'Quote';
+
+  @override
+  String get taskList => 'Task List';
+
+  @override
+  String get link => 'Link';
+
+  @override
+  String get wikiLink => 'Wiki Link';
+
+  @override
+  String get embedNote => 'Embed Note';
+
+  @override
+  String get horizontalRule => 'Horizontal Rule';
+
+  @override
+  String get table => 'Table';
+
+  @override
+  String charCount(Object count) {
+    return '$count characters';
+  }
+
+  @override
+  String wordCount(Object count) {
+    return '$count words';
+  }
+
+  @override
+  String get hasUnsavedChanges => 'Has unsaved changes';
+
+  @override
+  String get dropHere => 'Drop here';
+
+  @override
+  String get startWritingHint =>
+      'Start writing... Use [[note title]] to link other notes';
+
+  @override
+  String embedTarget(Object target) {
+    return 'Embed: $target';
+  }
+
+  @override
+  String get backToNotePreview => 'Back to note preview';
 }

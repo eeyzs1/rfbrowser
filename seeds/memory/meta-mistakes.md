@@ -76,3 +76,38 @@ Status: Resolved
 Root Cause: `_collectFolders` scanned all directories including `.rfbrowser`, `.rf`, and `attachments`, polluting the note tree with system directories
 Lesson: Disk scanning must filter hidden directories (starting with `.`) and known system directories (`attachments`) to show only user-relevant folders.
 Constraint Added: C042 — "Disk folder scanning must filter hidden directories and system directories"
+
+## Meta-Mistake 013: TextField with expands:true centered text vertically
+Status: Resolved
+Root Cause: `TextField(expands: true)` defaults to vertical center alignment, making the cursor start in the middle of the editor area
+Lesson: Always set `textAlignVertical: TextAlignVertical.top` when using `expands: true` on TextField. This matches VS Code / GitHub editor behavior where text starts from top-left.
+Constraint Added: U-7 — "TextField with expands: true must set textAlignVertical: TextAlignVertical.top"
+Evidence: Editor cursor appeared in the vertical center of the editing area
+
+## Meta-Mistake 014: Theme InputDecoration overrode editor background
+Status: Resolved
+Root Cause: `app_theme.dart` set `inputDecorationTheme.filled: true` with `borderRadius`, causing the editor TextField to show rounded corners and a surface-colored background instead of the custom background color
+Lesson: When a TextField needs full-bleed rendering (no border, custom background), explicitly override all InputDecoration properties: `filled: true/false`, `fillColor`, and all border states to `InputBorder.none`.
+Constraint Added: U-8 — "InputDecoration from theme may override editor appearance — always explicitly override for full-bleed editors"
+Evidence: Editor showed rounded corners and wrong background color despite setting ColoredBox wrapper
+
+## Meta-Mistake 015: Hardcoded Chinese strings in bilingual app
+Status: Resolved
+Root Cause: Added UI features with hardcoded Chinese strings (toolbar tooltips, status bar labels, section headers) instead of using the existing l10n system
+Lesson: In a bilingual app, ALL user-visible strings must use l10n keys from the start. Retrofitting 30+ strings across multiple files is error-prone and time-consuming. The l10n pattern requires: ARB files → abstract getters → implementation classes → usage via `AppLocalizations.of(context)!`.
+Constraint Added: U-10 — "All user-visible strings must use l10n keys, never hardcoded text"
+Evidence: 30+ hardcoded Chinese strings found in editor_page.dart and theme_settings_section.dart
+
+## Meta-Mistake 016: Color presets too similar to distinguish
+Status: Resolved
+Root Cause: Background presets used 5 near-identical dark colors (luminance difference < 5%) and 3 near-white colors. Surface presets used 5 near-identical dark grays. Users couldn't tell them apart visually.
+Lesson: Color presets must span different hues AND luminance ranges. For dark presets, use distinct color temperatures (blue-black, green-black, brown-black, purple-black). For light presets, use medium-brightness colors (70-85% luminance), not near-white (>95%).
+Constraint Added: UX-15 — "Color presets must have clear visual distinction — avoid presets that differ by < 5% luminance"
+Evidence: Midnight (#0F172A), Charcoal (#18181B), Navy (#0C1929) all appeared identical on screen
+
+## Meta-Mistake 017: isDarkMode as stored toggle caused theme/surface mismatch
+Status: Resolved
+Root Cause: `isDarkMode` was a stored boolean toggle independent of background/surface colors. Changing background color didn't affect whether the app used dark or light theme, causing white text on light backgrounds or dark text on dark backgrounds.
+Lesson: `isDarkMode` should be a computed getter derived from the surface/background color luminance, not an independent stored value. This ensures text contrast automatically adapts to color changes.
+Constraint Added: A-11 — "isDarkMode should be a computed property from luminance, not a stored toggle"
+Evidence: After changing background to a light color, text remained white (unreadable) because isDarkMode was still true

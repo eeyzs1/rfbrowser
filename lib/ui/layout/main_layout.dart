@@ -162,7 +162,10 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         MaterialPageRoute(builder: (_) => const SettingsPage()),
       );
     } else if (c.contains('theme')) {
-      ref.read(settingsProvider.notifier).toggleDarkMode();
+      final settings = ref.read(settingsProvider);
+      final isDark = settings.isDarkMode;
+      final newBg = isDark ? const Color(0xFFFAFCFF) : const Color(0xFF0F172A);
+      ref.read(settingsProvider.notifier).setScaffoldBgColor(newBg);
     } else if (c.contains('research')) {
       ref.read(agentProvider.notifier).research(command);
     } else {

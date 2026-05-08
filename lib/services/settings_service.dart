@@ -26,11 +26,12 @@ Color getPresetColor(String id) => _presetColors[id] ?? const Color(0xFF0EA5E9);
 
 class AppSettings {
   final String locale;
-  final bool isDarkMode;
   final double editorFontSize;
   final bool showLineNumbers;
   final String themePreset;
   final int accentColorValue;
+  final int scaffoldBgColorValue;
+  final int surfaceColorValue;
   final AppButtonStyle buttonStyle;
   final ComponentDensity density;
   final int iconSize;
@@ -40,11 +41,12 @@ class AppSettings {
 
   AppSettings({
     this.locale = 'system',
-    this.isDarkMode = true,
     this.editorFontSize = 14.0,
     this.showLineNumbers = false,
     this.themePreset = 'sky',
     this.accentColorValue = 0xFF0EA5E9,
+    this.scaffoldBgColorValue = 0xFF0F172A,
+    this.surfaceColorValue = 0xFF1E293B,
     this.buttonStyle = AppButtonStyle.rounded,
     this.density = ComponentDensity.comfortable,
     this.iconSize = 18,
@@ -54,6 +56,15 @@ class AppSettings {
   });
 
   Color get accentColor => Color(accentColorValue);
+
+  Color get scaffoldBgColor => Color(scaffoldBgColorValue);
+
+  Color get surfaceColor => Color(surfaceColorValue);
+
+  bool get isDarkMode {
+    final lum = surfaceColor.r * 0.299 + surfaceColor.g * 0.587 + surfaceColor.b * 0.114;
+    return lum < 0.5;
+  }
 
   double get effectiveBorderRadius {
     switch (buttonStyle) {
@@ -79,11 +90,12 @@ class AppSettings {
 
   AppSettings copyWith({
     String? locale,
-    bool? isDarkMode,
     double? editorFontSize,
     bool? showLineNumbers,
     String? themePreset,
     int? accentColorValue,
+    int? scaffoldBgColorValue,
+    int? surfaceColorValue,
     AppButtonStyle? buttonStyle,
     ComponentDensity? density,
     int? iconSize,
@@ -93,11 +105,12 @@ class AppSettings {
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
-      isDarkMode: isDarkMode ?? this.isDarkMode,
       editorFontSize: editorFontSize ?? this.editorFontSize,
       showLineNumbers: showLineNumbers ?? this.showLineNumbers,
       themePreset: themePreset ?? this.themePreset,
       accentColorValue: accentColorValue ?? this.accentColorValue,
+      scaffoldBgColorValue: scaffoldBgColorValue ?? this.scaffoldBgColorValue,
+      surfaceColorValue: surfaceColorValue ?? this.surfaceColorValue,
       buttonStyle: buttonStyle ?? this.buttonStyle,
       density: density ?? this.density,
       iconSize: iconSize ?? this.iconSize,
@@ -127,11 +140,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
     final colorValue = savedColor ?? getPresetColor(preset).toARGB32();
     state = AppSettings(
       locale: prefs.getString('locale') ?? 'system',
-      isDarkMode: prefs.getBool('isDarkMode') ?? true,
       editorFontSize: prefs.getDouble('editorFontSize') ?? 14.0,
       showLineNumbers: prefs.getBool('showLineNumbers') ?? false,
       themePreset: preset,
       accentColorValue: colorValue,
+      scaffoldBgColorValue: prefs.getInt('scaffoldBgColorValue') ?? 0xFF0F172A,
+      surfaceColorValue: prefs.getInt('surfaceColorValue') ?? 0xFF1E293B,
       buttonStyle: AppButtonStyle.values[prefs.getInt('buttonStyle') ?? 0],
       density: ComponentDensity.values[prefs.getInt('density') ?? 1],
       iconSize: (prefs.getInt('iconSize') ?? 18).clamp(12, 36),
@@ -145,12 +159,6 @@ class SettingsNotifier extends Notifier<AppSettings> {
     final prefs = await _ensurePrefs;
     await prefs.setString('locale', locale);
     state = state.copyWith(locale: locale);
-  }
-
-  Future<void> toggleDarkMode() async {
-    final prefs = await _ensurePrefs;
-    await prefs.setBool('isDarkMode', !state.isDarkMode);
-    state = state.copyWith(isDarkMode: !state.isDarkMode);
   }
 
   Future<void> setEditorFontSize(double size) async {
@@ -178,6 +186,18 @@ class SettingsNotifier extends Notifier<AppSettings> {
       themePreset: 'custom',
       accentColorValue: color.toARGB32(),
     );
+  }
+
+  Future<void> setScaffoldBgColor(Color color) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setInt('scaffoldBgColorValue', color.toARGB32());
+    state = state.copyWith(scaffoldBgColorValue: color.toARGB32());
+  }
+
+  Future<void> setSurfaceColor(Color color) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setInt('surfaceColorValue', color.toARGB32());
+    state = state.copyWith(surfaceColorValue: color.toARGB32());
   }
 
   Future<void> setButtonStyle(AppButtonStyle style) async {

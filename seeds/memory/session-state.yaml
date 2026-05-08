@@ -57,6 +57,21 @@ progress:
     - "Cycle detection in bookmark folder tree traversal"
     - "Font sizes in sidebar follow user settings"
     - "WebView tabs use Stack+Visibility instead of ValueKey swap"
+    - "Editor formatting toolbar with Markdown quick-insert buttons"
+    - "Editor status bar with char/word count and save status"
+    - "SegmentedButton for edit/preview/split view mode switching"
+    - "Explicit save feedback indicator (appears and fades)"
+    - "Theme colors independently configurable: scaffold bg + surface + accent"
+    - "isDarkMode computed from surface luminance (not stored toggle)"
+    - "Dark/light theme switch removed — background color controls theme"
+    - "All hardcoded strings replaced with l10n keys (33 new keys)"
+    - "Color presets redesigned with distinct hues and luminance ranges"
+    - "AI summary panel back button to return to note preview"
+    - "TextField textAlignVertical.top for editor (VS Code style)"
+    - "InputDecoration explicit override for full-bleed editors"
+    - "LayoutBuilder for color preset grid alignment"
+    - "9 new AGENTS.md rules: U-7~U-10, A-10~A-11, F-9~F-10, UX-11~UX-15"
+    - "5 new meta-mistakes documented: MM-013~MM-017"
   failed_criteria: []
   in_progress: []
   pending:
@@ -87,16 +102,21 @@ checkpoints:
     created_at: "2026-05-08T12:00:00"
     description: "Major UX and storage refactor: Chrome-style bookmark folders, note Trie tree, bookmark persistence, vault config JSON migration, AI summary for notes, save-as-note, vault switcher, Windows path fix, cycle detection, font settings, WebView Stack optimization. 12 new constraints (C037-C048)."
     completed_criteria_count: 12
+  - id: "ckpt-012"
+    name: "editor-ux-and-theme-overhaul"
+    created_at: "2026-05-08T18:00:00"
+    description: "Editor UX overhaul: formatting toolbar, status bar, SegmentedButton view switcher, save feedback. Theme system overhaul: independent scaffold/surface/accent colors, computed isDarkMode, removed dark/light toggle. l10n compliance: 33 new keys, all hardcoded strings replaced. Color preset redesign with distinct hues. 9 new AGENTS.md rules, 5 new meta-mistakes."
+    completed_criteria_count: 16
 metrics:
-  total_criteria: 67
-  completed: 67
+  total_criteria: 83
+  completed: 83
   satisfaction_rate: 1.0
   lint_issues: 0
   constraint_violations: 0
   test_count: 97
 evolution_counts:
-  mutations_applied: 28
-  constraints_added: 48
-  innovations_proposed: 5
-  constraints_activated: 38
-  constraints_verified: 48
+  mutations_applied: 33
+  constraints_added: 57
+  innovations_proposed: 6
+  constraints_activated: 47
+  constraints_verified: 57

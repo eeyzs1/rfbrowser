@@ -153,6 +153,8 @@ Plugins (lib/plugins/) → Plugin host + API + builtin Dataview
 - **A-7**: Canvas persistence should use file system (.json in vault/.rf/) for Git traceability.
 - **A-8**: Vault-specific data (bookmarks, index) must live in `<vault>/.rfbrowser/`, not in app-wide config. App config (theme, AI keys) goes in `<ApplicationSupport>/`.
 - **A-9**: Disk folder scanning must filter hidden directories (`.rfbrowser`, `.rf`) and system directories (`attachments`) to avoid polluting the note tree.
+- **A-10**: Theme colors must be independently configurable — scaffold background, surface (cards/panels), and accent color serve different purposes. Never derive one from another automatically.
+- **A-11**: `isDarkMode` should be a computed property from background/surface luminance, not a stored toggle. This eliminates the need for a separate dark/light mode switch.
 
 ### UI
 - **U-1**: Error dismiss buttons must actually clear the error state.
@@ -161,6 +163,10 @@ Plugins (lib/plugins/) → Plugin host + API + builtin Dataview
 - **U-4**: Font sizes in sidebars must follow user settings (e.g., `editorFontSize * 0.75`), not hardcoded values.
 - **U-5**: AI panels must always have a "back/reset" button visible after generating content, not just a close button.
 - **U-6**: Bookmark clicks must actually navigate the WebView — use `createTab(url:)` or `loadUrl()`, not just `updateTabUrl()`.
+- **U-7**: `TextField` with `expands: true` must set `textAlignVertical: TextAlignVertical.top` — otherwise text starts centered vertically.
+- **U-8**: `InputDecoration` from theme may set `filled: true` + `borderRadius` — always explicitly override for full-bleed editors (`filled: false` or `fillColor: bgColor` + all borders `InputBorder.none`).
+- **U-9**: Color preset grids must use `LayoutBuilder` to compute equal-width items per row — fixed-width `Wrap` causes misalignment on different screen sizes.
+- **U-10**: All user-visible strings must use l10n keys, never hardcoded text — even in early development. Retrofitting is expensive.
 
 ### Flutter-Specific
 - **F-1**: `DropdownButtonFormField.value` deprecated in 3.41+. Use with ignore comment + `ValueKey`.
@@ -171,6 +177,8 @@ Plugins (lib/plugins/) → Plugin host + API + builtin Dataview
 - **F-6**: `BoxDecoration.borderLeft` doesn't exist — use `Border(left: ...)`.
 - **F-7**: Never assign `TextEditingController.text` inside `build()` unconditionally.
 - **F-8**: `Markdown` widget doesn't accept `scrollController` — use `MarkdownBody`.
+- **F-9**: `SegmentedButton.segments` cannot be `const` when labels use runtime l10n values — remove `const` keyword.
+- **F-10**: `AppLocalizations` is only available inside `build()` — pass it as parameter to helper methods that need localized strings.
 
 ### Product UX
 - **UX-1**: Every backend service must have at least one user-accessible trigger.
@@ -183,3 +191,8 @@ Plugins (lib/plugins/) → Plugin host + API + builtin Dataview
 - **UX-8**: Vault switching must be accessible from the main layout (not just welcome page). Use a dropdown in the title bar.
 - **UX-9**: AI summary should support both web pages and notes, with a toggle to switch between them.
 - **UX-10**: AI-generated content (summaries) should have a "save as note" action button.
+- **UX-11**: Editor must have a formatting toolbar — raw Markdown syntax is not user-friendly. Provide quick-insert buttons for headings, bold, italic, lists, links, etc.
+- **UX-12**: Editor must show a status bar with character/word count and save status — users need feedback on their work.
+- **UX-13**: View mode switching (edit/preview/split) must use a `SegmentedButton` or similar explicit selector — cycling through modes with a single button is confusing.
+- **UX-14**: Save feedback must be explicit — a brief "已保存" indicator that appears and fades, not just a disappearing dot.
+- **UX-15**: Color presets must have clear visual distinction — avoid presets that differ by < 5% luminance. Use different hues, not just slightly different grays.
