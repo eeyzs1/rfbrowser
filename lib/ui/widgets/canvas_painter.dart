@@ -16,6 +16,7 @@ class CanvasPainter extends CustomPainter {
   final Offset? connectingPreviewEnd;
   final Color primaryColor, dividerColor, scaffoldBg, hintColor;
   final bool isDark;
+  final bool gridVisible;
   final TextStyle? bodySmallStyle, bodyMediumStyle;
   final KnowledgeState knowledgeState;
   final double baseFontSize;
@@ -28,6 +29,7 @@ class CanvasPainter extends CustomPainter {
     required this.searchMatchedIds, required this.searchActiveIndex,
     this.connectingPreviewEnd, required this.primaryColor, required this.dividerColor,
     required this.scaffoldBg, required this.isDark, required this.hintColor,
+    required this.gridVisible,
     this.bodySmallStyle, this.bodyMediumStyle, required this.knowledgeState,
     required this.baseFontSize,
   });
@@ -36,7 +38,7 @@ class CanvasPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    _drawGrid(canvas);
+    if (gridVisible) _drawGrid(canvas);
     _drawConnections(canvas);
     _drawCards(canvas);
   }
@@ -90,6 +92,21 @@ class CanvasPainter extends CustomPainter {
         canvas.drawPath(path, paint);
       }
       _drawArrowHead(canvas, cp2, tp, dashed ? primaryColor.withValues(alpha: 0.5) : primaryColor);
+
+      if (conn.label.isNotEmpty) {
+        final midX = (fp.dx + tp.dx) / 2;
+        final midY = (fp.dy + tp.dy) / 2;
+        final labelStyle = (bodySmallStyle ?? const TextStyle()).copyWith(
+          fontSize: (baseFontSize * 0.7).clamp(8.0, 14.0),
+          color: dashed ? hintColor : primaryColor,
+        );
+        final tp2 = TextPainter(text: TextSpan(text: conn.label, style: labelStyle), textDirection: TextDirection.ltr, maxLines: 1);
+        tp2.layout();
+        final bgRect = RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(midX, midY - 8), width: tp2.width + 8, height: tp2.height + 4), const Radius.circular(3));
+        canvas.drawRRect(bgRect, Paint()..color = scaffoldBg..style = PaintingStyle.fill);
+        canvas.drawRRect(bgRect, Paint()..color = (dashed ? hintColor : primaryColor).withValues(alpha: 0.3)..style = PaintingStyle.stroke..strokeWidth = 0.5);
+        tp2.paint(canvas, Offset(midX - tp2.width / 2, midY - 8 - tp2.height / 2));
+      }
     }
 
     for (final conn in connections) { drawLine(conn, conn.isAuto); }
@@ -166,6 +183,11 @@ class CanvasPainter extends CustomPainter {
       final headerRRect = RRect.fromRectAndCorners(headerRect, topLeft: const Radius.circular(7), topRight: const Radius.circular(7));
       canvas.drawRRect(headerRRect, Paint()..color = headerColor..style = PaintingStyle.fill);
 
+      final iconSize = 14.0 * scale;
+      final iconPaint = Paint()..color = primaryColor.withValues(alpha: 0.6);
+      final iconPos = Offset(cardRect.left + 8, cardRect.top + (28 * scale - iconSize) / 2);
+      _drawCardTypeIcon(canvas, card.type, iconPos, iconSize, iconPaint);
+
       Note? linkedNote;
       bool noteDeleted = false;
       if (card.noteId != null) {
@@ -197,8 +219,53 @@ class CanvasPainter extends CustomPainter {
       if (isSelected) {
         final resizeHandle = Rect.fromLTWH(cardRect.right - 12, cardRect.bottom - 12, 12, 12);
         canvas.drawRect(resizeHandle, Paint()..color = primaryColor.withValues(alpha: 0.3));
+        final handlePath = Path()
+          ..moveTo(resizeHandle.right - 3, resizeHandle.bottom - 8)
+          ..lineTo(resizeHandle.right - 3, resizeHandle.bottom - 3)
+          ..lineTo(resizeHandle.right - 8, resizeHandle.bottom - 3);
+        canvas.drawPath(handlePath, Paint()..color = primaryColor..strokeWidth = 1.5..style = PaintingStyle.stroke);
+
+        final moveHandle = Rect.fromLTWH(cardRect.left, cardRect.top, cardRect.width, 28 * scale);
+        canvas.drawRRect(RRect.fromRectAndCorners(moveHandle, topLeft: const Radius.circular(7), topRight: const Radius.circular(7)),
+          Paint()..color = primaryColor.withValues(alpha: 0.05)..style = PaintingStyle.fill);
       }
     }
+  }
+
+  void _drawCardTypeIcon(Canvas canvas, CanvasCardType type, Offset pos, double size, Paint paint) {
+    final path = switch (type) {
+      CanvasCardType.note => Path()
+        ..moveTo(pos.dx + size * 0.2, pos.dy)
+        ..lineTo(pos.dx + size * 0.7, pos.dy)
+        ..lineTo(pos.dx + size, pos.dy + size * 0.3)
+        ..lineTo(pos.dx + size, pos.dy + size)
+        ..lineTo(pos.dx, pos.dy + size)
+        ..close(),
+      CanvasCardType.text => Path()
+        ..moveTo(pos.dx + size * 0.1, pos.dy + size * 0.2)
+        ..lineTo(pos.dx + size * 0.9, pos.dy + size * 0.2)
+        ..moveTo(pos.dx + size * 0.1, pos.dy + size * 0.5)
+        ..lineTo(pos.dx + size * 0.9, pos.dy + size * 0.5)
+        ..moveTo(pos.dx + size * 0.1, pos.dy + size * 0.8)
+        ..lineTo(pos.dx + size * 0.6, pos.dy + size * 0.8),
+      CanvasCardType.image => Path()
+        ..moveTo(pos.dx, pos.dy)
+        ..lineTo(pos.dx + size, pos.dy)
+        ..lineTo(pos.dx + size, pos.dy + size)
+        ..lineTo(pos.dx, pos.dy + size)
+        ..close()
+        ..moveTo(pos.dx + size * 0.2, pos.dy + size * 0.6)
+        ..lineTo(pos.dx + size * 0.4, pos.dy + size * 0.35)
+        ..lineTo(pos.dx + size * 0.6, pos.dy + size * 0.55)
+        ..lineTo(pos.dx + size * 0.75, pos.dy + size * 0.4)
+        ..lineTo(pos.dx + size * 0.9, pos.dy + size * 0.6),
+      CanvasCardType.link => Path()
+        ..moveTo(pos.dx + size * 0.4, pos.dy + size * 0.4)
+        ..lineTo(pos.dx + size * 0.6, pos.dy + size * 0.4)
+        ..moveTo(pos.dx + size * 0.6, pos.dy + size * 0.6)
+        ..lineTo(pos.dx + size * 0.4, pos.dy + size * 0.6),
+    };
+    canvas.drawPath(path, paint..strokeWidth = 1.2..style = PaintingStyle.stroke);
   }
 
   @override
@@ -223,6 +290,7 @@ class CanvasPainter extends CustomPainter {
         scaffoldBg != old.scaffoldBg ||
         hintColor != old.hintColor ||
         isDark != old.isDark ||
+        gridVisible != old.gridVisible ||
         !identical(knowledgeState, old.knowledgeState) ||
         baseFontSize != old.baseFontSize;
   }

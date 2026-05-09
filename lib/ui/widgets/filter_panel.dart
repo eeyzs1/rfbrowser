@@ -115,15 +115,18 @@ class _FilterOption extends StatelessWidget {
               children: [
                 Icon(icon, size: 14, color: isActive ? theme.colorScheme.primary : theme.hintColor),
                 const SizedBox(width: DesignSpacing.sm),
-                Text(
-                  label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: isActive
-                        ? theme.colorScheme.primary
-                        : theme.textTheme.bodySmall?.color,
+                Expanded(
+                  child: Text(
+                    label,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isActive
+                          ? theme.colorScheme.primary
+                          : theme.textTheme.bodySmall?.color,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: DesignSpacing.xs),
                 if (count >= 0)
                   Container(
                     padding: const EdgeInsets.symmetric(

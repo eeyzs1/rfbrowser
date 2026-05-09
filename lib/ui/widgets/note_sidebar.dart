@@ -136,7 +136,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(isActive ? activeIcon : icon, size: 14, color: isActive ? primary : theme.hintColor),
             const SizedBox(width: 4),
-            Text(label, style: theme.textTheme.bodySmall?.copyWith(fontSize: _baseFontSize, color: isActive ? primary : theme.hintColor, fontWeight: isActive ? FontWeight.w600 : FontWeight.w400)),
+            Flexible(child: Text(label, style: theme.textTheme.bodySmall?.copyWith(fontSize: _baseFontSize, color: isActive ? primary : theme.hintColor, fontWeight: isActive ? FontWeight.w600 : FontWeight.w400), overflow: TextOverflow.ellipsis)),
             if (count > 0) ...[
               const SizedBox(width: 4),
               Container(

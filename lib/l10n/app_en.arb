@@ -375,6 +375,42 @@
   "clear": "Clear",
   "autoConnectOn": "Auto Connect: On",
   "autoConnectOff": "Auto Connect: Off",
+  "newCanvas": "New Canvas",
+  "canvasName": "Canvas Name",
+  "renameCanvas": "Rename Canvas",
+  "deleteCanvas": "Delete Canvas",
+  "deleteCanvasConfirm": "Delete \"{name}\"? This action cannot be undone.",
+  "@deleteCanvasConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "deleteAll": "Delete All",
+  "noteCard": "Note Card",
+  "textCard": "Text Card",
+  "imageCard": "Image Card",
+  "linkCard": "Link Card",
+  "fromKnowledgeNote": "From Knowledge Note",
+  "editCard": "Edit Card",
+  "duplicateCard": "Duplicate Card",
+  "deleteCard": "Delete Card",
+  "changeColor": "Change Color",
+  "connectFrom": "Connect From",
+  "manageConnections": "Manage Connections",
+  "autoConnection": "Auto Connection",
+  "manualConnection": "Manual Connection",
+  "cardColor": "Card Color",
+  "editCardType": "Edit {type} Card",
+  "@editCardType": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "imagePath": "Image Path",
+  "url": "URL",
+  "selectNote": "Select Note",
+  "noNotesInKnowledgeBase": "No notes in knowledge base",
+  "newName": "New Name",
   "startBrowsing": "Start Browsing",
   "openNewTabExplore": "Open a new tab to explore the web",
   "selectNoteToEdit": "Select a note to start editing",

@@ -20,8 +20,9 @@ class LayoutNode {
 class LayoutEdge {
   final String sourceId;
   final String targetId;
+  final double weight;
 
-  LayoutEdge({required this.sourceId, required this.targetId});
+  LayoutEdge({required this.sourceId, required this.targetId, this.weight = 1.0});
 }
 
 class LayoutResult {
@@ -49,6 +50,18 @@ class ForceDirectedLayout {
     this.maxIterations = 200,
     this.seed,
   }) : _temperature = idealEdgeLength * 2;
+
+  static ForceDirectedLayout adaptive(int nodeCount, {int? seed}) {
+    final baseArea = nodeCount * 3000;
+    final side = sqrt(baseArea).clamp(200.0, 700.0);
+    final edgeLen = side.clamp(40.0, 100.0);
+    return ForceDirectedLayout(
+      areaWidth: side,
+      areaHeight: side,
+      idealEdgeLength: edgeLen,
+      seed: seed,
+    );
+  }
 
   LayoutResult compute(
     List<LayoutNode> nodes,
@@ -157,7 +170,8 @@ class ForceDirectedLayout {
       final dy = target.y - source.y;
       final dist = sqrt(dx * dx + dy * dy).clamp(0.01, double.infinity);
 
-      final attraction = (dist * dist) / k;
+      final effectiveK = k / edge.weight;
+      final attraction = (dist * dist) / effectiveK;
       final fx = (dx / dist) * attraction;
       final fy = (dy / dist) * attraction;
 

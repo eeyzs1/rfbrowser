@@ -221,10 +221,9 @@ class _SceneButtonState extends State<_SceneButton> {
         onTap: active ? null : widget.onTap,
         onHover: (hovered) => setState(() => _isHovered = hovered),
         child: Container(
-          width: 110,
           padding: const EdgeInsets.symmetric(
-            horizontal: DesignSpacing.sm,
-            vertical: 2,
+            horizontal: DesignSpacing.md,
+            vertical: 4,
           ),
           decoration: active
               ? BoxDecoration(
@@ -233,38 +232,35 @@ class _SceneButtonState extends State<_SceneButton> {
                   ),
                 )
               : null,
-          child: Column(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 widget.icon,
-                size: 18,
+                size: 16,
                 color: active ? primary : theme.colorScheme.onSurfaceVariant,
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: Text(
-                      widget.label,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                        color: active ? primary : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  widget.label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                    color: active ? primary : theme.colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    widget.shortcut,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: active
-                          ? primary.withValues(alpha: 0.6)
-                          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Text(
+                widget.shortcut,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 9,
+                  color: active
+                      ? primary.withValues(alpha: 0.6)
+                      : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
               ),
             ],
           ),

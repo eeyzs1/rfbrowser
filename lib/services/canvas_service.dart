@@ -15,9 +15,14 @@ class CanvasNotifier extends Notifier<CanvasData> {
   SharedPreferences? _prefs;
   List<String> _canvasNames = ['default'];
   String _activeCanvasName = 'default';
+  final List<CanvasData> _undoStack = [];
+  final List<CanvasData> _redoStack = [];
+  static const int _maxHistory = 50;
 
   String get activeCanvasName => _activeCanvasName;
   List<String> get canvasNames => List.unmodifiable(_canvasNames);
+  bool get canUndo => _undoStack.isNotEmpty;
+  bool get canRedo => _redoStack.isNotEmpty;
 
   Future<SharedPreferences> get _ensurePrefs async {
     _prefs ??= await SharedPreferences.getInstance();
@@ -26,6 +31,26 @@ class CanvasNotifier extends Notifier<CanvasData> {
 
   @override
   CanvasData build() => CanvasData();
+
+  void _pushUndo() {
+    _undoStack.add(state);
+    if (_undoStack.length > _maxHistory) _undoStack.removeAt(0);
+    _redoStack.clear();
+  }
+
+  void undo() {
+    if (_undoStack.isEmpty) return;
+    _redoStack.add(state);
+    state = _undoStack.removeLast();
+    _debouncedSave();
+  }
+
+  void redo() {
+    if (_redoStack.isEmpty) return;
+    _undoStack.add(state);
+    state = _redoStack.removeLast();
+    _debouncedSave();
+  }
 
   Future<void> initialize() async {
     await _loadCanvasList();
@@ -73,6 +98,22 @@ class CanvasNotifier extends Notifier<CanvasData> {
   void toggleAutoConnections() {
     final newSettings = state.settings.copyWith(
       autoConnectionsEnabled: !state.settings.autoConnectionsEnabled,
+    );
+    state = state.copyWith(settings: newSettings);
+    _debouncedSave();
+  }
+
+  void toggleSnapToGrid() {
+    final newSettings = state.settings.copyWith(
+      snapToGrid: !state.settings.snapToGrid,
+    );
+    state = state.copyWith(settings: newSettings);
+    _debouncedSave();
+  }
+
+  void toggleGridVisible() {
+    final newSettings = state.settings.copyWith(
+      gridVisible: !state.settings.gridVisible,
     );
     state = state.copyWith(settings: newSettings);
     _debouncedSave();
@@ -229,17 +270,20 @@ class CanvasNotifier extends Notifier<CanvasData> {
   }
 
   Future<void> addCard(CanvasCard card) async {
+    _pushUndo();
     state = state.copyWith(cards: [...state.cards, card]);
     await _save();
   }
 
   Future<void> updateCard(CanvasCard card) async {
+    _pushUndo();
     final cards = state.cards.map((c) => c.id == card.id ? card : c).toList();
     state = state.copyWith(cards: cards);
     await _save();
   }
 
   Future<void> removeCard(String cardId) async {
+    _pushUndo();
     state = state.copyWith(
       cards: state.cards.where((c) => c.id != cardId).toList(),
       connections: state.connections
@@ -250,11 +294,13 @@ class CanvasNotifier extends Notifier<CanvasData> {
   }
 
   Future<void> addConnection(CanvasConnection conn) async {
+    _pushUndo();
     state = state.copyWith(connections: [...state.connections, conn]);
     await _save();
   }
 
   Future<void> removeConnection(String connId) async {
+    _pushUndo();
     state = state.copyWith(
       connections: state.connections.where((c) => c.id != connId).toList(),
     );
@@ -262,6 +308,7 @@ class CanvasNotifier extends Notifier<CanvasData> {
   }
 
   Future<void> clearCanvas() async {
+    _pushUndo();
     state = CanvasData();
     await _save();
   }

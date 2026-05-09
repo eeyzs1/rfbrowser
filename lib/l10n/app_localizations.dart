@@ -1898,6 +1898,162 @@ abstract class AppLocalizations {
   /// **'Auto Connect: Off'**
   String get autoConnectOff;
 
+  /// No description provided for @newCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'New Canvas'**
+  String get newCanvas;
+
+  /// No description provided for @canvasName.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas Name'**
+  String get canvasName;
+
+  /// No description provided for @renameCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Canvas'**
+  String get renameCanvas;
+
+  /// No description provided for @deleteCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Canvas'**
+  String get deleteCanvas;
+
+  /// No description provided for @deleteCanvasConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"? This action cannot be undone.'**
+  String deleteCanvasConfirm(String name);
+
+  /// No description provided for @deleteAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All'**
+  String get deleteAll;
+
+  /// No description provided for @noteCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Note Card'**
+  String get noteCard;
+
+  /// No description provided for @textCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Text Card'**
+  String get textCard;
+
+  /// No description provided for @imageCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Card'**
+  String get imageCard;
+
+  /// No description provided for @linkCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Card'**
+  String get linkCard;
+
+  /// No description provided for @fromKnowledgeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'From Knowledge Note'**
+  String get fromKnowledgeNote;
+
+  /// No description provided for @editCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Card'**
+  String get editCard;
+
+  /// No description provided for @duplicateCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate Card'**
+  String get duplicateCard;
+
+  /// No description provided for @deleteCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Card'**
+  String get deleteCard;
+
+  /// No description provided for @changeColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Color'**
+  String get changeColor;
+
+  /// No description provided for @connectFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect From'**
+  String get connectFrom;
+
+  /// No description provided for @manageConnections.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Connections'**
+  String get manageConnections;
+
+  /// No description provided for @autoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Connection'**
+  String get autoConnection;
+
+  /// No description provided for @manualConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual Connection'**
+  String get manualConnection;
+
+  /// No description provided for @cardColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Card Color'**
+  String get cardColor;
+
+  /// No description provided for @editCardType.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {type} Card'**
+  String editCardType(String type);
+
+  /// No description provided for @imagePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Path'**
+  String get imagePath;
+
+  /// No description provided for @url.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get url;
+
+  /// No description provided for @selectNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Note'**
+  String get selectNote;
+
+  /// No description provided for @noNotesInKnowledgeBase.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes in knowledge base'**
+  String get noNotesInKnowledgeBase;
+
+  /// No description provided for @newName.
+  ///
+  /// In en, this message translates to:
+  /// **'New Name'**
+  String get newName;
+
   /// No description provided for @startBrowsing.
   ///
   /// In en, this message translates to:

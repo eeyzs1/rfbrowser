@@ -189,30 +189,42 @@ class CanvasConnection {
 
 class CanvasSettings {
   final bool autoConnectionsEnabled;
+  final bool snapToGrid;
+  final bool gridVisible;
   final DateTime lastModified;
 
   CanvasSettings({
     this.autoConnectionsEnabled = true,
+    this.snapToGrid = true,
+    this.gridVisible = true,
     DateTime? lastModified,
   }) : lastModified = lastModified ?? DateTime.now();
 
   CanvasSettings copyWith({
     bool? autoConnectionsEnabled,
+    bool? snapToGrid,
+    bool? gridVisible,
     DateTime? lastModified,
   }) {
     return CanvasSettings(
       autoConnectionsEnabled: autoConnectionsEnabled ?? this.autoConnectionsEnabled,
+      snapToGrid: snapToGrid ?? this.snapToGrid,
+      gridVisible: gridVisible ?? this.gridVisible,
       lastModified: lastModified ?? this.lastModified,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'autoConnectionsEnabled': autoConnectionsEnabled,
+    'snapToGrid': snapToGrid,
+    'gridVisible': gridVisible,
     'lastModified': lastModified.toIso8601String(),
   };
 
   factory CanvasSettings.fromJson(Map<String, dynamic> json) => CanvasSettings(
     autoConnectionsEnabled: json['autoConnectionsEnabled'] as bool? ?? true,
+    snapToGrid: json['snapToGrid'] as bool? ?? true,
+    gridVisible: json['gridVisible'] as bool? ?? true,
     lastModified: json['lastModified'] != null
         ? DateTime.tryParse(json['lastModified'] as String)
         : null,

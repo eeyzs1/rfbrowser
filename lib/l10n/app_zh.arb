@@ -375,6 +375,42 @@
   "clear": "清除",
   "autoConnectOn": "自动连接: 开",
   "autoConnectOff": "自动连接: 关",
+  "newCanvas": "新建画布",
+  "canvasName": "画布名称",
+  "renameCanvas": "重命名画布",
+  "deleteCanvas": "删除画布",
+  "deleteCanvasConfirm": "确定删除\"{name}\"？此操作无法撤销。",
+  "@deleteCanvasConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "deleteAll": "全部删除",
+  "noteCard": "笔记卡片",
+  "textCard": "文本卡片",
+  "imageCard": "图片卡片",
+  "linkCard": "链接卡片",
+  "fromKnowledgeNote": "来自知识库笔记",
+  "editCard": "编辑卡片",
+  "duplicateCard": "复制卡片",
+  "deleteCard": "删除卡片",
+  "changeColor": "更改颜色",
+  "connectFrom": "连接来源",
+  "manageConnections": "管理连接",
+  "autoConnection": "自动连接",
+  "manualConnection": "手动连接",
+  "cardColor": "卡片颜色",
+  "editCardType": "编辑{type}卡片",
+  "@editCardType": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "imagePath": "图片路径",
+  "url": "网址",
+  "selectNote": "选择笔记",
+  "noNotesInKnowledgeBase": "知识库中暂无笔记",
+  "newName": "新名称",
   "startBrowsing": "开始浏览",
   "openNewTabExplore": "打开新标签页探索网络",
   "selectNoteToEdit": "选择一条笔记开始编辑",

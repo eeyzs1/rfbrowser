@@ -954,6 +954,88 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoConnectOff => 'Auto Connect: Off';
 
   @override
+  String get newCanvas => 'New Canvas';
+
+  @override
+  String get canvasName => 'Canvas Name';
+
+  @override
+  String get renameCanvas => 'Rename Canvas';
+
+  @override
+  String get deleteCanvas => 'Delete Canvas';
+
+  @override
+  String deleteCanvasConfirm(String name) {
+    return 'Delete \"$name\"? This action cannot be undone.';
+  }
+
+  @override
+  String get deleteAll => 'Delete All';
+
+  @override
+  String get noteCard => 'Note Card';
+
+  @override
+  String get textCard => 'Text Card';
+
+  @override
+  String get imageCard => 'Image Card';
+
+  @override
+  String get linkCard => 'Link Card';
+
+  @override
+  String get fromKnowledgeNote => 'From Knowledge Note';
+
+  @override
+  String get editCard => 'Edit Card';
+
+  @override
+  String get duplicateCard => 'Duplicate Card';
+
+  @override
+  String get deleteCard => 'Delete Card';
+
+  @override
+  String get changeColor => 'Change Color';
+
+  @override
+  String get connectFrom => 'Connect From';
+
+  @override
+  String get manageConnections => 'Manage Connections';
+
+  @override
+  String get autoConnection => 'Auto Connection';
+
+  @override
+  String get manualConnection => 'Manual Connection';
+
+  @override
+  String get cardColor => 'Card Color';
+
+  @override
+  String editCardType(String type) {
+    return 'Edit $type Card';
+  }
+
+  @override
+  String get imagePath => 'Image Path';
+
+  @override
+  String get url => 'URL';
+
+  @override
+  String get selectNote => 'Select Note';
+
+  @override
+  String get noNotesInKnowledgeBase => 'No notes in knowledge base';
+
+  @override
+  String get newName => 'New Name';
+
+  @override
   String get startBrowsing => 'Start Browsing';
 
   @override

@@ -122,6 +122,7 @@ void main() {
         searchMatchedIds: [], searchActiveIndex: 0,
         primaryColor: Colors.blue, dividerColor: Colors.grey,
         scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
+        gridVisible: true,
         knowledgeState: knowledge,
         baseFontSize: 14.0,
       );
@@ -140,6 +141,7 @@ void main() {
         searchMatchedIds: [], searchActiveIndex: 0,
         primaryColor: Colors.blue, dividerColor: Colors.grey,
         scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
+        gridVisible: true,
         knowledgeState: knowledge,
         baseFontSize: 14.0,
       );
@@ -150,6 +152,7 @@ void main() {
         searchMatchedIds: [], searchActiveIndex: 0,
         primaryColor: Colors.blue, dividerColor: Colors.grey,
         scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
+        gridVisible: true,
         knowledgeState: knowledge,
         baseFontSize: 14.0,
       );
@@ -214,6 +217,7 @@ void main() {
         searchMatchedIds: [], searchActiveIndex: 0,
         primaryColor: Colors.blue, dividerColor: Colors.grey,
         scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
+        gridVisible: true,
         knowledgeState: knowledge,
         baseFontSize: 14.0,
       );
@@ -230,6 +234,7 @@ void main() {
         searchMatchedIds: [], searchActiveIndex: 0,
         primaryColor: Colors.blue, dividerColor: Colors.grey,
         scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
+        gridVisible: true,
         knowledgeState: knowledge,
         baseFontSize: 14.0,
       );

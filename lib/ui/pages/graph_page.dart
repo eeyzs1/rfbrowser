@@ -73,24 +73,20 @@ class _GraphViewState extends ConsumerState<GraphView> {
 
     final allLinks = <GraphLink>[];
     final allDataLinks = <Link>[];
-    final seenLinks = <String>{};
+    final linkCounts = <String, int>{};
     for (final link in knowledgeState.outlinks) {
       final key = '${link.sourceId}->${link.targetId}';
-      if (!seenLinks.contains(key)) {
-        seenLinks.add(key);
-        allLinks.add(
-          GraphLink(sourceId: link.sourceId, targetId: link.targetId),
-        );
+      linkCounts[key] = (linkCounts[key] ?? 0) + 1;
+      if (!allLinks.any((l) => l.sourceId == link.sourceId && l.targetId == link.targetId)) {
+        allLinks.add(GraphLink(sourceId: link.sourceId, targetId: link.targetId));
         allDataLinks.add(link);
       }
     }
     for (final link in knowledgeState.backlinks) {
       final key = '${link.sourceId}->${link.targetId}';
-      if (!seenLinks.contains(key)) {
-        seenLinks.add(key);
-        allLinks.add(
-          GraphLink(sourceId: link.sourceId, targetId: link.targetId),
-        );
+      linkCounts[key] = (linkCounts[key] ?? 0) + 1;
+      if (!allLinks.any((l) => l.sourceId == link.sourceId && l.targetId == link.targetId)) {
+        allLinks.add(GraphLink(sourceId: link.sourceId, targetId: link.targetId));
         allDataLinks.add(link);
       }
     }
@@ -205,9 +201,10 @@ class _GraphViewState extends ConsumerState<GraphView> {
                 }
               }
             },
-            child: CustomPaint(
-              key: _graphKey,
-              painter: GraphPainter(
+            child: ClipRect(
+              child: CustomPaint(
+                key: _graphKey,
+                painter: GraphPainter(
                 notes: displayNotes,
                 links: displayLinks,
                 scale: _scale,
@@ -225,6 +222,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
                 errorColor: theme.colorScheme.error,
               ),
               size: Size.infinite,
+              ),
             ),
           ),
           ),
@@ -431,17 +429,25 @@ class _GraphViewState extends ConsumerState<GraphView> {
       return positions;
     }
 
+    final linkCounts = <String, int>{};
+    for (final l in links) {
+      final key = '${l.sourceId}->${l.targetId}';
+      linkCounts[key] = (linkCounts[key] ?? 0) + 1;
+    }
+
     final layoutNodes = notes
         .map((n) => LayoutNode(id: n.id))
         .toList();
     final layoutEdges = links
-        .map((l) => LayoutEdge(sourceId: l.sourceId, targetId: l.targetId))
+        .map((l) {
+          final key = '${l.sourceId}->${l.targetId}';
+          final weight = linkCounts[key]?.toDouble() ?? 1.0;
+          return LayoutEdge(sourceId: l.sourceId, targetId: l.targetId, weight: weight);
+        })
         .toList();
 
-    final layout = ForceDirectedLayout(
-      areaWidth: 800,
-      areaHeight: 600,
-      idealEdgeLength: 120,
+    final layout = ForceDirectedLayout.adaptive(
+      notes.length,
       seed: 42,
     );
     final result = layout.compute(layoutNodes, layoutEdges);

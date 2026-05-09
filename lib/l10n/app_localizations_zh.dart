@@ -943,6 +943,88 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autoConnectOff => '自动连接: 关';
 
   @override
+  String get newCanvas => '新建画布';
+
+  @override
+  String get canvasName => '画布名称';
+
+  @override
+  String get renameCanvas => '重命名画布';
+
+  @override
+  String get deleteCanvas => '删除画布';
+
+  @override
+  String deleteCanvasConfirm(String name) {
+    return '确定删除\"$name\"？此操作无法撤销。';
+  }
+
+  @override
+  String get deleteAll => '全部删除';
+
+  @override
+  String get noteCard => '笔记卡片';
+
+  @override
+  String get textCard => '文本卡片';
+
+  @override
+  String get imageCard => '图片卡片';
+
+  @override
+  String get linkCard => '链接卡片';
+
+  @override
+  String get fromKnowledgeNote => '来自知识库笔记';
+
+  @override
+  String get editCard => '编辑卡片';
+
+  @override
+  String get duplicateCard => '复制卡片';
+
+  @override
+  String get deleteCard => '删除卡片';
+
+  @override
+  String get changeColor => '更改颜色';
+
+  @override
+  String get connectFrom => '连接来源';
+
+  @override
+  String get manageConnections => '管理连接';
+
+  @override
+  String get autoConnection => '自动连接';
+
+  @override
+  String get manualConnection => '手动连接';
+
+  @override
+  String get cardColor => '卡片颜色';
+
+  @override
+  String editCardType(String type) {
+    return '编辑$type卡片';
+  }
+
+  @override
+  String get imagePath => '图片路径';
+
+  @override
+  String get url => '网址';
+
+  @override
+  String get selectNote => '选择笔记';
+
+  @override
+  String get noNotesInKnowledgeBase => '知识库中暂无笔记';
+
+  @override
+  String get newName => '新名称';
+
+  @override
   String get startBrowsing => '开始浏览';
 
   @override
