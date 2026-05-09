@@ -131,7 +131,7 @@ class AISettingsSection extends ConsumerWidget {
               ),
               child: Text(
                 l.disabled,
-                style: TextStyle(fontSize: 10, color: theme.colorScheme.error),
+                style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.error),
               ),
             ),
         ],
@@ -261,8 +261,7 @@ class AISettingsSection extends ConsumerWidget {
                 ),
                 child: Text(
                   l.custom,
-                  style: TextStyle(
-                    fontSize: 9,
+                  style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.tertiary,
                   ),
                 ),
@@ -273,7 +272,6 @@ class AISettingsSection extends ConsumerWidget {
       subtitle: Text(
         model.id,
         style: theme.textTheme.bodySmall?.copyWith(
-          fontSize: 11,
           color: theme.hintColor,
         ),
         overflow: TextOverflow.ellipsis,
@@ -740,7 +738,7 @@ class AISettingsSection extends ConsumerWidget {
                           title: Text(model.displayName),
                           subtitle: Text(
                             model.capabilityLabel,
-                            style: const TextStyle(fontSize: 11),
+                            style: Theme.of(ctx).textTheme.bodySmall,
                           ),
                           onTap: () {
                             ref

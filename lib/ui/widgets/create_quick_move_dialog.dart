@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/quick_move_service.dart';
 
 const _iconOptions = [
@@ -46,6 +47,7 @@ void showCreateQuickMoveDialog(
     context: context,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setDialogState) {
+        final l = AppLocalizations.of(context)!;
         return AlertDialog(
           title: const Text('Create Quick Move'),
           contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
@@ -58,9 +60,9 @@ void showCreateQuickMoveDialog(
                 children: [
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Command Name',
-                      hintText: 'e.g. 翻译',
+                      hintText: l.quickMoveExampleHint,
                       prefixText: '/',
                     ),
                   ),
@@ -151,7 +153,7 @@ void showCreateQuickMoveDialog(
                             shape: BoxShape.circle,
                             border: isSelected
                                 ? Border.all(
-                                    color: Colors.white,
+                                    color: Theme.of(context).colorScheme.primary,
                                     width: 3,
                                   )
                                 : null,
@@ -167,8 +169,8 @@ void showCreateQuickMoveDialog(
                                 : null,
                           ),
                           child: isSelected
-                              ? const Icon(Icons.check,
-                                  size: 14, color: Colors.white)
+                              ? Icon(Icons.check,
+                                  size: 14, color: (Color(colorValue).r * 0.299 + Color(colorValue).g * 0.587 + Color(colorValue).b * 0.114) > 128 ? Colors.black : Colors.white)
                               : null,
                         ),
                       );

@@ -8,6 +8,7 @@ import '../../services/knowledge_service.dart';
 import '../../services/quick_move_service.dart';
 import '../../data/models/browser_tab.dart';
 import '../../data/models/quick_move.dart';
+import '../../l10n/app_localizations.dart';
 
 class BrowserView extends ConsumerStatefulWidget {
   const BrowserView({super.key});
@@ -72,6 +73,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   Widget build(BuildContext context) {
     final browserState = ref.watch(browserProvider);
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final activeTab = browserState.activeTab;
 
     if (activeTab == null) {
@@ -93,10 +95,10 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
               ),
             ),
             const SizedBox(height: 20),
-            Text('开始浏览', style: theme.textTheme.headlineMedium),
+            Text(l.startBrowsing, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 6),
             Text(
-              '打开新标签页探索网络',
+              l.openNewTabExplore,
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 24),
@@ -107,7 +109,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                     .createTab(url: 'https://www.bing.com');
               },
               icon: const Icon(Icons.add, size: 16),
-              label: const Text('新标签页'),
+              label: Text(l.newTab),
             ),
           ],
         ),
@@ -153,7 +155,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                     controller: _urlController,
                     style: theme.textTheme.bodyMedium,
                     decoration: InputDecoration(
-                      hintText: '搜索或输入网址...',
+                      hintText: l.searchOrEnterUrl,
                       hintStyle: theme.textTheme.bodySmall,
                       prefixIcon: Icon(
                         Icons.search,
@@ -275,6 +277,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   }
 
   Widget _buildTabBar(ThemeData theme, BrowserState browserState) {
+    final l = AppLocalizations.of(context)!;
     final tabs = browserState.tabs;
     if (tabs.isEmpty) return const SizedBox.shrink();
 
@@ -294,7 +297,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
               onPressed: () => ref.read(browserProvider.notifier).createTab(url: 'https://www.bing.com'),
               padding: const EdgeInsets.symmetric(horizontal: 8),
               constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-              tooltip: '新建标签页',
+              tooltip: l.newTab,
             );
           }
           final tab = tabs[index];
@@ -324,7 +327,6 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                     child: Text(
                       tab.title.isNotEmpty ? tab.title : tab.url,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 11,
                         color: isActive ? theme.colorScheme.primary : null,
                         fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                       ),
@@ -347,6 +349,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   }
 
   Widget _buildBookmarkButton(ThemeData theme, BrowserState browserState, BrowserTab activeTab) {
+    final l = AppLocalizations.of(context)!;
     final isBookmarked = browserState.isBookmarked(activeTab.url);
     return IconButton(
       icon: Icon(
@@ -361,19 +364,20 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
           );
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(duration: Duration(seconds: 2), content: Text('已取消收藏')),
+            SnackBar(duration: const Duration(seconds: 2), content: Text(l.unbookmarked)),
           );
         } else {
           _showAddBookmarkDialog(browserState, activeTab);
         }
       },
-      tooltip: isBookmarked ? '取消收藏' : '收藏此页',
+      tooltip: isBookmarked ? l.unbookmark : l.bookmarkThisPage,
       padding: const EdgeInsets.all(4),
       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
     );
   }
 
   void _showAddBookmarkDialog(BrowserState browserState, BrowserTab activeTab) async {
+    final l = AppLocalizations.of(context)!;
     final folders = browserState.bookmarkFolders;
     final result = await showDialog<String>(
       context: context,
@@ -385,7 +389,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
       ref.read(browserProvider.notifier).addBookmark(activeTab.url, activeTab.title, result);
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(duration: const Duration(seconds: 2), content: Text('已收藏: ${activeTab.title}')),
+        SnackBar(duration: const Duration(seconds: 2), content: Text(l.bookmarked(activeTab.title))),
       );
     }
   }
@@ -674,8 +678,9 @@ class _AddBookmarkDialogState extends State<_AddBookmarkDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('添加收藏'),
+      title: Text(l.addBookmark),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -694,7 +699,7 @@ class _AddBookmarkDialogState extends State<_AddBookmarkDialog> {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 16),
-          Text('收藏到:', style: theme.textTheme.bodySmall),
+          Text(l.bookmarkTo, style: theme.textTheme.bodySmall),
           const SizedBox(height: 8),
           RadioGroup<String>(
             groupValue: _selectedFolderId,
@@ -722,11 +727,11 @@ class _AddBookmarkDialogState extends State<_AddBookmarkDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: Text(l.cancel),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, _selectedFolderId),
-          child: const Text('收藏'),
+          child: Text(l.bookmark),
         ),
       ],
     );

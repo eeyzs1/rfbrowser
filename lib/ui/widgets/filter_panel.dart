@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/knowledge_service.dart';
 import '../theme/design_tokens.dart';
 
@@ -9,6 +10,7 @@ class FilterPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final knowledgeState = ref.watch(knowledgeProvider);
     final noteCount = knowledgeState.notes.length;
     final links = knowledgeState.links;
@@ -27,46 +29,44 @@ class FilterPanel extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '筛选',
+            l.filter,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              fontSize: 13,
             ),
           ),
           const SizedBox(height: DesignSpacing.md),
           _FilterOption(
             icon: Icons.description_outlined,
-            label: '所有笔记',
+            label: l.allNotes,
             count: noteCount,
             isActive: currentFilter == NoteFilter.all,
             onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.all),
           ),
           _FilterOption(
             icon: Icons.link,
-            label: '有链接',
+            label: l.hasLinks,
             count: notesWithLinks,
             isActive: currentFilter == NoteFilter.hasLinks,
             onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.hasLinks),
           ),
           _FilterOption(
             icon: Icons.attach_file,
-            label: '有附件',
+            label: l.hasAttachments,
             count: 0,
             isActive: currentFilter == NoteFilter.hasAttachments,
             onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.hasAttachments),
           ),
           _FilterOption(
             icon: Icons.tag,
-            label: '标签',
+            label: l.tags,
             count: notesWithTags,
             isActive: currentFilter == NoteFilter.hasTags,
             onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.hasTags),
           ),
           const Spacer(),
           Text(
-            '$noteCount 条笔记',
-            style: TextStyle(
-              fontSize: 11,
+            l.noteCount(noteCount),
+            style: theme.textTheme.bodySmall?.copyWith(
               color: theme.hintColor,
             ),
           ),
@@ -117,8 +117,7 @@ class _FilterOption extends StatelessWidget {
                 const SizedBox(width: DesignSpacing.sm),
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: isActive
                         ? theme.colorScheme.primary
                         : theme.textTheme.bodySmall?.color,
@@ -137,7 +136,7 @@ class _FilterOption extends StatelessWidget {
                     ),
                     child: Text(
                       '$count',
-                      style: TextStyle(fontSize: 10, color: theme.hintColor),
+                      style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
                     ),
                   ),
               ],

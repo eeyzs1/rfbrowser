@@ -51,6 +51,10 @@
   "backgroundColor": "背景色",
   "surfaceColor": "面板色",
   "customColor": "自定义颜色",
+  "opacity": "透明度",
+  "themeTintOpacity": "主题色着色强度",
+  "surfaceOpacity": "面板色透明度",
+  "backgroundOpacity": "背景色透明度",
   "components": "组件",
   "buttonShape": "按钮形状",
   "rounded": "圆角",
@@ -259,5 +263,214 @@
   "dropHere": "拖放到此处",
   "startWritingHint": "开始写作... 使用 [[笔记标题]] 链接其他笔记",
   "embedTarget": "嵌入: {target}",
-  "backToNotePreview": "返回笔记预览"
+  "backToNotePreview": "返回笔记预览",
+  "capture": "捕捉",
+  "think": "思考",
+  "connect": "连接",
+  "openOtherVault": "打开其他知识库",
+  "createNewVault": "创建新知识库",
+  "recentlyOpened": "最近打开",
+  "selectVaultLocation": "选择知识库位置",
+  "note": "笔记",
+  "webPage": "网页",
+  "bookmarks": "收藏",
+  "searchNotes": "搜索笔记...",
+  "newFolder": "新建文件夹",
+  "newSubfolder": "新建子文件夹",
+  "newBookmarkFolder": "新建收藏夹",
+  "newSubBookmarkFolder": "新建子收藏夹",
+  "newConversation": "新对话",
+  "createNote": "创建笔记",
+  "searchOrEnterUrl": "搜索或输入网址...",
+  "enterMessage": "输入消息...（使用 @ 引用）",
+  "folderName": "文件夹名称",
+  "bookmarkFolderName": "收藏夹名称",
+  "quickMoveExampleHint": "e.g. 翻译",
+  "noteCount": "{count} 条笔记",
+  "@noteCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookmarkCount": "{count} 个收藏",
+  "@bookmarkCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noNotes": "暂无笔记",
+  "noBookmarks": "暂无收藏",
+  "uncategorized": "未分类",
+  "rootDirectory": "根目录",
+  "bookmarksBar": "收藏夹栏",
+  "openVaultToExplore": "打开知识库文件夹开始探索和学习",
+  "openVaultToManageNotes": "打开知识库管理笔记",
+  "openInEditor": "在编辑器中打开",
+  "bookmark": "收藏",
+  "unbookmark": "取消收藏",
+  "bookmarkThisPage": "收藏此页",
+  "bookmarkTo": "收藏到:",
+  "bookmarked": "已收藏: {title}",
+  "@bookmarked": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "unbookmarked": "已取消收藏",
+  "bookmarkHint": "浏览网页时点击 ⭐ 收藏",
+  "addBookmark": "添加收藏",
+  "clipFailed": "剪辑失败: {error}",
+  "@clipFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "selectTextFirst": "请先在网页中选中要剪辑的文本",
+  "clipTitle": "{title} · 片段",
+  "@clipTitle": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "clipFullPage": "剪辑全文",
+  "view": "查看",
+  "savedToKnowledgeBase": "已保存到知识库",
+  "clipSource": "来源: [{title}]({url})",
+  "@clipSource": {
+    "placeholders": {
+      "title": {"type": "String"},
+      "url": {"type": "String"}
+    }
+  },
+  "clippedAt": "剪辑于 {date}",
+  "@clippedAt": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "selectedClip": "选中片段",
+  "savedAsNote": "已保存为笔记: {title}",
+  "@savedAsNote": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "saveAsNote": "保存为笔记",
+  "filter": "筛选",
+  "allNotes": "所有笔记",
+  "hasLinks": "有链接",
+  "hasAttachments": "有附件",
+  "unlinkedMentions": "未链接提及",
+  "knowledgeGraph": "知识图谱",
+  "localGraph": "局部图谱",
+  "graphView": "图谱视图",
+  "canvasView": "画布视图",
+  "graphWillShowAfterNotes": "知识图谱将在创建笔记后显示",
+  "canvasWillShowAfterCards": "画布将在添加卡片后显示",
+  "switchToForceLayout": "切换为力导向布局",
+  "createLinkedNotesHint": "创建带有 [[链接]] 的笔记以查看关联",
+  "addCard": "添加卡片",
+  "clearCanvas": "清除画布",
+  "clearCanvasConfirm": "移除所有卡片和连接？此操作无法撤销。",
+  "clear": "清除",
+  "autoConnectOn": "自动连接: 开",
+  "autoConnectOff": "自动连接: 关",
+  "startBrowsing": "开始浏览",
+  "openNewTabExplore": "打开新标签页探索网络",
+  "selectNoteToEdit": "选择一条笔记开始编辑",
+  "aiAssistant": "AI 助手",
+  "askMeAnything": "问我任何问题",
+  "aiSummary": "AI 摘要",
+  "aiSuggestion": "AI 建议",
+  "aiSourceSummary": "AI {source}摘要",
+  "@aiSourceSummary": {
+    "placeholders": {
+      "source": {"type": "String"}
+    }
+  },
+  "generateSummary": "生成摘要",
+  "generateSourceSummary": "生成{source}摘要",
+  "@generateSourceSummary": {
+    "placeholders": {
+      "source": {"type": "String"}
+    }
+  },
+  "clickToGenerateSummary": "点击按钮生成 AI {source}摘要",
+  "@clickToGenerateSummary": {
+    "placeholders": {
+      "source": {"type": "String"}
+    }
+  },
+  "clickAiForSuggestion": "点击 AI 按钮获取建议",
+  "insertWikilink": "插入 Wikilink",
+  "clickNoteToPreview": "点击左侧笔记查看预览",
+  "notePreview": "笔记预览",
+  "noteSummary": "笔记摘要",
+  "webPageSummary": "网页摘要",
+  "summaryTitle": "{source}摘要 - {title}",
+  "@summaryTitle": {
+    "placeholders": {
+      "source": {"type": "String"},
+      "title": {"type": "String"}
+    }
+  },
+  "switchSummaryTarget": "切换摘要对象",
+  "selectNoteForSummary": "选择笔记后可使用 AI 摘要",
+  "openPageForSummary": "打开网页后可使用 AI 摘要",
+  "goBack": "返回",
+  "closePanel": "关闭面板",
+  "editNote": "编辑笔记",
+  "generating": "生成中...",
+  "retry": "重试",
+  "nodeDetail": "节点详情",
+  "clickNodeForDetail": "点击图谱节点查看详情",
+  "modifiedTime": "修改时间",
+  "contentPreview": "内容预览",
+  "restoreDefaultCommands": "恢复默认命令",
+  "restoreDefaultCommandsDesc": "将恢复所有已删除的预设命令，不会影响你创建的命令。",
+  "restore": "恢复",
+  "importSuccess": "导入成功",
+  "importFailed": "导入失败，请检查文件格式",
+  "deleteCommand": "删除命令",
+  "deleteCommandConfirm": "确定删除命令 \"{name}\" 吗？",
+  "@deleteCommandConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "deleteNote": "删除笔记",
+  "deleteNoteConfirm": "确定要删除\"{title}\"吗？",
+  "@deleteNoteConfirm": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "deleteFolder": "删除文件夹",
+  "deleteFolderConfirm": "删除\"{path}\"及其中的 {count} 篇笔记？此操作不可撤销。",
+  "@deleteFolderConfirm": {
+    "placeholders": {
+      "path": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "deleteBookmarkFolder": "删除收藏夹",
+  "deleteBookmarkFolderConfirm": "删除\"{name}\"？其中的收藏将移至\"未分类\"。",
+  "@deleteBookmarkFolderConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "renameFolder": "重命名文件夹",
+  "renameBookmarkFolder": "重命名收藏夹",
+  "moveTo": "移动到",
+  "moveToFolder": "移动到文件夹",
+  "cmdNewNote": "新笔记",
+  "cmdNewTab": "新标签页",
+  "cmdOpenDailyNote": "打开每日笔记",
+  "cmdSwitchTheme": "切换主题",
+  "cmdSettings": "设置",
+  "cmdGraphView": "图谱视图",
+  "cmdCanvasView": "画布视图",
+  "welcomeToRfbrowser": "欢迎使用 RFBrowser",
+  "obsidianCompatible": "支持 Obsidian 兼容的 Markdown 文件"
 }

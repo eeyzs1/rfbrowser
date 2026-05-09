@@ -35,7 +35,6 @@ class WelcomePage extends ConsumerWidget {
                 Text(
                   l.appName,
                   style: theme.textTheme.headlineLarge?.copyWith(
-                    fontSize: 32,
                     color: theme.colorScheme.primary,
                   ),
                 ),
@@ -292,7 +291,6 @@ class _VaultListItemState extends State<_VaultListItem> {
                         widget.vault.name,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
-                          fontSize: 14,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -301,7 +299,6 @@ class _VaultListItemState extends State<_VaultListItem> {
                         widget.vault.path,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.hintColor,
-                          fontSize: 11,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -313,7 +310,6 @@ class _VaultListItemState extends State<_VaultListItem> {
                   _formatDate(widget.vault.lastOpened, l),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.hintColor.withValues(alpha: 0.7),
-                    fontSize: 11,
                   ),
                 ),
                 const SizedBox(width: 4),

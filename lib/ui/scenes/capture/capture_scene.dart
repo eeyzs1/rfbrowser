@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/browser_service.dart';
 import '../../../services/knowledge_service.dart';
 import '../../../services/ai_service.dart';
@@ -163,7 +164,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
 
   bool get _canSummarize => _summarizeNote ? widget.activeNote != null : (widget.url != null && widget.url!.isNotEmpty);
 
-  String get _sourceLabel => _summarizeNote ? '笔记' : '网页';
+  String _sourceLabel(AppLocalizations l) => _summarizeNote ? l.note : l.webPage;
 
   void _requestSummary() {
     if (!_canSummarize) return;
@@ -192,7 +193,8 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
 
   void _saveAsNote() async {
     if (_summary == null || _summary!.isEmpty) return;
-    final title = '$_sourceLabel摘要 - ${widget.pageTitle ?? widget.activeNote?.title ?? 'Untitled'}';
+    final l = AppLocalizations.of(context)!;
+    final title = l.summaryTitle(_sourceLabel(l), widget.pageTitle ?? widget.activeNote?.title ?? 'Untitled');
     await ref.read(knowledgeProvider.notifier).createNote(
       title: title,
       content: _summary!,
@@ -200,7 +202,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
     if (mounted) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(duration: const Duration(seconds: 2), content: Text('已保存为笔记: $title')),
+        SnackBar(duration: const Duration(seconds: 2), content: Text(l.savedAsNote(title))),
       );
     }
   }
@@ -255,6 +257,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
   }
 
   Widget _buildHeader(ThemeData theme) {
+    final l = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -267,7 +270,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'AI $_sourceLabel摘要',
+              l.aiSourceSummary(_sourceLabel(l)),
               style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
               maxLines: 1, overflow: TextOverflow.ellipsis,
             ),
@@ -280,7 +283,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
               onPressed: _requestSummary,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              tooltip: '生成摘要',
+              tooltip: l.generateSummary,
             ),
           if (_mode == _SummaryMode.done)
             IconButton(
@@ -288,7 +291,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
               onPressed: _saveAsNote,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              tooltip: '保存为笔记',
+              tooltip: l.saveAsNote,
             ),
           if (_mode == _SummaryMode.done || _mode == _SummaryMode.error)
             IconButton(
@@ -296,7 +299,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
               onPressed: _reset,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              tooltip: '返回',
+              tooltip: l.goBack,
             ),
           if (widget.onBack != null)
             IconButton(
@@ -304,7 +307,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
               onPressed: widget.onBack,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              tooltip: '返回笔记预览',
+              tooltip: l.backToNotePreview,
             ),
           if (widget.onClose != null)
             IconButton(
@@ -312,7 +315,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
               onPressed: widget.onClose,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              tooltip: '关闭面板',
+              tooltip: l.closePanel,
             ),
         ],
       ),
@@ -320,11 +323,12 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
   }
 
   Widget _toggleSourceBtn(ThemeData theme) {
+    final l = AppLocalizations.of(context)!;
     return PopupMenuButton<String>(
       icon: Icon(Icons.swap_horiz, size: 16, color: theme.hintColor),
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-      tooltip: '切换摘要对象',
+      tooltip: l.switchSummaryTarget,
       onSelected: (value) {
         setState(() {
           _summarizeNote = value == 'note';
@@ -335,18 +339,19 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
         PopupMenuItem(value: 'page', child: Row(children: [
           Icon(Icons.language, size: 14, color: !_summarizeNote ? theme.colorScheme.primary : theme.hintColor),
           const SizedBox(width: 8),
-          Text('网页摘要', style: !_summarizeNote ? TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w600) : null),
+          Text(l.webPageSummary, style: !_summarizeNote ? TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w600) : null),
         ])),
         PopupMenuItem(value: 'note', child: Row(children: [
           Icon(Icons.description, size: 14, color: _summarizeNote ? theme.colorScheme.primary : theme.hintColor),
           const SizedBox(width: 8),
-          Text('笔记摘要', style: _summarizeNote ? TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w600) : null),
+          Text(l.noteSummary, style: _summarizeNote ? TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w600) : null),
         ])),
       ],
     );
   }
 
   Widget _buildContent(ThemeData theme) {
+    final l = AppLocalizations.of(context)!;
     if (!_canSummarize) {
       return Center(
         child: Padding(
@@ -358,7 +363,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
                 size: 32, color: theme.hintColor.withValues(alpha: 0.3)),
               const SizedBox(height: 8),
               Text(
-                _summarizeNote ? '选择笔记后可使用 AI 摘要' : '打开网页后可使用 AI 摘要',
+                _summarizeNote ? l.selectNoteForSummary : l.openPageForSummary,
                 style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
                 textAlign: TextAlign.center,
               ),
@@ -384,7 +389,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
               OutlinedButton.icon(
                 onPressed: _requestSummary,
                 icon: const Icon(Icons.refresh, size: 14),
-                label: const Text('重试'),
+                label: Text(l.retry),
               ),
             ],
           ),
@@ -401,14 +406,14 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
             children: [
               Icon(Icons.summarize, size: 32, color: theme.hintColor.withValues(alpha: 0.3)),
               const SizedBox(height: 8),
-              Text('点击按钮生成 AI $_sourceLabel摘要',
+              Text(l.clickToGenerateSummary(_sourceLabel(l)),
                 style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
                 textAlign: TextAlign.center),
               const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: _requestSummary,
                 icon: const Icon(Icons.auto_awesome, size: 14),
-                label: Text('生成$_sourceLabel摘要'),
+                label: Text(l.generateSourceSummary(_sourceLabel(l))),
               ),
             ],
           ),
@@ -429,14 +434,14 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(widget.url!,
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: 10),
+                style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
                 maxLines: 2, overflow: TextOverflow.ellipsis),
             ),
           if (_summarizeNote && widget.activeNote != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(widget.activeNote!.title,
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: 10, fontWeight: FontWeight.w600),
+                style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor, fontWeight: FontWeight.w600),
                 maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           SelectableText(_summary ?? '',
@@ -455,7 +460,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
               child: FilledButton.icon(
                 onPressed: _saveAsNote,
                 icon: const Icon(Icons.save_outlined, size: 14),
-                label: Text('保存为笔记'),
+                label: Text(l.saveAsNote),
               ),
             ),
           ],
@@ -476,6 +481,7 @@ class _NotePreviewPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return Container(
       decoration: BoxDecoration(
@@ -494,7 +500,7 @@ class _NotePreviewPanel extends StatelessWidget {
                 Icon(Icons.description, size: 16, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('笔记预览',
+                  child: Text(l.notePreview,
                     style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
                 ),
@@ -504,7 +510,7 @@ class _NotePreviewPanel extends StatelessWidget {
                     onPressed: onBack,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                    tooltip: 'AI 摘要',
+                    tooltip: l.aiSummary,
                   ),
                 if (onEdit != null)
                   IconButton(
@@ -512,7 +518,7 @@ class _NotePreviewPanel extends StatelessWidget {
                     onPressed: onEdit,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                    tooltip: '编辑笔记',
+                    tooltip: l.editNote,
                   ),
                 if (onClose != null)
                   IconButton(
@@ -520,7 +526,7 @@ class _NotePreviewPanel extends StatelessWidget {
                     onPressed: onClose,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                    tooltip: '关闭面板',
+                    tooltip: l.closePanel,
                   ),
               ],
             ),
@@ -533,7 +539,7 @@ class _NotePreviewPanel extends StatelessWidget {
                       children: [
                         Icon(Icons.description_outlined, size: 32, color: theme.hintColor.withValues(alpha: 0.3)),
                         const SizedBox(height: 8),
-                        Text('点击左侧笔记查看预览', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+                        Text(l.clickNoteToPreview, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
                       ],
                     ),
                   )
@@ -550,7 +556,7 @@ class _NotePreviewPanel extends StatelessWidget {
                             children: note.tags.map<Widget>((tag) => Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(color: theme.colorScheme.secondary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(3)),
-                              child: Text('#$tag', style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
+                              child: Text('#$tag', style: theme.textTheme.labelSmall),
                             )).toList(),
                           ),
                         ],
@@ -562,7 +568,7 @@ class _NotePreviewPanel extends StatelessWidget {
                           child: FilledButton.icon(
                             onPressed: onEdit,
                             icon: const Icon(Icons.edit_note, size: 16),
-                            label: const Text('在编辑器中打开'),
+                            label: Text(l.openInEditor),
                           ),
                         ),
                       ],

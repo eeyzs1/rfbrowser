@@ -86,6 +86,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AlertDialog(
       title: const Text('Custom Accent Color'),
       content: SingleChildScrollView(
@@ -128,7 +129,6 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                           ? Colors.black
                           : Colors.white,
                       fontWeight: FontWeight.w600,
-                      fontSize: 13,
                     ),
                   ),
                 ),
@@ -142,6 +142,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                   _r = v;
                   _updateHsvFromRgb();
                 }),
+                theme: theme,
               ),
               _buildRgbSlider(
                 label: 'G',
@@ -151,6 +152,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                   _g = v;
                   _updateHsvFromRgb();
                 }),
+                theme: theme,
               ),
               _buildRgbSlider(
                 label: 'B',
@@ -160,6 +162,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                   _b = v;
                   _updateHsvFromRgb();
                 }),
+                theme: theme,
               ),
             ],
           ),
@@ -184,6 +187,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
     required int value,
     required Color color,
     required ValueChanged<int> onChanged,
+    required ThemeData theme,
   }) {
     return Row(
       children: [
@@ -194,7 +198,6 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.w700,
-              fontSize: 13,
             ),
           ),
         ),
@@ -213,7 +216,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
           child: Text(
             '$value',
             textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 12),
+            style: theme.textTheme.bodySmall,
           ),
         ),
       ],

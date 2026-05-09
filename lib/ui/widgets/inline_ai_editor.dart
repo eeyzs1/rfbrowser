@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/ai_service.dart';
 import '../theme/design_tokens.dart';
@@ -38,6 +39,7 @@ class _InlineAIEditorState extends ConsumerState<InlineAIEditor> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return Stack(
       children: [
@@ -51,14 +53,14 @@ class _InlineAIEditorState extends ConsumerState<InlineAIEditor> {
               FloatingActionButton.small(
                 heroTag: 'inline_ai',
                 onPressed: _requestSuggestion,
-                tooltip: 'AI 建议',
+                tooltip: l.aiSuggestion,
                 child: const Icon(Icons.auto_awesome, size: 18),
               ),
               const SizedBox(height: DesignSpacing.sm),
               FloatingActionButton.small(
                 heroTag: 'wikilink_complete',
                 onPressed: _completeWikilink,
-                tooltip: '插入 Wikilink',
+                tooltip: l.insertWikilink,
                 child: const Icon(Icons.attach_file, size: 18),
               ),
             ],
@@ -75,6 +77,7 @@ class _InlineAIEditorState extends ConsumerState<InlineAIEditor> {
   }
 
   Widget _buildSuggestionPanel(ThemeData theme) {
+    final l = AppLocalizations.of(context)!;
     final aiState = ref.watch(aiProvider);
     return Material(
       elevation: 4,
@@ -106,10 +109,9 @@ class _InlineAIEditorState extends ConsumerState<InlineAIEditor> {
                       size: 14, color: theme.colorScheme.primary),
                   const SizedBox(width: 4),
                   Text(
-                    'AI 建议',
+                    l.aiSuggestion,
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      fontSize: 12,
                     ),
                   ),
                   const Spacer(),
@@ -129,7 +131,7 @@ class _InlineAIEditorState extends ConsumerState<InlineAIEditor> {
                         child: Text(
                           aiState.messages.isNotEmpty
                               ? aiState.messages.last.content
-                              : '点击 AI 按钮获取建议',
+                              : l.clickAiForSuggestion,
                           style: theme.textTheme.bodySmall,
                         ),
                       ),

@@ -128,8 +128,7 @@ class ComponentSettingsSection extends ConsumerWidget {
                 child: Center(
                   child: Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: isSelected
                           ? FontWeight.w600
                           : FontWeight.w400,

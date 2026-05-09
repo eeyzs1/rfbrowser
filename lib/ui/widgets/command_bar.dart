@@ -5,6 +5,7 @@ import '../../services/embedding_service.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/quick_move_service.dart';
 import '../../data/models/quick_move.dart';
+import '../../l10n/app_localizations.dart';
 import 'create_quick_move_dialog.dart';
 
 class CommandBar extends ConsumerStatefulWidget {
@@ -27,14 +28,14 @@ class _CommandBarState extends ConsumerState<CommandBar> {
   int _selectedIndex = 0;
   Timer? _debounceTimer;
 
-  static const _commands = [
-    _CommandDef('新笔记', Icons.add, 'note'),
-    _CommandDef('新标签页', Icons.language, 'tab'),
-    _CommandDef('打开每日笔记', Icons.today, 'daily'),
-    _CommandDef('切换主题', Icons.dark_mode, 'theme'),
-    _CommandDef('设置', Icons.settings, 'settings'),
-    _CommandDef('图谱视图', Icons.hub, 'graph'),
-    _CommandDef('画布视图', Icons.dashboard, 'canvas'),
+  List<_CommandDef> _buildCommands(AppLocalizations l) => [
+    _CommandDef(l.cmdNewNote, Icons.add, 'note'),
+    _CommandDef(l.cmdNewTab, Icons.language, 'tab'),
+    _CommandDef(l.cmdOpenDailyNote, Icons.today, 'daily'),
+    _CommandDef(l.cmdSwitchTheme, Icons.dark_mode, 'theme'),
+    _CommandDef(l.cmdSettings, Icons.settings, 'settings'),
+    _CommandDef(l.cmdGraphView, Icons.hub, 'graph'),
+    _CommandDef(l.cmdCanvasView, Icons.dashboard, 'canvas'),
   ];
 
   @override
@@ -174,7 +175,7 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       return;
     }
 
-    final matchingCommand = _commands.where(
+    final matchingCommand = _buildCommands(AppLocalizations.of(context)!).where(
       (c) => c.label.toLowerCase().contains(text.toLowerCase()),
     );
     if (matchingCommand.length == 1) {
@@ -260,9 +261,11 @@ class _CommandBarState extends ConsumerState<CommandBar> {
 
   List<_CommandDef> get _commandResults {
     if (_isQuickMoveMode) return [];
+    final l = AppLocalizations.of(context)!;
+    final commands = _buildCommands(l);
     final query = _controller.text.trim().toLowerCase();
-    if (query.isEmpty) return _commands;
-    return _commands
+    if (query.isEmpty) return commands;
+    return commands
         .where((c) => c.label.toLowerCase().contains(query))
         .toList();
   }
@@ -429,7 +432,6 @@ class _CommandBarState extends ConsumerState<CommandBar> {
               '${move.promptTemplate.substring(0, 60)}...',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.hintColor,
-                fontSize: 11,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -437,12 +439,10 @@ class _CommandBarState extends ConsumerState<CommandBar> {
           : null,
       trailing: Text(
         move.type == QuickMoveType.preset ? 'Preset' : 'Quick Move',
-        style: theme.textTheme.bodySmall?.copyWith(
+        style: theme.textTheme.labelSmall?.copyWith(
           color: theme.hintColor,
-          fontSize: 10,
         ),
       ),
-      onTap: onTap,
     );
   }
 
@@ -460,9 +460,8 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       title: Text(cmd.label, style: theme.textTheme.bodyMedium),
       trailing: Text(
         'Command',
-        style: theme.textTheme.bodySmall?.copyWith(
+        style: theme.textTheme.labelSmall?.copyWith(
           color: theme.hintColor,
-          fontSize: 10,
         ),
       ),
       onTap: onTap,
@@ -508,8 +507,7 @@ class _CommandBarState extends ConsumerState<CommandBar> {
                     .map(
                       (tag) => Text(
                         '#$tag',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 10,
+                        style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                         ),
                       ),
@@ -530,8 +528,7 @@ class _CommandBarState extends ConsumerState<CommandBar> {
               ),
               child: Text(
                 result.source == 'semantic' ? 'semantic' : 'keyword',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 9,
+                style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.primary,
                 ),
               ),

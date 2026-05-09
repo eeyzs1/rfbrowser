@@ -404,6 +404,30 @@ abstract class AppLocalizations {
   /// **'Custom Color'**
   String get customColor;
 
+  /// No description provided for @opacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Opacity'**
+  String get opacity;
+
+  /// No description provided for @themeTintOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme Tint Intensity'**
+  String get themeTintOpacity;
+
+  /// No description provided for @surfaceOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Surface Opacity'**
+  String get surfaceOpacity;
+
+  /// No description provided for @backgroundOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Background Opacity'**
+  String get backgroundOpacity;
+
   /// No description provided for @components.
   ///
   /// In en, this message translates to:
@@ -1453,6 +1477,762 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to note preview'**
   String get backToNotePreview;
+
+  /// No description provided for @capture.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture'**
+  String get capture;
+
+  /// No description provided for @think.
+  ///
+  /// In en, this message translates to:
+  /// **'Think'**
+  String get think;
+
+  /// No description provided for @connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connect;
+
+  /// No description provided for @openOtherVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Other Vault'**
+  String get openOtherVault;
+
+  /// No description provided for @createNewVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Vault'**
+  String get createNewVault;
+
+  /// No description provided for @recentlyOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently Opened'**
+  String get recentlyOpened;
+
+  /// No description provided for @selectVaultLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Vault Location'**
+  String get selectVaultLocation;
+
+  /// No description provided for @note.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get note;
+
+  /// No description provided for @webPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Web Page'**
+  String get webPage;
+
+  /// No description provided for @bookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmarks'**
+  String get bookmarks;
+
+  /// No description provided for @searchNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Search notes...'**
+  String get searchNotes;
+
+  /// No description provided for @newFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'New Folder'**
+  String get newFolder;
+
+  /// No description provided for @newSubfolder.
+  ///
+  /// In en, this message translates to:
+  /// **'New Subfolder'**
+  String get newSubfolder;
+
+  /// No description provided for @newBookmarkFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'New Bookmark Folder'**
+  String get newBookmarkFolder;
+
+  /// No description provided for @newSubBookmarkFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'New Subfolder'**
+  String get newSubBookmarkFolder;
+
+  /// No description provided for @newConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'New Conversation'**
+  String get newConversation;
+
+  /// No description provided for @createNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Note'**
+  String get createNote;
+
+  /// No description provided for @searchOrEnterUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Search or enter URL...'**
+  String get searchOrEnterUrl;
+
+  /// No description provided for @enterMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a message... (use @ to reference)'**
+  String get enterMessage;
+
+  /// No description provided for @folderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name'**
+  String get folderName;
+
+  /// No description provided for @bookmarkFolderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmark folder name'**
+  String get bookmarkFolderName;
+
+  /// No description provided for @quickMoveExampleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Translate'**
+  String get quickMoveExampleHint;
+
+  /// No description provided for @noteCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes'**
+  String noteCount(int count);
+
+  /// No description provided for @bookmarkCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} bookmarks'**
+  String bookmarkCount(int count);
+
+  /// No description provided for @noNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes yet'**
+  String get noNotes;
+
+  /// No description provided for @noBookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookmarks yet'**
+  String get noBookmarks;
+
+  /// No description provided for @uncategorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncategorized'**
+  String get uncategorized;
+
+  /// No description provided for @rootDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Root'**
+  String get rootDirectory;
+
+  /// No description provided for @bookmarksBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmarks Bar'**
+  String get bookmarksBar;
+
+  /// No description provided for @openVaultToExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a vault folder to start exploring and learning'**
+  String get openVaultToExplore;
+
+  /// No description provided for @openVaultToManageNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a vault to manage notes'**
+  String get openVaultToManageNotes;
+
+  /// No description provided for @openInEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Editor'**
+  String get openInEditor;
+
+  /// No description provided for @bookmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmark'**
+  String get bookmark;
+
+  /// No description provided for @unbookmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbookmark'**
+  String get unbookmark;
+
+  /// No description provided for @bookmarkThisPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmark this page'**
+  String get bookmarkThisPage;
+
+  /// No description provided for @bookmarkTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmark to:'**
+  String get bookmarkTo;
+
+  /// No description provided for @bookmarked.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmarked: {title}'**
+  String bookmarked(String title);
+
+  /// No description provided for @unbookmarked.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmark removed'**
+  String get unbookmarked;
+
+  /// No description provided for @bookmarkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Click ⭐ while browsing to bookmark'**
+  String get bookmarkHint;
+
+  /// No description provided for @addBookmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Bookmark'**
+  String get addBookmark;
+
+  /// No description provided for @clipFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Clip failed: {error}'**
+  String clipFailed(String error);
+
+  /// No description provided for @selectTextFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Select text on the page first to clip'**
+  String get selectTextFirst;
+
+  /// No description provided for @clipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} · Clip'**
+  String clipTitle(String title);
+
+  /// No description provided for @clipFullPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Clip Full Page'**
+  String get clipFullPage;
+
+  /// No description provided for @view.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get view;
+
+  /// No description provided for @savedToKnowledgeBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to knowledge base'**
+  String get savedToKnowledgeBase;
+
+  /// No description provided for @clipSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: [{title}]({url})'**
+  String clipSource(String title, String url);
+
+  /// No description provided for @clippedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipped at {date}'**
+  String clippedAt(String date);
+
+  /// No description provided for @selectedClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected Clip'**
+  String get selectedClip;
+
+  /// No description provided for @savedAsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as note: {title}'**
+  String savedAsNote(String title);
+
+  /// No description provided for @saveAsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as Note'**
+  String get saveAsNote;
+
+  /// No description provided for @filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get filter;
+
+  /// No description provided for @allNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'All Notes'**
+  String get allNotes;
+
+  /// No description provided for @hasLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Has Links'**
+  String get hasLinks;
+
+  /// No description provided for @hasAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Has Attachments'**
+  String get hasAttachments;
+
+  /// No description provided for @unlinkedMentions.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlinked Mentions'**
+  String get unlinkedMentions;
+
+  /// No description provided for @knowledgeGraph.
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge Graph'**
+  String get knowledgeGraph;
+
+  /// No description provided for @localGraph.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Graph'**
+  String get localGraph;
+
+  /// No description provided for @graphView.
+  ///
+  /// In en, this message translates to:
+  /// **'Graph View'**
+  String get graphView;
+
+  /// No description provided for @canvasView.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas View'**
+  String get canvasView;
+
+  /// No description provided for @graphWillShowAfterNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Graph will appear after creating notes'**
+  String get graphWillShowAfterNotes;
+
+  /// No description provided for @canvasWillShowAfterCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas will appear after adding cards'**
+  String get canvasWillShowAfterCards;
+
+  /// No description provided for @switchToForceLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to force layout'**
+  String get switchToForceLayout;
+
+  /// No description provided for @createLinkedNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create notes with [[links]] to see connections'**
+  String get createLinkedNotesHint;
+
+  /// No description provided for @addCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Card'**
+  String get addCard;
+
+  /// No description provided for @clearCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Canvas'**
+  String get clearCanvas;
+
+  /// No description provided for @clearCanvasConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all cards and connections? This cannot be undone.'**
+  String get clearCanvasConfirm;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
+  /// No description provided for @autoConnectOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Connect: On'**
+  String get autoConnectOn;
+
+  /// No description provided for @autoConnectOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Connect: Off'**
+  String get autoConnectOff;
+
+  /// No description provided for @startBrowsing.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Browsing'**
+  String get startBrowsing;
+
+  /// No description provided for @openNewTabExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a new tab to explore the web'**
+  String get openNewTabExplore;
+
+  /// No description provided for @selectNoteToEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a note to start editing'**
+  String get selectNoteToEdit;
+
+  /// No description provided for @aiAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get aiAssistant;
+
+  /// No description provided for @askMeAnything.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask me anything'**
+  String get askMeAnything;
+
+  /// No description provided for @aiSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Summary'**
+  String get aiSummary;
+
+  /// No description provided for @aiSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Suggestion'**
+  String get aiSuggestion;
+
+  /// No description provided for @aiSourceSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'AI {source} Summary'**
+  String aiSourceSummary(String source);
+
+  /// No description provided for @generateSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Summary'**
+  String get generateSummary;
+
+  /// No description provided for @generateSourceSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate {source} Summary'**
+  String generateSourceSummary(String source);
+
+  /// No description provided for @clickToGenerateSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Click the button to generate AI {source} summary'**
+  String clickToGenerateSummary(String source);
+
+  /// No description provided for @clickAiForSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Click AI button for suggestions'**
+  String get clickAiForSuggestion;
+
+  /// No description provided for @insertWikilink.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert Wikilink'**
+  String get insertWikilink;
+
+  /// No description provided for @clickNoteToPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Click a note on the left to preview'**
+  String get clickNoteToPreview;
+
+  /// No description provided for @notePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Note Preview'**
+  String get notePreview;
+
+  /// No description provided for @noteSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Note Summary'**
+  String get noteSummary;
+
+  /// No description provided for @webPageSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Web Page Summary'**
+  String get webPageSummary;
+
+  /// No description provided for @summaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{source} Summary - {title}'**
+  String summaryTitle(String source, String title);
+
+  /// No description provided for @switchSummaryTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch summary target'**
+  String get switchSummaryTarget;
+
+  /// No description provided for @selectNoteForSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a note to use AI summary'**
+  String get selectNoteForSummary;
+
+  /// No description provided for @openPageForSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a web page to use AI summary'**
+  String get openPageForSummary;
+
+  /// No description provided for @goBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Back'**
+  String get goBack;
+
+  /// No description provided for @closePanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Panel'**
+  String get closePanel;
+
+  /// No description provided for @editNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Note'**
+  String get editNote;
+
+  /// No description provided for @generating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating...'**
+  String get generating;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @nodeDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Node Detail'**
+  String get nodeDetail;
+
+  /// No description provided for @clickNodeForDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Click a graph node to see details'**
+  String get clickNodeForDetail;
+
+  /// No description provided for @modifiedTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified'**
+  String get modifiedTime;
+
+  /// No description provided for @contentPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Content Preview'**
+  String get contentPreview;
+
+  /// No description provided for @restoreDefaultCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Default Commands'**
+  String get restoreDefaultCommands;
+
+  /// No description provided for @restoreDefaultCommandsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'All deleted preset commands will be restored. Your custom commands will not be affected.'**
+  String get restoreDefaultCommandsDesc;
+
+  /// No description provided for @restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore;
+
+  /// No description provided for @importSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Import successful'**
+  String get importSuccess;
+
+  /// No description provided for @importFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed, please check file format'**
+  String get importFailed;
+
+  /// No description provided for @deleteCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Command'**
+  String get deleteCommand;
+
+  /// No description provided for @deleteCommandConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete command \"{name}\"?'**
+  String deleteCommandConfirm(String name);
+
+  /// No description provided for @deleteNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Note'**
+  String get deleteNote;
+
+  /// No description provided for @deleteNoteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{title}\"?'**
+  String deleteNoteConfirm(String title);
+
+  /// No description provided for @deleteFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Folder'**
+  String get deleteFolder;
+
+  /// No description provided for @deleteFolderConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{path}\" and its {count} notes? This cannot be undone.'**
+  String deleteFolderConfirm(String path, int count);
+
+  /// No description provided for @deleteBookmarkFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Bookmark Folder'**
+  String get deleteBookmarkFolder;
+
+  /// No description provided for @deleteBookmarkFolderConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"? Bookmarks inside will move to \"Uncategorized\".'**
+  String deleteBookmarkFolderConfirm(String name);
+
+  /// No description provided for @renameFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Folder'**
+  String get renameFolder;
+
+  /// No description provided for @renameBookmarkFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Bookmark Folder'**
+  String get renameBookmarkFolder;
+
+  /// No description provided for @moveTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Move To'**
+  String get moveTo;
+
+  /// No description provided for @moveToFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to Folder'**
+  String get moveToFolder;
+
+  /// No description provided for @cmdNewNote.
+  ///
+  /// In en, this message translates to:
+  /// **'New Note'**
+  String get cmdNewNote;
+
+  /// No description provided for @cmdNewTab.
+  ///
+  /// In en, this message translates to:
+  /// **'New Tab'**
+  String get cmdNewTab;
+
+  /// No description provided for @cmdOpenDailyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Daily Note'**
+  String get cmdOpenDailyNote;
+
+  /// No description provided for @cmdSwitchTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Theme'**
+  String get cmdSwitchTheme;
+
+  /// No description provided for @cmdSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get cmdSettings;
+
+  /// No description provided for @cmdGraphView.
+  ///
+  /// In en, this message translates to:
+  /// **'Graph View'**
+  String get cmdGraphView;
+
+  /// No description provided for @cmdCanvasView.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas View'**
+  String get cmdCanvasView;
+
+  /// No description provided for @welcomeToRfbrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to RFBrowser'**
+  String get welcomeToRfbrowser;
+
+  /// No description provided for @obsidianCompatible.
+  ///
+  /// In en, this message translates to:
+  /// **'Supports Obsidian-compatible Markdown files'**
+  String get obsidianCompatible;
 }
 
 class _AppLocalizationsDelegate

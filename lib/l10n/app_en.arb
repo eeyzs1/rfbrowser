@@ -51,6 +51,10 @@
   "backgroundColor": "Background",
   "surfaceColor": "Surface",
   "customColor": "Custom Color",
+  "opacity": "Opacity",
+  "themeTintOpacity": "Theme Tint Intensity",
+  "surfaceOpacity": "Surface Opacity",
+  "backgroundOpacity": "Background Opacity",
   "components": "Components",
   "buttonShape": "Button Shape",
   "rounded": "Rounded",
@@ -259,5 +263,214 @@
   "dropHere": "Drop here",
   "startWritingHint": "Start writing... Use [[note title]] to link other notes",
   "embedTarget": "Embed: {target}",
-  "backToNotePreview": "Back to note preview"
+  "backToNotePreview": "Back to note preview",
+  "capture": "Capture",
+  "think": "Think",
+  "connect": "Connect",
+  "openOtherVault": "Open Other Vault",
+  "createNewVault": "Create New Vault",
+  "recentlyOpened": "Recently Opened",
+  "selectVaultLocation": "Select Vault Location",
+  "note": "Note",
+  "webPage": "Web Page",
+  "bookmarks": "Bookmarks",
+  "searchNotes": "Search notes...",
+  "newFolder": "New Folder",
+  "newSubfolder": "New Subfolder",
+  "newBookmarkFolder": "New Bookmark Folder",
+  "newSubBookmarkFolder": "New Subfolder",
+  "newConversation": "New Conversation",
+  "createNote": "Create Note",
+  "searchOrEnterUrl": "Search or enter URL...",
+  "enterMessage": "Type a message... (use @ to reference)",
+  "folderName": "Folder name",
+  "bookmarkFolderName": "Bookmark folder name",
+  "quickMoveExampleHint": "e.g. Translate",
+  "noteCount": "{count} notes",
+  "@noteCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookmarkCount": "{count} bookmarks",
+  "@bookmarkCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noNotes": "No notes yet",
+  "noBookmarks": "No bookmarks yet",
+  "uncategorized": "Uncategorized",
+  "rootDirectory": "Root",
+  "bookmarksBar": "Bookmarks Bar",
+  "openVaultToExplore": "Open a vault folder to start exploring and learning",
+  "openVaultToManageNotes": "Open a vault to manage notes",
+  "openInEditor": "Open in Editor",
+  "bookmark": "Bookmark",
+  "unbookmark": "Unbookmark",
+  "bookmarkThisPage": "Bookmark this page",
+  "bookmarkTo": "Bookmark to:",
+  "bookmarked": "Bookmarked: {title}",
+  "@bookmarked": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "unbookmarked": "Bookmark removed",
+  "bookmarkHint": "Click ⭐ while browsing to bookmark",
+  "addBookmark": "Add Bookmark",
+  "clipFailed": "Clip failed: {error}",
+  "@clipFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "selectTextFirst": "Select text on the page first to clip",
+  "clipTitle": "{title} · Clip",
+  "@clipTitle": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "clipFullPage": "Clip Full Page",
+  "view": "View",
+  "savedToKnowledgeBase": "Saved to knowledge base",
+  "clipSource": "Source: [{title}]({url})",
+  "@clipSource": {
+    "placeholders": {
+      "title": {"type": "String"},
+      "url": {"type": "String"}
+    }
+  },
+  "clippedAt": "Clipped at {date}",
+  "@clippedAt": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "selectedClip": "Selected Clip",
+  "savedAsNote": "Saved as note: {title}",
+  "@savedAsNote": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "saveAsNote": "Save as Note",
+  "filter": "Filter",
+  "allNotes": "All Notes",
+  "hasLinks": "Has Links",
+  "hasAttachments": "Has Attachments",
+  "unlinkedMentions": "Unlinked Mentions",
+  "knowledgeGraph": "Knowledge Graph",
+  "localGraph": "Local Graph",
+  "graphView": "Graph View",
+  "canvasView": "Canvas View",
+  "graphWillShowAfterNotes": "Graph will appear after creating notes",
+  "canvasWillShowAfterCards": "Canvas will appear after adding cards",
+  "switchToForceLayout": "Switch to force layout",
+  "createLinkedNotesHint": "Create notes with [[links]] to see connections",
+  "addCard": "Add Card",
+  "clearCanvas": "Clear Canvas",
+  "clearCanvasConfirm": "Remove all cards and connections? This cannot be undone.",
+  "clear": "Clear",
+  "autoConnectOn": "Auto Connect: On",
+  "autoConnectOff": "Auto Connect: Off",
+  "startBrowsing": "Start Browsing",
+  "openNewTabExplore": "Open a new tab to explore the web",
+  "selectNoteToEdit": "Select a note to start editing",
+  "aiAssistant": "AI Assistant",
+  "askMeAnything": "Ask me anything",
+  "aiSummary": "AI Summary",
+  "aiSuggestion": "AI Suggestion",
+  "aiSourceSummary": "AI {source} Summary",
+  "@aiSourceSummary": {
+    "placeholders": {
+      "source": {"type": "String"}
+    }
+  },
+  "generateSummary": "Generate Summary",
+  "generateSourceSummary": "Generate {source} Summary",
+  "@generateSourceSummary": {
+    "placeholders": {
+      "source": {"type": "String"}
+    }
+  },
+  "clickToGenerateSummary": "Click the button to generate AI {source} summary",
+  "@clickToGenerateSummary": {
+    "placeholders": {
+      "source": {"type": "String"}
+    }
+  },
+  "clickAiForSuggestion": "Click AI button for suggestions",
+  "insertWikilink": "Insert Wikilink",
+  "clickNoteToPreview": "Click a note on the left to preview",
+  "notePreview": "Note Preview",
+  "noteSummary": "Note Summary",
+  "webPageSummary": "Web Page Summary",
+  "summaryTitle": "{source} Summary - {title}",
+  "@summaryTitle": {
+    "placeholders": {
+      "source": {"type": "String"},
+      "title": {"type": "String"}
+    }
+  },
+  "switchSummaryTarget": "Switch summary target",
+  "selectNoteForSummary": "Select a note to use AI summary",
+  "openPageForSummary": "Open a web page to use AI summary",
+  "goBack": "Go Back",
+  "closePanel": "Close Panel",
+  "editNote": "Edit Note",
+  "generating": "Generating...",
+  "retry": "Retry",
+  "nodeDetail": "Node Detail",
+  "clickNodeForDetail": "Click a graph node to see details",
+  "modifiedTime": "Modified",
+  "contentPreview": "Content Preview",
+  "restoreDefaultCommands": "Restore Default Commands",
+  "restoreDefaultCommandsDesc": "All deleted preset commands will be restored. Your custom commands will not be affected.",
+  "restore": "Restore",
+  "importSuccess": "Import successful",
+  "importFailed": "Import failed, please check file format",
+  "deleteCommand": "Delete Command",
+  "deleteCommandConfirm": "Delete command \"{name}\"?",
+  "@deleteCommandConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "deleteNote": "Delete Note",
+  "deleteNoteConfirm": "Are you sure you want to delete \"{title}\"?",
+  "@deleteNoteConfirm": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "deleteFolder": "Delete Folder",
+  "deleteFolderConfirm": "Delete \"{path}\" and its {count} notes? This cannot be undone.",
+  "@deleteFolderConfirm": {
+    "placeholders": {
+      "path": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "deleteBookmarkFolder": "Delete Bookmark Folder",
+  "deleteBookmarkFolderConfirm": "Delete \"{name}\"? Bookmarks inside will move to \"Uncategorized\".",
+  "@deleteBookmarkFolderConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "renameFolder": "Rename Folder",
+  "renameBookmarkFolder": "Rename Bookmark Folder",
+  "moveTo": "Move To",
+  "moveToFolder": "Move to Folder",
+  "cmdNewNote": "New Note",
+  "cmdNewTab": "New Tab",
+  "cmdOpenDailyNote": "Open Daily Note",
+  "cmdSwitchTheme": "Switch Theme",
+  "cmdSettings": "Settings",
+  "cmdGraphView": "Graph View",
+  "cmdCanvasView": "Canvas View",
+  "welcomeToRfbrowser": "Welcome to RFBrowser",
+  "obsidianCompatible": "Supports Obsidian-compatible Markdown files"
 }

@@ -162,6 +162,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customColor => 'Custom Color';
 
   @override
+  String get opacity => 'Opacity';
+
+  @override
+  String get themeTintOpacity => 'Theme Tint Intensity';
+
+  @override
+  String get surfaceOpacity => 'Surface Opacity';
+
+  @override
+  String get backgroundOpacity => 'Background Opacity';
+
+  @override
   String get components => 'Components';
 
   @override
@@ -709,4 +721,421 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backToNotePreview => 'Back to note preview';
+
+  @override
+  String get capture => 'Capture';
+
+  @override
+  String get think => 'Think';
+
+  @override
+  String get connect => 'Connect';
+
+  @override
+  String get openOtherVault => 'Open Other Vault';
+
+  @override
+  String get createNewVault => 'Create New Vault';
+
+  @override
+  String get recentlyOpened => 'Recently Opened';
+
+  @override
+  String get selectVaultLocation => 'Select Vault Location';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get webPage => 'Web Page';
+
+  @override
+  String get bookmarks => 'Bookmarks';
+
+  @override
+  String get searchNotes => 'Search notes...';
+
+  @override
+  String get newFolder => 'New Folder';
+
+  @override
+  String get newSubfolder => 'New Subfolder';
+
+  @override
+  String get newBookmarkFolder => 'New Bookmark Folder';
+
+  @override
+  String get newSubBookmarkFolder => 'New Subfolder';
+
+  @override
+  String get newConversation => 'New Conversation';
+
+  @override
+  String get createNote => 'Create Note';
+
+  @override
+  String get searchOrEnterUrl => 'Search or enter URL...';
+
+  @override
+  String get enterMessage => 'Type a message... (use @ to reference)';
+
+  @override
+  String get folderName => 'Folder name';
+
+  @override
+  String get bookmarkFolderName => 'Bookmark folder name';
+
+  @override
+  String get quickMoveExampleHint => 'e.g. Translate';
+
+  @override
+  String noteCount(int count) {
+    return '$count notes';
+  }
+
+  @override
+  String bookmarkCount(int count) {
+    return '$count bookmarks';
+  }
+
+  @override
+  String get noNotes => 'No notes yet';
+
+  @override
+  String get noBookmarks => 'No bookmarks yet';
+
+  @override
+  String get uncategorized => 'Uncategorized';
+
+  @override
+  String get rootDirectory => 'Root';
+
+  @override
+  String get bookmarksBar => 'Bookmarks Bar';
+
+  @override
+  String get openVaultToExplore =>
+      'Open a vault folder to start exploring and learning';
+
+  @override
+  String get openVaultToManageNotes => 'Open a vault to manage notes';
+
+  @override
+  String get openInEditor => 'Open in Editor';
+
+  @override
+  String get bookmark => 'Bookmark';
+
+  @override
+  String get unbookmark => 'Unbookmark';
+
+  @override
+  String get bookmarkThisPage => 'Bookmark this page';
+
+  @override
+  String get bookmarkTo => 'Bookmark to:';
+
+  @override
+  String bookmarked(String title) {
+    return 'Bookmarked: $title';
+  }
+
+  @override
+  String get unbookmarked => 'Bookmark removed';
+
+  @override
+  String get bookmarkHint => 'Click ⭐ while browsing to bookmark';
+
+  @override
+  String get addBookmark => 'Add Bookmark';
+
+  @override
+  String clipFailed(String error) {
+    return 'Clip failed: $error';
+  }
+
+  @override
+  String get selectTextFirst => 'Select text on the page first to clip';
+
+  @override
+  String clipTitle(String title) {
+    return '$title · Clip';
+  }
+
+  @override
+  String get clipFullPage => 'Clip Full Page';
+
+  @override
+  String get view => 'View';
+
+  @override
+  String get savedToKnowledgeBase => 'Saved to knowledge base';
+
+  @override
+  String clipSource(String title, String url) {
+    return 'Source: [$title]($url)';
+  }
+
+  @override
+  String clippedAt(String date) {
+    return 'Clipped at $date';
+  }
+
+  @override
+  String get selectedClip => 'Selected Clip';
+
+  @override
+  String savedAsNote(String title) {
+    return 'Saved as note: $title';
+  }
+
+  @override
+  String get saveAsNote => 'Save as Note';
+
+  @override
+  String get filter => 'Filter';
+
+  @override
+  String get allNotes => 'All Notes';
+
+  @override
+  String get hasLinks => 'Has Links';
+
+  @override
+  String get hasAttachments => 'Has Attachments';
+
+  @override
+  String get unlinkedMentions => 'Unlinked Mentions';
+
+  @override
+  String get knowledgeGraph => 'Knowledge Graph';
+
+  @override
+  String get localGraph => 'Local Graph';
+
+  @override
+  String get graphView => 'Graph View';
+
+  @override
+  String get canvasView => 'Canvas View';
+
+  @override
+  String get graphWillShowAfterNotes =>
+      'Graph will appear after creating notes';
+
+  @override
+  String get canvasWillShowAfterCards =>
+      'Canvas will appear after adding cards';
+
+  @override
+  String get switchToForceLayout => 'Switch to force layout';
+
+  @override
+  String get createLinkedNotesHint =>
+      'Create notes with [[links]] to see connections';
+
+  @override
+  String get addCard => 'Add Card';
+
+  @override
+  String get clearCanvas => 'Clear Canvas';
+
+  @override
+  String get clearCanvasConfirm =>
+      'Remove all cards and connections? This cannot be undone.';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String get autoConnectOn => 'Auto Connect: On';
+
+  @override
+  String get autoConnectOff => 'Auto Connect: Off';
+
+  @override
+  String get startBrowsing => 'Start Browsing';
+
+  @override
+  String get openNewTabExplore => 'Open a new tab to explore the web';
+
+  @override
+  String get selectNoteToEdit => 'Select a note to start editing';
+
+  @override
+  String get aiAssistant => 'AI Assistant';
+
+  @override
+  String get askMeAnything => 'Ask me anything';
+
+  @override
+  String get aiSummary => 'AI Summary';
+
+  @override
+  String get aiSuggestion => 'AI Suggestion';
+
+  @override
+  String aiSourceSummary(String source) {
+    return 'AI $source Summary';
+  }
+
+  @override
+  String get generateSummary => 'Generate Summary';
+
+  @override
+  String generateSourceSummary(String source) {
+    return 'Generate $source Summary';
+  }
+
+  @override
+  String clickToGenerateSummary(String source) {
+    return 'Click the button to generate AI $source summary';
+  }
+
+  @override
+  String get clickAiForSuggestion => 'Click AI button for suggestions';
+
+  @override
+  String get insertWikilink => 'Insert Wikilink';
+
+  @override
+  String get clickNoteToPreview => 'Click a note on the left to preview';
+
+  @override
+  String get notePreview => 'Note Preview';
+
+  @override
+  String get noteSummary => 'Note Summary';
+
+  @override
+  String get webPageSummary => 'Web Page Summary';
+
+  @override
+  String summaryTitle(String source, String title) {
+    return '$source Summary - $title';
+  }
+
+  @override
+  String get switchSummaryTarget => 'Switch summary target';
+
+  @override
+  String get selectNoteForSummary => 'Select a note to use AI summary';
+
+  @override
+  String get openPageForSummary => 'Open a web page to use AI summary';
+
+  @override
+  String get goBack => 'Go Back';
+
+  @override
+  String get closePanel => 'Close Panel';
+
+  @override
+  String get editNote => 'Edit Note';
+
+  @override
+  String get generating => 'Generating...';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get nodeDetail => 'Node Detail';
+
+  @override
+  String get clickNodeForDetail => 'Click a graph node to see details';
+
+  @override
+  String get modifiedTime => 'Modified';
+
+  @override
+  String get contentPreview => 'Content Preview';
+
+  @override
+  String get restoreDefaultCommands => 'Restore Default Commands';
+
+  @override
+  String get restoreDefaultCommandsDesc =>
+      'All deleted preset commands will be restored. Your custom commands will not be affected.';
+
+  @override
+  String get restore => 'Restore';
+
+  @override
+  String get importSuccess => 'Import successful';
+
+  @override
+  String get importFailed => 'Import failed, please check file format';
+
+  @override
+  String get deleteCommand => 'Delete Command';
+
+  @override
+  String deleteCommandConfirm(String name) {
+    return 'Delete command \"$name\"?';
+  }
+
+  @override
+  String get deleteNote => 'Delete Note';
+
+  @override
+  String deleteNoteConfirm(String title) {
+    return 'Are you sure you want to delete \"$title\"?';
+  }
+
+  @override
+  String get deleteFolder => 'Delete Folder';
+
+  @override
+  String deleteFolderConfirm(String path, int count) {
+    return 'Delete \"$path\" and its $count notes? This cannot be undone.';
+  }
+
+  @override
+  String get deleteBookmarkFolder => 'Delete Bookmark Folder';
+
+  @override
+  String deleteBookmarkFolderConfirm(String name) {
+    return 'Delete \"$name\"? Bookmarks inside will move to \"Uncategorized\".';
+  }
+
+  @override
+  String get renameFolder => 'Rename Folder';
+
+  @override
+  String get renameBookmarkFolder => 'Rename Bookmark Folder';
+
+  @override
+  String get moveTo => 'Move To';
+
+  @override
+  String get moveToFolder => 'Move to Folder';
+
+  @override
+  String get cmdNewNote => 'New Note';
+
+  @override
+  String get cmdNewTab => 'New Tab';
+
+  @override
+  String get cmdOpenDailyNote => 'Open Daily Note';
+
+  @override
+  String get cmdSwitchTheme => 'Switch Theme';
+
+  @override
+  String get cmdSettings => 'Settings';
+
+  @override
+  String get cmdGraphView => 'Graph View';
+
+  @override
+  String get cmdCanvasView => 'Canvas View';
+
+  @override
+  String get welcomeToRfbrowser => 'Welcome to RFBrowser';
+
+  @override
+  String get obsidianCompatible =>
+      'Supports Obsidian-compatible Markdown files';
 }

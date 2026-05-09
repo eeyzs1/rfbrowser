@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/browser_service.dart';
 import '../../services/knowledge_service.dart';
+import '../../l10n/app_localizations.dart';
 import '../theme/design_tokens.dart';
 
 class ClipToolbar extends ConsumerStatefulWidget {
@@ -33,7 +34,8 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
       );
       _showClipSuccess(note.title, note.id);
     } catch (e) {
-      _showToast('剪辑失败: $e', isError: true);
+      final l = AppLocalizations.of(context)!;
+      _showToast(l.clipFailed(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _isClipping = false);
     }
@@ -48,18 +50,21 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
     try {
       final selectedText = await ref.read(browserProvider.notifier).fetchSelectedText(tab.id);
       if (selectedText.isEmpty) {
-        _showToast('请先在网页中选中要剪辑的文本', isError: true);
+        final l = AppLocalizations.of(context)!;
+        _showToast(l.selectTextFirst, isError: true);
         return;
       }
       final knowledgeNotifier = ref.read(knowledgeProvider.notifier);
+      final l = AppLocalizations.of(context)!;
       final note = await knowledgeNotifier.clipSelection(
         url: tab.url,
-        title: '${tab.title} · 片段',
+        title: l.clipTitle(tab.title),
         selectedText: selectedText,
       );
       _showClipSuccess(note.title, note.id);
     } catch (e) {
-      _showToast('剪辑失败: $e', isError: true);
+      final l = AppLocalizations.of(context)!;
+      _showToast(l.clipFailed(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _isClipping = false);
     }
@@ -71,12 +76,14 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
     if (tab == null) return;
 
     final isBookmarked = browserState.isBookmarked(tab.url);
+    final l = AppLocalizations.of(context)!;
     ref.read(browserProvider.notifier).toggleBookmark(tab.url, tab.title);
-    _showToast(isBookmarked ? '已取消收藏' : '已收藏: ${tab.title}');
+    _showToast(isBookmarked ? l.unbookmarked : l.bookmarked(tab.title));
   }
 
   void _showClipSuccess(String title, String noteId) {
     if (!mounted) return;
+    final l = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -84,17 +91,17 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
         backgroundColor: DesignColors.semanticSuccess,
         content: Row(
           children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 18),
+            Icon(Icons.check_circle, color: Theme.of(context).colorScheme.onInverseSurface, size: 18),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('已保存到知识库', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  Text(l.savedToKnowledgeBase, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onInverseSurface)),
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 11),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onInverseSurface),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -104,8 +111,8 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
           ],
         ),
         action: SnackBarAction(
-          label: '查看',
-          textColor: Colors.white,
+          label: l.view,
+          textColor: Theme.of(context).colorScheme.onInverseSurface,
           onPressed: () {
             ref.read(knowledgeProvider.notifier).openNote(noteId);
           },
@@ -130,6 +137,7 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final browserState = ref.watch(browserProvider);
     final hasPage = browserState.activeTab != null &&
         browserState.activeTab!.url.isNotEmpty &&
@@ -152,13 +160,13 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
           else ...[
             _ClipButton(
               icon: Icons.content_copy,
-              label: '剪辑全文',
+              label: l.clipFullPage,
               onPressed: hasPage ? _clipFullPage : null,
             ),
             const SizedBox(width: DesignSpacing.sm),
             _ClipButton(
               icon: Icons.text_fields,
-              label: '剪辑选中',
+              label: l.clipSelection,
               onPressed: hasPage ? _clipSelection : null,
             ),
             const SizedBox(width: DesignSpacing.sm),
@@ -167,8 +175,8 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
                   ? Icons.bookmark
                   : Icons.bookmark_outline,
               label: browserState.isBookmarked(browserState.activeTab?.url ?? '')
-                  ? '已收藏'
-                  : '收藏',
+                  ? l.bookmark
+                  : l.bookmark,
               onPressed: hasPage ? _toggleBookmark : null,
             ),
           ],
@@ -200,8 +208,7 @@ class _ClipButton extends StatelessWidget {
       ),
       label: Text(
         label,
-        style: TextStyle(
-          fontSize: 11,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: onPressed != null ? null : Theme.of(context).disabledColor,
         ),
       ),

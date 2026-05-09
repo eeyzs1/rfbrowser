@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/knowledge_service.dart';
 import '../../data/models/note.dart';
 import '../theme/design_tokens.dart';
@@ -40,6 +41,7 @@ class _QuickSearchBarState extends ConsumerState<QuickSearchBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final filtered = _filterNotes();
 
     return Container(
@@ -61,9 +63,8 @@ class _QuickSearchBarState extends ConsumerState<QuickSearchBar> {
               controller: _searchController,
               focusNode: _focusNode,
               decoration: InputDecoration(
-                hintText: '搜索笔记...',
-                hintStyle: TextStyle(
-                  fontSize: 12,
+                hintText: l.searchNotes,
+                hintStyle: theme.textTheme.bodySmall?.copyWith(
                   color: theme.hintColor,
                 ),
                 prefixIcon: const Icon(Icons.search, size: 16),
@@ -79,7 +80,7 @@ class _QuickSearchBarState extends ConsumerState<QuickSearchBar> {
                 filled: true,
                 fillColor: theme.colorScheme.surface,
               ),
-              style: const TextStyle(fontSize: 13),
+              style: theme.textTheme.bodyMedium,
               onChanged: (v) => setState(() => _query = v),
             ),
           ),
@@ -116,14 +117,13 @@ class _QuickSearchBarState extends ConsumerState<QuickSearchBar> {
                     ),
                     title: Text(
                       note.title,
-                      style: const TextStyle(fontSize: 12),
+                      style: theme.textTheme.bodySmall,
                     ),
                     subtitle: Text(
                       note.content.length > 80
                           ? '${note.content.substring(0, 80)}...'
                           : note.content,
-                      style: TextStyle(
-                        fontSize: 10,
+                      style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.hintColor,
                       ),
                     ),

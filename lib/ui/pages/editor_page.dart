@@ -262,8 +262,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
                         ),
                         child: Text(
                           '#$tag',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 10,
+                          style: theme.textTheme.labelSmall?.copyWith(
                             color: theme.colorScheme.secondary,
                           ),
                         ),
@@ -296,8 +295,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
                     const SizedBox(width: 4),
                     Text(
                       l.unsaved,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 10,
+                      style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w500,
                       ),
@@ -312,19 +310,18 @@ class _EditorViewState extends ConsumerState<EditorView> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.check_circle, size: 10, color: Colors.green.shade600),
+                    Icon(Icons.check_circle, size: 10, color: theme.colorScheme.primary),
                     const SizedBox(width: 4),
                     Text(
                       l.saved,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 10,
-                        color: Colors.green.shade600,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -442,8 +439,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
           const SizedBox(width: 4),
           Text(
             note.filePath ?? '',
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 10,
+            style: theme.textTheme.labelSmall?.copyWith(
               color: theme.hintColor,
             ),
             maxLines: 1,
@@ -452,16 +448,14 @@ class _EditorViewState extends ConsumerState<EditorView> {
           const Spacer(),
           Text(
             l.charCount(_charCount),
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 10,
+            style: theme.textTheme.labelSmall?.copyWith(
               color: theme.hintColor,
             ),
           ),
           const SizedBox(width: 12),
           Text(
             l.wordCount(_wordCount),
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 10,
+            style: theme.textTheme.labelSmall?.copyWith(
               color: theme.hintColor,
             ),
           ),
@@ -469,14 +463,13 @@ class _EditorViewState extends ConsumerState<EditorView> {
           Icon(
             _isDirty ? Icons.circle : Icons.check_circle_outline,
             size: 10,
-            color: _isDirty ? theme.colorScheme.primary : Colors.green.shade600,
+            color: _isDirty ? theme.colorScheme.primary : theme.colorScheme.primary,
           ),
           const SizedBox(width: 3),
           Text(
             _isDirty ? l.hasUnsavedChanges : l.saved,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 10,
-              color: _isDirty ? theme.colorScheme.primary : Colors.green.shade600,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: _isDirty ? theme.colorScheme.primary : theme.colorScheme.primary,
             ),
           ),
         ],
@@ -772,7 +765,6 @@ class _WikiLinkBuilder extends MarkdownElementBuilder {
                 style: TextStyle(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w500,
-                  fontSize: 14,
                 ),
               ),
             ],
@@ -827,7 +819,6 @@ class _EmbedBuilder extends MarkdownElementBuilder {
                     style: TextStyle(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w500,
-                      fontSize: 12,
                     ),
                   ),
                   const SizedBox(height: 4),

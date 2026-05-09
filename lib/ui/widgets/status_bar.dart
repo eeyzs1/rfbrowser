@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/browser_service.dart';
 import '../../services/connectivity_service.dart';
 import '../../services/knowledge_service.dart';
@@ -11,6 +12,7 @@ class StatusBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final browserState = ref.watch(browserProvider);
     final knowledgeState = ref.watch(knowledgeProvider);
     final vaultState = ref.watch(vaultProvider);
@@ -29,7 +31,7 @@ class StatusBar extends ConsumerWidget {
         children: [
           Text(
               'RFBrowser v0.3.0',
-            style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+            style: theme.textTheme.bodySmall,
           ),
           const SizedBox(width: 12),
           Container(
@@ -46,9 +48,8 @@ class StatusBar extends ConsumerWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            isOffline ? '离线' : (hasVault ? '就绪' : '无知识库'),
+            isOffline ? l.offline : (hasVault ? l.ready : l.noVault),
             style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 11,
               color: isOffline ? const Color(0xFFEF4444) : null,
             ),
           ),
@@ -58,7 +59,7 @@ class StatusBar extends ConsumerWidget {
             const SizedBox(width: 4),
             Text(
               '${connectivityState.syncQueue.length} pending',
-              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+              style: theme.textTheme.bodySmall,
             ),
           ],
           if (hasVault && !isOffline) ...[
@@ -67,13 +68,13 @@ class StatusBar extends ConsumerWidget {
             const SizedBox(width: 4),
             Text(
               '${knowledgeState.notes.length} notes',
-              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+              style: theme.textTheme.bodySmall,
             ),
           ],
           const Spacer(),
           Text(
             '${browserState.tabs.length} tabs',
-            style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+            style: theme.textTheme.bodySmall,
           ),
           if (hasVault) ...[
             const SizedBox(width: 12),
@@ -81,7 +82,7 @@ class StatusBar extends ConsumerWidget {
             const SizedBox(width: 4),
             Text(
               'Git',
-              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+              style: theme.textTheme.bodySmall,
             ),
           ],
         ],

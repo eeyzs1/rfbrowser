@@ -7,9 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/canvas_service.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/browser_service.dart';
+import '../../services/settings_service.dart';
 import '../../data/models/canvas_model.dart';
 import '../../data/models/note.dart';
 import '../../core/link/link_resolver.dart';
+import '../../l10n/app_localizations.dart';
 import '../widgets/canvas_painter.dart';
 
 class CanvasView extends ConsumerStatefulWidget {
@@ -259,6 +261,7 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
     final knowledgeState = ref.watch(knowledgeProvider);
     final linkResolver = ref.watch(linkResolverProvider);
     final theme = Theme.of(context);
+    final settings = ref.watch(settingsProvider);
 
     final autoEnabled = canvasData.settings.autoConnectionsEnabled;
 
@@ -329,6 +332,7 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
                         bodySmallStyle: theme.textTheme.bodySmall,
                         bodyMediumStyle: theme.textTheme.bodyMedium,
                         knowledgeState: knowledgeState,
+                        baseFontSize: settings.editorFontSize,
                       ),
                     ),
                   ),
@@ -342,6 +346,7 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
   }
 
   Widget _buildToolbar(ThemeData theme, CanvasData canvasData, bool autoEnabled) {
+    final l = AppLocalizations.of(context)!;
     return Container(
       height: _toolbarHeight,
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -355,17 +360,17 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
           const SizedBox(width: 4),
           _buildCanvasSwitcher(theme),
           const SizedBox(width: 12),
-          _toolbarButton(theme, Icons.add, '添加卡片', () {
+          _toolbarButton(theme, Icons.add, l.addCard, () {
             final worldPos = Offset(_cameraX, _cameraY);
             _addCardAt(worldPos);
           }),
-          _toolbarButton(theme, Icons.link, '连接', () {
+          _toolbarButton(theme, Icons.link, l.connect, () {
             if (_selectedCardId != null) {
               setState(() => _connectingFromCardId = _selectedCardId);
             }
           }),
           _toolbarButton(theme, autoEnabled ? Icons.auto_fix_high : Icons.auto_fix_off,
-            autoEnabled ? '自动连接: 开' : '自动连接: 关',
+            autoEnabled ? l.autoConnectOn : l.autoConnectOff,
             () => ref.read(canvasProvider.notifier).toggleAutoConnections(),
           ),
           const SizedBox(width: 4),
@@ -382,7 +387,7 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
                     ? GestureDetector(onTap: _clearSearch, child: const Icon(Icons.close, size: 14))
                     : null,
               ),
-              style: TextStyle(fontSize: 12),
+              style: theme.textTheme.bodySmall,
               onChanged: _onSearchChanged,
               onSubmitted: _onSearchSubmit,
             ),
@@ -391,24 +396,24 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
             const SizedBox(width: 4),
             Text(
               '${_searchActiveIndex + 1}/${_searchMatchedIds.length}',
-              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11, color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
             ),
           ],
           const Spacer(),
-          Text('${canvasData.cards.length} cards', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: 11)),
+          Text('${canvasData.cards.length} cards', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
           const SizedBox(width: 8),
           _toolbarButton(theme, Icons.fit_screen, 'Fit', _fitToContent),
           _toolbarButton(theme, Icons.delete_outline, 'Clear', () {
             showDialog(context: context, builder: (ctx) => AlertDialog(
-              title: const Text('清除画布'),
-              content: const Text('移除所有卡片和连接？此操作无法撤销。'),
+              title: Text(l.clearCanvas),
+              content: Text(l.clearCanvasConfirm),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-                FilledButton(style: FilledButton.styleFrom(backgroundColor: Colors.red), onPressed: () {
+                TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
+                FilledButton(style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error), onPressed: () {
                   Navigator.pop(ctx);
                   ref.read(canvasProvider.notifier).clearCanvas();
                   setState(() { _selectedCardId = null; _connectingFromCardId = null; });
-                }, child: const Text('清除')),
+                }, child: Text(l.clear)),
               ],
             ));
           }),
@@ -444,12 +449,12 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
         ...names.map((name) => PopupMenuItem<String>(value: name, child: Row(children: [
           Icon(name == active ? Icons.radio_button_checked : Icons.radio_button_unchecked, size: 14, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          Expanded(child: Text(name, style: TextStyle(fontWeight: name == active ? FontWeight.w600 : FontWeight.w400, fontSize: 13), overflow: TextOverflow.ellipsis)),
+          Expanded(child: Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: name == active ? FontWeight.w600 : FontWeight.w400), overflow: TextOverflow.ellipsis)),
           if (name != active) GestureDetector(onTap: () { Navigator.pop(context); _showRenameDialog(name); }, child: Icon(Icons.edit, size: 14, color: theme.hintColor)),
-          if (name != active && names.length > 1) GestureDetector(onTap: () { Navigator.pop(context); _confirmDeleteCanvas(name); }, child: const Padding(padding: EdgeInsets.only(left: 4), child: Icon(Icons.delete, size: 14, color: Colors.red))),
+          if (name != active && names.length > 1) GestureDetector(onTap: () { Navigator.pop(context); _confirmDeleteCanvas(name); }, child: Padding(padding: const EdgeInsets.only(left: 4), child: Icon(Icons.delete, size: 14, color: theme.colorScheme.error))),
         ]))),
         const PopupMenuDivider(),
-        PopupMenuItem<String>(value: '__new__', child: Row(children: [Icon(Icons.add, size: 16, color: theme.colorScheme.primary), const SizedBox(width: 8), Text('New Canvas', style: TextStyle(fontSize: 13, color: theme.colorScheme.primary))])),
+        PopupMenuItem<String>(value: '__new__', child: Row(children: [Icon(Icons.add, size: 16, color: theme.colorScheme.primary), const SizedBox(width: 8), Text('New Canvas', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary))])),
       ],
     ).then((value) {
       if (value == null) return;
@@ -508,12 +513,13 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
   }
 
   void _confirmDeleteCanvas(String name) {
+    final theme = Theme.of(context);
     showDialog(context: context, builder: (ctx) => AlertDialog(
       title: const Text('Delete Canvas'),
       content: Text('Delete "$name"? This action cannot be undone.'),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        FilledButton(style: FilledButton.styleFrom(backgroundColor: Colors.red), onPressed: () async {
+        FilledButton(style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error), onPressed: () async {
           await ref.read(canvasProvider.notifier).deleteCanvas(name);
           if (!ctx.mounted) return;
           Navigator.pop(ctx);
@@ -528,6 +534,7 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
   }
 
   void _showContextMenu(BuildContext context, TapUpDetails details, CanvasData canvasData, Offset worldPos) {
+    final theme = Theme.of(context);
     showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(details.globalPosition.dx, details.globalPosition.dy, details.globalPosition.dx + 1, details.globalPosition.dy + 1),
@@ -538,7 +545,7 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
         PopupMenuItem(value: 'link', child: Row(children: [Icon(Icons.link, size: 16), const SizedBox(width: 8), const Text('Link Card')])),
         const PopupMenuDivider(),
         PopupMenuItem(value: 'fromNote', child: Row(children: [Icon(Icons.library_books, size: 16), const SizedBox(width: 8), const Text('From Knowledge Note')])),
-        if (_selectedCardId != null) ...[const PopupMenuDivider(), PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit, size: 16), const SizedBox(width: 8), const Text('Edit Card')])), PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete, size: 16, color: Colors.red), const SizedBox(width: 8), const Text('Delete Card')]))],
+        if (_selectedCardId != null) ...[const PopupMenuDivider(), PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit, size: 16), const SizedBox(width: 8), const Text('Edit Card')])), PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete, size: 16, color: theme.colorScheme.error), const SizedBox(width: 8), const Text('Delete Card')]))],
       ],
     ).then((value) {
       if (value == null) return;
@@ -563,14 +570,15 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
     final autoConnections = autoConns.where((c) => c.fromCardId == card.id || c.toCardId == card.id).toList();
     final allConns = [...connections.map((c) => (conn: c, isAuto: c.isAuto)), ...autoConnections.map((c) => (conn: c, isAuto: true))];
     if (allConns.isEmpty) return;
+    final theme = Theme.of(context);
     showMenu<int>(
       context: context,
       position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx + 1, position.dy + 1),
       items: [
         for (int i = 0; i < allConns.length; i++)
-          PopupMenuItem(value: i, child: Row(children: [Icon(allConns[i].isAuto ? Icons.auto_fix_high : Icons.link, size: 16), const SizedBox(width: 8), Text(allConns[i].isAuto ? 'Auto: ${allConns[i].conn.fromCardId} -> ${allConns[i].conn.toCardId}' : 'Manual: ${allConns[i].conn.fromCardId} -> ${allConns[i].conn.toCardId}', style: const TextStyle(fontSize: 12))])),
+          PopupMenuItem(value: i, child: Row(children: [Icon(allConns[i].isAuto ? Icons.auto_fix_high : Icons.link, size: 16), const SizedBox(width: 8), Text(allConns[i].isAuto ? 'Auto: ${allConns[i].conn.fromCardId} -> ${allConns[i].conn.toCardId}' : 'Manual: ${allConns[i].conn.fromCardId} -> ${allConns[i].conn.toCardId}', style: theme.textTheme.bodySmall)])),
         const PopupMenuDivider(),
-        PopupMenuItem(value: -1, child: Row(children: [Icon(Icons.delete, size: 16, color: Colors.red), const SizedBox(width: 8), const Text('Delete All Connections')])),
+        PopupMenuItem(value: -1, child: Row(children: [Icon(Icons.delete, size: 16, color: theme.colorScheme.error), const SizedBox(width: 8), const Text('Delete All Connections')])),
       ],
     ).then((value) {
       if (value == null) return;
@@ -613,25 +621,47 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
   void _editCard(String cardId) {
     final card = ref.read(canvasProvider.notifier).cardById(cardId);
     if (card == null) return;
+    final settings = ref.read(settingsProvider);
+    final l = AppLocalizations.of(context)!;
+    final dialogTheme = Theme.of(context);
     final titleCtrl = TextEditingController(text: card.title);
     final contentCtrl = TextEditingController(text: card.content);
-    showDialog(context: context, builder: (ctx) => AlertDialog(
+    double cardFontSize = card.fontSize > 0 ? card.fontSize : settings.editorFontSize * 0.85;
+    showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setDialogState) => AlertDialog(
       title: Text('Edit ${card.type.label}'),
       content: SizedBox(width: 360, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Title')),
+        TextField(controller: titleCtrl, decoration: InputDecoration(labelText: l.noteTitle)),
         const SizedBox(height: 12),
         TextField(controller: contentCtrl, decoration: InputDecoration(labelText: switch (card.type) {
-          CanvasCardType.note => 'Content', CanvasCardType.text => 'Text', CanvasCardType.image => 'Image path', CanvasCardType.link => 'URL' }),
+          CanvasCardType.note => l.contentPreview, CanvasCardType.text => l.note, CanvasCardType.image => 'Image path', CanvasCardType.link => 'URL' }),
           maxLines: card.type == CanvasCardType.note || card.type == CanvasCardType.text ? 5 : 1),
+        const SizedBox(height: 12),
+        Row(children: [
+          Text(l.fontSize, style: dialogTheme.textTheme.bodySmall),
+          Expanded(child: Slider(
+            value: cardFontSize,
+            min: 8,
+            max: 32,
+            divisions: 24,
+            label: cardFontSize.round().toString(),
+            onChanged: (v) => setDialogState(() => cardFontSize = v),
+          )),
+          SizedBox(width: 40, child: Text(cardFontSize.round().toString(), style: dialogTheme.textTheme.bodySmall, textAlign: TextAlign.end)),
+        ]),
       ])),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
         FilledButton(onPressed: () {
-          ref.read(canvasProvider.notifier).updateCard(card.copyWith(title: titleCtrl.text.trim(), content: contentCtrl.text.trim()));
+          final defaultSize = settings.editorFontSize * 0.85;
+          ref.read(canvasProvider.notifier).updateCard(card.copyWith(
+            title: titleCtrl.text.trim(),
+            content: contentCtrl.text.trim(),
+            fontSize: (cardFontSize - defaultSize).abs() < 0.5 ? 0 : cardFontSize,
+          ));
           Navigator.pop(ctx);
-        }, child: const Text('Save')),
+        }, child: Text(l.save)),
       ],
-    ));
+    )));
   }
 
   void _createConnection(String fromId, String toId) {

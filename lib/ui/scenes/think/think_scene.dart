@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/knowledge_service.dart';
 import '../../widgets/note_sidebar.dart';
 import '../../widgets/backlinks_panel.dart';
@@ -110,6 +111,7 @@ class ThinkScene extends ConsumerWidget {
 
   Widget _buildThinkEmptyState(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -121,14 +123,14 @@ class ThinkScene extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            '选择一条笔记开始编辑',
+            l.selectNoteToEdit,
             style: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
           ),
           const SizedBox(height: 8),
           ElevatedButton.icon(
             onPressed: onCreateNote,
             icon: const Icon(Icons.add, size: 16),
-            label: const Text('新建笔记'),
+            label: Text(l.newNote),
           ),
         ],
       ),

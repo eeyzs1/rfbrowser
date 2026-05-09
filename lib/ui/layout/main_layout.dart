@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/browser_service.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/ai_service.dart';
@@ -198,8 +199,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   }
 
   Future<void> _openVaultDialog() async {
+    final l = AppLocalizations.of(context)!;
     final result = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: '选择知识库位置',
+      dialogTitle: l.selectVaultLocation,
     );
     if (result != null) {
       await ref.read(vaultProvider.notifier).openVault(result);

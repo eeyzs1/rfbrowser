@@ -68,9 +68,8 @@ class SyncProgressWidget extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               progress.currentFile,
-              style: theme.textTheme.bodySmall?.copyWith(
+              style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.hintColor,
-                fontSize: 10,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

@@ -162,6 +162,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get customColor => '自定义颜色';
 
   @override
+  String get opacity => '透明度';
+
+  @override
+  String get themeTintOpacity => '主题色着色强度';
+
+  @override
+  String get surfaceOpacity => '面板色透明度';
+
+  @override
+  String get backgroundOpacity => '背景色透明度';
+
+  @override
   String get components => '组件';
 
   @override
@@ -703,4 +715,414 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get backToNotePreview => '返回笔记预览';
+
+  @override
+  String get capture => '捕捉';
+
+  @override
+  String get think => '思考';
+
+  @override
+  String get connect => '连接';
+
+  @override
+  String get openOtherVault => '打开其他知识库';
+
+  @override
+  String get createNewVault => '创建新知识库';
+
+  @override
+  String get recentlyOpened => '最近打开';
+
+  @override
+  String get selectVaultLocation => '选择知识库位置';
+
+  @override
+  String get note => '笔记';
+
+  @override
+  String get webPage => '网页';
+
+  @override
+  String get bookmarks => '收藏';
+
+  @override
+  String get searchNotes => '搜索笔记...';
+
+  @override
+  String get newFolder => '新建文件夹';
+
+  @override
+  String get newSubfolder => '新建子文件夹';
+
+  @override
+  String get newBookmarkFolder => '新建收藏夹';
+
+  @override
+  String get newSubBookmarkFolder => '新建子收藏夹';
+
+  @override
+  String get newConversation => '新对话';
+
+  @override
+  String get createNote => '创建笔记';
+
+  @override
+  String get searchOrEnterUrl => '搜索或输入网址...';
+
+  @override
+  String get enterMessage => '输入消息...（使用 @ 引用）';
+
+  @override
+  String get folderName => '文件夹名称';
+
+  @override
+  String get bookmarkFolderName => '收藏夹名称';
+
+  @override
+  String get quickMoveExampleHint => 'e.g. 翻译';
+
+  @override
+  String noteCount(int count) {
+    return '$count 条笔记';
+  }
+
+  @override
+  String bookmarkCount(int count) {
+    return '$count 个收藏';
+  }
+
+  @override
+  String get noNotes => '暂无笔记';
+
+  @override
+  String get noBookmarks => '暂无收藏';
+
+  @override
+  String get uncategorized => '未分类';
+
+  @override
+  String get rootDirectory => '根目录';
+
+  @override
+  String get bookmarksBar => '收藏夹栏';
+
+  @override
+  String get openVaultToExplore => '打开知识库文件夹开始探索和学习';
+
+  @override
+  String get openVaultToManageNotes => '打开知识库管理笔记';
+
+  @override
+  String get openInEditor => '在编辑器中打开';
+
+  @override
+  String get bookmark => '收藏';
+
+  @override
+  String get unbookmark => '取消收藏';
+
+  @override
+  String get bookmarkThisPage => '收藏此页';
+
+  @override
+  String get bookmarkTo => '收藏到:';
+
+  @override
+  String bookmarked(String title) {
+    return '已收藏: $title';
+  }
+
+  @override
+  String get unbookmarked => '已取消收藏';
+
+  @override
+  String get bookmarkHint => '浏览网页时点击 ⭐ 收藏';
+
+  @override
+  String get addBookmark => '添加收藏';
+
+  @override
+  String clipFailed(String error) {
+    return '剪辑失败: $error';
+  }
+
+  @override
+  String get selectTextFirst => '请先在网页中选中要剪辑的文本';
+
+  @override
+  String clipTitle(String title) {
+    return '$title · 片段';
+  }
+
+  @override
+  String get clipFullPage => '剪辑全文';
+
+  @override
+  String get view => '查看';
+
+  @override
+  String get savedToKnowledgeBase => '已保存到知识库';
+
+  @override
+  String clipSource(String title, String url) {
+    return '来源: [$title]($url)';
+  }
+
+  @override
+  String clippedAt(String date) {
+    return '剪辑于 $date';
+  }
+
+  @override
+  String get selectedClip => '选中片段';
+
+  @override
+  String savedAsNote(String title) {
+    return '已保存为笔记: $title';
+  }
+
+  @override
+  String get saveAsNote => '保存为笔记';
+
+  @override
+  String get filter => '筛选';
+
+  @override
+  String get allNotes => '所有笔记';
+
+  @override
+  String get hasLinks => '有链接';
+
+  @override
+  String get hasAttachments => '有附件';
+
+  @override
+  String get unlinkedMentions => '未链接提及';
+
+  @override
+  String get knowledgeGraph => '知识图谱';
+
+  @override
+  String get localGraph => '局部图谱';
+
+  @override
+  String get graphView => '图谱视图';
+
+  @override
+  String get canvasView => '画布视图';
+
+  @override
+  String get graphWillShowAfterNotes => '知识图谱将在创建笔记后显示';
+
+  @override
+  String get canvasWillShowAfterCards => '画布将在添加卡片后显示';
+
+  @override
+  String get switchToForceLayout => '切换为力导向布局';
+
+  @override
+  String get createLinkedNotesHint => '创建带有 [[链接]] 的笔记以查看关联';
+
+  @override
+  String get addCard => '添加卡片';
+
+  @override
+  String get clearCanvas => '清除画布';
+
+  @override
+  String get clearCanvasConfirm => '移除所有卡片和连接？此操作无法撤销。';
+
+  @override
+  String get clear => '清除';
+
+  @override
+  String get autoConnectOn => '自动连接: 开';
+
+  @override
+  String get autoConnectOff => '自动连接: 关';
+
+  @override
+  String get startBrowsing => '开始浏览';
+
+  @override
+  String get openNewTabExplore => '打开新标签页探索网络';
+
+  @override
+  String get selectNoteToEdit => '选择一条笔记开始编辑';
+
+  @override
+  String get aiAssistant => 'AI 助手';
+
+  @override
+  String get askMeAnything => '问我任何问题';
+
+  @override
+  String get aiSummary => 'AI 摘要';
+
+  @override
+  String get aiSuggestion => 'AI 建议';
+
+  @override
+  String aiSourceSummary(String source) {
+    return 'AI $source摘要';
+  }
+
+  @override
+  String get generateSummary => '生成摘要';
+
+  @override
+  String generateSourceSummary(String source) {
+    return '生成$source摘要';
+  }
+
+  @override
+  String clickToGenerateSummary(String source) {
+    return '点击按钮生成 AI $source摘要';
+  }
+
+  @override
+  String get clickAiForSuggestion => '点击 AI 按钮获取建议';
+
+  @override
+  String get insertWikilink => '插入 Wikilink';
+
+  @override
+  String get clickNoteToPreview => '点击左侧笔记查看预览';
+
+  @override
+  String get notePreview => '笔记预览';
+
+  @override
+  String get noteSummary => '笔记摘要';
+
+  @override
+  String get webPageSummary => '网页摘要';
+
+  @override
+  String summaryTitle(String source, String title) {
+    return '$source摘要 - $title';
+  }
+
+  @override
+  String get switchSummaryTarget => '切换摘要对象';
+
+  @override
+  String get selectNoteForSummary => '选择笔记后可使用 AI 摘要';
+
+  @override
+  String get openPageForSummary => '打开网页后可使用 AI 摘要';
+
+  @override
+  String get goBack => '返回';
+
+  @override
+  String get closePanel => '关闭面板';
+
+  @override
+  String get editNote => '编辑笔记';
+
+  @override
+  String get generating => '生成中...';
+
+  @override
+  String get retry => '重试';
+
+  @override
+  String get nodeDetail => '节点详情';
+
+  @override
+  String get clickNodeForDetail => '点击图谱节点查看详情';
+
+  @override
+  String get modifiedTime => '修改时间';
+
+  @override
+  String get contentPreview => '内容预览';
+
+  @override
+  String get restoreDefaultCommands => '恢复默认命令';
+
+  @override
+  String get restoreDefaultCommandsDesc => '将恢复所有已删除的预设命令，不会影响你创建的命令。';
+
+  @override
+  String get restore => '恢复';
+
+  @override
+  String get importSuccess => '导入成功';
+
+  @override
+  String get importFailed => '导入失败，请检查文件格式';
+
+  @override
+  String get deleteCommand => '删除命令';
+
+  @override
+  String deleteCommandConfirm(String name) {
+    return '确定删除命令 \"$name\" 吗？';
+  }
+
+  @override
+  String get deleteNote => '删除笔记';
+
+  @override
+  String deleteNoteConfirm(String title) {
+    return '确定要删除\"$title\"吗？';
+  }
+
+  @override
+  String get deleteFolder => '删除文件夹';
+
+  @override
+  String deleteFolderConfirm(String path, int count) {
+    return '删除\"$path\"及其中的 $count 篇笔记？此操作不可撤销。';
+  }
+
+  @override
+  String get deleteBookmarkFolder => '删除收藏夹';
+
+  @override
+  String deleteBookmarkFolderConfirm(String name) {
+    return '删除\"$name\"？其中的收藏将移至\"未分类\"。';
+  }
+
+  @override
+  String get renameFolder => '重命名文件夹';
+
+  @override
+  String get renameBookmarkFolder => '重命名收藏夹';
+
+  @override
+  String get moveTo => '移动到';
+
+  @override
+  String get moveToFolder => '移动到文件夹';
+
+  @override
+  String get cmdNewNote => '新笔记';
+
+  @override
+  String get cmdNewTab => '新标签页';
+
+  @override
+  String get cmdOpenDailyNote => '打开每日笔记';
+
+  @override
+  String get cmdSwitchTheme => '切换主题';
+
+  @override
+  String get cmdSettings => '设置';
+
+  @override
+  String get cmdGraphView => '图谱视图';
+
+  @override
+  String get cmdCanvasView => '画布视图';
+
+  @override
+  String get welcomeToRfbrowser => '欢迎使用 RFBrowser';
+
+  @override
+  String get obsidianCompatible => '支持 Obsidian 兼容的 Markdown 文件';
 }

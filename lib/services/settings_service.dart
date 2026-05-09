@@ -38,6 +38,9 @@ class AppSettings {
   final double borderRadius;
   final bool alwaysShowWelcomePage;
   final bool highContrastMode;
+  final double themeTintOpacity;
+  final double surfaceOpacity;
+  final double backgroundOpacity;
 
   AppSettings({
     this.locale = 'system',
@@ -53,6 +56,9 @@ class AppSettings {
     this.borderRadius = 8.0,
     this.alwaysShowWelcomePage = false,
     this.highContrastMode = false,
+    this.themeTintOpacity = 0.8,
+    this.surfaceOpacity = 1.0,
+    this.backgroundOpacity = 1.0,
   });
 
   Color get accentColor => Color(accentColorValue);
@@ -62,8 +68,8 @@ class AppSettings {
   Color get surfaceColor => Color(surfaceColorValue);
 
   bool get isDarkMode {
-    final lum = surfaceColor.r * 0.299 + surfaceColor.g * 0.587 + surfaceColor.b * 0.114;
-    return lum < 0.5;
+    final lum = scaffoldBgColor.r * 0.299 + scaffoldBgColor.g * 0.587 + scaffoldBgColor.b * 0.114;
+    return lum < 128;
   }
 
   double get effectiveBorderRadius {
@@ -102,6 +108,9 @@ class AppSettings {
     double? borderRadius,
     bool? alwaysShowWelcomePage,
     bool? highContrastMode,
+    double? themeTintOpacity,
+    double? surfaceOpacity,
+    double? backgroundOpacity,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
@@ -118,6 +127,9 @@ class AppSettings {
       alwaysShowWelcomePage:
           alwaysShowWelcomePage ?? this.alwaysShowWelcomePage,
       highContrastMode: highContrastMode ?? this.highContrastMode,
+      themeTintOpacity: themeTintOpacity ?? this.themeTintOpacity,
+      surfaceOpacity: surfaceOpacity ?? this.surfaceOpacity,
+      backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
     );
   }
 }
@@ -152,6 +164,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
       borderRadius: prefs.getDouble('borderRadius') ?? 8.0,
       alwaysShowWelcomePage: prefs.getBool('alwaysShowWelcomePage') ?? false,
       highContrastMode: prefs.getBool('highContrastMode') ?? false,
+      themeTintOpacity: prefs.getDouble('themeTintOpacity') ?? 0.8,
+      surfaceOpacity: prefs.getDouble('surfaceOpacity') ?? 1.0,
+      backgroundOpacity: prefs.getDouble('backgroundOpacity') ?? 1.0,
     );
   }
 
@@ -234,6 +249,24 @@ class SettingsNotifier extends Notifier<AppSettings> {
     final prefs = await _ensurePrefs;
     await prefs.setBool('highContrastMode', value);
     state = state.copyWith(highContrastMode: value);
+  }
+
+  Future<void> setThemeTintOpacity(double value) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setDouble('themeTintOpacity', value);
+    state = state.copyWith(themeTintOpacity: value);
+  }
+
+  Future<void> setSurfaceOpacity(double value) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setDouble('surfaceOpacity', value);
+    state = state.copyWith(surfaceOpacity: value);
+  }
+
+  Future<void> setBackgroundOpacity(double value) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setDouble('backgroundOpacity', value);
+    state = state.copyWith(backgroundOpacity: value);
   }
 }
 

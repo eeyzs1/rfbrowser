@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../theme/design_tokens.dart';
 
 class EmptyVaultGuide extends ConsumerWidget {
@@ -10,6 +11,7 @@ class EmptyVaultGuide extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return Center(
       child: Container(
@@ -30,15 +32,14 @@ class EmptyVaultGuide extends ConsumerWidget {
             ),
             const SizedBox(height: DesignSpacing.lg),
             Text(
-              '欢迎使用 RFBrowser',
+              l.welcomeToRfbrowser,
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                fontSize: 20,
               ),
             ),
             const SizedBox(height: DesignSpacing.sm),
             Text(
-              '打开知识库文件夹开始探索和学习',
+              l.openVaultToExplore,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.hintColor,
               ),
@@ -47,13 +48,12 @@ class EmptyVaultGuide extends ConsumerWidget {
             FilledButton.icon(
               onPressed: onCreateVault,
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('打开知识库'),
+              label: Text(l.openVault),
             ),
             const SizedBox(height: DesignSpacing.md),
             Text(
-              '支持 Obsidian 兼容的 Markdown 文件',
-              style: TextStyle(
-                fontSize: 11,
+              l.obsidianCompatible,
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.hintColor.withValues(alpha: 0.6),
               ),
             ),

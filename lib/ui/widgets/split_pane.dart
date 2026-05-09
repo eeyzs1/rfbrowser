@@ -124,7 +124,6 @@ class _SplitPaneState extends State<SplitPane> {
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.primary,
-                    fontSize: 11,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),

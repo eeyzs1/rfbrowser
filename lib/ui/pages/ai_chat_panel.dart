@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/ai_service.dart';
 import '../../services/settings_service.dart';
 import '../../services/knowledge_service.dart';
@@ -158,6 +159,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
   Widget build(BuildContext context) {
     final aiState = ref.watch(aiProvider);
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     ref.listen<AIState>(aiProvider, (prev, next) {
       if (prev?.messages.length != next.messages.length ||
@@ -192,9 +194,9 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Text('AI 助手', style: theme.textTheme.titleMedium),
+                      Text(l.aiAssistant, style: theme.textTheme.titleMedium),
                       const SizedBox(height: 4),
-                      Text('问我任何问题', style: theme.textTheme.bodySmall),
+                      Text(l.askMeAnything, style: theme.textTheme.bodySmall),
                     ],
                   ),
                 )
@@ -280,7 +282,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                     minWidth: 24,
                     minHeight: 24,
                   ),
-                  tooltip: '新对话',
+                  tooltip: l.newConversation,
                   style: IconButton.styleFrom(
                     backgroundColor: theme.colorScheme.surface,
                     side: BorderSide(color: theme.dividerColor),
@@ -355,9 +357,8 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                         subtitle: item.description.isNotEmpty
                             ? Text(
                                 item.description,
-                                style: theme.textTheme.bodySmall?.copyWith(
+                                style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.hintColor,
-                                  fontSize: 10,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -377,7 +378,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                       focusNode: _focusNode,
                       style: theme.textTheme.bodyMedium,
                       decoration: InputDecoration(
-                        hintText: '输入消息...（使用 @ 引用）',
+                        hintText: l.enterMessage,
                         hintStyle: theme.textTheme.bodySmall,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
@@ -416,6 +417,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
   }
 
   Widget _buildMessage(ThemeData theme, ChatMessage msg) {
+    final l = AppLocalizations.of(context)!;
     final isUser = msg.role == 'user';
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -479,9 +481,8 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                         onPressed: () => _saveAsNote(msg.content),
                         icon: const Icon(Icons.save, size: 12),
                         label: Text(
-                          '保存为笔记',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 10,
+                          l.saveAsNote,
+                          style: theme.textTheme.labelSmall?.copyWith(
                             color: theme.colorScheme.primary,
                           ),
                         ),
@@ -512,10 +513,9 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '生成中...',
-                            style: theme.textTheme.bodySmall?.copyWith(
+                            l.generating,
+                            style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.hintColor,
-                              fontSize: 10,
                             ),
                           ),
                         ],

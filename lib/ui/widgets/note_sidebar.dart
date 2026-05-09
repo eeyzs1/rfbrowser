@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/browser_service.dart';
 import '../../services/settings_service.dart';
@@ -80,6 +81,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final knowledgeState = ref.watch(knowledgeProvider);
     final vaultState = ref.watch(vaultProvider);
     final theme = Theme.of(context);
@@ -87,28 +89,28 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     _baseFontSize = settings.editorFontSize * 0.75;
 
     if (vaultState.currentVault == null) {
-      return _buildNoVaultPrompt(theme);
+      return _buildNoVaultPrompt(theme, l);
     }
 
     final notes = _filterNotes(knowledgeState.notes, knowledgeState);
 
     return Column(
       children: [
-        _buildTabBar(theme),
+        _buildTabBar(theme, l),
         if (_activeTab == _SidebarTab.notes)
-          _buildNotesToolbar(theme)
+          _buildNotesToolbar(theme, l)
         else
-          _buildBookmarksToolbar(theme),
+          _buildBookmarksToolbar(theme, l),
         Expanded(
           child: _activeTab == _SidebarTab.notes
-              ? _buildNotesTree(theme, notes, knowledgeState)
-              : _buildBookmarksTree(theme),
+              ? _buildNotesTree(theme, notes, knowledgeState, l)
+              : _buildBookmarksTree(theme, l),
         ),
       ],
     );
   }
 
-  Widget _buildTabBar(ThemeData theme) {
+  Widget _buildTabBar(ThemeData theme, AppLocalizations l) {
     return Container(
       height: 36,
       decoration: BoxDecoration(
@@ -116,8 +118,8 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
       ),
       child: Row(
         children: [
-          Expanded(child: _tabBtn(theme, _SidebarTab.notes, Icons.description_outlined, Icons.description, '笔记', ref.watch(knowledgeProvider).notes.length)),
-          Expanded(child: _tabBtn(theme, _SidebarTab.bookmarks, Icons.bookmark_border, Icons.bookmark, '收藏', ref.watch(browserProvider).bookmarks.length)),
+          Expanded(child: _tabBtn(theme, _SidebarTab.notes, Icons.description_outlined, Icons.description, l.notes, ref.watch(knowledgeProvider).notes.length)),
+          Expanded(child: _tabBtn(theme, _SidebarTab.bookmarks, Icons.bookmark_border, Icons.bookmark, l.bookmarks, ref.watch(browserProvider).bookmarks.length)),
         ],
       ),
     );
@@ -149,7 +151,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     );
   }
 
-  Widget _buildNotesToolbar(ThemeData theme) {
+  Widget _buildNotesToolbar(ThemeData theme, AppLocalizations l) {
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Row(children: [
@@ -158,7 +160,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
             controller: _searchController,
             style: theme.textTheme.bodySmall,
             decoration: InputDecoration(
-              hintText: '搜索笔记...', hintStyle: theme.textTheme.bodySmall,
+              hintText: l.searchNotes, hintStyle: theme.textTheme.bodySmall,
               prefixIcon: const Icon(Icons.search, size: 14), isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: 6),
               suffixIcon: _searchQuery.isNotEmpty ? IconButton(
@@ -171,21 +173,21 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
           ),
         ),
         const SizedBox(width: 4),
-        IconButton(icon: const Icon(Icons.create_new_folder_outlined, size: 14), onPressed: () => _createNoteFolder(''), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28), tooltip: '新建文件夹'),
-        IconButton(icon: const Icon(Icons.add, size: 16), onPressed: () => _createNewNote(''), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28), tooltip: '新建笔记'),
+        IconButton(icon: const Icon(Icons.create_new_folder_outlined, size: 14), onPressed: () => _createNoteFolder(''), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28), tooltip: l.newFolder),
+        IconButton(icon: const Icon(Icons.add, size: 16), onPressed: () => _createNewNote(''), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28), tooltip: l.newNote),
       ]),
     );
   }
 
-  Widget _buildBookmarksToolbar(ThemeData theme) {
+  Widget _buildBookmarksToolbar(ThemeData theme, AppLocalizations l) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Row(children: [
         Icon(Icons.bookmark, size: 14, color: theme.hintColor),
         const SizedBox(width: 6),
-        Text('${ref.watch(browserProvider).bookmarks.length} 个收藏', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: _baseFontSize)),
+        Text(l.bookmarkCount(ref.watch(browserProvider).bookmarks.length), style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: _baseFontSize)),
         const Spacer(),
-        IconButton(icon: const Icon(Icons.create_new_folder_outlined, size: 14), onPressed: () => _createBookmarkFolder('bookmarks-bar'), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 24, minHeight: 24), tooltip: '新建收藏夹'),
+        IconButton(icon: const Icon(Icons.create_new_folder_outlined, size: 14), onPressed: () => _createBookmarkFolder('bookmarks-bar'), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 24, minHeight: 24), tooltip: l.newBookmarkFolder),
       ]),
     );
   }
@@ -236,24 +238,24 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     }
   }
 
-  Widget _buildNotesTree(ThemeData theme, List<Note> notes, KnowledgeState knowledgeState) {
+  Widget _buildNotesTree(ThemeData theme, List<Note> notes, KnowledgeState knowledgeState, AppLocalizations l) {
     if (notes.isEmpty && _diskFolders.isEmpty) {
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.note_add, size: 32, color: theme.hintColor.withValues(alpha: 0.3)),
           const SizedBox(height: 8),
-          Text('暂无笔记', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+          Text(l.noNotes, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
           const SizedBox(height: 8),
-          FilledButton.tonal(onPressed: () => _createNewNote(''), child: const Text('创建笔记')),
+          FilledButton.tonal(onPressed: () => _createNewNote(''), child: Text(l.createNote)),
         ]),
       );
     }
 
     final trie = _buildNoteTrie(notes);
-    return ListView(padding: EdgeInsets.zero, children: _buildTrieWidgets(trie, knowledgeState));
+    return ListView(padding: EdgeInsets.zero, children: _buildTrieWidgets(trie, knowledgeState, l));
   }
 
-  List<Widget> _buildTrieWidgets(_TrieNode node, KnowledgeState knowledgeState) {
+  List<Widget> _buildTrieWidgets(_TrieNode node, KnowledgeState knowledgeState, AppLocalizations l) {
     final items = <Widget>[];
     for (final child in node.children) {
       final isExpanded = _expandedNoteFolders.contains(child.path);
@@ -261,7 +263,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
       items.add(_noteFolderRow(
         name: child.name, depth: child.depth, isExpanded: isExpanded,
         isRoot: child.depth == 0 && child.path.isEmpty, noteCount: noteCount,
-        folderPath: child.path,
+        folderPath: child.path, l: l,
         onToggle: () => setState(() {
           if (isExpanded) { _expandedNoteFolders.remove(child.path); } else { _expandedNoteFolders.add(child.path); }
         }),
@@ -271,13 +273,13 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         onDelete: child.depth > 0 ? () => _confirmDeleteNoteFolder(child.path) : null,
       ));
       if (isExpanded) {
-        items.addAll(_buildTrieWidgets(child, knowledgeState));
+        items.addAll(_buildTrieWidgets(child, knowledgeState, l));
       }
     }
     for (final note in node.notes) {
       final isActive = knowledgeState.activeNote?.id == note.id;
       final isHovered = _hoveredNoteId == note.id;
-      items.add(_noteRow(note, node.depth + (node.path.isEmpty ? 0 : 1), isActive, isHovered));
+      items.add(_noteRow(note, node.depth + (node.path.isEmpty ? 0 : 1), isActive, isHovered, l));
     }
     return items;
   }
@@ -285,6 +287,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   Widget _noteFolderRow({
     required String name, required int depth, required bool isExpanded,
     required bool isRoot, required int noteCount, required String folderPath,
+    required AppLocalizations l,
     required VoidCallback onToggle, required VoidCallback onNewNote,
     required VoidCallback onNewFolder, VoidCallback? onRename, VoidCallback? onDelete,
   }) {
@@ -305,7 +308,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
           onEnter: (_) => setState(() => _hoveredNoteFolder = folderPath),
           onExit: (_) => setState(() => _hoveredNoteFolder = null),
           child: GestureDetector(
-            onSecondaryTapUp: (d) => _showFolderContextMenu(d.globalPosition, onNewNote, onNewFolder, onRename, onDelete),
+            onSecondaryTapUp: (d) => _showFolderContextMenu(d.globalPosition, onNewNote, onNewFolder, onRename, onDelete, l),
             child: Container(
               padding: EdgeInsets.only(left: depth * 14.0 + 4.0),
               color: isDragOver ? theme.colorScheme.primary.withValues(alpha: 0.1)
@@ -326,12 +329,12 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                       maxLines: 1, overflow: TextOverflow.ellipsis,
                     )),
                     if (isHovered && !isRoot) ...[
-                      _ib(Icons.edit_outlined, onRename, '重命名'),
-                      _ib(Icons.delete_outline, onDelete, '删除'),
+                      _ib(Icons.edit_outlined, onRename, l.rename),
+                      _ib(Icons.delete_outline, onDelete, l.delete),
                     ],
                     if (isHovered) ...[
-                      _ib(Icons.add, onNewNote, '新建笔记'),
-                      _ib(Icons.create_new_folder_outlined, onNewFolder, '新建子文件夹'),
+                      _ib(Icons.add, onNewNote, l.newNote),
+                      _ib(Icons.create_new_folder_outlined, onNewFolder, l.newSubfolder),
                     ],
                     if (!isHovered && noteCount > 0)
                       Padding(padding: const EdgeInsets.only(left: 4), child: Text('$noteCount', style: TextStyle(fontSize: _baseFontSize - 2, color: theme.hintColor.withValues(alpha: 0.6)))),
@@ -345,7 +348,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     );
   }
 
-  Widget _noteRow(Note note, int depth, bool isActive, bool isHovered) {
+  Widget _noteRow(Note note, int depth, bool isActive, bool isHovered, AppLocalizations l) {
     return Draggable<String>(
       data: note.id,
       onDragStarted: () => setState(() => _draggingNoteId = note.id),
@@ -382,8 +385,8 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize, color: isActive ? Theme.of(context).colorScheme.primary : null, fontWeight: isActive ? FontWeight.w600 : null),
                   maxLines: 1, overflow: TextOverflow.ellipsis)),
                 if (isHovered) ...[
-                  _ib(Icons.drive_file_move_outline, () => _showMoveNoteDialog(note), '移动'),
-                  _ib(Icons.close, () => _confirmDeleteNote(note.title, note.id), '删除'),
+                  _ib(Icons.drive_file_move_outline, () => _showMoveNoteDialog(note), l.move),
+                  _ib(Icons.close, () => _confirmDeleteNote(note.title, note.id), l.delete),
                 ],
               ]),
             ),
@@ -401,15 +404,15 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     );
   }
 
-  void _showFolderContextMenu(Offset pos, VoidCallback onNewNote, VoidCallback onNewFolder, VoidCallback? onRename, VoidCallback? onDelete) {
+  void _showFolderContextMenu(Offset pos, VoidCallback onNewNote, VoidCallback onNewFolder, VoidCallback? onRename, VoidCallback? onDelete, AppLocalizations l) {
     final items = <PopupMenuEntry<String>>[
-      PopupMenuItem(value: 'new_note', child: Row(children: [Icon(Icons.add, size: 14, color: Theme.of(context).hintColor), const SizedBox(width: 8), const Text('新建笔记')])),
-      PopupMenuItem(value: 'new_folder', child: Row(children: [Icon(Icons.create_new_folder_outlined, size: 14, color: Theme.of(context).hintColor), const SizedBox(width: 8), const Text('新建子文件夹')])),
+      PopupMenuItem(value: 'new_note', child: Row(children: [Icon(Icons.add, size: 14, color: Theme.of(context).hintColor), const SizedBox(width: 8), Text(l.newNote)])),
+      PopupMenuItem(value: 'new_folder', child: Row(children: [Icon(Icons.create_new_folder_outlined, size: 14, color: Theme.of(context).hintColor), const SizedBox(width: 8), Text(l.newSubfolder)])),
     ];
-    if (onRename != null) items.add(PopupMenuItem(value: 'rename', child: Row(children: [Icon(Icons.edit, size: 14, color: Theme.of(context).hintColor), const SizedBox(width: 8), const Text('重命名')])));
+    if (onRename != null) items.add(PopupMenuItem(value: 'rename', child: Row(children: [Icon(Icons.edit, size: 14, color: Theme.of(context).hintColor), const SizedBox(width: 8), Text(l.rename)])));
     if (onDelete != null) {
       items.add(const PopupMenuDivider());
-      items.add(PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline, size: 14, color: Theme.of(context).colorScheme.error), const SizedBox(width: 8), Text('删除', style: TextStyle(color: Theme.of(context).colorScheme.error))])));
+      items.add(PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline, size: 14, color: Theme.of(context).colorScheme.error), const SizedBox(width: 8), Text(l.delete, style: TextStyle(color: Theme.of(context).colorScheme.error))])));
     }
     showMenu(context: context, position: RelativeRect.fromLTRB(pos.dx, pos.dy, pos.dx + 1, pos.dy + 1), items: items).then((v) {
       switch (v) {
@@ -421,7 +424,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     });
   }
 
-  Widget _buildBookmarksTree(ThemeData theme) {
+  Widget _buildBookmarksTree(ThemeData theme, AppLocalizations l) {
     final browserState = ref.watch(browserProvider);
     final bookmarks = browserState.bookmarks;
     final folders = browserState.bookmarkFolders;
@@ -431,26 +434,26 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.bookmark_border, size: 32, color: theme.hintColor.withValues(alpha: 0.3)),
           const SizedBox(height: 8),
-          Text('暂无收藏', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+          Text(l.noBookmarks, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
           const SizedBox(height: 4),
-          Text('浏览网页时点击 ⭐ 收藏', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: _baseFontSize)),
+          Text(l.bookmarkHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: _baseFontSize)),
         ]),
       );
     }
 
     final items = <Widget>[];
-    _buildBookmarkFolderWidgets(folders, bookmarks, 'bookmarks-bar', 0, items);
+    _buildBookmarkFolderWidgets(folders, bookmarks, 'bookmarks-bar', 0, items, l);
     final unfiled = bookmarks.where((b) => b.folderId.isEmpty).toList();
     if (unfiled.isNotEmpty) {
-      items.add(Padding(padding: const EdgeInsets.only(left: 8, top: 6, bottom: 2), child: Text('未分类', style: theme.textTheme.bodySmall?.copyWith(fontSize: _baseFontSize - 1, fontWeight: FontWeight.w600, color: theme.hintColor))));
+      items.add(Padding(padding: const EdgeInsets.only(left: 8, top: 6, bottom: 2), child: Text(l.uncategorized, style: theme.textTheme.bodySmall?.copyWith(fontSize: _baseFontSize - 1, fontWeight: FontWeight.w600, color: theme.hintColor))));
       for (final bm in unfiled) {
-        items.add(_bookmarkRow(bm, 1));
+        items.add(_bookmarkRow(bm, 1, l));
       }
     }
     return ListView(children: items);
   }
 
-  void _buildBookmarkFolderWidgets(List<BookmarkFolder> allFolders, List<Bookmark> allBookmarks, String parentId, int depth, List<Widget> items) {
+  void _buildBookmarkFolderWidgets(List<BookmarkFolder> allFolders, List<Bookmark> allBookmarks, String parentId, int depth, List<Widget> items, AppLocalizations l) {
     final childFolders = allFolders.where((f) => f.parentId == parentId).toList();
     for (final folder in childFolders) {
       final folderBookmarks = allBookmarks.where((b) => b.folderId == folder.id).toList();
@@ -491,12 +494,12 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                     const SizedBox(width: 5),
                     Expanded(child: Text(folder.name, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
                     if (isHovered && folder.id != 'bookmarks-bar') ...[
-                      _ib(Icons.create_new_folder_outlined, () => _createBookmarkFolder(folder.id), '新建子收藏夹'),
-                      _ib(Icons.edit_outlined, () => _renameBookmarkFolder(folder), '重命名'),
-                      _ib(Icons.delete_outline, () => _confirmDeleteBookmarkFolder(folder.name, folder.id), '删除'),
+                      _ib(Icons.create_new_folder_outlined, () => _createBookmarkFolder(folder.id), l.newSubBookmarkFolder),
+                      _ib(Icons.edit_outlined, () => _renameBookmarkFolder(folder), l.rename),
+                      _ib(Icons.delete_outline, () => _confirmDeleteBookmarkFolder(folder.name, folder.id), l.delete),
                     ],
                     if (isHovered && folder.id == 'bookmarks-bar')
-                      _ib(Icons.create_new_folder_outlined, () => _createBookmarkFolder(folder.id), '新建子收藏夹'),
+                      _ib(Icons.create_new_folder_outlined, () => _createBookmarkFolder(folder.id), l.newSubBookmarkFolder),
                     if (!isHovered && totalBookmarks > 0)
                       Padding(padding: const EdgeInsets.only(left: 4), child: Text('$totalBookmarks', style: TextStyle(fontSize: _baseFontSize - 2, color: Theme.of(context).hintColor.withValues(alpha: 0.6)))),
                   ]),
@@ -508,9 +511,9 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
       ));
 
       if (isExpanded) {
-        _buildBookmarkFolderWidgets(allFolders, allBookmarks, folder.id, depth + 1, items);
+        _buildBookmarkFolderWidgets(allFolders, allBookmarks, folder.id, depth + 1, items, l);
         for (final bm in folderBookmarks) {
-          items.add(_bookmarkRow(bm, depth + 1));
+          items.add(_bookmarkRow(bm, depth + 1, l));
         }
       }
     }
@@ -527,7 +530,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     return count;
   }
 
-  Widget _bookmarkRow(Bookmark bookmark, int depth) {
+  Widget _bookmarkRow(Bookmark bookmark, int depth, AppLocalizations l) {
     final isHovered = _hoveredBookmarkId == bookmark.id;
     return Draggable<String>(
       data: bookmark.id,
@@ -561,8 +564,8 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                   if (_domain(bookmark).isNotEmpty) Text(_domain(bookmark), style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize - 2, color: Theme.of(context).hintColor), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ])),
                 if (isHovered) ...[
-                  _ib(Icons.drive_file_move_outline, () => _showMoveBookmarkDialog(bookmark), '移动'),
-                  _ib(Icons.close, () => ref.read(browserProvider.notifier).removeBookmark(bookmark.id), '移除'),
+                  _ib(Icons.drive_file_move_outline, () => _showMoveBookmarkDialog(bookmark), l.move),
+                  _ib(Icons.close, () => ref.read(browserProvider.notifier).removeBookmark(bookmark.id), l.remove),
                 ],
               ]),
             ),
@@ -586,16 +589,17 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   }
 
   void _createNoteFolder(String parentPath) async {
+    final l = AppLocalizations.of(context)!;
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) {
         final controller = TextEditingController();
         return AlertDialog(
-          title: Text(parentPath.isEmpty ? '新建文件夹' : '在 $parentPath 中新建文件夹'),
-          content: TextField(controller: controller, autofocus: true, decoration: const InputDecoration(hintText: '文件夹名称', isDense: true)),
+          title: Text(l.newFolder),
+          content: TextField(controller: controller, autofocus: true, decoration: InputDecoration(hintText: l.folderName, isDense: true)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('创建')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: Text(l.create)),
           ],
         );
       },
@@ -639,17 +643,18 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   }
 
   void _renameNoteFolder(String folderPath) async {
+    final l = AppLocalizations.of(context)!;
     final parts = folderPath.split('/');
     final oldName = parts.last;
     final controller = TextEditingController(text: oldName);
     final newName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('重命名文件夹'),
+        title: Text(l.renameFolder),
         content: TextField(controller: controller, autofocus: true, decoration: const InputDecoration(isDense: true)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('确定')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: Text(l.confirm)),
         ],
       ),
     );
@@ -669,16 +674,17 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   }
 
   void _confirmDeleteNoteFolder(String folderPath) async {
+    final l = AppLocalizations.of(context)!;
     final knowledgeState = ref.read(knowledgeProvider);
     final count = knowledgeState.notes.where((n) => n.filePath.startsWith('$folderPath/')).length;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除文件夹'),
-        content: Text('删除"$folderPath"及其中的 $count 篇笔记？此操作不可撤销。'),
+        title: Text(l.deleteFolder),
+        content: Text(l.deleteFolderConfirm(folderPath, count)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error), child: const Text('删除')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error), child: Text(l.delete)),
         ],
       ),
     );
@@ -695,16 +701,17 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   }
 
   void _createBookmarkFolder(String parentFolderId) async {
+    final l = AppLocalizations.of(context)!;
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) {
         final controller = TextEditingController();
         return AlertDialog(
-          title: const Text('新建收藏夹'),
-          content: TextField(controller: controller, autofocus: true, decoration: const InputDecoration(hintText: '收藏夹名称', isDense: true)),
+          title: Text(l.newBookmarkFolder),
+          content: TextField(controller: controller, autofocus: true, decoration: InputDecoration(hintText: l.bookmarkFolderName, isDense: true)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('创建')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: Text(l.create)),
           ],
         );
       },
@@ -715,15 +722,16 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   }
 
   void _renameBookmarkFolder(BookmarkFolder folder) async {
+    final l = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: folder.name);
     final newName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('重命名收藏夹'),
+        title: Text(l.renameBookmarkFolder),
         content: TextField(controller: controller, autofocus: true, decoration: const InputDecoration(isDense: true)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('确定')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: Text(l.confirm)),
         ],
       ),
     );
@@ -733,14 +741,15 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   }
 
   void _confirmDeleteBookmarkFolder(String name, String folderId) async {
+    final l = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除收藏夹'),
-        content: Text('删除"$name"？其中的收藏将移至"未分类"。'),
+        title: Text(l.deleteBookmarkFolder),
+        content: Text(l.deleteBookmarkFolderConfirm(name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error), child: const Text('删除')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error), child: Text(l.delete)),
         ],
       ),
     );
@@ -748,14 +757,15 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   }
 
   void _showMoveBookmarkDialog(Bookmark bookmark) async {
+    final l = AppLocalizations.of(context)!;
     final folders = ref.read(browserProvider).bookmarkFolders;
     if (folders.isEmpty) return;
     final folderId = await showDialog<String>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        title: const Text('移动到'),
+        title: Text(l.moveTo),
         children: [
-          SimpleDialogOption(onPressed: () => Navigator.pop(ctx, ''), child: const Text('未分类')),
+          SimpleDialogOption(onPressed: () => Navigator.pop(ctx, ''), child: Text(l.uncategorized)),
           ...folders.map((f) => SimpleDialogOption(onPressed: () => Navigator.pop(ctx, f.id), child: Text(f.name))),
         ],
       ),
@@ -764,6 +774,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   }
 
   void _showMoveNoteDialog(Note note) async {
+    final l = AppLocalizations.of(context)!;
     final knowledgeState = ref.read(knowledgeProvider);
     final allFolders = _getAllFolderPaths(knowledgeState.notes);
     final currentFolder = note.filePath.split('/').length > 1
@@ -772,9 +783,9 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     final targetFolder = await showDialog<String>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        title: const Text('移动到文件夹'),
+        title: Text(l.moveToFolder),
         children: [
-          SimpleDialogOption(onPressed: () => Navigator.pop(ctx, ''), child: const Text('根目录')),
+          SimpleDialogOption(onPressed: () => Navigator.pop(ctx, ''), child: Text(l.rootDirectory)),
           ...allFolders.where((f) => f != currentFolder).map((f) => SimpleDialogOption(onPressed: () => Navigator.pop(ctx, f), child: Text(f))),
         ],
       ),
@@ -815,22 +826,23 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     return filtered.where((n) => n.title.toLowerCase().contains(q) || n.tags.any((t) => t.toLowerCase().contains(q)) || n.content.toLowerCase().contains(q)).toList();
   }
 
-  Widget _buildNoVaultPrompt(ThemeData theme) {
+  Widget _buildNoVaultPrompt(ThemeData theme, AppLocalizations l) {
     return Column(children: [
       Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.dividerColor))),
-        child: Row(children: [Icon(Icons.folder_open, size: 16, color: theme.colorScheme.primary), const SizedBox(width: 8), Expanded(child: Text('笔记', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)))])),
+        child: Row(children: [Icon(Icons.folder_open, size: 16, color: theme.colorScheme.primary), const SizedBox(width: 8), Expanded(child: Text(l.notes, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)))])),
       Expanded(child: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.folder_off, size: 40, color: theme.hintColor), const SizedBox(height: 12),
-        Text('未连接知识库', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)), const SizedBox(height: 4),
-        Text('打开知识库管理笔记', style: theme.textTheme.bodySmall, textAlign: TextAlign.center), const SizedBox(height: 16),
-        FilledButton.icon(onPressed: () => _openVault(), icon: const Icon(Icons.folder_open, size: 16), label: const Text('打开知识库')), const SizedBox(height: 8),
-        OutlinedButton.icon(onPressed: () => _createVault(), icon: const Icon(Icons.create_new_folder, size: 16), label: const Text('创建知识库')),
+        Text(l.noVaultConnected, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)), const SizedBox(height: 4),
+        Text(l.openVaultToManageNotes, style: theme.textTheme.bodySmall, textAlign: TextAlign.center), const SizedBox(height: 16),
+        FilledButton.icon(onPressed: () => _openVault(), icon: const Icon(Icons.folder_open, size: 16), label: Text(l.openVault)), const SizedBox(height: 8),
+        OutlinedButton.icon(onPressed: () => _createVault(), icon: const Icon(Icons.create_new_folder, size: 16), label: Text(l.createVault)),
       ])))),
     ]);
   }
 
   Future<void> _openVault() async {
-    final result = await FilePicker.platform.getDirectoryPath(dialogTitle: '选择知识库位置');
+    final l = AppLocalizations.of(context)!;
+    final result = await FilePicker.platform.getDirectoryPath(dialogTitle: l.selectVaultLocation);
     if (result != null) {
       await ref.read(vaultProvider.notifier).openVault(result);
       ref.read(knowledgeProvider.notifier).loadAllNotes();
@@ -840,7 +852,8 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   }
 
   Future<void> _createVault() async {
-    final result = await FilePicker.platform.getDirectoryPath(dialogTitle: '选择知识库位置');
+    final l = AppLocalizations.of(context)!;
+    final result = await FilePicker.platform.getDirectoryPath(dialogTitle: l.selectVaultLocation);
     if (result != null) {
       await ref.read(vaultProvider.notifier).createVault(result);
       ref.read(knowledgeProvider.notifier).loadAllNotes();
@@ -850,13 +863,14 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   }
 
   void _confirmDeleteNote(String title, String noteId) async {
+    final l = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除笔记'), content: Text('确定要删除"$title"吗？'),
+        title: Text(l.deleteNote), content: Text(l.deleteNoteConfirm(title)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error), child: const Text('删除')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error), child: Text(l.delete)),
         ],
       ),
     );

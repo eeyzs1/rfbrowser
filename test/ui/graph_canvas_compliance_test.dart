@@ -31,7 +31,7 @@ void main() {
         notes: notes, links: links, scale: 1.0, offset: Offset.zero,
         primaryColor: Colors.blue, secondaryColor: Colors.cyan,
         surfaceColor: Colors.white, onSurfaceColor: Colors.black,
-        hintColor: Colors.grey, cardColor: Colors.white, bridgeIds: {},
+        hintColor: Colors.grey, cardColor: Colors.white, errorColor: Colors.red, bridgeIds: {},
       );
 
       expect(p.shouldRepaint(p), isFalse);
@@ -45,13 +45,13 @@ void main() {
         notes: notes, links: links, scale: 1.0, offset: Offset.zero,
         primaryColor: Colors.blue, secondaryColor: Colors.cyan,
         surfaceColor: Colors.white, onSurfaceColor: Colors.black,
-        hintColor: Colors.grey, cardColor: Colors.white, bridgeIds: {},
+        hintColor: Colors.grey, cardColor: Colors.white, errorColor: Colors.red, bridgeIds: {},
       );
       final p2 = GraphPainter(
         notes: notes, links: links, scale: 2.0, offset: Offset.zero,
         primaryColor: Colors.blue, secondaryColor: Colors.cyan,
         surfaceColor: Colors.white, onSurfaceColor: Colors.black,
-        hintColor: Colors.grey, cardColor: Colors.white, bridgeIds: {},
+        hintColor: Colors.grey, cardColor: Colors.white, errorColor: Colors.red, bridgeIds: {},
       );
 
       expect(p1.shouldRepaint(p2), isTrue);
@@ -123,6 +123,7 @@ void main() {
         primaryColor: Colors.blue, dividerColor: Colors.grey,
         scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
         knowledgeState: knowledge,
+        baseFontSize: 14.0,
       );
 
       expect(p.shouldRepaint(p), isFalse);
@@ -140,6 +141,7 @@ void main() {
         primaryColor: Colors.blue, dividerColor: Colors.grey,
         scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
         knowledgeState: knowledge,
+        baseFontSize: 14.0,
       );
       final p2 = CanvasPainter(
         cards: cards, connections: [], autoConnections: [],
@@ -149,6 +151,7 @@ void main() {
         primaryColor: Colors.blue, dividerColor: Colors.grey,
         scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
         knowledgeState: knowledge,
+        baseFontSize: 14.0,
       );
 
       expect(p1.shouldRepaint(p2), isTrue);
@@ -212,6 +215,7 @@ void main() {
         primaryColor: Colors.blue, dividerColor: Colors.grey,
         scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
         knowledgeState: knowledge,
+        baseFontSize: 14.0,
       );
 
       expect(p.shouldRepaint(p), isFalse);
@@ -227,6 +231,7 @@ void main() {
         primaryColor: Colors.blue, dividerColor: Colors.grey,
         scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
         knowledgeState: knowledge,
+        baseFontSize: 14.0,
       );
 
       expect(painter, isA<CustomPainter>());

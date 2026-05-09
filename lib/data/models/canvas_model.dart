@@ -33,6 +33,7 @@ class CanvasCard {
   final String content;
   final int colorValue;
   final String? noteId;
+  final double fontSize;
 
   const CanvasCard({
     required this.id,
@@ -45,7 +46,10 @@ class CanvasCard {
     this.content = '',
     this.colorValue = 0xFFFFFFFF,
     this.noteId,
+    this.fontSize = 0,
   });
+
+  double effectiveFontSize(double base) => fontSize > 0 ? fontSize : base * 0.85;
 
   CanvasCard copyWith({
     double? x,
@@ -56,6 +60,7 @@ class CanvasCard {
     String? content,
     int? colorValue,
     String? noteId,
+    double? fontSize,
   }) {
     return CanvasCard(
       id: id,
@@ -68,6 +73,7 @@ class CanvasCard {
       content: content ?? this.content,
       colorValue: colorValue ?? this.colorValue,
       noteId: noteId ?? this.noteId,
+      fontSize: fontSize ?? this.fontSize,
     );
   }
 
@@ -86,6 +92,7 @@ class CanvasCard {
     'content': content,
     'colorValue': colorValue,
     'noteId': noteId,
+    'fontSize': fontSize,
   };
 
   factory CanvasCard.fromJson(Map<String, dynamic> json) => CanvasCard(
@@ -99,6 +106,7 @@ class CanvasCard {
     content: json['content'] as String? ?? '',
     colorValue: json['colorValue'] as int? ?? 0xFFFFFFFF,
     noteId: json['noteId'] as String?,
+    fontSize: (json['fontSize'] as num?)?.toDouble() ?? 0,
   );
 }
 

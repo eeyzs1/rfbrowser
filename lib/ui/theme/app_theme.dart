@@ -43,20 +43,21 @@ class AppTheme {
     AppSettings s, {
     bool highContrast = false,
   }) {
-    final surface = s.scaffoldBgColor;
+    final surface = s.scaffoldBgColor.withValues(alpha: s.backgroundOpacity);
     final surfaceC = highContrast
         ? const Color(0xFF1A1A1A)
-        : s.surfaceColor;
+        : s.surfaceColor.withValues(alpha: s.surfaceOpacity);
     final surfaceIsLight = !highContrast && _isLight(surfaceC);
+    final tintAlpha = s.themeTintOpacity;
     final onSurface = highContrast
         ? const Color(0xFFFFFFFF)
         : (surfaceIsLight ? const Color(0xFF1E293B) : DesignColors.textPrimary);
     final onSurfaceVariant = highContrast
         ? const Color(0xFFE0E0E0)
-        : (surfaceIsLight ? const Color(0xFF475569) : DesignColors.textSecondary);
+        : cs.primary.withValues(alpha: tintAlpha);
     final muted = highContrast
         ? const Color(0xFFBDBDBD)
-        : (surfaceIsLight ? const Color(0xFF94A3B8) : DesignColors.textMuted);
+        : cs.primary.withValues(alpha: tintAlpha * 0.7);
     final divider = highContrast
         ? const Color(0xFF444444)
         : (surfaceIsLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B));
@@ -69,9 +70,10 @@ class AppTheme {
 
     return ThemeData(
       brightness: s.isDarkMode ? Brightness.dark : Brightness.light,
-      colorScheme: cs,
+      colorScheme: cs.copyWith(onSurfaceVariant: onSurfaceVariant),
       scaffoldBackgroundColor: surface,
       visualDensity: s.effectiveVisualDensity,
+      hintColor: cs.primary.withValues(alpha: tintAlpha),
       appBarTheme: AppBarTheme(
         backgroundColor: surfaceC,
         foregroundColor: onSurface,
@@ -133,7 +135,7 @@ class AppTheme {
           fontSize: fontSize - 3,
         ),
       ),
-      iconTheme: IconThemeData(color: muted, size: iconSz),
+      iconTheme: IconThemeData(color: cs.primary.withValues(alpha: tintAlpha), size: iconSz),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: cs.primary,
         foregroundColor: cs.onPrimary,
@@ -176,8 +178,118 @@ class AppTheme {
         ),
       ),
       listTileTheme: ListTileThemeData(
+        iconColor: cs.primary,
+        selectedColor: cs.primary,
+        selectedTileColor: cs.primary.withValues(alpha: 0.08),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
         visualDensity: s.effectiveVisualDensity,
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return cs.primary;
+          return null;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return cs.primary.withValues(alpha: 0.5);
+          return null;
+        }),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return cs.primary;
+          return Colors.transparent;
+        }),
+        checkColor: WidgetStatePropertyAll(cs.onPrimary),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br * 0.5)),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return cs.primary;
+          return null;
+        }),
+      ),
+      sliderTheme: SliderThemeData(
+        activeTrackColor: cs.primary,
+        thumbColor: cs.primary,
+        inactiveTrackColor: cs.primary.withValues(alpha: 0.3),
+        overlayColor: cs.primary.withValues(alpha: 0.12),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: cs.primary,
+        linearTrackColor: cs.primary.withValues(alpha: 0.2),
+        circularTrackColor: cs.primary.withValues(alpha: 0.2),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: cs.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(br),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          textStyle: TextStyle(
+            inherit: false,
+            fontWeight: FontWeight.w500,
+            fontSize: fontSize - 1,
+          ),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: cs.primary,
+          foregroundColor: cs.onPrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(br),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          textStyle: TextStyle(
+            inherit: false,
+            fontWeight: FontWeight.w600,
+            fontSize: fontSize - 1,
+          ),
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) return cs.primary;
+            return surfaceC;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) return cs.onPrimary;
+            return onSurfaceVariant;
+          }),
+          side: WidgetStatePropertyAll(BorderSide(color: divider)),
+          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(br),
+          )),
+        ),
+      ),
+      tabBarTheme: TabBarThemeData(
+        labelColor: cs.primary,
+        unselectedLabelColor: muted,
+        indicatorColor: cs.primary,
+        indicatorSize: TabBarIndicatorSize.label,
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        selectedItemColor: cs.primary,
+        unselectedItemColor: muted,
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        selectedIconTheme: IconThemeData(color: cs.primary, size: iconSz),
+        unselectedIconTheme: IconThemeData(color: muted, size: iconSz),
+        selectedLabelTextStyle: TextStyle(color: cs.primary, fontWeight: FontWeight.w600, fontSize: fontSize - 2),
+        unselectedLabelTextStyle: TextStyle(color: muted, fontSize: fontSize - 2),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: surfaceC,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: onSurface,
+          borderRadius: BorderRadius.circular(br * 0.5),
+        ),
+        textStyle: TextStyle(color: surface, fontSize: fontSize - 2),
       ),
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(

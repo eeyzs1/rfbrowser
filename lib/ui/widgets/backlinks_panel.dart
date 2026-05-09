@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/knowledge_service.dart';
 import '../../data/models/link_type.dart';
 import '../../data/models/unlinked_mention.dart';
@@ -12,6 +13,7 @@ class BacklinksPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final knowledgeState = ref.watch(knowledgeProvider);
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final activeNote = knowledgeState.activeNote;
     final backlinks = knowledgeState.backlinks;
 
@@ -29,7 +31,7 @@ class BacklinksPanel extends ConsumerWidget {
               Icon(Icons.link, size: 14, color: theme.colorScheme.primary),
               const SizedBox(width: 6),
               Text(
-                '反向链接',
+                l.backlinks,
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -43,9 +45,8 @@ class BacklinksPanel extends ConsumerWidget {
                 ),
                 child: Text(
                   '${backlinks.length}',
-                  style: theme.textTheme.bodySmall?.copyWith(
+                  style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.primary,
-                    fontSize: 10,
                   ),
                 ),
               ),
@@ -56,7 +57,7 @@ class BacklinksPanel extends ConsumerWidget {
                   onPressed: onClose,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                  tooltip: '关闭面板',
+                  tooltip: l.closePanel,
                 ),
             ],
           ),
@@ -66,7 +67,7 @@ class BacklinksPanel extends ConsumerWidget {
               ? Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(
-                    '未选择笔记',
+                    l.noNoteSelected,
                     style: theme.textTheme.bodySmall,
                   ),
                 )
@@ -74,7 +75,7 @@ class BacklinksPanel extends ConsumerWidget {
               ? Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(
-                    '暂无反向链接',
+                    l.noBacklinks,
                     style: theme.textTheme.bodySmall,
                   ),
                 )
@@ -104,7 +105,7 @@ class BacklinksPanel extends ConsumerWidget {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              '未链接提及',
+                              l.unlinkedMentions,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: theme.colorScheme.tertiary,
@@ -123,9 +124,8 @@ class BacklinksPanel extends ConsumerWidget {
                               ),
                               child: Text(
                                 '${unlinkedMentions.length}',
-                                style: theme.textTheme.bodySmall?.copyWith(
+                                style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.tertiary,
-                                  fontSize: 10,
                                 ),
                               ),
                             ),
@@ -216,7 +216,6 @@ class _BacklinkItem extends ConsumerWidget {
                   linkContext!,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.hintColor,
-                    fontSize: 11,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -241,6 +240,7 @@ class _UnlinkedMentionItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return InkWell(
       onTap: () {
@@ -292,7 +292,7 @@ class _UnlinkedMentionItem extends ConsumerWidget {
                   onPressed: onLink,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-                  tooltip: '链接',
+                  tooltip: l.link,
                 ),
               ],
             ),
@@ -303,7 +303,6 @@ class _UnlinkedMentionItem extends ConsumerWidget {
                   mention.context,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.hintColor,
-                    fontSize: 11,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

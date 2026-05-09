@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/quick_move_service.dart';
 import '../../../data/models/quick_move.dart';
 import '../../widgets/settings_section.dart';
@@ -14,6 +15,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final quickMoveState = ref.watch(quickMoveProvider);
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return SettingsSection(
       title: 'Quick Moves',
@@ -52,16 +54,16 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          title: const Text('恢复默认命令'),
-                          content: const Text('将恢复所有已删除的预设命令，不会影响你创建的命令。'),
+                          title: Text(l.restoreDefaultCommands),
+                          content: Text(l.restoreDefaultCommandsDesc),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(ctx, false),
-                              child: const Text('取消'),
+                              child: Text(l.cancel),
                             ),
                             FilledButton(
                               onPressed: () => Navigator.pop(ctx, true),
-                              child: const Text('恢复'),
+                              child: Text(l.restore),
                             ),
                           ],
                         ),
@@ -96,7 +98,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                success ? '导入成功' : '导入失败，请检查文件格式',
+                                success ? l.importSuccess : l.importFailed,
                               ),
                             ),
                           );
@@ -196,6 +198,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
     QuickMove move, {
     Key? key,
   }) {
+    final l = AppLocalizations.of(context)!;
     return Dismissible(
       key: key ?? ValueKey(move.id),
       direction: DismissDirection.endToStart,
@@ -203,19 +206,19 @@ class QuickMovesSettingsSection extends ConsumerWidget {
         final confirm = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('删除命令'),
-            content: Text('确定删除命令 "${move.name}" 吗？'),
+            title: Text(l.deleteCommand),
+            content: Text(l.deleteCommandConfirm(move.name)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('取消'),
+                child: Text(l.cancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 style: FilledButton.styleFrom(
                   backgroundColor: theme.colorScheme.error,
                 ),
-                child: const Text('删除'),
+                child: Text(l.delete),
               ),
             ],
           ),
@@ -249,14 +252,12 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                 '${move.promptTemplate.substring(0, 40)}...',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.hintColor,
-                  fontSize: 11,
                 ),
               )
             : Text(
                 move.promptTemplate,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.hintColor,
-                  fontSize: 11,
                 ),
               ),
         trailing: Row(
@@ -264,9 +265,8 @@ class QuickMovesSettingsSection extends ConsumerWidget {
           children: [
             Text(
               move.type == QuickMoveType.preset ? 'Preset' : 'Custom',
-              style: theme.textTheme.bodySmall?.copyWith(
+              style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.hintColor,
-                fontSize: 10,
               ),
             ),
             const SizedBox(width: 4),
@@ -398,7 +398,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                               shape: BoxShape.circle,
                               border: isSelected
                                   ? Border.all(
-                                      color: Colors.white, width: 3)
+                                      color: Theme.of(context).colorScheme.primary, width: 3)
                                   : null,
                               boxShadow: isSelected
                                   ? [
@@ -412,8 +412,8 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                                   : null,
                             ),
                             child: isSelected
-                                ? const Icon(Icons.check,
-                                    size: 14, color: Colors.white)
+                                ? Icon(Icons.check,
+                                    size: 14, color: (Color(colorVal).r * 0.299 + Color(colorVal).g * 0.587 + Color(colorVal).b * 0.114) > 128 ? Colors.black : Colors.white)
                                 : null,
                           ),
                         );

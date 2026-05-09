@@ -18,6 +18,7 @@ class CanvasPainter extends CustomPainter {
   final bool isDark;
   final TextStyle? bodySmallStyle, bodyMediumStyle;
   final KnowledgeState knowledgeState;
+  final double baseFontSize;
 
   CanvasPainter({
     required this.cards, required this.connections, required this.autoConnections,
@@ -28,6 +29,7 @@ class CanvasPainter extends CustomPainter {
     this.connectingPreviewEnd, required this.primaryColor, required this.dividerColor,
     required this.scaffoldBg, required this.isDark, required this.hintColor,
     this.bodySmallStyle, this.bodyMediumStyle, required this.knowledgeState,
+    required this.baseFontSize,
   });
 
   Offset _w2s(double wx, double wy) => Offset((wx - cameraX) * scale + viewW / 2, (wy - cameraY) * scale + viewH / 2);
@@ -173,20 +175,21 @@ class CanvasPainter extends CustomPainter {
       final displayTitle = linkedNote != null ? linkedNote.title : noteDeleted ? '${card.title} [deleted]' : (card.title.isEmpty ? card.type.label : card.title);
       final displayContent = linkedNote != null ? (linkedNote.content.length > 500 ? '${linkedNote.content.substring(0, 500)}...' : linkedNote.content) : card.content;
 
-      final titleStyle = (bodySmallStyle ?? const TextStyle()).copyWith(fontWeight: FontWeight.w600, fontSize: 11, color: noteDeleted ? Colors.orange : null);
+      final cardFontSize = card.effectiveFontSize(baseFontSize);
+      final titleStyle = (bodySmallStyle ?? const TextStyle()).copyWith(fontWeight: FontWeight.w600, fontSize: cardFontSize, color: noteDeleted ? Colors.orange : null);
       final tp = TextPainter(text: TextSpan(text: displayTitle, style: titleStyle), textDirection: TextDirection.ltr, maxLines: 1, ellipsis: '...');
       tp.layout(maxWidth: cardRect.width - 40);
       tp.paint(canvas, Offset(cardRect.left + 24, cardRect.top + (28 * scale - tp.height) / 2));
 
       if (displayContent.isNotEmpty) {
-        final contentStyle = (bodySmallStyle ?? const TextStyle()).copyWith(fontSize: 12, color: displayContent == 'Empty note' ? hintColor : null);
+        final contentStyle = (bodySmallStyle ?? const TextStyle()).copyWith(fontSize: cardFontSize * 1.06, color: displayContent == 'Empty note' ? hintColor : null);
         final cp = TextPainter(text: TextSpan(text: displayContent, style: contentStyle), textDirection: TextDirection.ltr, maxLines: 10, ellipsis: '...');
         cp.layout(maxWidth: cardRect.width - 16);
         cp.paint(canvas, Offset(cardRect.left + 8, cardRect.top + 28 * scale + 8));
       }
 
       if (displayContent.isEmpty && linkedNote == null) {
-        final emptyTp = TextPainter(text: TextSpan(text: card.type == CanvasCardType.note ? 'Empty note' : 'Type something...', style: TextStyle(color: hintColor, fontSize: 12)), textDirection: TextDirection.ltr);
+        final emptyTp = TextPainter(text: TextSpan(text: card.type == CanvasCardType.note ? 'Empty note' : 'Type something...', style: TextStyle(color: hintColor, fontSize: cardFontSize * 1.06)), textDirection: TextDirection.ltr);
         emptyTp.layout(maxWidth: cardRect.width - 16);
         emptyTp.paint(canvas, Offset(cardRect.left + 8, cardRect.top + 28 * scale + 8));
       }
@@ -220,6 +223,7 @@ class CanvasPainter extends CustomPainter {
         scaffoldBg != old.scaffoldBg ||
         hintColor != old.hintColor ||
         isDark != old.isDark ||
-        !identical(knowledgeState, old.knowledgeState);
+        !identical(knowledgeState, old.knowledgeState) ||
+        baseFontSize != old.baseFontSize;
   }
 }

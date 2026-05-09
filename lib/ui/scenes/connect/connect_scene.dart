@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/knowledge_service.dart';
 import '../../widgets/filter_panel.dart';
 import '../../widgets/node_detail_panel.dart';
@@ -107,6 +108,7 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
   }
 
   Widget _buildViewModeSwitcher(ThemeData theme) {
+    final l = AppLocalizations.of(context)!;
     return Container(
       height: 32,
       decoration: BoxDecoration(
@@ -115,8 +117,8 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
       ),
       child: Row(
         children: [
-          _viewModeTab(theme, ConnectViewMode.graph, Icons.hub, '图谱'),
-          _viewModeTab(theme, ConnectViewMode.canvas, Icons.dashboard, '画布'),
+          _viewModeTab(theme, ConnectViewMode.graph, Icons.hub, l.graph),
+          _viewModeTab(theme, ConnectViewMode.canvas, Icons.dashboard, l.canvas),
         ],
       ),
     );
@@ -159,6 +161,7 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
 
   Widget _buildConnectEmptyState(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -171,8 +174,8 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
           const SizedBox(height: 16),
           Text(
             _viewMode == ConnectViewMode.graph
-                ? '知识图谱将在创建笔记后显示'
-                : '画布将在添加卡片后显示',
+                ? l.graphWillShowAfterNotes
+                : l.canvasWillShowAfterCards,
             style: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
           ),
         ],

@@ -7,6 +7,7 @@ import '../../data/stores/vault_store.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/browser_service.dart';
 import 'scene_scaffold.dart';
+import '../../../l10n/app_localizations.dart';
 
 class SceneSwitcher extends ConsumerStatefulWidget {
   final SceneType currentScene;
@@ -26,6 +27,7 @@ class _SceneSwitcherState extends ConsumerState<SceneSwitcher> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final vaultState = ref.watch(vaultProvider);
     final vaultName = vaultState.currentVault?.name ?? 'No Vault';
     return Container(
@@ -39,15 +41,15 @@ class _SceneSwitcherState extends ConsumerState<SceneSwitcher> {
         children: [
           Icon(Icons.explore, size: 18, color: theme.colorScheme.primary),
           const SizedBox(width: 6),
-          Text('RFBrowser', style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700, color: theme.colorScheme.primary, fontSize: 13)),
+          Text('RFBrowser', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: theme.colorScheme.primary)),
           const SizedBox(width: 8),
           _VaultSwitcher(vaultName: vaultName),
           const Spacer(),
-          _SceneButton(scene: SceneType.capture, icon: Icons.explore, label: '捕捉', shortcut: 'Ctrl+1', isActive: widget.currentScene == SceneType.capture, onTap: () => widget.onSceneChanged(SceneType.capture)),
+          _SceneButton(scene: SceneType.capture, icon: Icons.explore, label: l.capture, shortcut: 'Ctrl+1', isActive: widget.currentScene == SceneType.capture, onTap: () => widget.onSceneChanged(SceneType.capture)),
           const SizedBox(width: DesignSpacing.xs),
-          _SceneButton(scene: SceneType.think, icon: Icons.edit_note, label: '思考', shortcut: 'Ctrl+2', isActive: widget.currentScene == SceneType.think, onTap: () => widget.onSceneChanged(SceneType.think)),
+          _SceneButton(scene: SceneType.think, icon: Icons.edit_note, label: l.think, shortcut: 'Ctrl+2', isActive: widget.currentScene == SceneType.think, onTap: () => widget.onSceneChanged(SceneType.think)),
           const SizedBox(width: DesignSpacing.xs),
-          _SceneButton(scene: SceneType.connect, icon: Icons.hub, label: '连接', shortcut: 'Ctrl+3', isActive: widget.currentScene == SceneType.connect, onTap: () => widget.onSceneChanged(SceneType.connect)),
+          _SceneButton(scene: SceneType.connect, icon: Icons.hub, label: l.connect, shortcut: 'Ctrl+3', isActive: widget.currentScene == SceneType.connect, onTap: () => widget.onSceneChanged(SceneType.connect)),
           const SizedBox(width: DesignSpacing.xs),
           _SettingsButton(),
         ],
@@ -86,7 +88,7 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
             children: [
               Icon(Icons.folder_open, size: 12, color: theme.colorScheme.primary),
               const SizedBox(width: 4),
-              Text(widget.vaultName, style: theme.textTheme.bodySmall?.copyWith(fontSize: 10, color: theme.colorScheme.primary), maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text(widget.vaultName, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.primary), maxLines: 1, overflow: TextOverflow.ellipsis),
               Icon(Icons.arrow_drop_down, size: 12, color: theme.hintColor),
             ],
           ),
@@ -96,15 +98,16 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
   }
 
   void _showVaultMenu(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final vaultState = ref.read(vaultProvider);
     final theme = Theme.of(context);
     final items = <PopupMenuEntry<String>>[
-      PopupMenuItem(value: 'open', child: Row(children: [Icon(Icons.folder_open, size: 14, color: theme.hintColor), const SizedBox(width: 8), const Text('打开其他知识库')])),
-      PopupMenuItem(value: 'new', child: Row(children: [Icon(Icons.create_new_folder, size: 14, color: theme.hintColor), const SizedBox(width: 8), const Text('创建新知识库')])),
+      PopupMenuItem(value: 'open', child: Row(children: [Icon(Icons.folder_open, size: 14, color: theme.hintColor), const SizedBox(width: 8), Text(l.openOtherVault)])),
+      PopupMenuItem(value: 'new', child: Row(children: [Icon(Icons.create_new_folder, size: 14, color: theme.hintColor), const SizedBox(width: 8), Text(l.createNewVault)])),
     ];
     if (vaultState.recentVaults.isNotEmpty) {
       items.add(const PopupMenuDivider());
-      items.add(PopupMenuItem(enabled: false, height: 24, child: Text('最近打开', style: theme.textTheme.bodySmall?.copyWith(fontSize: 9, fontWeight: FontWeight.w600, color: theme.hintColor))));
+      items.add(PopupMenuItem(enabled: false, height: 24, child: Text(l.recentlyOpened, style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, color: theme.hintColor))));
       for (final vault in vaultState.recentVaults.take(5)) {
         final isCurrent = vaultState.currentVault?.path == vault.path;
         items.add(PopupMenuItem(
@@ -120,14 +123,14 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
     showMenu(context: context, position: RelativeRect.fromLTRB(10, 44, 200, 0), items: items).then((value) async {
       if (value == null) return;
       if (value == 'open') {
-        final result = await FilePicker.platform.getDirectoryPath(dialogTitle: '选择知识库位置');
+        final result = await FilePicker.platform.getDirectoryPath(dialogTitle: l.selectVaultLocation);
         if (result != null) {
           await ref.read(vaultProvider.notifier).openVault(result);
           ref.read(knowledgeProvider.notifier).loadAllNotes();
           ref.read(browserProvider.notifier).loadBookmarks();
         }
       } else if (value == 'new') {
-        final result = await FilePicker.platform.getDirectoryPath(dialogTitle: '选择知识库位置');
+        final result = await FilePicker.platform.getDirectoryPath(dialogTitle: l.selectVaultLocation);
         if (result != null) {
           await ref.read(vaultProvider.notifier).createVault(result);
           ref.read(knowledgeProvider.notifier).loadAllNotes();
@@ -237,7 +240,7 @@ class _SceneButtonState extends State<_SceneButton> {
               Icon(
                 widget.icon,
                 size: 18,
-                color: active ? primary : DesignColors.textMuted,
+                color: active ? primary : theme.colorScheme.onSurfaceVariant,
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -245,10 +248,9 @@ class _SceneButtonState extends State<_SceneButton> {
                   Flexible(
                     child: Text(
                       widget.label,
-                      style: TextStyle(
-                        fontSize: 11,
+                      style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                        color: active ? primary : DesignColors.textMuted,
+                        color: active ? primary : theme.colorScheme.onSurfaceVariant,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -256,11 +258,10 @@ class _SceneButtonState extends State<_SceneButton> {
                   const SizedBox(width: 4),
                   Text(
                     widget.shortcut,
-                    style: TextStyle(
-                      fontSize: 9,
+                    style: theme.textTheme.labelSmall?.copyWith(
                       color: active
                           ? primary.withValues(alpha: 0.6)
-                          : DesignColors.textMuted.withValues(alpha: 0.5),
+                          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                     ),
                   ),
                 ],

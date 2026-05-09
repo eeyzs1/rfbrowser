@@ -32,6 +32,8 @@ const _bgPresets = [
   _PresetColor('espresso', 'Espresso', Icons.coffee, Color(0xFF3E2723)),
   _PresetColor('deepSea', 'Deep Sea', Icons.water, Color(0xFF004D61)),
   _PresetColor('plum', 'Plum', Icons.local_florist, Color(0xFF4A1942)),
+  _PresetColor('charcoal', 'Charcoal', Icons.brightness_3, Color(0xFF1A1A2E)),
+  _PresetColor('forest', 'Forest', Icons.forest, Color(0xFF1B2A1B)),
   _PresetColor('linen', 'Linen', Icons.checkroom, Color(0xFFD6D3D1)),
   _PresetColor('fog', 'Fog', Icons.cloud_outlined, Color(0xFFCBD5E1)),
   _PresetColor('dune', 'Dune', Icons.beach_access, Color(0xFFD4C5B2)),
@@ -42,10 +44,12 @@ const _surfacePresets = [
   _PresetColor('graphite', 'Graphite', Icons.gradient, Color(0xFF374151)),
   _PresetColor('bronze', 'Bronze', Icons.shield, Color(0xFF5D4037)),
   _PresetColor('steel', 'Steel', Icons.construction, Color(0xFF455A64)),
+  _PresetColor('ivory', 'Ivory', Icons.light_mode, Color(0xFFE8E0D0)),
   _PresetColor('mist', 'Mist', Icons.foggy, Color(0xFFC8CCD0)),
   _PresetColor('sandstone', 'Sandstone', Icons.texture, Color(0xFFC4B5A0)),
   _PresetColor('sage', 'Sage', Icons.eco, Color(0xFFB8C5B4)),
   _PresetColor('lavender', 'Lavender', Icons.local_florist, Color(0xFFC8C0D4)),
+  _PresetColor('pearl', 'Pearl', Icons.diamond, Color(0xFFD4CFC9)),
 ];
 
 class ThemeSettingsSection extends ConsumerWidget {
@@ -87,6 +91,8 @@ class ThemeSettingsSection extends ConsumerWidget {
           setter: (c) => ref.read(settingsProvider.notifier).setSurfaceColor(c),
           isAccent: false,
         ),
+        const Divider(height: 24),
+        _buildOpacitySliders(context, ref, settings, theme, l),
         const SizedBox(height: 4),
       ],
     );
@@ -140,7 +146,7 @@ class ThemeSettingsSection extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(10),
                         border: isSelected
                             ? Border.all(color: isAccent ? preset.color : theme.colorScheme.primary, width: 2.5)
-                            : Border.all(color: isAccent ? Colors.transparent : Colors.white.withValues(alpha: 0.08), width: 1),
+                            : Border.all(color: isAccent ? Colors.transparent : theme.colorScheme.onSurface.withValues(alpha: 0.08), width: 1),
                         boxShadow: isSelected ? [
                           BoxShadow(
                             color: (isAccent ? preset.color : theme.colorScheme.primary).withValues(alpha: 0.3),
@@ -163,8 +169,7 @@ class ThemeSettingsSection extends ConsumerWidget {
                           Text(
                             preset.label,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 9,
+                            style: theme.textTheme.labelSmall?.copyWith(
                               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                               color: isAccent
                                   ? preset.color
@@ -199,5 +204,74 @@ class ThemeSettingsSection extends ConsumerWidget {
   Color _contrastText(Color bg) {
     final lum = bg.r * 0.299 + bg.g * 0.587 + bg.b * 0.114;
     return lum > 128 ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+  }
+
+  Widget _buildOpacitySliders(
+    BuildContext context,
+    WidgetRef ref,
+    AppSettings settings,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: Text(
+            l.opacity,
+            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+          ),
+        ),
+        ListTile(
+          title: Text(l.themeTintOpacity),
+          subtitle: Text('${(settings.themeTintOpacity * 100).round()}%'),
+          trailing: SizedBox(
+            width: 200,
+            child: Slider(
+              value: settings.themeTintOpacity,
+              min: 0.2,
+              max: 1.0,
+              divisions: 8,
+              label: '${(settings.themeTintOpacity * 100).round()}%',
+              onChanged: (v) =>
+                  ref.read(settingsProvider.notifier).setThemeTintOpacity(v),
+            ),
+          ),
+        ),
+        ListTile(
+          title: Text(l.surfaceOpacity),
+          subtitle: Text('${(settings.surfaceOpacity * 100).round()}%'),
+          trailing: SizedBox(
+            width: 200,
+            child: Slider(
+              value: settings.surfaceOpacity,
+              min: 0.1,
+              max: 1.0,
+              divisions: 9,
+              label: '${(settings.surfaceOpacity * 100).round()}%',
+              onChanged: (v) =>
+                  ref.read(settingsProvider.notifier).setSurfaceOpacity(v),
+            ),
+          ),
+        ),
+        ListTile(
+          title: Text(l.backgroundOpacity),
+          subtitle: Text('${(settings.backgroundOpacity * 100).round()}%'),
+          trailing: SizedBox(
+            width: 200,
+            child: Slider(
+              value: settings.backgroundOpacity,
+              min: 0.1,
+              max: 1.0,
+              divisions: 9,
+              label: '${(settings.backgroundOpacity * 100).round()}%',
+              onChanged: (v) =>
+                  ref.read(settingsProvider.notifier).setBackgroundOpacity(v),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

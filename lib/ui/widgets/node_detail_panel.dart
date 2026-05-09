@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/knowledge_service.dart';
 import '../theme/design_tokens.dart';
 
@@ -10,6 +11,7 @@ class NodeDetailPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final knowledgeState = ref.watch(knowledgeProvider);
     final activeNote = knowledgeState.activeNote;
 
@@ -31,7 +33,7 @@ class NodeDetailPanel extends ConsumerWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    activeNote != null ? '节点详情' : '节点详情',
+                    activeNote != null ? l.nodeDetail : l.nodeDetail,
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -45,7 +47,7 @@ class NodeDetailPanel extends ConsumerWidget {
                     onPressed: onClose,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                    tooltip: '关闭面板',
+                    tooltip: l.closePanel,
                   ),
               ],
             ),
@@ -63,9 +65,8 @@ class NodeDetailPanel extends ConsumerWidget {
                         ),
                         const SizedBox(height: DesignSpacing.sm),
                         Text(
-                          '点击图谱节点查看详情',
-                          style: TextStyle(
-                            fontSize: 12,
+                          l.clickNodeForDetail,
+                          style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.hintColor,
                           ),
                         ),
@@ -86,12 +87,12 @@ class NodeDetailPanel extends ConsumerWidget {
                         const SizedBox(height: 8),
                         _infoRow(theme, Icons.label_outline, 'ID', activeNote.id),
                         if (activeNote.tags.isNotEmpty)
-                          _infoRow(theme, Icons.tag, '标签', activeNote.tags.join(', ')),
-                        _infoRow(theme, Icons.link, '反向链接', '${knowledgeState.backlinks.length}'),
-                        _infoRow(theme, Icons.access_time, '修改时间', _formatDate(activeNote.modified)),
+                          _infoRow(theme, Icons.tag, l.tags, activeNote.tags.join(', ')),
+                        _infoRow(theme, Icons.link, l.backlinks, '${knowledgeState.backlinks.length}'),
+                        _infoRow(theme, Icons.access_time, l.modifiedTime, _formatDate(activeNote.modified)),
                         const SizedBox(height: 12),
                         Text(
-                          '内容预览',
+                          l.contentPreview,
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: theme.hintColor,
@@ -132,10 +133,9 @@ class NodeDetailPanel extends ConsumerWidget {
           const SizedBox(width: 4),
           Text('$label: ', style: theme.textTheme.bodySmall?.copyWith(
             color: theme.hintColor,
-            fontSize: 11,
           )),
           Expanded(
-            child: Text(value, style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+            child: Text(value, style: theme.textTheme.bodySmall,
               maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         ],

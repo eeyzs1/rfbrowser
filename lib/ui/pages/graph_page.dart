@@ -7,6 +7,7 @@ import '../../data/models/link.dart';
 import '../../core/graph/layout_engine.dart';
 import '../../core/graph/filter_engine.dart';
 import '../../core/graph/graph_algorithm.dart';
+import '../../l10n/app_localizations.dart';
 import '../widgets/graph_stats_card.dart';
 
 enum GraphLayoutMode { circular, forceDirected }
@@ -37,6 +38,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
   Widget build(BuildContext context) {
     final knowledgeState = ref.watch(knowledgeProvider);
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final notes = knowledgeState.notes;
 
     if (notes.isEmpty) {
@@ -58,10 +60,10 @@ class _GraphViewState extends ConsumerState<GraphView> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('知识图谱', style: theme.textTheme.headlineMedium),
+            Text(l.knowledgeGraph, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 8),
             Text(
-              '创建带有 [[链接]] 的笔记以查看关联',
+              l.createLinkedNotesHint,
               style: theme.textTheme.bodySmall,
             ),
           ],
@@ -220,6 +222,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
                 onSurfaceColor: theme.colorScheme.onSurface,
                 hintColor: theme.hintColor,
                 cardColor: theme.cardColor,
+                errorColor: theme.colorScheme.error,
               ),
               size: Size.infinite,
             ),
@@ -246,7 +249,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
                   Icon(Icons.hub, size: 16, color: theme.colorScheme.primary),
                   const SizedBox(width: 6),
                   Text(
-                    '${displayNotes.length} 条笔记',
+                    l.noteCount(displayNotes.length),
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(width: 8),
@@ -268,7 +271,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
                     constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                     tooltip: _layoutMode == GraphLayoutMode.forceDirected
                         ? 'Switch to circular'
-                        : '切换为力导向布局',
+                        : l.switchToForceLayout,
                   ),
                   IconButton(
                     icon: Icon(
@@ -289,7 +292,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                     tooltip: _viewMode == GraphViewMode.full
-                        ? '局部图谱'
+                        ? l.localGraph
                         : 'Full graph',
                   ),
                   const SizedBox(width: 4),
@@ -379,18 +382,18 @@ class _GraphViewState extends ConsumerState<GraphView> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.15),
+                  color: theme.colorScheme.error.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.star, size: 14, color: Colors.red.shade400),
+                    Icon(Icons.star, size: 14, color: theme.colorScheme.error),
                     const SizedBox(width: 4),
                     Text(
                       '${bridgeNodes.length} bridge nodes',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.red.shade400,
+                        color: theme.colorScheme.error,
                       ),
                     ),
                   ],
@@ -467,6 +470,7 @@ class GraphPainter extends CustomPainter {
   final Color onSurfaceColor;
   final Color hintColor;
   final Color cardColor;
+  final Color errorColor;
 
   GraphPainter({
     required this.notes,
@@ -483,6 +487,7 @@ class GraphPainter extends CustomPainter {
     required this.onSurfaceColor,
     required this.hintColor,
     required this.cardColor,
+    required this.errorColor,
   });
 
   @override
@@ -531,7 +536,7 @@ class GraphPainter extends CustomPainter {
       }
     }
 
-    final redColor = Colors.red.shade400;
+    final redColor = errorColor;
 
     for (final note in notes) {
       final pos = nodePositions[note.id];

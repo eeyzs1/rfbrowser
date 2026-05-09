@@ -141,7 +141,7 @@ class _TaskCard extends ConsumerWidget {
       case TaskStatus.paused:
         return theme.colorScheme.tertiary;
       case TaskStatus.completed:
-        return Colors.green;
+        return theme.colorScheme.primary;
       case TaskStatus.failed:
         return theme.colorScheme.error;
     }
@@ -209,7 +209,7 @@ class _StepRow extends StatelessWidget {
       case TaskStatus.paused:
         return theme.colorScheme.tertiary;
       case TaskStatus.completed:
-        return Colors.green;
+        return theme.colorScheme.primary;
       case TaskStatus.failed:
         return theme.colorScheme.error;
     }
