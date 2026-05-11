@@ -175,12 +175,16 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     required String title,
     required String content,
     String? selectedText,
+    String? rawHtmlPath,
+    String? screenshotPath,
   }) async {
     final note = await _noteSvc.clipToNote(
       url: url,
       title: title,
       content: content,
       selectedText: selectedText,
+      rawHtmlPath: rawHtmlPath,
+      screenshotPath: screenshotPath,
     );
     state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
     _linkSvc.updateLinksForNote(note, state.notes);
@@ -193,12 +197,14 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     required String title,
     required String htmlContent,
     required String textContent,
+    String? tabId,
   }) async {
     final note = await _noteSvc.clipFullPage(
       url: url,
       title: title,
       htmlContent: htmlContent,
       textContent: textContent,
+      tabId: tabId,
     );
     state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
     _linkSvc.updateLinksForNote(note, state.notes);

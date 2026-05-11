@@ -1988,6 +1988,12 @@ abstract class AppLocalizations {
   /// **'Change Color'**
   String get changeColor;
 
+  /// No description provided for @searchCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Cards'**
+  String get searchCards;
+
   /// No description provided for @connectFrom.
   ///
   /// In en, this message translates to:
@@ -2389,6 +2395,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Supports Obsidian-compatible Markdown files'**
   String get obsidianCompatible;
+
+  /// No description provided for @addToCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Canvas'**
+  String get addToCanvas;
+
+  /// No description provided for @notesOnCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notesOnCanvas;
+
+  /// No description provided for @dragOrClickToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Click or drag to add note to canvas'**
+  String get dragOrClickToAdd;
+
+  /// No description provided for @alreadyOnCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Already on canvas'**
+  String get alreadyOnCanvas;
+
+  /// No description provided for @resizeHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'Resize'**
+  String get resizeHandle;
+
+  /// No description provided for @viewOriginalPage.
+  ///
+  /// In en, this message translates to:
+  /// **'View Original Page'**
+  String get viewOriginalPage;
+
+  /// No description provided for @viewScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'View Screenshot'**
+  String get viewScreenshot;
+
+  /// No description provided for @originalPageViewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the original page view. JavaScript is disabled for security.'**
+  String get originalPageViewHint;
+
+  /// No description provided for @openInBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Browser'**
+  String get openInBrowser;
+
+  /// No description provided for @loadingOriginalPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading original page...'**
+  String get loadingOriginalPage;
+
+  /// No description provided for @noOriginalPage.
+  ///
+  /// In en, this message translates to:
+  /// **'No original page saved'**
+  String get noOriginalPage;
+
+  /// No description provided for @pageScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Page Screenshot'**
+  String get pageScreenshot;
+
+  /// No description provided for @screenshotNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot file not found'**
+  String get screenshotNotFound;
+
+  /// No description provided for @connectionProperties.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Properties'**
+  String get connectionProperties;
+
+  /// No description provided for @fromCard.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get fromCard;
+
+  /// No description provided for @toCard.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get toCard;
+
+  /// No description provided for @pathType.
+  ///
+  /// In en, this message translates to:
+  /// **'Path Type'**
+  String get pathType;
+
+  /// No description provided for @endArrow.
+  ///
+  /// In en, this message translates to:
+  /// **'End Arrow'**
+  String get endArrow;
+
+  /// No description provided for @startArrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Arrow'**
+  String get startArrow;
+
+  /// No description provided for @arrowSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow Size'**
+  String get arrowSize;
+
+  /// No description provided for @labelFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Label Font Size'**
+  String get labelFontSize;
+
+  /// No description provided for @lineWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Line Width'**
+  String get lineWidth;
+
+  /// No description provided for @lineColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Line Color'**
+  String get lineColor;
+
+  /// No description provided for @lineJump.
+  ///
+  /// In en, this message translates to:
+  /// **'Line Jump'**
+  String get lineJump;
+
+  /// No description provided for @flowAnimation.
+  ///
+  /// In en, this message translates to:
+  /// **'Flow Animation'**
+  String get flowAnimation;
+
+  /// No description provided for @label.
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get label;
+
+  /// No description provided for @connectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection label'**
+  String get connectionLabel;
+
+  /// No description provided for @deleteConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Connection'**
+  String get deleteConnection;
 }
 
 class _AppLocalizationsDelegate

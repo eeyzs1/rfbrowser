@@ -157,23 +157,30 @@ class ThemeSettingsSection extends ConsumerWidget {
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             preset.icon,
-                            size: 18,
+                            size: 16,
                             color: isAccent
                                 ? preset.color
                                 : _contrastText(preset.color),
                           ),
-                          const SizedBox(height: 3),
-                          Text(
-                            preset.label,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                              color: isAccent
-                                  ? preset.color
-                                  : _contrastText(preset.color),
+                          const SizedBox(height: 2),
+                          Flexible(
+                            child: Text(
+                              preset.label,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                fontSize: 10,
+                                color: isAccent
+                                    ? preset.color
+                                    : _contrastText(preset.color),
+                                height: 1.2,
+                              ),
                             ),
                           ),
                         ],

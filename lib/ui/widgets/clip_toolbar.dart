@@ -31,6 +31,7 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
         title: tab.title,
         htmlContent: htmlContent,
         textContent: textContent.isNotEmpty ? textContent : htmlContent,
+        tabId: tab.id,
       );
       _showClipSuccess(note.title, note.id);
     } catch (e) {

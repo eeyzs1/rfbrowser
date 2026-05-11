@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -29,6 +30,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(browserProvider.notifier).registerContentFetcher(_fetchPageContent);
       ref.read(browserProvider.notifier).registerSelectedTextFetcher(_fetchSelectedText);
+      ref.read(browserProvider.notifier).registerScreenshotFetcher(_takeScreenshot);
     });
   }
 
@@ -58,6 +60,21 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
       return '';
     } catch (_) {
       return '';
+    }
+  }
+
+  Future<Uint8List?> _takeScreenshot(String tabId) async {
+    final controller = _controllers[tabId];
+    if (controller == null) return null;
+    try {
+      return await controller.takeScreenshot(
+        screenshotConfiguration: ScreenshotConfiguration(
+          quality: 80,
+          compressFormat: CompressFormat.JPEG,
+        ),
+      );
+    } catch (_) {
+      return null;
     }
   }
 

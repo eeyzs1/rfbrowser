@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -53,10 +54,12 @@ class BrowserState {
 
 typedef PageContentFetcher = Future<({String html, String text})> Function(String tabId);
 typedef SelectedTextFetcher = Future<String> Function(String tabId);
+typedef ScreenshotFetcher = Future<Uint8List?> Function(String tabId);
 
 class BrowserNotifier extends Notifier<BrowserState> {
   PageContentFetcher? _contentFetcher;
   SelectedTextFetcher? _selectedTextFetcher;
+  ScreenshotFetcher? _screenshotFetcher;
 
   void registerContentFetcher(PageContentFetcher fetcher) {
     _contentFetcher = fetcher;
@@ -64,6 +67,10 @@ class BrowserNotifier extends Notifier<BrowserState> {
 
   void registerSelectedTextFetcher(SelectedTextFetcher fetcher) {
     _selectedTextFetcher = fetcher;
+  }
+
+  void registerScreenshotFetcher(ScreenshotFetcher fetcher) {
+    _screenshotFetcher = fetcher;
   }
 
   Future<({String html, String text})?> fetchPageContent(String tabId) async {
@@ -81,6 +88,15 @@ class BrowserNotifier extends Notifier<BrowserState> {
       return await _selectedTextFetcher!(tabId);
     } catch (_) {
       return '';
+    }
+  }
+
+  Future<Uint8List?> takeScreenshot(String tabId) async {
+    if (_screenshotFetcher == null) return null;
+    try {
+      return await _screenshotFetcher!(tabId);
+    } catch (_) {
+      return null;
     }
   }
 

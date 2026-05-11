@@ -1001,6 +1001,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changeColor => 'Change Color';
 
   @override
+  String get searchCards => 'Search Cards';
+
+  @override
   String get connectFrom => 'Connect From';
 
   @override
@@ -1220,4 +1223,89 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get obsidianCompatible =>
       'Supports Obsidian-compatible Markdown files';
+
+  @override
+  String get addToCanvas => 'Add to Canvas';
+
+  @override
+  String get notesOnCanvas => 'Notes';
+
+  @override
+  String get dragOrClickToAdd => 'Click or drag to add note to canvas';
+
+  @override
+  String get alreadyOnCanvas => 'Already on canvas';
+
+  @override
+  String get resizeHandle => 'Resize';
+
+  @override
+  String get viewOriginalPage => 'View Original Page';
+
+  @override
+  String get viewScreenshot => 'View Screenshot';
+
+  @override
+  String get originalPageViewHint =>
+      'This is the original page view. JavaScript is disabled for security.';
+
+  @override
+  String get openInBrowser => 'Open in Browser';
+
+  @override
+  String get loadingOriginalPage => 'Loading original page...';
+
+  @override
+  String get noOriginalPage => 'No original page saved';
+
+  @override
+  String get pageScreenshot => 'Page Screenshot';
+
+  @override
+  String get screenshotNotFound => 'Screenshot file not found';
+
+  @override
+  String get connectionProperties => 'Connection Properties';
+
+  @override
+  String get fromCard => 'From';
+
+  @override
+  String get toCard => 'To';
+
+  @override
+  String get pathType => 'Path Type';
+
+  @override
+  String get endArrow => 'End Arrow';
+
+  @override
+  String get startArrow => 'Start Arrow';
+
+  @override
+  String get arrowSize => 'Arrow Size';
+
+  @override
+  String get labelFontSize => 'Label Font Size';
+
+  @override
+  String get lineWidth => 'Line Width';
+
+  @override
+  String get lineColor => 'Line Color';
+
+  @override
+  String get lineJump => 'Line Jump';
+
+  @override
+  String get flowAnimation => 'Flow Animation';
+
+  @override
+  String get label => 'Label';
+
+  @override
+  String get connectionLabel => 'Connection label';
+
+  @override
+  String get deleteConnection => 'Delete Connection';
 }

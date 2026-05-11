@@ -990,6 +990,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changeColor => '更改颜色';
 
   @override
+  String get searchCards => '搜索卡片';
+
+  @override
   String get connectFrom => '连接来源';
 
   @override
@@ -1207,4 +1210,88 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get obsidianCompatible => '支持 Obsidian 兼容的 Markdown 文件';
+
+  @override
+  String get addToCanvas => '添加到画布';
+
+  @override
+  String get notesOnCanvas => '笔记';
+
+  @override
+  String get dragOrClickToAdd => '点击或拖拽将笔记添加到画布';
+
+  @override
+  String get alreadyOnCanvas => '已在画布上';
+
+  @override
+  String get resizeHandle => '调整大小';
+
+  @override
+  String get viewOriginalPage => '查看原始页面';
+
+  @override
+  String get viewScreenshot => '查看截图';
+
+  @override
+  String get originalPageViewHint => '这是原始页面视图，为安全起见已禁用 JavaScript。';
+
+  @override
+  String get openInBrowser => '在浏览器中打开';
+
+  @override
+  String get loadingOriginalPage => '正在加载原始页面...';
+
+  @override
+  String get noOriginalPage => '未保存原始页面';
+
+  @override
+  String get pageScreenshot => '页面截图';
+
+  @override
+  String get screenshotNotFound => '截图文件未找到';
+
+  @override
+  String get connectionProperties => '连接属性';
+
+  @override
+  String get fromCard => '起点';
+
+  @override
+  String get toCard => '终点';
+
+  @override
+  String get pathType => '路径类型';
+
+  @override
+  String get endArrow => '终点箭头';
+
+  @override
+  String get startArrow => '起点箭头';
+
+  @override
+  String get arrowSize => '箭头大小';
+
+  @override
+  String get labelFontSize => '标签字号';
+
+  @override
+  String get lineWidth => '线宽';
+
+  @override
+  String get lineColor => '线条颜色';
+
+  @override
+  String get lineJump => '跨线样式';
+
+  @override
+  String get flowAnimation => '流动动画';
+
+  @override
+  String get label => '标签';
+
+  @override
+  String get connectionLabel => '连接标签';
+
+  @override
+  String get deleteConnection => '删除连接';
 }

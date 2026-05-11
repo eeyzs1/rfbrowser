@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:path/path.dart' as p;
 import '../../core/editor/highlighted_text_editing_controller.dart';
 import '../../core/editor/sync_scroll_controller.dart';
 import '../../data/models/drag_data.dart';
@@ -14,7 +18,7 @@ import '../../data/models/quick_move.dart';
 import '../widgets/create_note_dialog.dart';
 import '../../l10n/app_localizations.dart';
 
-enum _EditorViewMode { edit, preview, split }
+enum _EditorViewMode { edit, preview, split, original }
 
 class EditorView extends ConsumerStatefulWidget {
   const EditorView({super.key});
@@ -218,11 +222,13 @@ class _EditorViewState extends ConsumerState<EditorView> {
         Expanded(
           child: ColoredBox(
             color: bgColor,
-            child: _viewMode == _EditorViewMode.split
-                ? _buildSplitView(theme, note, bgColor, l)
-                : _viewMode == _EditorViewMode.preview
-                    ? _buildMarkdownPreview(theme, note, l)
-                    : _buildEditor(theme, bgColor, l),
+            child: _viewMode == _EditorViewMode.original
+                ? _buildOriginalView(theme, note, bgColor, l)
+                : _viewMode == _EditorViewMode.split
+                    ? _buildSplitView(theme, note, bgColor, l)
+                    : _viewMode == _EditorViewMode.preview
+                        ? _buildMarkdownPreview(theme, note, l)
+                        : _buildEditor(theme, bgColor, l),
           ),
         ),
         _buildStatusBar(theme, note, l),
@@ -329,6 +335,44 @@ class _EditorViewState extends ConsumerState<EditorView> {
                 ),
               ),
             ),
+          if (note.rawHtmlPath != null || note.sourceUrl != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Tooltip(
+                message: l.viewOriginalPage,
+                child: IconButton(
+                  icon: const Icon(Icons.language, size: 16),
+                  onPressed: () => _switchViewMode(
+                    _viewMode == _EditorViewMode.original
+                        ? _EditorViewMode.edit
+                        : _EditorViewMode.original,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  style: IconButton.styleFrom(
+                    backgroundColor: _viewMode == _EditorViewMode.original
+                        ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                        : null,
+                    foregroundColor: _viewMode == _EditorViewMode.original
+                        ? theme.colorScheme.primary
+                        : null,
+                  ),
+                ),
+              ),
+            ),
+          if (note.screenshotPath != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Tooltip(
+                message: l.viewScreenshot,
+                child: IconButton(
+                  icon: const Icon(Icons.screenshot, size: 16),
+                  onPressed: () => _showScreenshot(note),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                ),
+              ),
+            ),
           SegmentedButton<_EditorViewMode>(
             segments: [
               ButtonSegment(value: _EditorViewMode.edit, label: Text(l.editMode), icon: Icon(Icons.edit, size: 14)),
@@ -366,6 +410,174 @@ class _EditorViewState extends ConsumerState<EditorView> {
         _syncScrollController?.attach();
       }
     });
+  }
+
+  Widget _buildOriginalView(ThemeData theme, dynamic note, Color bgColor, AppLocalizations l) {
+    final vault = ref.read(vaultProvider).currentVault;
+    if (vault == null) {
+      return Center(child: Text(l.noVaultConnected));
+    }
+
+    if (note.rawHtmlPath != null) {
+      final htmlFile = File(p.join(vault.path, note.rawHtmlPath));
+      return FutureBuilder<String>(
+        future: htmlFile.exists().then((exists) => exists ? htmlFile.readAsString() : ''),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final htmlContent = snapshot.data ?? '';
+          if (htmlContent.isEmpty) {
+            return _buildOriginalFallback(note, l, theme);
+          }
+          return Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  border: Border(bottom: BorderSide(color: theme.dividerColor)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 14, color: theme.hintColor),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l.originalPageViewHint,
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                      ),
+                    ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.open_in_browser, size: 14),
+                      label: Text(l.openInBrowser, style: theme.textTheme.labelSmall),
+                      onPressed: () {
+                        if (note.sourceUrl != null) {
+                          launchUrl(Uri.parse(note.sourceUrl!));
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: InAppWebView(
+                  initialData: InAppWebViewInitialData(data: htmlContent),
+                  initialSettings: InAppWebViewSettings(
+                    useHybridComposition: true,
+                    supportZoom: true,
+                    javaScriptEnabled: false,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    if (note.sourceUrl != null) {
+      return Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              border: Border(bottom: BorderSide(color: theme.dividerColor)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 14, color: theme.hintColor),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l.loadingOriginalPage,
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: InAppWebView(
+              initialUrlRequest: URLRequest(url: WebUri(note.sourceUrl!)),
+              initialSettings: InAppWebViewSettings(
+                useHybridComposition: true,
+                supportZoom: true,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return _buildOriginalFallback(note, l, theme);
+  }
+
+  Widget _buildOriginalFallback(dynamic note, AppLocalizations l, ThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.web_asset_off, size: 48, color: theme.hintColor),
+          const SizedBox(height: 12),
+          Text(l.noOriginalPage, style: theme.textTheme.bodyLarge),
+          const SizedBox(height: 8),
+          if (note.sourceUrl != null)
+            FilledButton.tonal(
+              onPressed: () => launchUrl(Uri.parse(note.sourceUrl!)),
+              child: Text(l.openInBrowser),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showScreenshot(dynamic note) {
+    final vault = ref.read(vaultProvider).currentVault;
+    if (vault == null || note.screenshotPath == null) return;
+    final l = AppLocalizations.of(context)!;
+    final imgFile = File(p.join(vault.path, note.screenshotPath));
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Icon(Icons.screenshot, size: 18, color: Theme.of(ctx).hintColor),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(l.pageScreenshot, style: Theme.of(ctx).textTheme.titleMedium)),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: FutureBuilder<bool>(
+                future: imgFile.exists(),
+                builder: (ctx, snapshot) {
+                  if (snapshot.data != true) {
+                    return Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(l.screenshotNotFound, style: Theme.of(ctx).textTheme.bodyMedium),
+                    );
+                  }
+                  return InteractiveViewer(
+                    child: Image.file(imgFile, fit: BoxFit.contain),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildFormatToolbar(ThemeData theme, AppLocalizations l) {

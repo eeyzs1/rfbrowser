@@ -15,6 +15,8 @@ class Note {
   String? sourceUrl;
   String? sourceTitle;
   String? agentTaskId;
+  String? rawHtmlPath;
+  String? screenshotPath;
 
   Note({
     String? id,
@@ -29,6 +31,8 @@ class Note {
     this.sourceUrl,
     this.sourceTitle,
     this.agentTaskId,
+    this.rawHtmlPath,
+    this.screenshotPath,
   }) : id = id ?? const Uuid().v4(),
        frontMatter = frontMatter ?? {},
        tags = tags ?? [],
@@ -47,6 +51,8 @@ class Note {
     String? sourceUrl,
     String? sourceTitle,
     String? agentTaskId,
+    String? rawHtmlPath,
+    String? screenshotPath,
   }) {
     return Note(
       id: id,
@@ -61,6 +67,8 @@ class Note {
       sourceUrl: sourceUrl ?? this.sourceUrl,
       sourceTitle: sourceTitle ?? this.sourceTitle,
       agentTaskId: agentTaskId ?? this.agentTaskId,
+      rawHtmlPath: rawHtmlPath ?? this.rawHtmlPath,
+      screenshotPath: screenshotPath ?? this.screenshotPath,
     );
   }
 
@@ -80,6 +88,8 @@ class Note {
       if (sourceUrl != null) buffer.writeln('source: $sourceUrl');
       if (sourceTitle != null) buffer.writeln('source-title: "$sourceTitle"');
       if (agentTaskId != null) buffer.writeln('agent-task: $agentTaskId');
+      if (rawHtmlPath != null) buffer.writeln('raw-html: "$rawHtmlPath"');
+      if (screenshotPath != null) buffer.writeln('screenshot: "$screenshotPath"');
       frontMatter.forEach((key, value) {
         if (![
           'title',
@@ -90,6 +100,8 @@ class Note {
           'source',
           'source-title',
           'agent-task',
+          'raw-html',
+          'screenshot',
         ].contains(key)) {
           buffer.writeln('$key: $value');
         }
@@ -110,6 +122,8 @@ class Note {
     String? sourceUrl;
     String? sourceTitle;
     String? agentTaskId;
+    String? rawHtmlPath;
+    String? screenshotPath;
 
     if (markdown.startsWith('---')) {
       final endIndex = markdown.indexOf('---', 3);
@@ -125,6 +139,8 @@ class Note {
             sourceUrl = parsed['source']?.toString();
             sourceTitle = parsed['source-title']?.toString();
             agentTaskId = parsed['agent-task']?.toString();
+            rawHtmlPath = parsed['raw-html']?.toString();
+            screenshotPath = parsed['screenshot']?.toString();
             for (final entry in parsed.entries) {
               final key = entry.key.toString();
               if (![
@@ -136,6 +152,8 @@ class Note {
                 'source',
                 'source-title',
                 'agent-task',
+                'raw-html',
+                'screenshot',
               ].contains(key)) {
                 frontMatter[key] = entry.value;
               }
@@ -173,6 +191,8 @@ class Note {
       sourceUrl: sourceUrl,
       sourceTitle: sourceTitle,
       agentTaskId: agentTaskId,
+      rawHtmlPath: rawHtmlPath,
+      screenshotPath: screenshotPath,
     );
   }
 
