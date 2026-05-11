@@ -3,35 +3,52 @@ import 'package:rfbrowser/core/editor/markdown_highlighter.dart';
 
 void main() {
   group('MarkdownHighlighter', () {
-    test('AC-P5-3-1: heading, bold, link produce different highlight types', () {
-      final highlighter = MarkdownHighlighter();
-      final text = '# Title\n**bold**\n[link](url)';
-      final ranges = highlighter.highlight(text);
+    test(
+      'AC-P5-3-1: heading, bold, link produce different highlight types',
+      () {
+        final highlighter = MarkdownHighlighter();
+        final text = '# Title\n**bold**\n[link](url)';
+        final ranges = highlighter.highlight(text);
 
-      final types = ranges.map((r) => r.type).toSet();
-      expect(types, containsAll([HighlightType.heading, HighlightType.bold, HighlightType.link]));
-    });
+        final types = ranges.map((r) => r.type).toSet();
+        expect(
+          types,
+          containsAll([
+            HighlightType.heading,
+            HighlightType.bold,
+            HighlightType.link,
+          ]),
+        );
+      },
+    );
 
     test('AC-P5-3-2: [[wikilink]] produces wikilink highlight type', () {
       final highlighter = MarkdownHighlighter();
       final text = 'See [[量子计算]] for details';
       final ranges = highlighter.highlight(text);
 
-      final wikilinkRanges = ranges.where((r) => r.type == HighlightType.wikilink).toList();
+      final wikilinkRanges = ranges
+          .where((r) => r.type == HighlightType.wikilink)
+          .toList();
       expect(wikilinkRanges.isNotEmpty, true);
       final range = wikilinkRanges.first;
       expect(text.substring(range.start, range.end), contains('量子计算'));
     });
 
-    test('AC-P5-3-4: code block produces codeBlock highlight with language', () {
-      final highlighter = MarkdownHighlighter();
-      final text = 'Before\n```dart\nprint("hello")\n```\nAfter';
-      final ranges = highlighter.highlight(text);
+    test(
+      'AC-P5-3-4: code block produces codeBlock highlight with language',
+      () {
+        final highlighter = MarkdownHighlighter();
+        final text = 'Before\n```dart\nprint("hello")\n```\nAfter';
+        final ranges = highlighter.highlight(text);
 
-      final codeRanges = ranges.where((r) => r.type == HighlightType.codeBlock).toList();
-      expect(codeRanges.isNotEmpty, true);
-      expect(codeRanges.first.language, 'dart');
-    });
+        final codeRanges = ranges
+            .where((r) => r.type == HighlightType.codeBlock)
+            .toList();
+        expect(codeRanges.isNotEmpty, true);
+        expect(codeRanges.first.language, 'dart');
+      },
+    );
 
     test('empty text produces no ranges', () {
       final highlighter = MarkdownHighlighter();
@@ -50,7 +67,9 @@ void main() {
       final text = 'This is #project and #important';
       final ranges = highlighter.highlight(text);
 
-      final tagRanges = ranges.where((r) => r.type == HighlightType.tag).toList();
+      final tagRanges = ranges
+          .where((r) => r.type == HighlightType.tag)
+          .toList();
       expect(tagRanges.length, 2);
     });
 
@@ -59,7 +78,9 @@ void main() {
       final text = 'See @note[量子计算] and @web[https://example.com]';
       final ranges = highlighter.highlight(text);
 
-      final refRanges = ranges.where((r) => r.type == HighlightType.contextRef).toList();
+      final refRanges = ranges
+          .where((r) => r.type == HighlightType.contextRef)
+          .toList();
       expect(refRanges.length, 2);
     });
 
@@ -68,7 +89,9 @@ void main() {
       final text = 'Here is ![[image.png]] embedded';
       final ranges = highlighter.highlight(text);
 
-      final embedRanges = ranges.where((r) => r.type == HighlightType.embed).toList();
+      final embedRanges = ranges
+          .where((r) => r.type == HighlightType.embed)
+          .toList();
       expect(embedRanges.isNotEmpty, true);
     });
 
@@ -77,7 +100,9 @@ void main() {
       final text = '> This is a quote';
       final ranges = highlighter.highlight(text);
 
-      final quoteRanges = ranges.where((r) => r.type == HighlightType.blockquote).toList();
+      final quoteRanges = ranges
+          .where((r) => r.type == HighlightType.blockquote)
+          .toList();
       expect(quoteRanges.isNotEmpty, true);
     });
 
@@ -86,7 +111,9 @@ void main() {
       final text = '- First item\n- Second item';
       final ranges = highlighter.highlight(text);
 
-      final listRanges = ranges.where((r) => r.type == HighlightType.list).toList();
+      final listRanges = ranges
+          .where((r) => r.type == HighlightType.list)
+          .toList();
       expect(listRanges.isNotEmpty, true);
     });
 

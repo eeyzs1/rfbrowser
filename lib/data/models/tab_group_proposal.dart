@@ -3,8 +3,7 @@ class TabGroupProposal {
 
   TabGroupProposal({required this.groups});
 
-  Set<String> get allTabIds =>
-      groups.expand((g) => g.tabIds).toSet();
+  Set<String> get allTabIds => groups.expand((g) => g.tabIds).toSet();
 }
 
 class ProposedGroup {

@@ -9,7 +9,8 @@ class GraphFilter {
 
   GraphFilter({required this.allNotes, required this.allLinks});
 
-  GraphAlgorithm get _algorithm => GraphAlgorithm(allNotes: allNotes, allLinks: allLinks);
+  GraphAlgorithm get _algorithm =>
+      GraphAlgorithm(allNotes: allNotes, allLinks: allLinks);
 
   List<Note> filterByTag(String tag) {
     return allNotes.where((n) => n.tags.contains(tag)).toList();

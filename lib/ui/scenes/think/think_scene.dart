@@ -41,9 +41,7 @@ class ThinkScene extends ConsumerWidget {
 
     return Column(
       children: [
-        QuickSearchBar(
-          onNoteSelected: (note) => _openNote(ref, note),
-        ),
+        QuickSearchBar(onNoteSelected: (note) => _openNote(ref, note)),
         Expanded(
           child: Stack(
             children: [
@@ -65,9 +63,15 @@ class ThinkScene extends ConsumerWidget {
                           width: 24,
                           decoration: BoxDecoration(
                             color: theme.colorScheme.surface,
-                            border: Border(right: BorderSide(color: theme.dividerColor)),
+                            border: Border(
+                              right: BorderSide(color: theme.dividerColor),
+                            ),
                           ),
-                          child: Icon(Icons.chevron_right, size: 14, color: theme.hintColor),
+                          child: Icon(
+                            Icons.chevron_right,
+                            size: 14,
+                            color: theme.hintColor,
+                          ),
                         ),
                       ),
                     ),
@@ -85,9 +89,15 @@ class ThinkScene extends ConsumerWidget {
                           width: 24,
                           decoration: BoxDecoration(
                             color: theme.colorScheme.surface,
-                            border: Border(left: BorderSide(color: theme.dividerColor)),
+                            border: Border(
+                              left: BorderSide(color: theme.dividerColor),
+                            ),
                           ),
-                          child: Icon(Icons.chevron_left, size: 14, color: theme.hintColor),
+                          child: Icon(
+                            Icons.chevron_left,
+                            size: 14,
+                            color: theme.hintColor,
+                          ),
                         ),
                       ),
                     ),

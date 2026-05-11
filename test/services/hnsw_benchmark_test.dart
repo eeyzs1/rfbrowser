@@ -58,7 +58,9 @@ void main() {
       final data = <String, List<double>>{};
 
       final centroids = List.generate(
-          numClusters, (i) => _randomUnitVector(dim, seed: i * 1000));
+        numClusters,
+        (i) => _randomUnitVector(dim, seed: i * 1000),
+      );
 
       for (int c = 0; c < numClusters; c++) {
         for (int d = 0; d < docsPerCluster; d++) {
@@ -92,10 +94,17 @@ void main() {
       final recall = total > 0 ? hits / total : 0.0;
       final avgMs = totalLat / (numQueries * 1000);
 
-      expect(recall, greaterThanOrEqualTo(0.3),
-          reason: 'HNSW recall@10 must be >= 0.3 with curated clusters');
-      expect(avgMs, lessThan(100),
-          reason: 'Query latency must be < 100ms, got ${avgMs.toStringAsFixed(1)}ms');
+      expect(
+        recall,
+        greaterThanOrEqualTo(0.3),
+        reason: 'HNSW recall@10 must be >= 0.3 with curated clusters',
+      );
+      expect(
+        avgMs,
+        lessThan(100),
+        reason:
+            'Query latency must be < 100ms, got ${avgMs.toStringAsFixed(1)}ms',
+      );
     });
 
     test('recall@10 — random vectors stress test', () {
@@ -128,8 +137,12 @@ void main() {
 
       final recall = total > 0 ? hits / total : 0.0;
 
-      expect(recall, greaterThanOrEqualTo(0.3),
-          reason: 'Random vector stress test recall@10 must be >= 0.3, got ${recall.toStringAsFixed(3)}');
+      expect(
+        recall,
+        greaterThanOrEqualTo(0.3),
+        reason:
+            'Random vector stress test recall@10 must be >= 0.3, got ${recall.toStringAsFixed(3)}',
+      );
     });
 
     test('identical vector search returns exact match', () {
@@ -150,8 +163,11 @@ void main() {
 
       final hnsw = HnswIndex(M: 16, efConstruction: 200);
       for (int i = 0; i < n; i++) {
-        hnsw.insert('doc-$i', _randomUnitVector(dim, seed: i),
-            metadata: {'index': i});
+        hnsw.insert(
+          'doc-$i',
+          _randomUnitVector(dim, seed: i),
+          metadata: {'index': i},
+        );
       }
 
       final query = _randomUnitVector(dim, seed: 999);

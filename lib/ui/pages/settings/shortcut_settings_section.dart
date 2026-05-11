@@ -52,8 +52,7 @@ class _ShortcutSettingsSectionState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       TextButton(
-                        onPressed: () =>
-                            setState(() => _editingAction = null),
+                        onPressed: () => setState(() => _editingAction = null),
                         child: Text(l.cancel),
                       ),
                     ],

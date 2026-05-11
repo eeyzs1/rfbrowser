@@ -34,28 +34,31 @@ class PluginManifest {
   });
 
   factory PluginManifest.fromMap(Map<String, dynamic> map) => PluginManifest(
-        id: map['id'] as String? ?? '',
-        name: map['name'] as String? ?? '',
-        version: map['version'] as String? ?? '0.1.0',
-        author: map['author'] as String? ?? '',
-        description: map['description'] as String? ?? '',
-        permissions: (map['permissions'] as List?)
-                ?.map((p) => Permission.values.firstWhere(
-                      (e) => e.name == p,
-                      orElse: () => Permission.knowledgeRead,
-                    ))
-                .toList() ??
-            [],
-      );
+    id: map['id'] as String? ?? '',
+    name: map['name'] as String? ?? '',
+    version: map['version'] as String? ?? '0.1.0',
+    author: map['author'] as String? ?? '',
+    description: map['description'] as String? ?? '',
+    permissions:
+        (map['permissions'] as List?)
+            ?.map(
+              (p) => Permission.values.firstWhere(
+                (e) => e.name == p,
+                orElse: () => Permission.knowledgeRead,
+              ),
+            )
+            .toList() ??
+        [],
+  );
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'name': name,
-        'version': version,
-        'author': author,
-        'description': description,
-        'permissions': permissions.map((p) => p.name).toList(),
-      };
+    'id': id,
+    'name': name,
+    'version': version,
+    'author': author,
+    'description': description,
+    'permissions': permissions.map((p) => p.name).toList(),
+  };
 }
 
 class PluginCommand {
@@ -126,12 +129,12 @@ class _ApiRequest {
   });
 
   Map<String, dynamic> toMap() => {
-        'type': 'apiRequest',
-        'id': id,
-        'apiName': apiName,
-        'args': args,
-        'requiredPermission': requiredPermission.name,
-      };
+    'type': 'apiRequest',
+    'id': id,
+    'apiName': apiName,
+    'args': args,
+    'requiredPermission': requiredPermission.name,
+  };
 }
 
 class _ApiResponse {
@@ -148,15 +151,18 @@ class _ApiResponse {
   });
 
   factory _ApiResponse.fromMap(Map<String, dynamic> map) => _ApiResponse(
-        id: map['id'] as String? ?? '',
-        success: map['success'] as bool? ?? false,
-        result: map['result'],
-        error: map['error'] as String?,
-      );
+    id: map['id'] as String? ?? '',
+    success: map['success'] as bool? ?? false,
+    result: map['result'],
+    error: map['error'] as String?,
+  );
 }
 
-typedef ApiHandler = Future<Map<String, dynamic>> Function(
-    String apiName, Map<String, dynamic> args);
+typedef ApiHandler =
+    Future<Map<String, dynamic>> Function(
+      String apiName,
+      Map<String, dynamic> args,
+    );
 
 class Sandbox {
   final String pluginId;
@@ -247,7 +253,9 @@ class Sandbox {
         final response = _ApiResponse.fromMap(message);
         _pendingRequests.remove(response.id)?.complete(response);
       } else if (type == 'error') {
-        _errorController.add(message['message'] as String? ?? 'Unknown plugin error');
+        _errorController.add(
+          message['message'] as String? ?? 'Unknown plugin error',
+        );
       }
     }
   }
@@ -301,16 +309,13 @@ class Sandbox {
       response = _ApiResponse(
         id: requestId,
         success: false,
-        error: 'PermissionDeniedError: Plugin "${manifest.name}" lacks permission: ${permission.name}',
+        error:
+            'PermissionDeniedError: Plugin "${manifest.name}" lacks permission: ${permission.name}',
       );
     } else {
       try {
         final result = await _apiHandler(apiName, args);
-        response = _ApiResponse(
-          id: requestId,
-          success: true,
-          result: result,
-        );
+        response = _ApiResponse(id: requestId, success: true, result: result);
       } catch (e) {
         response = _ApiResponse(
           id: requestId,
@@ -528,9 +533,7 @@ class PluginHostNotifier extends Notifier<PluginState> {
       _sandboxes.remove(pluginId);
     }
 
-    state = state.copyWith(
-      running: {...state.running}..remove(pluginId),
-    );
+    state = state.copyWith(running: {...state.running}..remove(pluginId));
   }
 
   void registerCommand(PluginCommand command) {
@@ -555,7 +558,11 @@ class PluginHostNotifier extends Notifier<PluginState> {
   }) async {
     final sandbox = _sandboxes[pluginId];
     if (sandbox == null) throw StateError('Plugin $pluginId not found');
-    return sandbox.callApi<T>(apiName, args, requiredPermission: requiredPermission);
+    return sandbox.callApi<T>(
+      apiName,
+      args,
+      requiredPermission: requiredPermission,
+    );
   }
 }
 

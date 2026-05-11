@@ -32,7 +32,9 @@ class BookmarkFolder {
     return BookmarkFolder(
       id: id,
       name: json['name'] as String,
-      parentId: id == 'bookmarks-bar' ? '' : (json['parentId'] as String? ?? 'bookmarks-bar'),
+      parentId: id == 'bookmarks-bar'
+          ? ''
+          : (json['parentId'] as String? ?? 'bookmarks-bar'),
       isExpanded: json['isExpanded'] as bool? ?? true,
     );
   }
@@ -51,9 +53,9 @@ class Bookmark {
     required this.title,
     String? folderId,
     DateTime? addedAt,
-  })  : id = id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        folderId = folderId ?? '',
-        addedAt = addedAt ?? DateTime.now();
+  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+       folderId = folderId ?? '',
+       addedAt = addedAt ?? DateTime.now();
 
   Bookmark copyWith({String? folderId}) {
     return Bookmark(
@@ -78,7 +80,9 @@ class Bookmark {
     url: json['url'] as String,
     title: json['title'] as String,
     folderId: json['folderId'] as String? ?? '',
-    addedAt: json['addedAt'] != null ? DateTime.parse(json['addedAt'] as String) : DateTime.now(),
+    addedAt: json['addedAt'] != null
+        ? DateTime.parse(json['addedAt'] as String)
+        : DateTime.now(),
   );
 }
 

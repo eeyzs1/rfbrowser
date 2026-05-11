@@ -49,10 +49,7 @@ void main() {
     });
 
     test('resolvePrompt returns template unchanged when no placeholders', () {
-      final move = QuickMove(
-        name: 'test',
-        promptTemplate: 'No placeholders',
-      );
+      final move = QuickMove(name: 'test', promptTemplate: 'No placeholders');
 
       final result = move.resolvePrompt({});
 
@@ -60,10 +57,7 @@ void main() {
     });
 
     test('resolvePrompt handles repeated placeholders', () {
-      final move = QuickMove(
-        name: 'test',
-        promptTemplate: '{input}{input}',
-      );
+      final move = QuickMove(name: 'test', promptTemplate: '{input}{input}');
 
       final result = move.resolvePrompt({'input': 'x'});
 
@@ -161,14 +155,14 @@ void main() {
     });
 
     test('copyWith rebuilds byId map', () {
-      final moves = [
-        QuickMove(id: '1', name: 'A', promptTemplate: ''),
-      ];
+      final moves = [QuickMove(id: '1', name: 'A', promptTemplate: '')];
       final state = QuickMoveState(moves: moves);
-      final updated = state.copyWith(moves: [
-        QuickMove(id: '1', name: 'A_updated', promptTemplate: ''),
-        QuickMove(id: '2', name: 'B', promptTemplate: ''),
-      ]);
+      final updated = state.copyWith(
+        moves: [
+          QuickMove(id: '1', name: 'A_updated', promptTemplate: ''),
+          QuickMove(id: '2', name: 'B', promptTemplate: ''),
+        ],
+      );
 
       expect(updated.byId.length, 2);
       expect(updated.byId['1']!.name, 'A_updated');
@@ -185,8 +179,11 @@ void main() {
     test('all presets have {input} in promptTemplate', () {
       final presets = QuickMove.defaultPresets();
       for (final p in presets) {
-        expect(p.promptTemplate.contains('{input}'), isTrue,
-            reason: '${p.name} should contain {input}');
+        expect(
+          p.promptTemplate.contains('{input}'),
+          isTrue,
+          reason: '${p.name} should contain {input}',
+        );
       }
     });
 

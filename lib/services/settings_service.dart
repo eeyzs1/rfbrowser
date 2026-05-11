@@ -68,7 +68,10 @@ class AppSettings {
   Color get surfaceColor => Color(surfaceColorValue);
 
   bool get isDarkMode {
-    final lum = scaffoldBgColor.r * 0.299 + scaffoldBgColor.g * 0.587 + scaffoldBgColor.b * 0.114;
+    final lum =
+        scaffoldBgColor.r * 0.299 +
+        scaffoldBgColor.g * 0.587 +
+        scaffoldBgColor.b * 0.114;
     return lum < 128;
   }
 
@@ -327,7 +330,9 @@ class AIConfigState {
     return AIConfigState(
       providers: providers ?? this.providers,
       models: models ?? this.models,
-      activeConfig: clearActiveConfig ? null : (activeConfig ?? this.activeConfig),
+      activeConfig: clearActiveConfig
+          ? null
+          : (activeConfig ?? this.activeConfig),
     );
   }
 }
@@ -469,10 +474,16 @@ class AIConfigNotifier extends Notifier<AIConfigState> {
 
   Future<void> removeProvider(String providerId) async {
     final providers = state.providers.where((p) => p.id != providerId).toList();
-    final models = state.models.where((m) => m.providerId != providerId).toList();
+    final models = state.models
+        .where((m) => m.providerId != providerId)
+        .toList();
     await _secureStorage.delete(key: 'ai_key_$providerId');
     final clearActive = state.activeConfig?.providerId == providerId;
-    state = state.copyWith(providers: providers, models: models, clearActiveConfig: clearActive);
+    state = state.copyWith(
+      providers: providers,
+      models: models,
+      clearActiveConfig: clearActive,
+    );
     if (clearActive) await _saveActiveConfig();
     await _saveProviders();
     await _saveModels();
@@ -492,7 +503,9 @@ class AIConfigNotifier extends Notifier<AIConfigState> {
     String providerId,
     List<AIModel> newModels,
   ) async {
-    var models = state.models.where((m) => m.providerId != providerId || m.isCustom).toList();
+    var models = state.models
+        .where((m) => m.providerId != providerId || m.isCustom)
+        .toList();
     models.addAll(newModels);
     state = state.copyWith(models: models);
     await _saveModels();
@@ -509,10 +522,11 @@ class AIConfigNotifier extends Notifier<AIConfigState> {
   }
 
   Future<void> removeModel(String modelId, String providerId) async {
-    final models = state.models.where(
-      (m) => !(m.id == modelId && m.providerId == providerId),
-    ).toList();
-    final clearActive = state.activeConfig?.modelId == modelId &&
+    final models = state.models
+        .where((m) => !(m.id == modelId && m.providerId == providerId))
+        .toList();
+    final clearActive =
+        state.activeConfig?.modelId == modelId &&
         state.activeConfig?.providerId == providerId;
     state = state.copyWith(models: models, clearActiveConfig: clearActive);
     if (clearActive) await _saveActiveConfig();

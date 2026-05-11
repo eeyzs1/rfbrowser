@@ -11,10 +11,7 @@ class GraphAlgorithm {
   late final Map<String, Set<String>> _adjacency;
   late final Set<String> _allNodeIds;
 
-  GraphAlgorithm({
-    this.allNotes = const [],
-    this.allLinks = const [],
-  }) {
+  GraphAlgorithm({this.allNotes = const [], this.allLinks = const []}) {
     _allNodeIds = allNotes.map((n) => n.id).toSet();
     _adjacency = {};
     for (final link in allLinks) {
@@ -95,10 +92,7 @@ class GraphAlgorithm {
     return path;
   }
 
-  Map<String, double> pageRank({
-    int iterations = 50,
-    double damping = 0.85,
-  }) {
+  Map<String, double> pageRank({int iterations = 50, double damping = 0.85}) {
     final nodeList = allNotes.toList();
     if (nodeList.isEmpty) return {};
 
@@ -245,9 +239,7 @@ class GraphAlgorithm {
   GraphStats getGraphStats() {
     final totalNodes = _allNodeIds.length;
     final totalEdges = allLinks.length;
-    final avgDegree = totalNodes > 0
-        ? (allLinks.length * 2) / totalNodes
-        : 0.0;
+    final avgDegree = totalNodes > 0 ? (allLinks.length * 2) / totalNodes : 0.0;
 
     final cc = connectedComponents();
 

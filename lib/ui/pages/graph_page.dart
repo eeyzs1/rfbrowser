@@ -11,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import '../widgets/graph_stats_card.dart';
 
 enum GraphLayoutMode { circular, forceDirected }
+
 enum GraphViewMode { full, local }
 
 class GraphView extends ConsumerStatefulWidget {
@@ -62,10 +63,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
             const SizedBox(height: 16),
             Text(l.knowledgeGraph, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 8),
-            Text(
-              l.createLinkedNotesHint,
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(l.createLinkedNotesHint, style: theme.textTheme.bodySmall),
           ],
         ),
       );
@@ -77,16 +75,24 @@ class _GraphViewState extends ConsumerState<GraphView> {
     for (final link in knowledgeState.outlinks) {
       final key = '${link.sourceId}->${link.targetId}';
       linkCounts[key] = (linkCounts[key] ?? 0) + 1;
-      if (!allLinks.any((l) => l.sourceId == link.sourceId && l.targetId == link.targetId)) {
-        allLinks.add(GraphLink(sourceId: link.sourceId, targetId: link.targetId));
+      if (!allLinks.any(
+        (l) => l.sourceId == link.sourceId && l.targetId == link.targetId,
+      )) {
+        allLinks.add(
+          GraphLink(sourceId: link.sourceId, targetId: link.targetId),
+        );
         allDataLinks.add(link);
       }
     }
     for (final link in knowledgeState.backlinks) {
       final key = '${link.sourceId}->${link.targetId}';
       linkCounts[key] = (linkCounts[key] ?? 0) + 1;
-      if (!allLinks.any((l) => l.sourceId == link.sourceId && l.targetId == link.targetId)) {
-        allLinks.add(GraphLink(sourceId: link.sourceId, targetId: link.targetId));
+      if (!allLinks.any(
+        (l) => l.sourceId == link.sourceId && l.targetId == link.targetId,
+      )) {
+        allLinks.add(
+          GraphLink(sourceId: link.sourceId, targetId: link.targetId),
+        );
         allDataLinks.add(link);
       }
     }
@@ -127,7 +133,8 @@ class _GraphViewState extends ConsumerState<GraphView> {
     final bridgeIds = bridgeNodes.map((b) => b.noteId).toSet();
     final graphStats = algorithm.getGraphStats();
 
-    final layoutKey = '${displayNotes.map((n) => n.id).join(",")}|${displayLinks.map((l) => '${l.sourceId}->${l.targetId}').join(",")}|$_layoutMode';
+    final layoutKey =
+        '${displayNotes.map((n) => n.id).join(",")}|${displayLinks.map((l) => '${l.sourceId}->${l.targetId}').join(",")}|$_layoutMode';
     if (_cachedLayoutKey != layoutKey) {
       _cachedLayout = _computeLayout(displayNotes, displayLinks);
       _cachedLayoutKey = layoutKey;
@@ -165,66 +172,68 @@ class _GraphViewState extends ConsumerState<GraphView> {
               }
             },
             child: GestureDetector(
-            onScaleUpdate: (details) {
-              setState(() {
-                _scale = (_scale * details.scale).clamp(0.3, 3.0);
-                _offset += details.focalPointDelta;
-              });
-            },
-            onTapUp: (details) {
-              final size =
-                  (_graphKey.currentContext?.findRenderObject() as RenderBox?)
-                      ?.size ??
-                  Size.zero;
-              final nodeRadius = 6.0 * _scale;
-              final layout = _cachedLayout;
+              onScaleUpdate: (details) {
+                setState(() {
+                  _scale = (_scale * details.scale).clamp(0.3, 3.0);
+                  _offset += details.focalPointDelta;
+                });
+              },
+              onTapUp: (details) {
+                final size =
+                    (_graphKey.currentContext?.findRenderObject() as RenderBox?)
+                        ?.size ??
+                    Size.zero;
+                final nodeRadius = 6.0 * _scale;
+                final layout = _cachedLayout;
 
-              String? tappedNoteId;
-              if (layout != null) {
-                for (final entry in layout.entries) {
-                  final pos = Offset(
-                    entry.value.dx * _scale + size.width / 2 + _offset.dx,
-                    entry.value.dy * _scale + size.height / 2 + _offset.dy,
-                  );
-                  final dist = (pos - details.localPosition).distance;
-                  if (dist < nodeRadius * 3) {
-                    tappedNoteId = entry.key;
-                    break;
+                String? tappedNoteId;
+                if (layout != null) {
+                  for (final entry in layout.entries) {
+                    final pos = Offset(
+                      entry.value.dx * _scale + size.width / 2 + _offset.dx,
+                      entry.value.dy * _scale + size.height / 2 + _offset.dy,
+                    );
+                    final dist = (pos - details.localPosition).distance;
+                    if (dist < nodeRadius * 3) {
+                      tappedNoteId = entry.key;
+                      break;
+                    }
                   }
                 }
-              }
 
-              if (tappedNoteId != null) {
-                final note = displayNotes.where((n) => n.id == tappedNoteId).firstOrNull;
-                if (note != null) {
-                  ref.read(knowledgeProvider.notifier).openNote(note.id);
+                if (tappedNoteId != null) {
+                  final note = displayNotes
+                      .where((n) => n.id == tappedNoteId)
+                      .firstOrNull;
+                  if (note != null) {
+                    ref.read(knowledgeProvider.notifier).openNote(note.id);
+                  }
                 }
-              }
-            },
-            child: ClipRect(
-              child: CustomPaint(
-                key: _graphKey,
-                painter: GraphPainter(
-                notes: displayNotes,
-                links: displayLinks,
-                scale: _scale,
-                offset: _offset,
-                layout: _cachedLayout,
-                hoveredNode: _hoveredNode,
-                selectedNode: _selectedNode,
-                bridgeIds: bridgeIds,
-                primaryColor: theme.colorScheme.primary,
-                secondaryColor: theme.colorScheme.secondary,
-                surfaceColor: theme.colorScheme.surface,
-                onSurfaceColor: theme.colorScheme.onSurface,
-                hintColor: theme.hintColor,
-                cardColor: theme.cardColor,
-                errorColor: theme.colorScheme.error,
-              ),
-              size: Size.infinite,
+              },
+              child: ClipRect(
+                child: CustomPaint(
+                  key: _graphKey,
+                  painter: GraphPainter(
+                    notes: displayNotes,
+                    links: displayLinks,
+                    scale: _scale,
+                    offset: _offset,
+                    layout: _cachedLayout,
+                    hoveredNode: _hoveredNode,
+                    selectedNode: _selectedNode,
+                    bridgeIds: bridgeIds,
+                    primaryColor: theme.colorScheme.primary,
+                    secondaryColor: theme.colorScheme.secondary,
+                    surfaceColor: theme.colorScheme.surface,
+                    onSurfaceColor: theme.colorScheme.onSurface,
+                    hintColor: theme.hintColor,
+                    cardColor: theme.cardColor,
+                    errorColor: theme.colorScheme.error,
+                  ),
+                  size: Size.infinite,
+                ),
               ),
             ),
-          ),
           ),
           Positioned(
             top: 12,
@@ -259,14 +268,16 @@ class _GraphViewState extends ConsumerState<GraphView> {
                       size: 14,
                     ),
                     onPressed: () => setState(() {
-                      _layoutMode =
-                          _layoutMode == GraphLayoutMode.forceDirected
-                              ? GraphLayoutMode.circular
-                              : GraphLayoutMode.forceDirected;
+                      _layoutMode = _layoutMode == GraphLayoutMode.forceDirected
+                          ? GraphLayoutMode.circular
+                          : GraphLayoutMode.forceDirected;
                       _cachedLayoutKey = null;
                     }),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     tooltip: _layoutMode == GraphLayoutMode.forceDirected
                         ? 'Switch to circular'
                         : l.switchToForceLayout,
@@ -282,13 +293,18 @@ class _GraphViewState extends ConsumerState<GraphView> {
                       _viewMode = _viewMode == GraphViewMode.full
                           ? GraphViewMode.local
                           : GraphViewMode.full;
-                      if (_viewMode == GraphViewMode.local && _localGraphCenter == null) {
-                        _localGraphCenter = knowledgeState.activeNote?.id ?? notes.first.id;
+                      if (_viewMode == GraphViewMode.local &&
+                          _localGraphCenter == null) {
+                        _localGraphCenter =
+                            knowledgeState.activeNote?.id ?? notes.first.id;
                       }
                       _cachedLayoutKey = null;
                     }),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     tooltip: _viewMode == GraphViewMode.full
                         ? l.localGraph
                         : 'Full graph',
@@ -301,7 +317,10 @@ class _GraphViewState extends ConsumerState<GraphView> {
                     ),
                     onPressed: () => setState(() => _showStats = !_showStats),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     tooltip: 'Toggle statistics',
                   ),
                   const SizedBox(width: 4),
@@ -310,14 +329,20 @@ class _GraphViewState extends ConsumerState<GraphView> {
                     onPressed: () =>
                         setState(() => _scale = (_scale * 1.2).clamp(0.3, 3.0)),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.zoom_out, size: 16),
                     onPressed: () =>
                         setState(() => _scale = (_scale / 1.2).clamp(0.3, 3.0)),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.center_focus_strong, size: 16),
@@ -326,7 +351,10 @@ class _GraphViewState extends ConsumerState<GraphView> {
                       _scale = 1.0;
                     }),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                   ),
                 ],
               ),
@@ -343,7 +371,10 @@ class _GraphViewState extends ConsumerState<GraphView> {
               bottom: 12,
               left: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: theme.cardColor,
                   borderRadius: BorderRadius.circular(8),
@@ -378,7 +409,10 @@ class _GraphViewState extends ConsumerState<GraphView> {
               bottom: 12,
               right: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.error.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
@@ -404,16 +438,12 @@ class _GraphViewState extends ConsumerState<GraphView> {
   }
 
   LocalGraphResult? _computeLocalGraph(KnowledgeState knowledgeState) {
-    return ref.read(knowledgeProvider.notifier).getLocalGraph(
-      _localGraphCenter!,
-      depth: _localGraphDepth,
-    );
+    return ref
+        .read(knowledgeProvider.notifier)
+        .getLocalGraph(_localGraphCenter!, depth: _localGraphDepth);
   }
 
-  Map<String, Offset>? _computeLayout(
-    List<Note> notes,
-    List<GraphLink> links,
-  ) {
+  Map<String, Offset>? _computeLayout(List<Note> notes, List<GraphLink> links) {
     if (notes.isEmpty) return null;
 
     if (_layoutMode == GraphLayoutMode.circular) {
@@ -435,21 +465,18 @@ class _GraphViewState extends ConsumerState<GraphView> {
       linkCounts[key] = (linkCounts[key] ?? 0) + 1;
     }
 
-    final layoutNodes = notes
-        .map((n) => LayoutNode(id: n.id))
-        .toList();
-    final layoutEdges = links
-        .map((l) {
-          final key = '${l.sourceId}->${l.targetId}';
-          final weight = linkCounts[key]?.toDouble() ?? 1.0;
-          return LayoutEdge(sourceId: l.sourceId, targetId: l.targetId, weight: weight);
-        })
-        .toList();
+    final layoutNodes = notes.map((n) => LayoutNode(id: n.id)).toList();
+    final layoutEdges = links.map((l) {
+      final key = '${l.sourceId}->${l.targetId}';
+      final weight = linkCounts[key]?.toDouble() ?? 1.0;
+      return LayoutEdge(
+        sourceId: l.sourceId,
+        targetId: l.targetId,
+        weight: weight,
+      );
+    }).toList();
 
-    final layout = ForceDirectedLayout.adaptive(
-      notes.length,
-      seed: 42,
-    );
+    final layout = ForceDirectedLayout.adaptive(notes.length, seed: 42);
     final result = layout.compute(layoutNodes, layoutEdges);
     return result.positions;
   }
@@ -597,7 +624,10 @@ class GraphPainter extends CustomPainter {
         starPainter.layout();
         starPainter.paint(
           canvas,
-          Offset(pos.dx - starPainter.width / 2, pos.dy - r - starPainter.height),
+          Offset(
+            pos.dx - starPainter.width / 2,
+            pos.dy - r - starPainter.height,
+          ),
         );
       }
 

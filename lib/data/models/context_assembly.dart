@@ -40,10 +40,7 @@ class ContextAssembly {
     : items = items ?? [];
 
   ContextAssembly addItem(ContextItem item) {
-    return ContextAssembly(
-      items: [...items, item],
-      truncated: truncated,
-    );
+    return ContextAssembly(items: [...items, item], truncated: truncated);
   }
 
   String toPrompt() {

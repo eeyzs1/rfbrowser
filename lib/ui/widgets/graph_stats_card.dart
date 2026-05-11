@@ -17,10 +17,7 @@ class GraphStatsCard extends StatelessWidget {
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 8),
         ],
       ),
       child: Column(
@@ -40,8 +37,16 @@ class GraphStatsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          _StatRow(label: 'Nodes', value: stats.totalNodes.toString(), theme: theme),
-          _StatRow(label: 'Edges', value: stats.totalEdges.toString(), theme: theme),
+          _StatRow(
+            label: 'Nodes',
+            value: stats.totalNodes.toString(),
+            theme: theme,
+          ),
+          _StatRow(
+            label: 'Edges',
+            value: stats.totalEdges.toString(),
+            theme: theme,
+          ),
           _StatRow(
             label: 'Avg Degree',
             value: stats.avgDegree.toStringAsFixed(1),

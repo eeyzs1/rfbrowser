@@ -28,9 +28,9 @@ class QuickMove {
     DateTime? updatedAt,
     this.lastUsedAt,
     this.useCount = 0,
-  })  : id = id ?? const Uuid().v4(),
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : id = id ?? const Uuid().v4(),
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   IconData get icon => IconData(iconCodePoint, fontFamily: 'MaterialIcons');
 
@@ -70,98 +70,96 @@ class QuickMove {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'promptTemplate': promptTemplate,
-        'iconCodePoint': iconCodePoint,
-        'colorValue': colorValue,
-        'type': type.name,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-        'lastUsedAt': lastUsedAt?.toIso8601String(),
-        'useCount': useCount,
-      };
+    'id': id,
+    'name': name,
+    'promptTemplate': promptTemplate,
+    'iconCodePoint': iconCodePoint,
+    'colorValue': colorValue,
+    'type': type.name,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+    'lastUsedAt': lastUsedAt?.toIso8601String(),
+    'useCount': useCount,
+  };
 
   factory QuickMove.fromJson(Map<String, dynamic> json) => QuickMove(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        promptTemplate: json['promptTemplate'] as String,
-        iconCodePoint: json['iconCodePoint'] as int? ?? _defaultIconCodePoint,
-        colorValue: json['colorValue'] as int? ?? 0xFF0EA5E9,
-        type: QuickMoveType.values.firstWhere(
-          (t) => t.name == json['type'],
-          orElse: () => QuickMoveType.user,
-        ),
-        createdAt: json['createdAt'] != null
-            ? DateTime.parse(json['createdAt'] as String)
-            : DateTime.now(),
-        updatedAt: json['updatedAt'] != null
-            ? DateTime.parse(json['updatedAt'] as String)
-            : DateTime.now(),
-        lastUsedAt: json['lastUsedAt'] != null
-            ? DateTime.parse(json['lastUsedAt'] as String)
-            : null,
-        useCount: json['useCount'] as int? ?? 0,
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    promptTemplate: json['promptTemplate'] as String,
+    iconCodePoint: json['iconCodePoint'] as int? ?? _defaultIconCodePoint,
+    colorValue: json['colorValue'] as int? ?? 0xFF0EA5E9,
+    type: QuickMoveType.values.firstWhere(
+      (t) => t.name == json['type'],
+      orElse: () => QuickMoveType.user,
+    ),
+    createdAt: json['createdAt'] != null
+        ? DateTime.parse(json['createdAt'] as String)
+        : DateTime.now(),
+    updatedAt: json['updatedAt'] != null
+        ? DateTime.parse(json['updatedAt'] as String)
+        : DateTime.now(),
+    lastUsedAt: json['lastUsedAt'] != null
+        ? DateTime.parse(json['lastUsedAt'] as String)
+        : null,
+    useCount: json['useCount'] as int? ?? 0,
+  );
 
   static List<QuickMove> defaultPresets() => [
-        QuickMove(
-          id: 'preset_translate',
-          name: '翻译',
-          promptTemplate:
-              'Translate the following text to English. Only return the translation, no explanations:\n\n{input}',
-          iconCodePoint: 0xe8e2,
-          colorValue: 0xFF64748B,
-          type: QuickMoveType.preset,
-        ),
-        QuickMove(
-          id: 'preset_summarize',
-          name: '总结',
-          promptTemplate:
-              'Summarize the following content in 3 bullet points:\n\n{input}',
-          iconCodePoint: 0xf071,
-          colorValue: 0xFF0EA5E9,
-          type: QuickMoveType.preset,
-        ),
-        QuickMove(
-          id: 'preset_explain',
-          name: '解释',
-          promptTemplate:
-              'Explain the following concept in simple terms:\n\n{input}',
-          iconCodePoint: 0xea4a,
-          colorValue: 0xFF8B5CF6,
-          type: QuickMoveType.preset,
-        ),
-        QuickMove(
-          id: 'preset_email',
-          name: '邮件',
-          promptTemplate:
-              'Write a professional email based on the following context:\n\n{input}',
-          iconCodePoint: 0xe158,
-          colorValue: 0xFF10B981,
-          type: QuickMoveType.preset,
-        ),
-        QuickMove(
-          id: 'preset_grammar',
-          name: '语法',
-          promptTemplate:
-              'Fix grammar and spelling errors in the following text. Only return the corrected version:\n\n{input}',
-          iconCodePoint: 0xe8ce,
-          colorValue: 0xFFF59E0B,
-          type: QuickMoveType.preset,
-        ),
-      ];
+    QuickMove(
+      id: 'preset_translate',
+      name: '翻译',
+      promptTemplate:
+          'Translate the following text to English. Only return the translation, no explanations:\n\n{input}',
+      iconCodePoint: 0xe8e2,
+      colorValue: 0xFF64748B,
+      type: QuickMoveType.preset,
+    ),
+    QuickMove(
+      id: 'preset_summarize',
+      name: '总结',
+      promptTemplate:
+          'Summarize the following content in 3 bullet points:\n\n{input}',
+      iconCodePoint: 0xf071,
+      colorValue: 0xFF0EA5E9,
+      type: QuickMoveType.preset,
+    ),
+    QuickMove(
+      id: 'preset_explain',
+      name: '解释',
+      promptTemplate:
+          'Explain the following concept in simple terms:\n\n{input}',
+      iconCodePoint: 0xea4a,
+      colorValue: 0xFF8B5CF6,
+      type: QuickMoveType.preset,
+    ),
+    QuickMove(
+      id: 'preset_email',
+      name: '邮件',
+      promptTemplate:
+          'Write a professional email based on the following context:\n\n{input}',
+      iconCodePoint: 0xe158,
+      colorValue: 0xFF10B981,
+      type: QuickMoveType.preset,
+    ),
+    QuickMove(
+      id: 'preset_grammar',
+      name: '语法',
+      promptTemplate:
+          'Fix grammar and spelling errors in the following text. Only return the corrected version:\n\n{input}',
+      iconCodePoint: 0xe8ce,
+      colorValue: 0xFFF59E0B,
+      type: QuickMoveType.preset,
+    ),
+  ];
 }
 
 class QuickMoveState {
   final List<QuickMove> moves;
   final Map<String, QuickMove> byId;
 
-  QuickMoveState({
-    List<QuickMove>? moves,
-    Map<String, QuickMove>? byId,
-  })  : moves = moves ?? [],
-        byId = byId ?? {};
+  QuickMoveState({List<QuickMove>? moves, Map<String, QuickMove>? byId})
+    : moves = moves ?? [],
+      byId = byId ?? {};
 
   factory QuickMoveState.initial() {
     final presets = QuickMove.defaultPresets();
@@ -189,9 +187,7 @@ class QuickMoveState {
         .toList();
   }
 
-  QuickMoveState copyWith({
-    List<QuickMove>? moves,
-  }) {
+  QuickMoveState copyWith({List<QuickMove>? moves}) {
     final newMoves = moves ?? this.moves;
     final byId = <String, QuickMove>{};
     for (final m in newMoves) {
@@ -201,11 +197,12 @@ class QuickMoveState {
   }
 
   Map<String, dynamic> toJson() => {
-        'moves': moves.map((m) => m.toJson()).toList(),
-      };
+    'moves': moves.map((m) => m.toJson()).toList(),
+  };
 
   factory QuickMoveState.fromJson(Map<String, dynamic> json) {
-    final movesList = (json['moves'] as List<dynamic>?)
+    final movesList =
+        (json['moves'] as List<dynamic>?)
             ?.map((e) => QuickMove.fromJson(e as Map<String, dynamic>))
             .toList() ??
         [];
@@ -247,12 +244,11 @@ class QuickMoveContext {
     return QuickMoveContext(
       currentUrl: clearCurrentUrl ? null : (currentUrl ?? this.currentUrl),
       pageTitle: clearPageTitle ? null : (pageTitle ?? this.pageTitle),
-      pageContent:
-          clearPageContent ? null : (pageContent ?? this.pageContent),
-      selectedText:
-          clearSelectedText ? null : (selectedText ?? this.selectedText),
-      noteContent:
-          clearNoteContent ? null : (noteContent ?? this.noteContent),
+      pageContent: clearPageContent ? null : (pageContent ?? this.pageContent),
+      selectedText: clearSelectedText
+          ? null
+          : (selectedText ?? this.selectedText),
+      noteContent: clearNoteContent ? null : (noteContent ?? this.noteContent),
     );
   }
 }

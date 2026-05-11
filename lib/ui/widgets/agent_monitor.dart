@@ -22,7 +22,9 @@ class AgentMonitor extends ConsumerWidget {
             const SizedBox(height: 4),
             Text(
               'Start a research or extraction task',
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
             ),
           ],
         ),
@@ -50,7 +52,9 @@ class _TaskCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final statusColor = _statusColor(task.status, theme);
     final statusIcon = _statusIcon(task.status);
-    final completedSteps = task.steps.where((s) => s.status == TaskStatus.completed).length;
+    final completedSteps = task.steps
+        .where((s) => s.status == TaskStatus.completed)
+        .length;
     final totalSteps = task.steps.length;
     final progress = totalSteps > 0 ? completedSteps / totalSteps : 0.0;
 
@@ -77,33 +81,50 @@ class _TaskCard extends ConsumerWidget {
                 if (task.status == TaskStatus.running) ...[
                   IconButton(
                     icon: const Icon(Icons.pause, size: 16),
-                    onPressed: () => ref.read(agentProvider.notifier).pauseTask(task.id),
+                    onPressed: () =>
+                        ref.read(agentProvider.notifier).pauseTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     tooltip: 'Pause',
                   ),
                   IconButton(
                     icon: const Icon(Icons.stop, size: 16),
-                    onPressed: () => ref.read(agentProvider.notifier).cancelTask(task.id),
+                    onPressed: () =>
+                        ref.read(agentProvider.notifier).cancelTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     tooltip: 'Cancel',
                   ),
                 ],
                 if (task.status == TaskStatus.paused)
                   IconButton(
                     icon: const Icon(Icons.play_arrow, size: 16),
-                    onPressed: () => ref.read(agentProvider.notifier).resumeTask(task.id),
+                    onPressed: () =>
+                        ref.read(agentProvider.notifier).resumeTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     tooltip: 'Resume',
                   ),
-                if (task.status == TaskStatus.completed || task.status == TaskStatus.failed)
+                if (task.status == TaskStatus.completed ||
+                    task.status == TaskStatus.failed)
                   IconButton(
                     icon: const Icon(Icons.close, size: 14),
-                    onPressed: () => ref.read(agentProvider.notifier).removeTask(task.id),
+                    onPressed: () =>
+                        ref.read(agentProvider.notifier).removeTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     tooltip: 'Remove',
                   ),
               ],
@@ -121,7 +142,9 @@ class _TaskCard extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 '$completedSteps/$totalSteps steps',
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                ),
               ),
             ],
             const SizedBox(height: 8),

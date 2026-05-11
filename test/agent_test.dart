@@ -5,14 +5,17 @@ import 'package:rfbrowser/data/models/agent_task.dart';
 
 void main() {
   group('HeadlessManager', () {
-    test('AC-P3-1-1: create returns non-null WebView and activeCount increments', () {
-      final manager = HeadlessManager(idleTimeout: Duration(hours: 1));
-      final webView = manager.create();
-      expect(webView, isNotNull);
-      expect(webView.id, isNotEmpty);
-      expect(manager.activeCount, 1);
-      manager.disposeAll();
-    });
+    test(
+      'AC-P3-1-1: create returns non-null WebView and activeCount increments',
+      () {
+        final manager = HeadlessManager(idleTimeout: Duration(hours: 1));
+        final webView = manager.create();
+        expect(webView, isNotNull);
+        expect(webView.id, isNotEmpty);
+        expect(manager.activeCount, 1);
+        manager.disposeAll();
+      },
+    );
 
     test('AC-P3-1-8: dispose decrements activeCount', () async {
       final manager = HeadlessManager(idleTimeout: Duration(hours: 1));
@@ -112,36 +115,48 @@ void main() {
       expect(task.status, TaskStatus.paused);
     });
 
-    test('AC-P3-1-6: cancelTask changes status to failed with cancelled reason', () {
-      var task = AgentTask(
-        id: 'test-3',
-        name: 'Test',
-        description: 'Test',
-        status: TaskStatus.running,
-        steps: [AgentStep(description: 'Step 1')],
-      );
+    test(
+      'AC-P3-1-6: cancelTask changes status to failed with cancelled reason',
+      () {
+        var task = AgentTask(
+          id: 'test-3',
+          name: 'Test',
+          description: 'Test',
+          status: TaskStatus.running,
+          steps: [AgentStep(description: 'Step 1')],
+        );
 
-      task = task.copyWith(status: TaskStatus.failed, result: 'cancelled');
-      expect(task.status, TaskStatus.failed);
-      expect(task.result, 'cancelled');
-    });
+        task = task.copyWith(status: TaskStatus.failed, result: 'cancelled');
+        expect(task.status, TaskStatus.failed);
+        expect(task.result, 'cancelled');
+      },
+    );
 
-    test('AC-P3-1-7: task exceeding 50 steps fails with step_limit_exceeded', () {
-      final steps = List.generate(51, (i) => AgentStep(description: 'Step $i'));
-      var task = AgentTask(
-        id: 'test-4',
-        name: 'Test',
-        description: 'Test',
-        steps: steps,
-      );
+    test(
+      'AC-P3-1-7: task exceeding 50 steps fails with step_limit_exceeded',
+      () {
+        final steps = List.generate(
+          51,
+          (i) => AgentStep(description: 'Step $i'),
+        );
+        var task = AgentTask(
+          id: 'test-4',
+          name: 'Test',
+          description: 'Test',
+          steps: steps,
+        );
 
-      expect(task.steps.length, 51);
-      expect(51 > AgentNotifier.maxSteps, true);
+        expect(task.steps.length, 51);
+        expect(51 > AgentNotifier.maxSteps, true);
 
-      task = task.copyWith(status: TaskStatus.failed, result: 'step_limit_exceeded');
-      expect(task.status, TaskStatus.failed);
-      expect(task.result, 'step_limit_exceeded');
-    });
+        task = task.copyWith(
+          status: TaskStatus.failed,
+          result: 'step_limit_exceeded',
+        );
+        expect(task.status, TaskStatus.failed);
+        expect(task.result, 'step_limit_exceeded');
+      },
+    );
   });
 }
 

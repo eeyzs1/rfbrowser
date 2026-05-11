@@ -18,7 +18,11 @@ class SyncConflictDialog extends StatelessWidget {
     return AlertDialog(
       title: Row(
         children: [
-          Icon(Icons.warning_amber, color: theme.colorScheme.tertiary, size: 20),
+          Icon(
+            Icons.warning_amber,
+            color: theme.colorScheme.tertiary,
+            size: 20,
+          ),
           const SizedBox(width: 8),
           const Text('Sync Conflict'),
         ],
@@ -82,7 +86,11 @@ class _InfoRow extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _InfoRow({required this.label, required this.value, required this.icon});
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +101,10 @@ class _InfoRow extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: theme.hintColor),
           const SizedBox(width: 8),
-          Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          ),
           const Spacer(),
           Text(value, style: theme.textTheme.bodySmall),
         ],

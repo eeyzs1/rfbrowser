@@ -15,9 +15,13 @@ class FilterPanel extends ConsumerWidget {
     final noteCount = knowledgeState.notes.length;
     final links = knowledgeState.links;
     final notesWithLinks = knowledgeState.notes
-        .where((n) => links.any((l) => l.sourceId == n.id || l.targetId == n.id))
+        .where(
+          (n) => links.any((l) => l.sourceId == n.id || l.targetId == n.id),
+        )
         .length;
-    final notesWithTags = knowledgeState.notes.where((n) => n.tags.isNotEmpty).length;
+    final notesWithTags = knowledgeState.notes
+        .where((n) => n.tags.isNotEmpty)
+        .length;
     final currentFilter = knowledgeState.noteFilter;
 
     return Container(
@@ -40,35 +44,40 @@ class FilterPanel extends ConsumerWidget {
             label: l.allNotes,
             count: noteCount,
             isActive: currentFilter == NoteFilter.all,
-            onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.all),
+            onTap: () =>
+                ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.all),
           ),
           _FilterOption(
             icon: Icons.link,
             label: l.hasLinks,
             count: notesWithLinks,
             isActive: currentFilter == NoteFilter.hasLinks,
-            onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.hasLinks),
+            onTap: () => ref
+                .read(knowledgeProvider.notifier)
+                .setFilter(NoteFilter.hasLinks),
           ),
           _FilterOption(
             icon: Icons.attach_file,
             label: l.hasAttachments,
             count: 0,
             isActive: currentFilter == NoteFilter.hasAttachments,
-            onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.hasAttachments),
+            onTap: () => ref
+                .read(knowledgeProvider.notifier)
+                .setFilter(NoteFilter.hasAttachments),
           ),
           _FilterOption(
             icon: Icons.tag,
             label: l.tags,
             count: notesWithTags,
             isActive: currentFilter == NoteFilter.hasTags,
-            onTap: () => ref.read(knowledgeProvider.notifier).setFilter(NoteFilter.hasTags),
+            onTap: () => ref
+                .read(knowledgeProvider.notifier)
+                .setFilter(NoteFilter.hasTags),
           ),
           const Spacer(),
           Text(
             l.noteCount(noteCount),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.hintColor,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
           ),
         ],
       ),
@@ -113,7 +122,11 @@ class _FilterOption extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, size: 14, color: isActive ? theme.colorScheme.primary : theme.hintColor),
+                Icon(
+                  icon,
+                  size: 14,
+                  color: isActive ? theme.colorScheme.primary : theme.hintColor,
+                ),
                 const SizedBox(width: DesignSpacing.sm),
                 Expanded(
                   child: Text(
@@ -139,7 +152,9 @@ class _FilterOption extends StatelessWidget {
                     ),
                     child: Text(
                       '$count',
-                      style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.hintColor,
+                      ),
                     ),
                   ),
               ],

@@ -32,7 +32,11 @@ class VectorStore {
 
   bool exists(String id) => _records.containsKey(id);
 
-  void insert(String id, List<double> embedding, {Map<String, dynamic>? metadata}) {
+  void insert(
+    String id,
+    List<double> embedding, {
+    Map<String, dynamic>? metadata,
+  }) {
     _records[id] = VectorRecord(
       id: id,
       embedding: embedding,
@@ -76,7 +80,9 @@ class VectorStore {
 
     heap.sort((a, b) => b.score.compareTo(a.score));
     return heap
-        .map((e) => SearchResult(id: e.id, score: e.score, metadata: e.metadata))
+        .map(
+          (e) => SearchResult(id: e.id, score: e.score, metadata: e.metadata),
+        )
         .toList();
   }
 
@@ -93,7 +99,9 @@ class VectorStore {
       final left = 2 * i + 1;
       final right = 2 * i + 2;
       if (left < n && heap[left].score < heap[smallest].score) smallest = left;
-      if (right < n && heap[right].score < heap[smallest].score) smallest = right;
+      if (right < n && heap[right].score < heap[smallest].score) {
+        smallest = right;
+      }
       if (smallest == i) break;
       final tmp = heap[i];
       heap[i] = heap[smallest];

@@ -22,9 +22,9 @@ class _InlineAIEditorState extends ConsumerState<InlineAIEditor> {
     final activeNote = knowledgeState.activeNote;
     if (activeNote == null) return;
 
-    ref.read(aiProvider.notifier).sendMessage(
-          '基于以下笔记内容提供改进建议（简洁地）:\n${activeNote.content}',
-        );
+    ref
+        .read(aiProvider.notifier)
+        .sendMessage('基于以下笔记内容提供改进建议（简洁地）:\n${activeNote.content}');
     setState(() => _showSuggestions = true);
   }
 
@@ -99,14 +99,15 @@ class _InlineAIEditorState extends ConsumerState<InlineAIEditor> {
                 vertical: DesignSpacing.xs,
               ),
               decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: theme.dividerColor),
-                ),
+                border: Border(bottom: BorderSide(color: theme.dividerColor)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.auto_awesome,
-                      size: 14, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.auto_awesome,
+                    size: 14,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     l.aiSuggestion,

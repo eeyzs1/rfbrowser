@@ -195,10 +195,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
           width: 16,
           child: Text(
             label,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
+            style: TextStyle(color: color, fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(width: 8),

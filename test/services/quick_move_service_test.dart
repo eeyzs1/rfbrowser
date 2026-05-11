@@ -17,8 +17,7 @@ void main() {
       container.dispose();
     });
 
-    QuickMoveNotifier notifier() =>
-        container.read(quickMoveProvider.notifier);
+    QuickMoveNotifier notifier() => container.read(quickMoveProvider.notifier);
 
     QuickMoveState state() => container.read(quickMoveProvider);
 
@@ -29,10 +28,7 @@ void main() {
     test('createMove adds a new move', () {
       final beforeCount = state().moves.length;
       notifier().createMove('test', 'prompt {input}');
-      expect(
-        container.read(quickMoveProvider).moves.length,
-        beforeCount + 1,
-      );
+      expect(container.read(quickMoveProvider).moves.length, beforeCount + 1);
     });
 
     test('updateMove modifies existing move', () async {
@@ -50,10 +46,7 @@ void main() {
       await notifier().deleteMove(move.id);
 
       expect(container.read(quickMoveProvider).moves.length, beforeCount - 1);
-      expect(
-        container.read(quickMoveProvider).byId[move.id],
-        isNull,
-      );
+      expect(container.read(quickMoveProvider).byId[move.id], isNull);
     });
 
     test('reorderMove changes position', () async {
@@ -61,14 +54,18 @@ void main() {
       await notifier().createMove('B', '');
       await notifier().createMove('C', '');
 
-      final presetCount =
-          container.read(quickMoveProvider).moves.where((m) => m.type == QuickMoveType.preset).length;
+      final presetCount = container
+          .read(quickMoveProvider)
+          .moves
+          .where((m) => m.type == QuickMoveType.preset)
+          .length;
 
       notifier().reorderMove(a.id, presetCount + 2);
 
       final moves = container.read(quickMoveProvider).moves;
-      final userMoves =
-          moves.where((m) => m.type == QuickMoveType.user).toList();
+      final userMoves = moves
+          .where((m) => m.type == QuickMoveType.user)
+          .toList();
       expect(userMoves[0].name, 'B');
       expect(userMoves[1].name, 'C');
       expect(userMoves[2].name, 'A');
@@ -84,15 +81,17 @@ void main() {
       }
 
       var current = container.read(quickMoveProvider);
-      final presetCountAfterDelete =
-          current.moves.where((m) => m.type == QuickMoveType.preset).length;
+      final presetCountAfterDelete = current.moves
+          .where((m) => m.type == QuickMoveType.preset)
+          .length;
       expect(presetCountAfterDelete, 0);
 
       await notifier().restoreDefaults();
 
       current = container.read(quickMoveProvider);
-      final presetCountAfterRestore =
-          current.moves.where((m) => m.type == QuickMoveType.preset).length;
+      final presetCountAfterRestore = current.moves
+          .where((m) => m.type == QuickMoveType.preset)
+          .length;
       expect(presetCountAfterRestore, greaterThanOrEqualTo(5));
     });
 
@@ -121,10 +120,7 @@ void main() {
     });
 
     test('resolvePrompt returns resolved string', () {
-      final move = QuickMove(
-        name: 'test',
-        promptTemplate: 'Hello {input}',
-      );
+      final move = QuickMove(name: 'test', promptTemplate: 'Hello {input}');
       final result = notifier().resolvePrompt(move, {'input': 'World'});
       expect(result, 'Hello World');
     });
@@ -142,10 +138,7 @@ void main() {
       expect(success, isTrue);
 
       final current = container.read(quickMoveProvider);
-      expect(
-        current.moves.any((m) => m.name == 'Imported'),
-        isTrue,
-      );
+      expect(current.moves.any((m) => m.name == 'Imported'), isTrue);
     });
 
     test('importFromJson with invalid JSON returns false', () async {
@@ -178,7 +171,9 @@ void main() {
     });
 
     test('can update context fields', () {
-      container.read(quickMoveContextProvider.notifier).update(
+      container
+          .read(quickMoveContextProvider.notifier)
+          .update(
             QuickMoveContext(
               currentUrl: 'https://example.com',
               pageTitle: 'Test Page',

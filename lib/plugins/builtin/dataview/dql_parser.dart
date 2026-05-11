@@ -46,13 +46,19 @@ class DqlQuery {
 }
 
 class DqlParser {
-  static const experimentalWarning = 'DQL is experimental: limited syntax support. '
+  static const experimentalWarning =
+      'DQL is experimental: limited syntax support. '
       'Only TABLE/LIST/TASK with basic WHERE and SORT clauses are supported. '
       'Complex filters, OR conditions, and nested expressions are not yet implemented.';
 
-  static final _tagFilterRegex = RegExp(r'tag\s*=\s*#(\w+)', caseSensitive: false);
-  static final _dateFilterRegex =
-      RegExp(r'(\w+)\s*(>=|<=|>|<|=)\s*(\d{4}-\d{2}-\d{2})', caseSensitive: false);
+  static final _tagFilterRegex = RegExp(
+    r'tag\s*=\s*#(\w+)',
+    caseSensitive: false,
+  );
+  static final _dateFilterRegex = RegExp(
+    r'(\w+)\s*(>=|<=|>|<|=)\s*(\d{4}-\d{2}-\d{2})',
+    caseSensitive: false,
+  );
   static final _sortRegex = RegExp(r'(\w+)\s+(ASC|DESC)', caseSensitive: false);
 
   DqlQuery parse(String input) {
@@ -89,7 +95,9 @@ class DqlParser {
     if (whereKeywordIdx >= 0) {
       final sortKeywordIdx = _findKeyword(upper, 'SORT');
       final filterEnd = sortKeywordIdx >= 0 ? sortKeywordIdx : trimmed.length;
-      final filterStr = trimmed.substring(whereKeywordIdx + 5, filterEnd).trim();
+      final filterStr = trimmed
+          .substring(whereKeywordIdx + 5, filterEnd)
+          .trim();
       filters.addAll(_parseFilters(filterStr));
     }
 
@@ -100,12 +108,7 @@ class DqlParser {
       sorts.addAll(_parseSorts(afterSort));
     }
 
-    return DqlQuery(
-      type: type,
-      fields: fields,
-      filters: filters,
-      sorts: sorts,
-    );
+    return DqlQuery(type: type, fields: fields, filters: filters, sorts: sorts);
   }
 
   List<QueryFilter> _parseFilters(String filterStr) {

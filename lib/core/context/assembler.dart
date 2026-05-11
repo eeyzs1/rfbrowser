@@ -54,7 +54,10 @@ class Assembler {
       }
     }
 
-    if (currentNote != null && !refs.any((r) => r.type == ContextRefType.note && r.target == 'current')) {
+    if (currentNote != null &&
+        !refs.any(
+          (r) => r.type == ContextRefType.note && r.target == 'current',
+        )) {
       final alreadyHasCurrentNote = items.any(
         (i) => i.type == ContextType.note && i.id == currentNote.id,
       );
@@ -75,10 +78,7 @@ class Assembler {
     final ranked = _ranker.rank(items);
     final trimmed = _budget.trim(ranked);
 
-    return ContextAssembly(
-      items: trimmed.items,
-      truncated: trimmed.truncated,
-    );
+    return ContextAssembly(items: trimmed.items, truncated: trimmed.truncated);
   }
 }
 

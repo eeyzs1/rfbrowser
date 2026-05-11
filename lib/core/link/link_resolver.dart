@@ -14,9 +14,13 @@ class LinkResolver {
   Future<void> rebuildTitleIndex(List<Note> notes) async {
     _titleToPaths = {};
     for (final note in notes) {
-      _titleToPaths.putIfAbsent(note.title.toLowerCase(), () => []).add(note.filePath);
+      _titleToPaths
+          .putIfAbsent(note.title.toLowerCase(), () => [])
+          .add(note.filePath);
       for (final alias in note.aliases) {
-        _titleToPaths.putIfAbsent(alias.toLowerCase(), () => []).add(note.filePath);
+        _titleToPaths
+            .putIfAbsent(alias.toLowerCase(), () => [])
+            .add(note.filePath);
       }
     }
   }

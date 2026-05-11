@@ -31,7 +31,8 @@ void main() {
         id: 'c1',
         type: CanvasCardType.note,
         noteId: 'note-1',
-        x: 100, y: 100,
+        x: 100,
+        y: 100,
         title: 'Old Title',
         content: 'Old Content',
       );
@@ -45,8 +46,24 @@ void main() {
 
     test('UI-2: auto connections appear for wikilink-related notes', () {
       addCardsSync([
-        CanvasCard(id: 'c1', type: CanvasCardType.note, noteId: 'note-A', x: 0, y: 0, title: 'Note A', content: ''),
-        CanvasCard(id: 'c2', type: CanvasCardType.note, noteId: 'note-B', x: 200, y: 0, title: 'Note B', content: ''),
+        CanvasCard(
+          id: 'c1',
+          type: CanvasCardType.note,
+          noteId: 'note-A',
+          x: 0,
+          y: 0,
+          title: 'Note A',
+          content: '',
+        ),
+        CanvasCard(
+          id: 'c2',
+          type: CanvasCardType.note,
+          noteId: 'note-B',
+          x: 200,
+          y: 0,
+          title: 'Note B',
+          content: '',
+        ),
       ]);
 
       final noteA = Note(
@@ -64,16 +81,34 @@ void main() {
 
       expect(notifier.autoConnectionsEnabled, isTrue);
       expect(notifier.state.cards.length, equals(2));
-      expect(notifier.state.cards.where((c) => c.noteId != null).length, equals(2));
+      expect(
+        notifier.state.cards.where((c) => c.noteId != null).length,
+        equals(2),
+      );
       expect(noteA.content.contains('[[Note B]]'), isTrue);
       expect(noteB.title, 'Note B');
     });
 
     test('UI-3: search for cards by title (case-insensitive)', () {
       addCardsSync([
-        CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'Research Notes', content: ''),
-        CanvasCard(id: 'c2', type: CanvasCardType.text, title: 'Shopping List', content: ''),
-        CanvasCard(id: 'c3', type: CanvasCardType.text, title: 'Research Methods', content: ''),
+        CanvasCard(
+          id: 'c1',
+          type: CanvasCardType.text,
+          title: 'Research Notes',
+          content: '',
+        ),
+        CanvasCard(
+          id: 'c2',
+          type: CanvasCardType.text,
+          title: 'Shopping List',
+          content: '',
+        ),
+        CanvasCard(
+          id: 'c3',
+          type: CanvasCardType.text,
+          title: 'Research Methods',
+          content: '',
+        ),
       ]);
 
       final results = notifier.searchCards('research');
@@ -82,17 +117,33 @@ void main() {
 
     test('UI-4: persistence round-trip preserves cards and connections', () {
       addCardsSync([
-        CanvasCard(id: 'c1', type: CanvasCardType.note, x: 10, y: 20, title: 'Card 1', content: 'Content 1'),
-        CanvasCard(id: 'c2', type: CanvasCardType.note, x: 100, y: 200, title: 'Card 2', content: 'Content 2'),
+        CanvasCard(
+          id: 'c1',
+          type: CanvasCardType.note,
+          x: 10,
+          y: 20,
+          title: 'Card 1',
+          content: 'Content 1',
+        ),
+        CanvasCard(
+          id: 'c2',
+          type: CanvasCardType.note,
+          x: 100,
+          y: 200,
+          title: 'Card 2',
+          content: 'Content 2',
+        ),
       ]);
 
-      notifier.addConnectionSync(CanvasConnection(
-        id: 'conn1',
-        fromCardId: 'c1',
-        toCardId: 'c2',
-        label: 'relates to',
-        isAuto: false,
-      ));
+      notifier.addConnectionSync(
+        CanvasConnection(
+          id: 'conn1',
+          fromCardId: 'c1',
+          toCardId: 'c2',
+          label: 'relates to',
+          isAuto: false,
+        ),
+      );
 
       final json = notifier.state.toJsonString();
       final restored = CanvasData.fromJsonString(json);
@@ -105,13 +156,27 @@ void main() {
 
     test('UI-5: clear canvas removes all cards and connections', () {
       addCardsSync([
-        CanvasCard(id: 'c1', type: CanvasCardType.note, x: 10, y: 20, title: 'Card 1', content: ''),
-        CanvasCard(id: 'c2', type: CanvasCardType.note, x: 100, y: 200, title: 'Card 2', content: ''),
+        CanvasCard(
+          id: 'c1',
+          type: CanvasCardType.note,
+          x: 10,
+          y: 20,
+          title: 'Card 1',
+          content: '',
+        ),
+        CanvasCard(
+          id: 'c2',
+          type: CanvasCardType.note,
+          x: 100,
+          y: 200,
+          title: 'Card 2',
+          content: '',
+        ),
       ]);
 
-      notifier.addConnectionSync(CanvasConnection(
-        id: 'conn1', fromCardId: 'c1', toCardId: 'c2',
-      ));
+      notifier.addConnectionSync(
+        CanvasConnection(id: 'conn1', fromCardId: 'c1', toCardId: 'c2'),
+      );
 
       expect(notifier.state.cards.length, equals(2));
       expect(notifier.state.connections.length, equals(1));

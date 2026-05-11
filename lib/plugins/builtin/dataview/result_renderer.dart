@@ -27,11 +27,13 @@ class ResultRenderer {
       child: DataTable(
         columns: result.fields.map((f) => DataColumn(label: Text(f))).toList(),
         rows: result.rows
-            .map((row) => DataRow(
-                  cells: result.fields
-                      .map((f) => DataCell(Text('${row[f] ?? ''}')))
-                      .toList(),
-                ))
+            .map(
+              (row) => DataRow(
+                cells: result.fields
+                    .map((f) => DataCell(Text('${row[f] ?? ''}')))
+                    .toList(),
+              ),
+            )
             .toList(),
       ),
     );

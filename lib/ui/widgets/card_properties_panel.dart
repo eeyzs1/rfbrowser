@@ -48,8 +48,12 @@ class CardPropertiesPanel extends ConsumerWidget {
     if (card == null) return const SizedBox.shrink();
 
     final settings = ref.watch(settingsProvider);
-    final cardFontSize = card.fontSize > 0 ? card.fontSize : settings.editorFontSize * 0.85;
-    final connections = canvasData.connections.where((c) => c.fromCardId == card.id || c.toCardId == card.id).toList();
+    final cardFontSize = card.fontSize > 0
+        ? card.fontSize
+        : settings.editorFontSize * 0.85;
+    final connections = canvasData.connections
+        .where((c) => c.fromCardId == card.id || c.toCardId == card.id)
+        .toList();
     final s = card.style ?? CanvasCardStyle.defaults;
 
     return ListView(
@@ -57,9 +61,19 @@ class CardPropertiesPanel extends ConsumerWidget {
       children: [
         Row(
           children: [
-            Icon(_cardTypeIcon(card.type), size: 16, color: theme.colorScheme.primary),
+            Icon(
+              _cardTypeIcon(card.type),
+              size: 16,
+              color: theme.colorScheme.primary,
+            ),
             const SizedBox(width: 6),
-            Text(card.type.label, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: theme.colorScheme.primary)),
+            Text(
+              card.type.label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.primary,
+              ),
+            ),
             const Spacer(),
             GestureDetector(
               onTap: () {
@@ -72,198 +86,451 @@ class CardPropertiesPanel extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 12),
-        _propSection(theme, l.noteTitle, Text(card.title.isEmpty ? l.untagged : card.title, style: theme.textTheme.bodySmall, overflow: TextOverflow.ellipsis)),
-        const SizedBox(height: 8),
-        _propSection(theme, l.fontSize, Row(
-          children: [
-            Expanded(child: Slider(
-              value: cardFontSize,
-              min: 8, max: 32, divisions: 24,
-              label: cardFontSize.round().toString(),
-              onChanged: (v) {
-                final defaultSize = settings.editorFontSize * 0.85;
-                ref.read(canvasProvider.notifier).updateCard(card.copyWith(
-                  fontSize: (v - defaultSize).abs() < 0.5 ? 0 : v,
-                ));
-              },
-            )),
-            SizedBox(width: 32, child: Text(cardFontSize.round().toString(), style: theme.textTheme.bodySmall, textAlign: TextAlign.end)),
-          ],
-        )),
-        const SizedBox(height: 8),
-        _propSection(theme, l.cardColor, Wrap(
-          spacing: 4, runSpacing: 4,
-          children: _cardColorPresets.map((color) => GestureDetector(
-            onTap: () => ref.read(canvasProvider.notifier).updateCard(card.copyWith(colorValue: color.toARGB32())),
-            child: Container(
-              width: 24, height: 24,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: card.colorValue == color.toARGB32() ? theme.colorScheme.primary : theme.dividerColor,
-                  width: card.colorValue == color.toARGB32() ? 2 : 0.5,
-                ),
-              ),
-              child: card.colorValue == color.toARGB32() ? Icon(Icons.check, size: 12, color: theme.colorScheme.primary) : null,
-            ),
-          )).toList(),
-        )),
-        const SizedBox(height: 12),
-        _sectionDivider(theme),
-        const SizedBox(height: 8),
-        Text('Style', style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: theme.colorScheme.primary, fontSize: 11)),
-        const SizedBox(height: 8),
-        _propSection(theme, 'Border Color', Wrap(
-          spacing: 4, runSpacing: 4,
-          children: _borderColorPresets.map((color) => GestureDetector(
-            onTap: () => ref.read(canvasProvider.notifier).updateCard(card.copyWith(
-              style: s.copyWith(borderColor: color.toARGB32()),
-            )),
-            child: Container(
-              width: 22, height: 22,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(3),
-                border: Border.all(
-                  color: s.borderColor == color.toARGB32() ? theme.colorScheme.primary : theme.dividerColor,
-                  width: s.borderColor == color.toARGB32() ? 2 : 0.5,
-                ),
-              ),
-            ),
-          )).toList(),
-        )),
-        const SizedBox(height: 6),
-        _propSection(theme, 'Border Width', Row(
-          children: [
-            Expanded(child: Slider(
-              value: s.borderWidth,
-              min: 0, max: 4, divisions: 8,
-              label: s.borderWidth.toStringAsFixed(1),
-              onChanged: (v) => ref.read(canvasProvider.notifier).updateCard(card.copyWith(style: s.copyWith(borderWidth: v))),
-            )),
-            SizedBox(width: 28, child: Text(s.borderWidth.toStringAsFixed(1), style: theme.textTheme.bodySmall, textAlign: TextAlign.end)),
-          ],
-        )),
-        const SizedBox(height: 4),
-        _propSection(theme, 'Border Style', SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(children: CardBorderStyle.values.map((bs) => Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: ChoiceChip(
-              label: Text(bs.name, style: const TextStyle(fontSize: 10)),
-              selected: s.borderStyle == bs,
-              onSelected: (_) => ref.read(canvasProvider.notifier).updateCard(card.copyWith(style: s.copyWith(borderStyle: bs))),
-              visualDensity: VisualDensity.compact,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-            ),
-          )).toList()),
-        )),
-        const SizedBox(height: 6),
-        _propSection(theme, 'Corner Radius', Row(
-          children: [
-            Expanded(child: Slider(
-              value: s.borderRadius,
-              min: 0, max: 24, divisions: 12,
-              label: s.borderRadius.round().toString(),
-              onChanged: (v) => ref.read(canvasProvider.notifier).updateCard(card.copyWith(style: s.copyWith(borderRadius: v))),
-            )),
-            SizedBox(width: 28, child: Text(s.borderRadius.round().toString(), style: theme.textTheme.bodySmall, textAlign: TextAlign.end)),
-          ],
-        )),
-        const SizedBox(height: 6),
-        _propSection(theme, 'Opacity', Row(
-          children: [
-            Expanded(child: Slider(
-              value: s.opacity,
-              min: 0.1, max: 1.0, divisions: 9,
-              label: s.opacity.toStringAsFixed(1),
-              onChanged: (v) => ref.read(canvasProvider.notifier).updateCard(card.copyWith(style: s.copyWith(opacity: v))),
-            )),
-            SizedBox(width: 28, child: Text(s.opacity.toStringAsFixed(1), style: theme.textTheme.bodySmall, textAlign: TextAlign.end)),
-          ],
-        )),
-        const SizedBox(height: 6),
-        _propSection(theme, 'Shadow', Switch(
-          value: s.shadow,
-          onChanged: (v) => ref.read(canvasProvider.notifier).updateCard(card.copyWith(style: s.copyWith(shadow: v))),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        )),
-        const SizedBox(height: 6),
-        _propSection(theme, 'Gradient', Row(
-          children: [
-            Text('Off', style: theme.textTheme.bodySmall?.copyWith(fontSize: 10, color: s.gradientColor != null ? theme.hintColor : theme.colorScheme.primary)),
-            Switch(
-              value: s.gradientColor != null,
-              onChanged: (v) => ref.read(canvasProvider.notifier).updateCard(card.copyWith(
-                style: v ? s.copyWith(gradientColor: 0xFFE0E0E0) : s.copyWith(clearGradient: true),
-              )),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            Text('On', style: theme.textTheme.bodySmall?.copyWith(fontSize: 10, color: s.gradientColor != null ? theme.colorScheme.primary : theme.hintColor)),
-            if (s.gradientColor != null) ...[
-              const SizedBox(width: 8),
-              ..._borderColorPresets.take(5).map((color) => GestureDetector(
-                onTap: () => ref.read(canvasProvider.notifier).updateCard(card.copyWith(style: s.copyWith(gradientColor: color.toARGB32()))),
-                child: Container(
-                  width: 18, height: 18,
-                  margin: const EdgeInsets.only(right: 2),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(3),
-                    border: Border.all(color: s.gradientColor == color.toARGB32() ? theme.colorScheme.primary : theme.dividerColor, width: s.gradientColor == color.toARGB32() ? 1.5 : 0.5),
-                  ),
-                ),
-              )),
-            ],
-          ],
-        )),
-        if (s.gradientColor != null)
-          _propSection(theme, 'Gradient Direction', SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: GradientDirection.values.map((gd) => Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: ChoiceChip(
-                label: Icon(_gradientDirectionIcon(gd), size: 12),
-                selected: s.gradientDirection == gd,
-                onSelected: (_) => ref.read(canvasProvider.notifier).updateCard(card.copyWith(style: s.copyWith(gradientDirection: gd))),
-                visualDensity: VisualDensity.compact,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                labelPadding: const EdgeInsets.symmetric(horizontal: 2),
-              ),
-            )).toList()),
-          )),
-        const SizedBox(height: 8),
-        _propSection(theme, 'Reset Style', SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () => ref.read(canvasProvider.notifier).updateCard(card.copyWith(clearStyle: true)),
-            icon: Icon(Icons.refresh, size: 12),
-            label: Text('Reset to Default', style: TextStyle(fontSize: 10)),
-            style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), minimumSize: Size.zero),
+        _propSection(
+          theme,
+          l.noteTitle,
+          Text(
+            card.title.isEmpty ? l.untagged : card.title,
+            style: theme.textTheme.bodySmall,
+            overflow: TextOverflow.ellipsis,
           ),
-        )),
+        ),
+        const SizedBox(height: 8),
+        _propSection(
+          theme,
+          l.fontSize,
+          Row(
+            children: [
+              Expanded(
+                child: Slider(
+                  value: cardFontSize,
+                  min: 8,
+                  max: 32,
+                  divisions: 24,
+                  label: cardFontSize.round().toString(),
+                  onChanged: (v) {
+                    final defaultSize = settings.editorFontSize * 0.85;
+                    ref
+                        .read(canvasProvider.notifier)
+                        .updateCard(
+                          card.copyWith(
+                            fontSize: (v - defaultSize).abs() < 0.5 ? 0 : v,
+                          ),
+                        );
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 32,
+                child: Text(
+                  cardFontSize.round().toString(),
+                  style: theme.textTheme.bodySmall,
+                  textAlign: TextAlign.end,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        _propSection(
+          theme,
+          l.cardColor,
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: _cardColorPresets
+                .map(
+                  (color) => GestureDetector(
+                    onTap: () => ref
+                        .read(canvasProvider.notifier)
+                        .updateCard(
+                          card.copyWith(colorValue: color.toARGB32()),
+                        ),
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: card.colorValue == color.toARGB32()
+                              ? theme.colorScheme.primary
+                              : theme.dividerColor,
+                          width: card.colorValue == color.toARGB32() ? 2 : 0.5,
+                        ),
+                      ),
+                      child: card.colorValue == color.toARGB32()
+                          ? Icon(
+                              Icons.check,
+                              size: 12,
+                              color: theme.colorScheme.primary,
+                            )
+                          : null,
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
         const SizedBox(height: 12),
         _sectionDivider(theme),
         const SizedBox(height: 8),
-        _propSection(theme, 'Size', Text('${card.width.round()} × ${card.height.round()}', style: theme.textTheme.bodySmall)),
+        Text(
+          'Style',
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.primary,
+            fontSize: 11,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _propSection(
+          theme,
+          'Border Color',
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: _borderColorPresets
+                .map(
+                  (color) => GestureDetector(
+                    onTap: () => ref
+                        .read(canvasProvider.notifier)
+                        .updateCard(
+                          card.copyWith(
+                            style: s.copyWith(borderColor: color.toARGB32()),
+                          ),
+                        ),
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(
+                          color: s.borderColor == color.toARGB32()
+                              ? theme.colorScheme.primary
+                              : theme.dividerColor,
+                          width: s.borderColor == color.toARGB32() ? 2 : 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+        const SizedBox(height: 6),
+        _propSection(
+          theme,
+          'Border Width',
+          Row(
+            children: [
+              Expanded(
+                child: Slider(
+                  value: s.borderWidth,
+                  min: 0,
+                  max: 4,
+                  divisions: 8,
+                  label: s.borderWidth.toStringAsFixed(1),
+                  onChanged: (v) => ref
+                      .read(canvasProvider.notifier)
+                      .updateCard(
+                        card.copyWith(style: s.copyWith(borderWidth: v)),
+                      ),
+                ),
+              ),
+              SizedBox(
+                width: 28,
+                child: Text(
+                  s.borderWidth.toStringAsFixed(1),
+                  style: theme.textTheme.bodySmall,
+                  textAlign: TextAlign.end,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        _propSection(
+          theme,
+          'Border Style',
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: CardBorderStyle.values
+                  .map(
+                    (bs) => Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: ChoiceChip(
+                        label: Text(
+                          bs.name,
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                        selected: s.borderStyle == bs,
+                        onSelected: (_) => ref
+                            .read(canvasProvider.notifier)
+                            .updateCard(
+                              card.copyWith(style: s.copyWith(borderStyle: bs)),
+                            ),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        _propSection(
+          theme,
+          'Corner Radius',
+          Row(
+            children: [
+              Expanded(
+                child: Slider(
+                  value: s.borderRadius,
+                  min: 0,
+                  max: 24,
+                  divisions: 12,
+                  label: s.borderRadius.round().toString(),
+                  onChanged: (v) => ref
+                      .read(canvasProvider.notifier)
+                      .updateCard(
+                        card.copyWith(style: s.copyWith(borderRadius: v)),
+                      ),
+                ),
+              ),
+              SizedBox(
+                width: 28,
+                child: Text(
+                  s.borderRadius.round().toString(),
+                  style: theme.textTheme.bodySmall,
+                  textAlign: TextAlign.end,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        _propSection(
+          theme,
+          'Opacity',
+          Row(
+            children: [
+              Expanded(
+                child: Slider(
+                  value: s.opacity,
+                  min: 0.1,
+                  max: 1.0,
+                  divisions: 9,
+                  label: s.opacity.toStringAsFixed(1),
+                  onChanged: (v) => ref
+                      .read(canvasProvider.notifier)
+                      .updateCard(card.copyWith(style: s.copyWith(opacity: v))),
+                ),
+              ),
+              SizedBox(
+                width: 28,
+                child: Text(
+                  s.opacity.toStringAsFixed(1),
+                  style: theme.textTheme.bodySmall,
+                  textAlign: TextAlign.end,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        _propSection(
+          theme,
+          'Shadow',
+          Switch(
+            value: s.shadow,
+            onChanged: (v) => ref
+                .read(canvasProvider.notifier)
+                .updateCard(card.copyWith(style: s.copyWith(shadow: v))),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+        const SizedBox(height: 6),
+        _propSection(
+          theme,
+          'Gradient',
+          Row(
+            children: [
+              Text(
+                'Off',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 10,
+                  color: s.gradientColor != null
+                      ? theme.hintColor
+                      : theme.colorScheme.primary,
+                ),
+              ),
+              Switch(
+                value: s.gradientColor != null,
+                onChanged: (v) => ref
+                    .read(canvasProvider.notifier)
+                    .updateCard(
+                      card.copyWith(
+                        style: v
+                            ? s.copyWith(gradientColor: 0xFFE0E0E0)
+                            : s.copyWith(clearGradient: true),
+                      ),
+                    ),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              Text(
+                'On',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 10,
+                  color: s.gradientColor != null
+                      ? theme.colorScheme.primary
+                      : theme.hintColor,
+                ),
+              ),
+              if (s.gradientColor != null) ...[
+                const SizedBox(width: 8),
+                ..._borderColorPresets
+                    .take(5)
+                    .map(
+                      (color) => GestureDetector(
+                        onTap: () => ref
+                            .read(canvasProvider.notifier)
+                            .updateCard(
+                              card.copyWith(
+                                style: s.copyWith(
+                                  gradientColor: color.toARGB32(),
+                                ),
+                              ),
+                            ),
+                        child: Container(
+                          width: 18,
+                          height: 18,
+                          margin: const EdgeInsets.only(right: 2),
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(3),
+                            border: Border.all(
+                              color: s.gradientColor == color.toARGB32()
+                                  ? theme.colorScheme.primary
+                                  : theme.dividerColor,
+                              width: s.gradientColor == color.toARGB32()
+                                  ? 1.5
+                                  : 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+              ],
+            ],
+          ),
+        ),
+        if (s.gradientColor != null)
+          _propSection(
+            theme,
+            'Gradient Direction',
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: GradientDirection.values
+                    .map(
+                      (gd) => Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: ChoiceChip(
+                          label: Icon(_gradientDirectionIcon(gd), size: 12),
+                          selected: s.gradientDirection == gd,
+                          onSelected: (_) => ref
+                              .read(canvasProvider.notifier)
+                              .updateCard(
+                                card.copyWith(
+                                  style: s.copyWith(gradientDirection: gd),
+                                ),
+                              ),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          labelPadding: const EdgeInsets.symmetric(
+                            horizontal: 2,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ),
+        const SizedBox(height: 8),
+        _propSection(
+          theme,
+          'Reset Style',
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => ref
+                  .read(canvasProvider.notifier)
+                  .updateCard(card.copyWith(clearStyle: true)),
+              icon: Icon(Icons.refresh, size: 12),
+              label: Text('Reset to Default', style: TextStyle(fontSize: 10)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                minimumSize: Size.zero,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _sectionDivider(theme),
+        const SizedBox(height: 8),
+        _propSection(
+          theme,
+          'Size',
+          Text(
+            '${card.width.round()} × ${card.height.round()}',
+            style: theme.textTheme.bodySmall,
+          ),
+        ),
         const SizedBox(height: 8),
         if (card.noteId != null)
-          _propSection(theme, 'Note', Text(card.noteId!, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor), overflow: TextOverflow.ellipsis)),
+          _propSection(
+            theme,
+            'Note',
+            Text(
+              card.noteId!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         if (connections.isNotEmpty) ...[
           const SizedBox(height: 8),
-          _propSection(theme, l.backlinks, Text('${connections.length}', style: theme.textTheme.bodySmall)),
+          _propSection(
+            theme,
+            l.backlinks,
+            Text('${connections.length}', style: theme.textTheme.bodySmall),
+          ),
         ],
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () => ref.read(canvasProvider.notifier).startInlineEditing(card.id),
+                onPressed: () => ref
+                    .read(canvasProvider.notifier)
+                    .startInlineEditing(card.id),
                 icon: Icon(Icons.edit, size: 14),
                 label: Text(l.editCard, style: TextStyle(fontSize: 12)),
-                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  minimumSize: Size.zero,
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -273,10 +540,14 @@ class CardPropertiesPanel extends ConsumerWidget {
                   final newCard = CanvasCard(
                     id: 'card_${DateTime.now().millisecondsSinceEpoch}',
                     type: card.type,
-                    x: card.x + 40, y: card.y + 40,
-                    width: card.width, height: card.height,
-                    title: card.title, content: card.content,
-                    colorValue: card.colorValue, fontSize: card.fontSize,
+                    x: card.x + 40,
+                    y: card.y + 40,
+                    width: card.width,
+                    height: card.height,
+                    title: card.title,
+                    content: card.content,
+                    colorValue: card.colorValue,
+                    fontSize: card.fontSize,
                     style: card.style,
                   );
                   ref.read(canvasProvider.notifier).addCard(newCard);
@@ -284,7 +555,13 @@ class CardPropertiesPanel extends ConsumerWidget {
                 },
                 icon: Icon(Icons.content_copy, size: 14),
                 label: Text(l.duplicateCard, style: TextStyle(fontSize: 12)),
-                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  minimumSize: Size.zero,
+                ),
               ),
             ),
           ],
@@ -297,9 +574,19 @@ class CardPropertiesPanel extends ConsumerWidget {
               ref.read(canvasProvider.notifier).removeCard(card.id);
               ref.read(canvasProvider.notifier).selectCard(null);
             },
-            icon: Icon(Icons.delete_outline, size: 14, color: theme.colorScheme.error),
-            label: Text(l.deleteCard, style: TextStyle(fontSize: 12, color: theme.colorScheme.error)),
-            style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero),
+            icon: Icon(
+              Icons.delete_outline,
+              size: 14,
+              color: theme.colorScheme.error,
+            ),
+            label: Text(
+              l.deleteCard,
+              style: TextStyle(fontSize: 12, color: theme.colorScheme.error),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: Size.zero,
+            ),
           ),
         ),
       ],
@@ -342,7 +629,13 @@ class CardPropertiesPanel extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: 10)),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.hintColor,
+            fontSize: 10,
+          ),
+        ),
         const SizedBox(height: 2),
         child,
       ],

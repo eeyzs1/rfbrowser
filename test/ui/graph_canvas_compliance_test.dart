@@ -28,10 +28,18 @@ void main() {
       final links = [_mkGLink('A', 'B')];
 
       final p = GraphPainter(
-        notes: notes, links: links, scale: 1.0, offset: Offset.zero,
-        primaryColor: Colors.blue, secondaryColor: Colors.cyan,
-        surfaceColor: Colors.white, onSurfaceColor: Colors.black,
-        hintColor: Colors.grey, cardColor: Colors.white, errorColor: Colors.red, bridgeIds: {},
+        notes: notes,
+        links: links,
+        scale: 1.0,
+        offset: Offset.zero,
+        primaryColor: Colors.blue,
+        secondaryColor: Colors.cyan,
+        surfaceColor: Colors.white,
+        onSurfaceColor: Colors.black,
+        hintColor: Colors.grey,
+        cardColor: Colors.white,
+        errorColor: Colors.red,
+        bridgeIds: {},
       );
 
       expect(p.shouldRepaint(p), isFalse);
@@ -42,16 +50,32 @@ void main() {
       final links = [_mkGLink('A', 'B')];
 
       final p1 = GraphPainter(
-        notes: notes, links: links, scale: 1.0, offset: Offset.zero,
-        primaryColor: Colors.blue, secondaryColor: Colors.cyan,
-        surfaceColor: Colors.white, onSurfaceColor: Colors.black,
-        hintColor: Colors.grey, cardColor: Colors.white, errorColor: Colors.red, bridgeIds: {},
+        notes: notes,
+        links: links,
+        scale: 1.0,
+        offset: Offset.zero,
+        primaryColor: Colors.blue,
+        secondaryColor: Colors.cyan,
+        surfaceColor: Colors.white,
+        onSurfaceColor: Colors.black,
+        hintColor: Colors.grey,
+        cardColor: Colors.white,
+        errorColor: Colors.red,
+        bridgeIds: {},
       );
       final p2 = GraphPainter(
-        notes: notes, links: links, scale: 2.0, offset: Offset.zero,
-        primaryColor: Colors.blue, secondaryColor: Colors.cyan,
-        surfaceColor: Colors.white, onSurfaceColor: Colors.black,
-        hintColor: Colors.grey, cardColor: Colors.white, errorColor: Colors.red, bridgeIds: {},
+        notes: notes,
+        links: links,
+        scale: 2.0,
+        offset: Offset.zero,
+        primaryColor: Colors.blue,
+        secondaryColor: Colors.cyan,
+        surfaceColor: Colors.white,
+        onSurfaceColor: Colors.black,
+        hintColor: Colors.grey,
+        cardColor: Colors.white,
+        errorColor: Colors.red,
+        bridgeIds: {},
       );
 
       expect(p1.shouldRepaint(p2), isTrue);
@@ -59,9 +83,7 @@ void main() {
 
     test('bridge node detection finds articulation edges', () {
       final notes = _ns(['A', 'B', 'C', 'D']);
-      final links = [
-        _mkLink('A', 'B'), _mkLink('B', 'C'), _mkLink('D', 'B'),
-      ];
+      final links = [_mkLink('A', 'B'), _mkLink('B', 'C'), _mkLink('D', 'B')];
 
       final algo = GraphAlgorithm(allNotes: notes, allLinks: links);
       final bridges = algo.getBridgeNodes();
@@ -102,8 +124,11 @@ void main() {
   group('G6: CanvasPage compliance', () {
     test('CanvasCard with noteId supports live note data (A-5)', () {
       final card = CanvasCard(
-        id: 'card-1', type: CanvasCardType.note,
-        title: 'Stale Title', content: '', noteId: 'live-note',
+        id: 'card-1',
+        type: CanvasCardType.note,
+        title: 'Stale Title',
+        content: '',
+        noteId: 'live-note',
       );
 
       expect(card.noteId, 'live-note');
@@ -116,12 +141,24 @@ void main() {
       final knowledge = KnowledgeState();
 
       final p = CanvasPainter(
-        cards: cards, connections: [], autoConnections: [],
-        cameraX: 0, cameraY: 0, scale: 1.0, viewW: 400, viewH: 300,
-        gridSize: 20, visibleWorldRect: const Rect.fromLTWH(0, 0, 400, 300),
-        selectedCardIds: [], searchMatchedIds: [], searchActiveIndex: 0,
-        primaryColor: Colors.blue, dividerColor: Colors.grey,
-        scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
+        cards: cards,
+        connections: [],
+        autoConnections: [],
+        cameraX: 0,
+        cameraY: 0,
+        scale: 1.0,
+        viewW: 400,
+        viewH: 300,
+        gridSize: 20,
+        visibleWorldRect: const Rect.fromLTWH(0, 0, 400, 300),
+        selectedCardIds: [],
+        searchMatchedIds: [],
+        searchActiveIndex: 0,
+        primaryColor: Colors.blue,
+        dividerColor: Colors.grey,
+        scaffoldBg: Colors.white,
+        isDark: false,
+        hintColor: Colors.grey,
         gridVisible: true,
         knowledgeState: knowledge,
         baseFontSize: 14.0,
@@ -135,23 +172,47 @@ void main() {
       final knowledge = KnowledgeState();
 
       final p1 = CanvasPainter(
-        cards: cards, connections: [], autoConnections: [],
-        cameraX: 0, cameraY: 0, scale: 1.0, viewW: 400, viewH: 300,
-        gridSize: 20, visibleWorldRect: const Rect.fromLTWH(0, 0, 400, 300),
-        selectedCardIds: [], searchMatchedIds: [], searchActiveIndex: 0,
-        primaryColor: Colors.blue, dividerColor: Colors.grey,
-        scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
+        cards: cards,
+        connections: [],
+        autoConnections: [],
+        cameraX: 0,
+        cameraY: 0,
+        scale: 1.0,
+        viewW: 400,
+        viewH: 300,
+        gridSize: 20,
+        visibleWorldRect: const Rect.fromLTWH(0, 0, 400, 300),
+        selectedCardIds: [],
+        searchMatchedIds: [],
+        searchActiveIndex: 0,
+        primaryColor: Colors.blue,
+        dividerColor: Colors.grey,
+        scaffoldBg: Colors.white,
+        isDark: false,
+        hintColor: Colors.grey,
         gridVisible: true,
         knowledgeState: knowledge,
         baseFontSize: 14.0,
       );
       final p2 = CanvasPainter(
-        cards: cards, connections: [], autoConnections: [],
-        cameraX: 10, cameraY: 0, scale: 1.0, viewW: 400, viewH: 300,
-        gridSize: 20, visibleWorldRect: const Rect.fromLTWH(0, 0, 400, 300),
-        selectedCardIds: [], searchMatchedIds: [], searchActiveIndex: 0,
-        primaryColor: Colors.blue, dividerColor: Colors.grey,
-        scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
+        cards: cards,
+        connections: [],
+        autoConnections: [],
+        cameraX: 10,
+        cameraY: 0,
+        scale: 1.0,
+        viewW: 400,
+        viewH: 300,
+        gridSize: 20,
+        visibleWorldRect: const Rect.fromLTWH(0, 0, 400, 300),
+        selectedCardIds: [],
+        searchMatchedIds: [],
+        searchActiveIndex: 0,
+        primaryColor: Colors.blue,
+        dividerColor: Colors.grey,
+        scaffoldBg: Colors.white,
+        isDark: false,
+        hintColor: Colors.grey,
         gridVisible: true,
         knowledgeState: knowledge,
         baseFontSize: 14.0,
@@ -162,13 +223,19 @@ void main() {
 
     test('auto connections flagged distinct from manual (A-6)', () {
       final auto = CanvasConnection(
-        id: 'ac', fromCardId: 'A', toCardId: 'B',
-        fromSide: ConnectionSide.right, toSide: ConnectionSide.left,
+        id: 'ac',
+        fromCardId: 'A',
+        toCardId: 'B',
+        fromSide: ConnectionSide.right,
+        toSide: ConnectionSide.left,
         isAuto: true,
       );
       final manual = CanvasConnection(
-        id: 'mc', fromCardId: 'A', toCardId: 'B',
-        fromSide: ConnectionSide.right, toSide: ConnectionSide.left,
+        id: 'mc',
+        fromCardId: 'A',
+        toCardId: 'B',
+        fromSide: ConnectionSide.right,
+        toSide: ConnectionSide.left,
         isAuto: false,
       );
 
@@ -179,8 +246,12 @@ void main() {
 
     test('CanvasCard rect computed correctly', () {
       final card = CanvasCard(
-        id: 'c', type: CanvasCardType.note,
-        x: 100, y: 200, width: 300, height: 150,
+        id: 'c',
+        type: CanvasCardType.note,
+        x: 100,
+        y: 200,
+        width: 300,
+        height: 150,
       );
 
       final r = card.rect;
@@ -193,8 +264,11 @@ void main() {
 
     test('CanvasConnection sides correctly set', () {
       final conn = CanvasConnection(
-        id: 'c', fromCardId: 'A', toCardId: 'B',
-        fromSide: ConnectionSide.right, toSide: ConnectionSide.left,
+        id: 'c',
+        fromCardId: 'A',
+        toCardId: 'B',
+        fromSide: ConnectionSide.right,
+        toSide: ConnectionSide.left,
       );
 
       expect(conn.fromSide, ConnectionSide.right);
@@ -211,12 +285,24 @@ void main() {
       final knowledge = KnowledgeState();
 
       final p = CanvasPainter(
-        cards: [], connections: [], autoConnections: [],
-        cameraX: 0, cameraY: 0, scale: 1.0, viewW: 400, viewH: 300,
-        gridSize: 20, visibleWorldRect: const Rect.fromLTWH(0, 0, 400, 300),
-        selectedCardIds: [], searchMatchedIds: [], searchActiveIndex: 0,
-        primaryColor: Colors.blue, dividerColor: Colors.grey,
-        scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
+        cards: [],
+        connections: [],
+        autoConnections: [],
+        cameraX: 0,
+        cameraY: 0,
+        scale: 1.0,
+        viewW: 400,
+        viewH: 300,
+        gridSize: 20,
+        visibleWorldRect: const Rect.fromLTWH(0, 0, 400, 300),
+        selectedCardIds: [],
+        searchMatchedIds: [],
+        searchActiveIndex: 0,
+        primaryColor: Colors.blue,
+        dividerColor: Colors.grey,
+        scaffoldBg: Colors.white,
+        isDark: false,
+        hintColor: Colors.grey,
         gridVisible: true,
         knowledgeState: knowledge,
         baseFontSize: 14.0,
@@ -228,12 +314,24 @@ void main() {
     test('U-2: CanvasPainter is valid CustomPainter', () {
       final knowledge = KnowledgeState();
       final painter = CanvasPainter(
-        cards: [], connections: [], autoConnections: [],
-        cameraX: 0, cameraY: 0, scale: 1.0, viewW: 400, viewH: 300,
-        gridSize: 20, visibleWorldRect: const Rect.fromLTWH(0, 0, 400, 300),
-        selectedCardIds: [], searchMatchedIds: [], searchActiveIndex: 0,
-        primaryColor: Colors.blue, dividerColor: Colors.grey,
-        scaffoldBg: Colors.white, isDark: false, hintColor: Colors.grey,
+        cards: [],
+        connections: [],
+        autoConnections: [],
+        cameraX: 0,
+        cameraY: 0,
+        scale: 1.0,
+        viewW: 400,
+        viewH: 300,
+        gridSize: 20,
+        visibleWorldRect: const Rect.fromLTWH(0, 0, 400, 300),
+        selectedCardIds: [],
+        searchMatchedIds: [],
+        searchActiveIndex: 0,
+        primaryColor: Colors.blue,
+        dividerColor: Colors.grey,
+        scaffoldBg: Colors.white,
+        isDark: false,
+        hintColor: Colors.grey,
         gridVisible: true,
         knowledgeState: knowledge,
         baseFontSize: 14.0,

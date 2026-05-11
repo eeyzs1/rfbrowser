@@ -89,7 +89,9 @@ class Note {
       if (sourceTitle != null) buffer.writeln('source-title: "$sourceTitle"');
       if (agentTaskId != null) buffer.writeln('agent-task: $agentTaskId');
       if (rawHtmlPath != null) buffer.writeln('raw-html: "$rawHtmlPath"');
-      if (screenshotPath != null) buffer.writeln('screenshot: "$screenshotPath"');
+      if (screenshotPath != null) {
+        buffer.writeln('screenshot: "$screenshotPath"');
+      }
       frontMatter.forEach((key, value) {
         if (![
           'title',

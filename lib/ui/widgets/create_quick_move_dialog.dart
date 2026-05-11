@@ -72,9 +72,9 @@ void showCreateQuickMoveDialog(
                     maxLines: 3,
                     decoration: const InputDecoration(
                       labelText: 'Prompt Template',
-                      hintText:
-                          'Translate to English:\n\n{input}',
-                      helperText: 'Supported: {input}, {pageContent}, {selectedText}, {pageUrl}, {noteContent}',
+                      hintText: 'Translate to English:\n\n{input}',
+                      helperText:
+                          'Supported: {input}, {pageContent}, {selectedText}, {pageUrl}, {noteContent}',
                       helperMaxLines: 2,
                     ),
                   ),
@@ -82,8 +82,8 @@ void showCreateQuickMoveDialog(
                   Text(
                     'Icon',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).hintColor,
-                        ),
+                      color: Theme.of(context).hintColor,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -130,8 +130,8 @@ void showCreateQuickMoveDialog(
                   Text(
                     'Color',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).hintColor,
-                        ),
+                      color: Theme.of(context).hintColor,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -153,15 +153,18 @@ void showCreateQuickMoveDialog(
                             shape: BoxShape.circle,
                             border: isSelected
                                 ? Border.all(
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                     width: 3,
                                   )
                                 : null,
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: Color(colorValue)
-                                          .withValues(alpha: 0.4),
+                                      color: Color(
+                                        colorValue,
+                                      ).withValues(alpha: 0.4),
                                       blurRadius: 8,
                                       spreadRadius: 1,
                                     ),
@@ -169,8 +172,17 @@ void showCreateQuickMoveDialog(
                                 : null,
                           ),
                           child: isSelected
-                              ? Icon(Icons.check,
-                                  size: 14, color: (Color(colorValue).r * 0.299 + Color(colorValue).g * 0.587 + Color(colorValue).b * 0.114) > 128 ? Colors.black : Colors.white)
+                              ? Icon(
+                                  Icons.check,
+                                  size: 14,
+                                  color:
+                                      (Color(colorValue).r * 0.299 +
+                                              Color(colorValue).g * 0.587 +
+                                              Color(colorValue).b * 0.114) >
+                                          128
+                                      ? Colors.black
+                                      : Colors.white,
+                                )
                               : null,
                         ),
                       );
@@ -191,7 +203,9 @@ void showCreateQuickMoveDialog(
                 final prompt = promptController.text.trim();
                 if (name.isEmpty || prompt.isEmpty) return;
 
-                ref.read(quickMoveProvider.notifier).createMove(
+                ref
+                    .read(quickMoveProvider.notifier)
+                    .createMove(
                       name,
                       prompt,
                       iconCodePoint: selectedIconCodePoint,

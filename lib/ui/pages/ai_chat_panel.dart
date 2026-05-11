@@ -92,10 +92,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
     if (query.isNotEmpty) {
       final knowledge = ref.read(knowledgeProvider);
       final noteResults = knowledge.notes
-          .where(
-            (n) =>
-                n.title.toLowerCase().contains(query.toLowerCase()),
-          )
+          .where((n) => n.title.toLowerCase().contains(query.toLowerCase()))
           .take(10)
           .toList();
       for (final note in noteResults) {
@@ -130,7 +127,8 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
       final after = text.substring(cursorPos);
       final newText = '$before${item.insertText}$after';
       _controller.text = newText;
-      final newCursorPos = atMatch.start + item.insertText.length + item.cursorOffset;
+      final newCursorPos =
+          atMatch.start + item.insertText.length + item.cursorOffset;
       _controller.selection = TextSelection.collapsed(
         offset: newCursorPos.clamp(0, newText.length),
       );
@@ -529,12 +527,9 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
 
   Widget _buildModelSelector(ThemeData theme, AIState aiState) {
     final aiConfig = ref.read(aiConfigProvider);
-    final providers = aiConfig.providers
-        .where((p) => p.isEnabled)
-        .toList();
+    final providers = aiConfig.providers.where((p) => p.isEnabled).toList();
     final activeModel = aiState.activeModel ?? aiConfig.activeModel;
-    final activeProvider =
-        aiState.activeProvider ?? aiConfig.activeProvider;
+    final activeProvider = aiState.activeProvider ?? aiConfig.activeProvider;
 
     if (providers.isEmpty) {
       return TextButton.icon(
@@ -636,9 +631,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
 
   void _showModelPicker(ThemeData theme) {
     final aiConfig = ref.read(aiConfigProvider);
-    final providers = aiConfig.providers
-        .where((p) => p.isEnabled)
-        .toList();
+    final providers = aiConfig.providers.where((p) => p.isEnabled).toList();
     final activeConfig = aiConfig.activeConfig;
 
     showDialog(
@@ -887,8 +880,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
     );
 
     final contextStr = assembly.toPrompt();
-    final effectiveContext =
-        contextStr.isNotEmpty ? contextStr : null;
+    final effectiveContext = contextStr.isNotEmpty ? contextStr : null;
 
     if (assembly.truncated && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1021,16 +1013,18 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
     final browser = ref.read(browserProvider);
     final activeTab = browser.activeTab;
 
-    await ref.read(knowledgeProvider.notifier).clipToNote(
+    await ref
+        .read(knowledgeProvider.notifier)
+        .clipToNote(
           url: activeTab?.url ?? '',
           title: 'AI Response — ${DateTime.now().toString().substring(0, 16)}',
           content: content,
         );
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Saved as note')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Saved as note')));
     }
   }
 

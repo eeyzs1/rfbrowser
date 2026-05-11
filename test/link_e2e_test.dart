@@ -85,8 +85,11 @@ void main() {
 
     final targetId = aLinks.first.targetId;
     final bBacklinks = await indexStore.getBacklinks(targetId);
-    expect(bBacklinks.length, greaterThanOrEqualTo(1),
-        reason: 'B should have backlinks');
+    expect(
+      bBacklinks.length,
+      greaterThanOrEqualTo(1),
+      reason: 'B should have backlinks',
+    );
     expect(bBacklinks.any((l) => l.sourceId == noteA.id), isTrue);
   });
 

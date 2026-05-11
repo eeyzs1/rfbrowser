@@ -15,7 +15,9 @@ void main() {
       for (var i = 0; i < 40; i++) {
         final source = rng.nextInt(30);
         var target = rng.nextInt(30);
-        while (target == source) { target = rng.nextInt(30); }
+        while (target == source) {
+          target = rng.nextInt(30);
+        }
         edges.add(LayoutEdge(sourceId: 'n$source', targetId: 'n$target'));
       }
 

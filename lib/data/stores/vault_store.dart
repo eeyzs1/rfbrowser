@@ -87,9 +87,7 @@ class VaultNotifier extends Notifier<VaultState> {
     final file = File(path);
     final dir = Directory(p.dirname(path));
     if (!await dir.exists()) await dir.create(recursive: true);
-    await file.writeAsString(
-      JsonEncoder.withIndent('  ').convert(config),
-    );
+    await file.writeAsString(JsonEncoder.withIndent('  ').convert(config));
   }
 
   static const _recentVaultsKey = 'recent_vaults';
@@ -102,9 +100,7 @@ class VaultNotifier extends Notifier<VaultState> {
     final vaults = vaultsJson
         .map((j) {
           try {
-            return VaultConfig.fromJson(
-              Map<String, dynamic>.from(j as Map),
-            );
+            return VaultConfig.fromJson(Map<String, dynamic>.from(j as Map));
           } catch (_) {
             return null;
           }
@@ -126,8 +122,7 @@ class VaultNotifier extends Notifier<VaultState> {
     state = state.copyWith(recentVaults: vaults, currentVault: currentVault);
   }
 
-  String _normalizePath(String path) =>
-      p.normalize(p.absolute(path));
+  String _normalizePath(String path) => p.normalize(p.absolute(path));
 
   Future<void> openVault(String vaultPath) async {
     state = state.copyWith(isLoading: true, clearError: true);
@@ -201,9 +196,7 @@ class VaultNotifier extends Notifier<VaultState> {
     final existing = vaultsJson
         .map((j) {
           try {
-            return VaultConfig.fromJson(
-              Map<String, dynamic>.from(j as Map),
-            );
+            return VaultConfig.fromJson(Map<String, dynamic>.from(j as Map));
           } catch (_) {
             return null;
           }

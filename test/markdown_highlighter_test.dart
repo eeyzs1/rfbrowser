@@ -26,7 +26,9 @@ void main() {
       final text = 'See [[量子计算]] for details';
       final ranges = highlighter.highlight(text);
 
-      final wikilinks = ranges.where((r) => r.type == HighlightType.wikilink).toList();
+      final wikilinks = ranges
+          .where((r) => r.type == HighlightType.wikilink)
+          .toList();
       expect(wikilinks.length, 1);
       expect(wikilinks.first.start, lessThan(wikilinks.first.end));
     });
@@ -35,7 +37,9 @@ void main() {
       final text = '# Main Title\nSome text\n## Sub Title';
       final ranges = highlighter.highlight(text);
 
-      final headings = ranges.where((r) => r.type == HighlightType.heading).toList();
+      final headings = ranges
+          .where((r) => r.type == HighlightType.heading)
+          .toList();
       expect(headings.length, 2);
     });
 
@@ -43,7 +47,9 @@ void main() {
       final text = 'Before\n```dart\nprint("hi");\n```\nAfter';
       final ranges = highlighter.highlight(text);
 
-      final codeBlocks = ranges.where((r) => r.type == HighlightType.codeBlock).toList();
+      final codeBlocks = ranges
+          .where((r) => r.type == HighlightType.codeBlock)
+          .toList();
       expect(codeBlocks.length, 1);
     });
 
@@ -51,7 +57,9 @@ void main() {
       final text = '```dart\nprint("hi");\n```';
       final ranges = highlighter.highlight(text);
 
-      final codeBlocks = ranges.where((r) => r.type == HighlightType.codeBlock).toList();
+      final codeBlocks = ranges
+          .where((r) => r.type == HighlightType.codeBlock)
+          .toList();
       expect(codeBlocks.length, 1);
       expect(codeBlocks.first.language, 'dart');
     });
@@ -60,7 +68,9 @@ void main() {
       final text = '```\nplain code\n```';
       final ranges = highlighter.highlight(text);
 
-      final codeBlocks = ranges.where((r) => r.type == HighlightType.codeBlock).toList();
+      final codeBlocks = ranges
+          .where((r) => r.type == HighlightType.codeBlock)
+          .toList();
       expect(codeBlocks.length, 1);
       expect(codeBlocks.first.language, isNull);
     });
@@ -69,7 +79,9 @@ void main() {
       final text = '```python\nprint("hello")\n```';
       final ranges = highlighter.highlight(text);
 
-      final codeBlocks = ranges.where((r) => r.type == HighlightType.codeBlock).toList();
+      final codeBlocks = ranges
+          .where((r) => r.type == HighlightType.codeBlock)
+          .toList();
       expect(codeBlocks.length, 1);
       expect(codeBlocks.first.language, 'python');
     });
@@ -94,8 +106,12 @@ void main() {
       final text = '[[link]] and ![[embed]]';
       final ranges = highlighter.highlight(text);
 
-      final embeds = ranges.where((r) => r.type == HighlightType.embed).toList();
-      final wikilinks = ranges.where((r) => r.type == HighlightType.wikilink).toList();
+      final embeds = ranges
+          .where((r) => r.type == HighlightType.embed)
+          .toList();
+      final wikilinks = ranges
+          .where((r) => r.type == HighlightType.wikilink)
+          .toList();
       expect(embeds.length, 1);
       expect(wikilinks.length, 1);
     });
@@ -104,7 +120,9 @@ void main() {
       final text = 'Check @note[量子计算] for details';
       final ranges = highlighter.highlight(text);
 
-      final refs = ranges.where((r) => r.type == HighlightType.contextRef).toList();
+      final refs = ranges
+          .where((r) => r.type == HighlightType.contextRef)
+          .toList();
       expect(refs.length, 1);
     });
 
@@ -114,7 +132,9 @@ void main() {
     });
 
     test('plain text returns no ranges', () {
-      final ranges = highlighter.highlight('Just plain text without any markdown');
+      final ranges = highlighter.highlight(
+        'Just plain text without any markdown',
+      );
       expect(ranges, isEmpty);
     });
 

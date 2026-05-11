@@ -12,6 +12,7 @@ class TantivyBridge {
   TantivySearchResults search(String query, {int topK = 20}) {
     return TantivySearchResults(hits: [], totalCount: 0);
   }
+
   void close() {}
 }
 

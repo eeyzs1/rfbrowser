@@ -42,7 +42,9 @@ class SyncProgressWidget extends StatelessWidget {
               const Spacer(),
               Text(
                 '${progress.filesProcessed}/${progress.totalFiles}',
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                ),
               ),
               if (onCancel != null) ...[
                 const SizedBox(width: 8),
@@ -50,7 +52,10 @@ class SyncProgressWidget extends StatelessWidget {
                   icon: const Icon(Icons.close, size: 14),
                   onPressed: onCancel,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 20,
+                  ),
                 ),
               ],
             ],
@@ -61,7 +66,9 @@ class SyncProgressWidget extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress.progress,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                theme.colorScheme.primary,
+              ),
             ),
           ),
           if (progress.currentFile.isNotEmpty) ...[

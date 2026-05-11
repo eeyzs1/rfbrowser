@@ -12,8 +12,7 @@ class AIFloat extends StatefulWidget {
   State<AIFloat> createState() => _AIFloatState();
 }
 
-class _AIFloatState extends State<AIFloat>
-    with SingleTickerProviderStateMixin {
+class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
   late final AnimationController _animationController;
   late final Animation<double> _scaleAnimation;
@@ -93,11 +92,8 @@ class _AIFloatState extends State<AIFloat>
                     height: 480,
                     decoration: BoxDecoration(
                       color: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius:
-                          BorderRadius.circular(DesignRadius.lg),
-                      border: Border.all(
-                        color: Theme.of(context).dividerColor,
-                      ),
+                      borderRadius: BorderRadius.circular(DesignRadius.lg),
+                      border: Border.all(color: Theme.of(context).dividerColor),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(DesignRadius.lg),
@@ -116,8 +112,7 @@ class _AIFloatState extends State<AIFloat>
                                 minHeight: 24,
                               ),
                               style: IconButton.styleFrom(
-                                backgroundColor:
-                                    Colors.black26,
+                                backgroundColor: Colors.black26,
                               ),
                             ),
                           ),

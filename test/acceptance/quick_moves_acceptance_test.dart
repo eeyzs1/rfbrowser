@@ -35,7 +35,9 @@ void main() {
     });
 
     test('AC-1-4: Created command immediately available', () async {
-      await container.read(quickMoveProvider.notifier).createMove('mycmd', 'Process {input}');
+      await container
+          .read(quickMoveProvider.notifier)
+          .createMove('mycmd', 'Process {input}');
       expect(s().moves.any((m) => m.name == 'mycmd'), isTrue);
       expect(s().matching('mycmd').length, 1);
     });
@@ -44,7 +46,9 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
-            home: Scaffold(body: CommandBar(onCommand: _noop, onClose: _noop)),
+            home: Scaffold(
+              body: CommandBar(onCommand: _noop, onClose: _noop),
+            ),
           ),
         ),
       );
@@ -78,21 +82,36 @@ void main() {
     test('AC-2-2: case-insensitive matching', () {
       final presets = QuickMove.defaultPresets();
       final summarize = presets.firstWhere((p) => p.id == 'preset_summarize');
-      final state = QuickMoveState(moves: [
-        summarize.copyWith(name: 'SUMMARIZE'),
-        QuickMove(id: '2', name: 'sum', promptTemplate: ''),
-      ]);
+      final state = QuickMoveState(
+        moves: [
+          summarize.copyWith(name: 'SUMMARIZE'),
+          QuickMove(id: '2', name: 'sum', promptTemplate: ''),
+        ],
+      );
       expect(state.matching('sum').length, greaterThanOrEqualTo(2));
     });
 
     test('AC-2-4: sorted by lastUsedAt descending', () {
       final now = DateTime.now();
       final moves = [
-        QuickMove(id: 'old', name: 'Old', promptTemplate: '',
-            lastUsedAt: now.subtract(const Duration(days: 5))),
-        QuickMove(id: 'recent', name: 'Recent', promptTemplate: '', lastUsedAt: now),
-        QuickMove(id: 'mid', name: 'Mid', promptTemplate: '',
-            lastUsedAt: now.subtract(const Duration(hours: 1))),
+        QuickMove(
+          id: 'old',
+          name: 'Old',
+          promptTemplate: '',
+          lastUsedAt: now.subtract(const Duration(days: 5)),
+        ),
+        QuickMove(
+          id: 'recent',
+          name: 'Recent',
+          promptTemplate: '',
+          lastUsedAt: now,
+        ),
+        QuickMove(
+          id: 'mid',
+          name: 'Mid',
+          promptTemplate: '',
+          lastUsedAt: now.subtract(const Duration(hours: 1)),
+        ),
       ];
       final sorted = QuickMoveState(moves: moves).byLastUsed;
       expect(sorted[0].name, 'Recent');
@@ -104,7 +123,9 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
-            home: Scaffold(body: CommandBar(onCommand: _noop, onClose: _noop)),
+            home: Scaffold(
+              body: CommandBar(onCommand: _noop, onClose: _noop),
+            ),
           ),
         ),
       );
@@ -124,7 +145,9 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
-            home: Scaffold(body: CommandBar(onCommand: _noop, onClose: _noop)),
+            home: Scaffold(
+              body: CommandBar(onCommand: _noop, onClose: _noop),
+            ),
           ),
         ),
       );
@@ -179,9 +202,7 @@ void main() {
     testWidgets('AC-3-1: settings section renders', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(body: QuickMovesSettingsSection()),
-          ),
+          child: MaterialApp(home: Scaffold(body: QuickMovesSettingsSection())),
         ),
       );
       await tester.pumpAndSettle();
@@ -189,12 +210,12 @@ void main() {
       expect(find.text('/翻译'), findsOneWidget);
     });
 
-    testWidgets('AC-3-2: all moves show type badge and drag handle', (tester) async {
+    testWidgets('AC-3-2: all moves show type badge and drag handle', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(body: QuickMovesSettingsSection()),
-          ),
+          child: MaterialApp(home: Scaffold(body: QuickMovesSettingsSection())),
         ),
       );
       await tester.pumpAndSettle();
@@ -224,13 +245,19 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       final c = ProviderContainer();
       final n = c.read(quickMoveProvider.notifier);
-      for (final p in c.read(quickMoveProvider).moves
-          .where((m) => m.type == QuickMoveType.preset)) {
+      for (final p
+          in c
+              .read(quickMoveProvider)
+              .moves
+              .where((m) => m.type == QuickMoveType.preset)) {
         await n.deleteMove(p.id);
       }
       await n.restoreDefaults();
-      final count = c.read(quickMoveProvider).moves
-          .where((m) => m.type == QuickMoveType.preset).length;
+      final count = c
+          .read(quickMoveProvider)
+          .moves
+          .where((m) => m.type == QuickMoveType.preset)
+          .length;
       expect(count, greaterThanOrEqualTo(5));
       c.dispose();
     });
@@ -241,8 +268,12 @@ void main() {
       final n = c.read(quickMoveProvider.notifier);
       await n.restoreDefaults();
       await n.restoreDefaults();
-      final ids = c.read(quickMoveProvider).moves
-          .where((m) => m.type == QuickMoveType.preset).map((m) => m.id).toSet();
+      final ids = c
+          .read(quickMoveProvider)
+          .moves
+          .where((m) => m.type == QuickMoveType.preset)
+          .map((m) => m.id)
+          .toSet();
       expect(ids.length, 5);
       c.dispose();
     });
@@ -251,7 +282,10 @@ void main() {
   group('US-5: 上下文感知的 AI 响应', () {
     test('AC-5-3: {pageContent} resolves', () {
       final m = QuickMove(name: 'sum', promptTemplate: 'TL;DR:\n{pageContent}');
-      expect(m.resolvePrompt({'pageContent': 'Long article...'}), 'TL;DR:\nLong article...');
+      expect(
+        m.resolvePrompt({'pageContent': 'Long article...'}),
+        'TL;DR:\nLong article...',
+      );
     });
 
     test('AC-5-3: {selectedText} resolves', () {
@@ -260,34 +294,53 @@ void main() {
     });
 
     test('AC-5-1: combined {pageContent} + {input}', () {
-      final m = QuickMove(name: 's', promptTemplate: 'Q: {input}\n\nDoc: {pageContent}');
+      final m = QuickMove(
+        name: 's',
+        promptTemplate: 'Q: {input}\n\nDoc: {pageContent}',
+      );
       final r = m.resolvePrompt({'input': 'summary', 'pageContent': 'Article'});
       expect(r, contains('summary'));
       expect(r, contains('Article'));
     });
 
     test('AC-5-2: {selectedText} resolves', () {
-      final m = QuickMove(name: 't', promptTemplate: 'Translate: {selectedText}');
+      final m = QuickMove(
+        name: 't',
+        promptTemplate: 'Translate: {selectedText}',
+      );
       expect(m.resolvePrompt({'selectedText': '你好世界'}), contains('你好世界'));
     });
 
     test('AC-5-4: missing context placeholder stays (no crash)', () {
-      final m = QuickMove(name: 's', promptTemplate: 'Page: {pageContent}. In: {input}');
+      final m = QuickMove(
+        name: 's',
+        promptTemplate: 'Page: {pageContent}. In: {input}',
+      );
       final r = m.resolvePrompt({'input': 'hi'});
       expect(r, contains('{pageContent}'));
       expect(r, contains('hi'));
     });
 
     test('AC-5-4: {pageUrl} + {noteContent} resolve together', () {
-      final m = QuickMove(name: 's', promptTemplate: '{pageUrl}\n{noteContent}');
-      final r = m.resolvePrompt({'pageUrl': 'https://x.com', 'noteContent': 'My note'});
+      final m = QuickMove(
+        name: 's',
+        promptTemplate: '{pageUrl}\n{noteContent}',
+      );
+      final r = m.resolvePrompt({
+        'pageUrl': 'https://x.com',
+        'noteContent': 'My note',
+      });
       expect(r, contains('https://x.com'));
       expect(r, contains('My note'));
     });
 
-    testWidgets('AC-5: context provider updates via Consumer widget', (tester) async {
+    testWidgets('AC-5: context provider updates via Consumer widget', (
+      tester,
+    ) async {
       final container = ProviderContainer();
-      container.read(quickMoveContextProvider.notifier).update(
+      container
+          .read(quickMoveContextProvider.notifier)
+          .update(
             QuickMoveContext(
               currentUrl: 'https://example.com',
               pageContent: 'Some page text',
@@ -299,10 +352,12 @@ void main() {
           container: container,
           child: MaterialApp(
             home: Scaffold(
-              body: Consumer(builder: (context, ref, _) {
-                final ctx = ref.watch(quickMoveContextProvider);
-                return Text(ctx.currentUrl ?? 'null');
-              }),
+              body: Consumer(
+                builder: (context, ref, _) {
+                  final ctx = ref.watch(quickMoveContextProvider);
+                  return Text(ctx.currentUrl ?? 'null');
+                },
+              ),
             ),
           ),
         ),
@@ -320,7 +375,10 @@ void main() {
       SharedPreferences.setMockInitialValues({});
 
       final presets = QuickMove.defaultPresets();
-      final move = QuickMove(name: 'persistent', promptTemplate: 'test {input}');
+      final move = QuickMove(
+        name: 'persistent',
+        promptTemplate: 'test {input}',
+      );
       final state = QuickMoveState(moves: [...presets, move]);
       await store.save(state);
 
@@ -335,11 +393,17 @@ void main() {
       SharedPreferences.setMockInitialValues({});
 
       final presets = QuickMove.defaultPresets();
-      final move = QuickMove(id: 'will_delete', name: 'temp', promptTemplate: '');
+      final move = QuickMove(
+        id: 'will_delete',
+        name: 'temp',
+        promptTemplate: '',
+      );
       await store.save(QuickMoveState(moves: [...presets, move]));
 
       var state = await store.load();
-      state = state.copyWith(moves: state.moves.where((m) => m.id != 'will_delete').toList());
+      state = state.copyWith(
+        moves: state.moves.where((m) => m.id != 'will_delete').toList(),
+      );
       await store.save(state);
 
       final reloaded = await store.load();
@@ -350,12 +414,19 @@ void main() {
       SharedPreferences.setMockInitialValues({});
 
       final presets = QuickMove.defaultPresets();
-      final original = QuickMove(id: 'edit_me', name: 'original', promptTemplate: 'old');
+      final original = QuickMove(
+        id: 'edit_me',
+        name: 'original',
+        promptTemplate: 'old',
+      );
       await store.save(QuickMoveState(moves: [...presets, original]));
 
       var loaded = await store.load();
       final idx = loaded.moves.indexWhere((m) => m.id == 'edit_me');
-      final updated = loaded.moves[idx].copyWith(name: 'edited', promptTemplate: 'new');
+      final updated = loaded.moves[idx].copyWith(
+        name: 'edited',
+        promptTemplate: 'new',
+      );
       final updatedMoves = List<QuickMove>.from(loaded.moves);
       updatedMoves[idx] = updated;
       await store.save(QuickMoveState(moves: updatedMoves));
@@ -370,9 +441,12 @@ void main() {
       SharedPreferences.setMockInitialValues({});
 
       final presets = QuickMove.defaultPresets();
-      final s1 = QuickMoveState(moves: [...presets,
-        QuickMove(id: 'x', name: 'test', promptTemplate: '{input}'),
-      ]);
+      final s1 = QuickMoveState(
+        moves: [
+          ...presets,
+          QuickMove(id: 'x', name: 'test', promptTemplate: '{input}'),
+        ],
+      );
       await store.save(s1);
 
       final s1Loaded = await store.load();

@@ -49,11 +49,14 @@ void main() {
     expect(sim, lessThan(0.3));
   });
 
-  test('AC-IMP-4-4: same text produces identical embeddings (deterministic)', () async {
-    final emb1 = await embeddingService.embed('机器学习 with some extra words');
-    final emb2 = await embeddingService.embed('机器学习 with some extra words');
+  test(
+    'AC-IMP-4-4: same text produces identical embeddings (deterministic)',
+    () async {
+      final emb1 = await embeddingService.embed('机器学习 with some extra words');
+      final emb2 = await embeddingService.embed('机器学习 with some extra words');
 
-    final sim = cosineSimilarity(emb1, emb2);
-    expect(sim, closeTo(1.0, 1e-15));
-  });
+      final sim = cosineSimilarity(emb1, emb2);
+      expect(sim, closeTo(1.0, 1e-15));
+    },
+  );
 }

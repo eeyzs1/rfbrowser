@@ -7,8 +7,10 @@ void main() {
       final card = CanvasCard(
         id: 'model-test',
         type: CanvasCardType.image,
-        x: 0, y: 0,
-        width: 200, height: 150,
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 150,
         title: 'Cat Photo',
         content: 'https://example.com/cat.jpg',
       );
@@ -23,8 +25,10 @@ void main() {
       final card = CanvasCard(
         id: 'empty',
         type: CanvasCardType.image,
-        x: 50, y: 60,
-        width: 100, height: 100,
+        x: 50,
+        y: 60,
+        width: 100,
+        height: 100,
         title: '',
         content: '',
       );
@@ -39,8 +43,10 @@ void main() {
       final card = CanvasCard(
         id: 'orig',
         type: CanvasCardType.image,
-        x: 10, y: 20,
-        width: 300, height: 200,
+        x: 10,
+        y: 20,
+        width: 300,
+        height: 200,
         title: 'Original',
         content: 'https://example.com/img.png',
       );
@@ -57,8 +63,10 @@ void main() {
       final card = CanvasCard(
         id: 'type-test',
         type: CanvasCardType.image,
-        x: 0, y: 0,
-        width: 100, height: 100,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
         title: '',
         content: '',
       );
@@ -71,8 +79,10 @@ void main() {
       final card = CanvasCard(
         id: 'local',
         type: CanvasCardType.image,
-        x: 0, y: 0,
-        width: 200, height: 200,
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 200,
         title: 'Local Photo',
         content: 'C:/photos/screenshot.png',
       );

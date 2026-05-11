@@ -52,15 +52,9 @@ class _SceneScaffoldState extends State<SceneScaffold> {
       switchInCurve: Curves.easeOut,
       switchOutCurve: Curves.easeIn,
       transitionBuilder: (child, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
+        return FadeTransition(opacity: animation, child: child);
       },
-      child: KeyedSubtree(
-        key: ValueKey(_currentScene),
-        child: child,
-      ),
+      child: KeyedSubtree(key: ValueKey(_currentScene), child: child),
     );
   }
 
@@ -72,9 +66,7 @@ class _SceneScaffoldState extends State<SceneScaffold> {
           currentScene: _currentScene,
           onSceneChanged: _switchScene,
         ),
-        Expanded(
-          child: _buildSceneContent(),
-        ),
+        Expanded(child: _buildSceneContent()),
         if (widget.statusBar != null) widget.statusBar!,
       ],
     );

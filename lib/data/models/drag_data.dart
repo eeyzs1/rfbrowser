@@ -1,6 +1,11 @@
 enum DragSource { browser, sidebar, canvas, editor }
 
-class DragDataType { static const text = 'text'; static const link = 'link'; static const image = 'image'; static const note = 'note'; }
+class DragDataType {
+  static const text = 'text';
+  static const link = 'link';
+  static const image = 'image';
+  static const note = 'note';
+}
 
 class DragData {
   final DragSource source;

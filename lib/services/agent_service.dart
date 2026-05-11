@@ -8,13 +8,14 @@ class AgentState {
   final List<AgentTask> tasks;
   final HeadlessManager headlessManager;
 
-  AgentState({
-    this.tasks = const [],
-    HeadlessManager? headlessManager,
-  }) : headlessManager = headlessManager ?? HeadlessManager();
+  AgentState({this.tasks = const [], HeadlessManager? headlessManager})
+    : headlessManager = headlessManager ?? HeadlessManager();
 
   AgentState copyWith({List<AgentTask>? tasks}) {
-    return AgentState(tasks: tasks ?? this.tasks, headlessManager: headlessManager);
+    return AgentState(
+      tasks: tasks ?? this.tasks,
+      headlessManager: headlessManager,
+    );
   }
 }
 
@@ -113,7 +114,10 @@ class AgentNotifier extends Notifier<AgentState> {
     return current;
   }
 
-  Future<String> _executeStep(AgentStep step, List<String> previousResults) async {
+  Future<String> _executeStep(
+    AgentStep step,
+    List<String> previousResults,
+  ) async {
     if (step.description.startsWith('Navigate to:')) {
       final url = step.description.replaceFirst('Navigate to:', '').trim();
       final webView = state.headlessManager.create();
@@ -123,7 +127,9 @@ class AgentNotifier extends Notifier<AgentState> {
     }
 
     if (step.description.startsWith('Extract text from:')) {
-      final url = step.description.replaceFirst('Extract text from:', '').trim();
+      final url = step.description
+          .replaceFirst('Extract text from:', '')
+          .trim();
       final webView = state.headlessManager.create();
       await webView.run();
       await webView.loadUrl(url);
@@ -136,12 +142,14 @@ class AgentNotifier extends Notifier<AgentState> {
       final content = [
         '# $title',
         '',
-        previousResults.isNotEmpty ? '## Context\n\n${previousResults.join('\n\n')}' : '',
+        previousResults.isNotEmpty
+            ? '## Context\n\n${previousResults.join('\n\n')}'
+            : '',
       ].join('\n');
       try {
-        final note = await ref.read(knowledgeProvider.notifier).createNote(
-          title: title,
-        );
+        final note = await ref
+            .read(knowledgeProvider.notifier)
+            .createNote(title: title);
         ref.read(knowledgeProvider.notifier).updateActiveNoteContent(content);
         await ref.read(knowledgeProvider.notifier).saveActiveNote();
         return 'Note created: $title (${note.filePath})';
@@ -173,7 +181,9 @@ class AgentNotifier extends Notifier<AgentState> {
   }
 
   void removeTask(String id) {
-    state = state.copyWith(tasks: state.tasks.where((t) => t.id != id).toList());
+    state = state.copyWith(
+      tasks: state.tasks.where((t) => t.id != id).toList(),
+    );
   }
 
   Future<AgentTask> research(String topic, {int depth = 3}) async {

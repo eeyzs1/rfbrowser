@@ -23,14 +23,18 @@ class HnswIndex {
     int? maxLayer0Connections,
     double? mL,
     int? seed,
-  })  : _maxLayer0Connections = maxLayer0Connections ?? M * 2,
-        _mL = mL ?? 1.0 / log(M),
-        _rng = Random(seed ?? DateTime.now().microsecondsSinceEpoch);
+  }) : _maxLayer0Connections = maxLayer0Connections ?? M * 2,
+       _mL = mL ?? 1.0 / log(M),
+       _rng = Random(seed ?? DateTime.now().microsecondsSinceEpoch);
 
   int get size => _ids.length;
   bool get isEmpty => _ids.isEmpty;
 
-  void insert(String id, List<double> vector, {Map<String, dynamic>? metadata}) {
+  void insert(
+    String id,
+    List<double> vector, {
+    Map<String, dynamic>? metadata,
+  }) {
     final existingIndex = _ids.indexOf(id);
     if (existingIndex >= 0) {
       _vectors[existingIndex] = List.from(vector);
@@ -73,7 +77,12 @@ class HnswIndex {
     }
 
     for (var lc = min(level, _maxLevel); lc >= 0; lc--) {
-      final candidates = _searchLayer(_vectors[nodeIndex], currNode, efConstruction, lc);
+      final candidates = _searchLayer(
+        _vectors[nodeIndex],
+        currNode,
+        efConstruction,
+        lc,
+      );
 
       final mMax = lc == 0 ? _maxLayer0Connections : M;
       final neighbors = _selectNeighborsHeuristic(candidates, mMax, lc);
@@ -196,10 +205,19 @@ class HnswIndex {
     return sqrt(sum);
   }
 
-  List<int> _searchLayer(List<double> query, int entryPoint, int ef, int layer) {
+  List<int> _searchLayer(
+    List<double> query,
+    int entryPoint,
+    int ef,
+    int layer,
+  ) {
     final visited = <int>{entryPoint};
-    final candidates = HeapPriorityQueue<_DistNode>((a, b) => a.dist.compareTo(b.dist));
-    final results = HeapPriorityQueue<_DistNode>((a, b) => b.dist.compareTo(a.dist));
+    final candidates = HeapPriorityQueue<_DistNode>(
+      (a, b) => a.dist.compareTo(b.dist),
+    );
+    final results = HeapPriorityQueue<_DistNode>(
+      (a, b) => b.dist.compareTo(a.dist),
+    );
 
     final entryDist = _distance(query, _vectors[entryPoint]);
     candidates.add(_DistNode(entryPoint, entryDist));
@@ -236,7 +254,11 @@ class HnswIndex {
     return sorted;
   }
 
-  List<int> _selectNeighborsHeuristic(List<int> candidates, int mMax, int layer) {
+  List<int> _selectNeighborsHeuristic(
+    List<int> candidates,
+    int mMax,
+    int layer,
+  ) {
     if (candidates.length <= mMax) return candidates;
 
     final selected = <int>[];
@@ -296,7 +318,9 @@ class HnswIndex {
 
     final entries = <_DistNode>[];
     for (final neighbor in connections) {
-      entries.add(_DistNode(neighbor, _distance(_vectors[nodeIndex], _vectors[neighbor])));
+      entries.add(
+        _DistNode(neighbor, _distance(_vectors[nodeIndex], _vectors[neighbor])),
+      );
     }
     entries.sort((a, b) => a.dist.compareTo(b.dist));
     _graphs[nodeIndex] = entries.take(mMax).map((e) => e.node).toList();
@@ -359,10 +383,12 @@ class HeapPriorityQueue<E> {
       var smallest = index;
       final left = 2 * index + 1;
       final right = 2 * index + 2;
-      if (left < _queue.length && comparison(_queue[left], _queue[smallest]) < 0) {
+      if (left < _queue.length &&
+          comparison(_queue[left], _queue[smallest]) < 0) {
         smallest = left;
       }
-      if (right < _queue.length && comparison(_queue[right], _queue[smallest]) < 0) {
+      if (right < _queue.length &&
+          comparison(_queue[right], _queue[smallest]) < 0) {
         smallest = right;
       }
       if (smallest == index) break;

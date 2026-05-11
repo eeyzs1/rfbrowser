@@ -104,19 +104,25 @@ class LinkNotifier extends Notifier<LinkState> {
     return state.backlinksCache[noteId] ?? [];
   }
 
-  List<UnlinkedMentionResult> getUnlinkedMentions(String noteId, List<Note> allNotes) {
+  List<UnlinkedMentionResult> getUnlinkedMentions(
+    String noteId,
+    List<Note> allNotes,
+  ) {
     final note = allNotes.where((n) => n.id == noteId).firstOrNull;
     if (note == null) return [];
 
     final titles = allNotes.map((n) => n.title).toList();
     final extractor = LinkExtractor();
-    return extractor.findUnlinkedMentions(note.content, titles)
-        .map((m) => UnlinkedMentionResult(
-              sourceNoteId: m.noteId,
-              targetTitle: m.targetTitle,
-              context: m.context,
-              position: m.position,
-            ))
+    return extractor
+        .findUnlinkedMentions(note.content, titles)
+        .map(
+          (m) => UnlinkedMentionResult(
+            sourceNoteId: m.noteId,
+            targetTitle: m.targetTitle,
+            context: m.context,
+            position: m.position,
+          ),
+        )
         .toList();
   }
 
@@ -148,13 +154,24 @@ class LinkNotifier extends Notifier<LinkState> {
     ];
   }
 
-  LocalGraphResult getLocalGraph(String centerNoteId, List<Note> allNotes, {int depth = 1}) {
+  LocalGraphResult getLocalGraph(
+    String centerNoteId,
+    List<Note> allNotes, {
+    int depth = 1,
+  }) {
     final graphFilter = GraphFilter(allNotes: allNotes, allLinks: state.links);
     return graphFilter.getLocalGraph(centerNoteId, depth: depth);
   }
 
-  Future<void> linkMention(String sourceNoteId, String targetTitle, int position, List<Note> allNotes) async {
-    final targetNote = allNotes.where((n) => n.title == targetTitle).firstOrNull;
+  Future<void> linkMention(
+    String sourceNoteId,
+    String targetTitle,
+    int position,
+    List<Note> allNotes,
+  ) async {
+    final targetNote = allNotes
+        .where((n) => n.title == targetTitle)
+        .firstOrNull;
     if (targetNote == null) return;
 
     final newLink = Link(

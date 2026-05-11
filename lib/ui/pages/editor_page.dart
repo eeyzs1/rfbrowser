@@ -81,13 +81,25 @@ class _EditorViewState extends ConsumerState<EditorView> {
   int get _wordCount {
     final text = _controller.text.trim();
     if (text.isEmpty) return 0;
-    final cjk = RegExp(r'[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]').allMatches(text).length;
-    final withoutCjk = text.replaceAll(RegExp(r'[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]'), ' ');
-    final englishWords = withoutCjk.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+    final cjk = RegExp(
+      r'[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]',
+    ).allMatches(text).length;
+    final withoutCjk = text.replaceAll(
+      RegExp(r'[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]'),
+      ' ',
+    );
+    final englishWords = withoutCjk
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .length;
     return cjk + englishWords;
   }
 
-  void _insertFormatting(String prefix, String suffix, [String placeholder = '']) {
+  void _insertFormatting(
+    String prefix,
+    String suffix, [
+    String placeholder = '',
+  ]) {
     final text = _controller.text;
     final selection = _controller.selection;
     final selectedText = selection.textInside(text);
@@ -114,11 +126,19 @@ class _EditorViewState extends ConsumerState<EditorView> {
     final cursorPos = selection.start >= 0 ? selection.start : text.length;
     int lineStart = text.lastIndexOf('\n', cursorPos - 1) + 1;
     final lineEnd = text.indexOf('\n', cursorPos);
-    final currentLine = text.substring(lineStart, lineEnd >= 0 ? lineEnd : text.length);
+    final currentLine = text.substring(
+      lineStart,
+      lineEnd >= 0 ? lineEnd : text.length,
+    );
     final stripped = currentLine.replaceFirst(RegExp(r'^#{1,6}\s*'), '');
     final newLine = '$prefix$stripped';
-    _controller.text = text.substring(0, lineStart) + newLine + text.substring(lineEnd >= 0 ? lineEnd : text.length);
-    _controller.selection = TextSelection.collapsed(offset: lineStart + newLine.length);
+    _controller.text =
+        text.substring(0, lineStart) +
+        newLine +
+        text.substring(lineEnd >= 0 ? lineEnd : text.length);
+    _controller.selection = TextSelection.collapsed(
+      offset: lineStart + newLine.length,
+    );
   }
 
   void _cycleHeading() {
@@ -127,14 +147,22 @@ class _EditorViewState extends ConsumerState<EditorView> {
     final cursorPos = selection.start >= 0 ? selection.start : text.length;
     int lineStart = text.lastIndexOf('\n', cursorPos - 1) + 1;
     final lineEnd = text.indexOf('\n', cursorPos);
-    final currentLine = text.substring(lineStart, lineEnd >= 0 ? lineEnd : text.length);
+    final currentLine = text.substring(
+      lineStart,
+      lineEnd >= 0 ? lineEnd : text.length,
+    );
     final match = RegExp(r'^(#{1,6})\s*').firstMatch(currentLine);
     int currentLevel = match != null ? match.group(1)!.length : 0;
     int nextLevel = currentLevel >= 6 ? 0 : currentLevel + 1;
     final stripped = currentLine.replaceFirst(RegExp(r'^#{1,6}\s*'), '');
     final newLine = nextLevel > 0 ? '${'#' * nextLevel} $stripped' : stripped;
-    _controller.text = text.substring(0, lineStart) + newLine + text.substring(lineEnd >= 0 ? lineEnd : text.length);
-    _controller.selection = TextSelection.collapsed(offset: lineStart + newLine.length);
+    _controller.text =
+        text.substring(0, lineStart) +
+        newLine +
+        text.substring(lineEnd >= 0 ? lineEnd : text.length);
+    _controller.selection = TextSelection.collapsed(
+      offset: lineStart + newLine.length,
+    );
   }
 
   @override
@@ -165,10 +193,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
             const SizedBox(height: 20),
             Text(l.noVaultConnected, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 6),
-            Text(
-              l.openVaultToStart,
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(l.openVaultToStart, style: theme.textTheme.bodySmall),
           ],
         ),
       );
@@ -185,10 +210,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
             const SizedBox(height: 16),
             Text(l.noNoteSelected, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 8),
-            Text(
-              l.createOrSelectNote,
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(l.createOrSelectNote, style: theme.textTheme.bodySmall),
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () => _createNewNote(),
@@ -217,7 +239,8 @@ class _EditorViewState extends ConsumerState<EditorView> {
     return Column(
       children: [
         _buildHeader(theme, note, l),
-        if (_viewMode == _EditorViewMode.edit || _viewMode == _EditorViewMode.split)
+        if (_viewMode == _EditorViewMode.edit ||
+            _viewMode == _EditorViewMode.split)
           _buildFormatToolbar(theme, l),
         Expanded(
           child: ColoredBox(
@@ -225,10 +248,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
             child: _viewMode == _EditorViewMode.original
                 ? _buildOriginalView(theme, note, bgColor, l)
                 : _viewMode == _EditorViewMode.split
-                    ? _buildSplitView(theme, note, bgColor, l)
-                    : _viewMode == _EditorViewMode.preview
-                        ? _buildMarkdownPreview(theme, note, l)
-                        : _buildEditor(theme, bgColor, l),
+                ? _buildSplitView(theme, note, bgColor, l)
+                : _viewMode == _EditorViewMode.preview
+                ? _buildMarkdownPreview(theme, note, l)
+                : _buildEditor(theme, bgColor, l),
           ),
         ),
         _buildStatusBar(theme, note, l),
@@ -251,7 +274,9 @@ class _EditorViewState extends ConsumerState<EditorView> {
               children: [
                 Text(
                   note.title,
-                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -260,19 +285,29 @@ class _EditorViewState extends ConsumerState<EditorView> {
                     padding: const EdgeInsets.only(top: 2),
                     child: Wrap(
                       spacing: 4,
-                      children: note.tags.take(5).map<Widget>((tag) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.secondary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: Text(
-                          '#$tag',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.secondary,
-                          ),
-                        ),
-                      )).toList(),
+                      children: note.tags
+                          .take(5)
+                          .map<Widget>(
+                            (tag) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 0,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.secondary.withValues(
+                                  alpha: 0.08,
+                                ),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                              child: Text(
+                                '#$tag',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.secondary,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
                     ),
                   ),
               ],
@@ -322,7 +357,11 @@ class _EditorViewState extends ConsumerState<EditorView> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.check_circle, size: 10, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.check_circle,
+                      size: 10,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       l.saved,
@@ -348,7 +387,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
                         : _EditorViewMode.original,
                   ),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
                   style: IconButton.styleFrom(
                     backgroundColor: _viewMode == _EditorViewMode.original
                         ? theme.colorScheme.primary.withValues(alpha: 0.12)
@@ -369,22 +411,39 @@ class _EditorViewState extends ConsumerState<EditorView> {
                   icon: const Icon(Icons.screenshot, size: 16),
                   onPressed: () => _showScreenshot(note),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
                 ),
               ),
             ),
           SegmentedButton<_EditorViewMode>(
             segments: [
-              ButtonSegment(value: _EditorViewMode.edit, label: Text(l.editMode), icon: Icon(Icons.edit, size: 14)),
-              ButtonSegment(value: _EditorViewMode.preview, label: Text(l.previewMode), icon: Icon(Icons.visibility, size: 14)),
-              ButtonSegment(value: _EditorViewMode.split, label: Text(l.splitView), icon: Icon(Icons.vertical_split, size: 14)),
+              ButtonSegment(
+                value: _EditorViewMode.edit,
+                label: Text(l.editMode),
+                icon: Icon(Icons.edit, size: 14),
+              ),
+              ButtonSegment(
+                value: _EditorViewMode.preview,
+                label: Text(l.previewMode),
+                icon: Icon(Icons.visibility, size: 14),
+              ),
+              ButtonSegment(
+                value: _EditorViewMode.split,
+                label: Text(l.splitView),
+                icon: Icon(Icons.vertical_split, size: 14),
+              ),
             ],
             selected: {_viewMode},
             onSelectionChanged: (modes) => _switchViewMode(modes.first),
             style: ButtonStyle(
               visualDensity: VisualDensity.compact,
               textStyle: WidgetStatePropertyAll(theme.textTheme.labelSmall),
-              padding: WidgetStatePropertyAll(const EdgeInsets.symmetric(horizontal: 8, vertical: 4)),
+              padding: WidgetStatePropertyAll(
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              ),
             ),
           ),
           const SizedBox(width: 4),
@@ -412,7 +471,12 @@ class _EditorViewState extends ConsumerState<EditorView> {
     });
   }
 
-  Widget _buildOriginalView(ThemeData theme, dynamic note, Color bgColor, AppLocalizations l) {
+  Widget _buildOriginalView(
+    ThemeData theme,
+    dynamic note,
+    Color bgColor,
+    AppLocalizations l,
+  ) {
     final vault = ref.read(vaultProvider).currentVault;
     if (vault == null) {
       return Center(child: Text(l.noVaultConnected));
@@ -421,7 +485,9 @@ class _EditorViewState extends ConsumerState<EditorView> {
     if (note.rawHtmlPath != null) {
       final htmlFile = File(p.join(vault.path, note.rawHtmlPath));
       return FutureBuilder<String>(
-        future: htmlFile.exists().then((exists) => exists ? htmlFile.readAsString() : ''),
+        future: htmlFile.exists().then(
+          (exists) => exists ? htmlFile.readAsString() : '',
+        ),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -433,7 +499,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
           return Column(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surface,
                   border: Border(bottom: BorderSide(color: theme.dividerColor)),
@@ -445,12 +514,17 @@ class _EditorViewState extends ConsumerState<EditorView> {
                     Expanded(
                       child: Text(
                         l.originalPageViewHint,
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
                       ),
                     ),
                     TextButton.icon(
                       icon: const Icon(Icons.open_in_browser, size: 14),
-                      label: Text(l.openInBrowser, style: theme.textTheme.labelSmall),
+                      label: Text(
+                        l.openInBrowser,
+                        style: theme.textTheme.labelSmall,
+                      ),
                       onPressed: () {
                         if (note.sourceUrl != null) {
                           launchUrl(Uri.parse(note.sourceUrl!));
@@ -492,7 +566,9 @@ class _EditorViewState extends ConsumerState<EditorView> {
                 Expanded(
                   child: Text(
                     l.loadingOriginalPage,
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
                   ),
                 ),
               ],
@@ -514,7 +590,11 @@ class _EditorViewState extends ConsumerState<EditorView> {
     return _buildOriginalFallback(note, l, theme);
   }
 
-  Widget _buildOriginalFallback(dynamic note, AppLocalizations l, ThemeData theme) {
+  Widget _buildOriginalFallback(
+    dynamic note,
+    AppLocalizations l,
+    ThemeData theme,
+  ) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -548,9 +628,18 @@ class _EditorViewState extends ConsumerState<EditorView> {
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  Icon(Icons.screenshot, size: 18, color: Theme.of(ctx).hintColor),
+                  Icon(
+                    Icons.screenshot,
+                    size: 18,
+                    color: Theme.of(ctx).hintColor,
+                  ),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(l.pageScreenshot, style: Theme.of(ctx).textTheme.titleMedium)),
+                  Expanded(
+                    child: Text(
+                      l.pageScreenshot,
+                      style: Theme.of(ctx).textTheme.titleMedium,
+                    ),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.close, size: 18),
                     onPressed: () => Navigator.pop(ctx),
@@ -565,7 +654,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
                   if (snapshot.data != true) {
                     return Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Text(l.screenshotNotFound, style: Theme.of(ctx).textTheme.bodyMedium),
+                      child: Text(
+                        l.screenshotNotFound,
+                        style: Theme.of(ctx).textTheme.bodyMedium,
+                      ),
                     );
                   }
                   return InteractiveViewer(
@@ -592,31 +684,109 @@ class _EditorViewState extends ConsumerState<EditorView> {
         child: Row(
           children: [
             _toolbarBtn(theme, Icons.title, l.heading, _cycleHeading),
-            _toolbarBtn(theme, Icons.format_bold, l.bold, () => _insertFormatting('**', '**', 'Bold text')),
-            _toolbarBtn(theme, Icons.format_italic, l.italic, () => _insertFormatting('*', '*', 'Italic text')),
-            _toolbarBtn(theme, Icons.strikethrough_s, l.strikethrough, () => _insertFormatting('~~', '~~', 'Struck text')),
+            _toolbarBtn(
+              theme,
+              Icons.format_bold,
+              l.bold,
+              () => _insertFormatting('**', '**', 'Bold text'),
+            ),
+            _toolbarBtn(
+              theme,
+              Icons.format_italic,
+              l.italic,
+              () => _insertFormatting('*', '*', 'Italic text'),
+            ),
+            _toolbarBtn(
+              theme,
+              Icons.strikethrough_s,
+              l.strikethrough,
+              () => _insertFormatting('~~', '~~', 'Struck text'),
+            ),
             _toolbarDivider(theme),
-            _toolbarBtn(theme, Icons.code, l.inlineCode, () => _insertFormatting('`', '`', 'code')),
-            _toolbarBtn(theme, Icons.data_object, l.codeBlock, () => _insertFormatting('\n```\n', '\n```\n', 'code')),
+            _toolbarBtn(
+              theme,
+              Icons.code,
+              l.inlineCode,
+              () => _insertFormatting('`', '`', 'code'),
+            ),
+            _toolbarBtn(
+              theme,
+              Icons.data_object,
+              l.codeBlock,
+              () => _insertFormatting('\n```\n', '\n```\n', 'code'),
+            ),
             _toolbarDivider(theme),
-            _toolbarBtn(theme, Icons.format_list_bulleted, l.bulletList, () => _insertLinePrefix('- ')),
-            _toolbarBtn(theme, Icons.format_list_numbered, l.numberedList, () => _insertLinePrefix('1. ')),
-            _toolbarBtn(theme, Icons.format_quote, l.quote, () => _insertLinePrefix('> ')),
-            _toolbarBtn(theme, Icons.checklist, l.taskList, () => _insertLinePrefix('- [ ] ')),
+            _toolbarBtn(
+              theme,
+              Icons.format_list_bulleted,
+              l.bulletList,
+              () => _insertLinePrefix('- '),
+            ),
+            _toolbarBtn(
+              theme,
+              Icons.format_list_numbered,
+              l.numberedList,
+              () => _insertLinePrefix('1. '),
+            ),
+            _toolbarBtn(
+              theme,
+              Icons.format_quote,
+              l.quote,
+              () => _insertLinePrefix('> '),
+            ),
+            _toolbarBtn(
+              theme,
+              Icons.checklist,
+              l.taskList,
+              () => _insertLinePrefix('- [ ] '),
+            ),
             _toolbarDivider(theme),
-            _toolbarBtn(theme, Icons.link, l.link, () => _insertFormatting('[', '](url)', 'link text')),
-            _toolbarBtn(theme, Icons.add_link, l.wikiLink, () => _insertFormatting('[[', ']]', 'note title')),
-            _toolbarBtn(theme, Icons.input, l.embedNote, () => _insertFormatting('![[', ']]', 'note title')),
+            _toolbarBtn(
+              theme,
+              Icons.link,
+              l.link,
+              () => _insertFormatting('[', '](url)', 'link text'),
+            ),
+            _toolbarBtn(
+              theme,
+              Icons.add_link,
+              l.wikiLink,
+              () => _insertFormatting('[[', ']]', 'note title'),
+            ),
+            _toolbarBtn(
+              theme,
+              Icons.input,
+              l.embedNote,
+              () => _insertFormatting('![[', ']]', 'note title'),
+            ),
             _toolbarDivider(theme),
-            _toolbarBtn(theme, Icons.horizontal_rule, l.horizontalRule, () => _insertFormatting('\n---\n', '')),
-            _toolbarBtn(theme, Icons.table_chart, l.table, () => _insertFormatting('\n| Col1 | Col2 | Col3 |\n| --- | --- | --- |\n| ', ' | content | content |\n')),
+            _toolbarBtn(
+              theme,
+              Icons.horizontal_rule,
+              l.horizontalRule,
+              () => _insertFormatting('\n---\n', ''),
+            ),
+            _toolbarBtn(
+              theme,
+              Icons.table_chart,
+              l.table,
+              () => _insertFormatting(
+                '\n| Col1 | Col2 | Col3 |\n| --- | --- | --- |\n| ',
+                ' | content | content |\n',
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _toolbarBtn(ThemeData theme, IconData icon, String tooltip, VoidCallback onPressed) {
+  Widget _toolbarBtn(
+    ThemeData theme,
+    IconData icon,
+    String tooltip,
+    VoidCallback onPressed,
+  ) {
     return IconButton(
       icon: Icon(icon, size: 16, color: theme.hintColor),
       onPressed: onPressed,
@@ -630,11 +800,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
   Widget _toolbarDivider(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Container(
-        width: 1,
-        height: 16,
-        color: theme.dividerColor,
-      ),
+      child: Container(width: 1, height: 16, color: theme.dividerColor),
     );
   }
 
@@ -651,37 +817,35 @@ class _EditorViewState extends ConsumerState<EditorView> {
           const SizedBox(width: 4),
           Text(
             note.filePath ?? '',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.hintColor,
-            ),
+            style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           const Spacer(),
           Text(
             l.charCount(_charCount),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.hintColor,
-            ),
+            style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
           ),
           const SizedBox(width: 12),
           Text(
             l.wordCount(_wordCount),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.hintColor,
-            ),
+            style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
           ),
           const SizedBox(width: 12),
           Icon(
             _isDirty ? Icons.circle : Icons.check_circle_outline,
             size: 10,
-            color: _isDirty ? theme.colorScheme.primary : theme.colorScheme.primary,
+            color: _isDirty
+                ? theme.colorScheme.primary
+                : theme.colorScheme.primary,
           ),
           const SizedBox(width: 3),
           Text(
             _isDirty ? l.hasUnsavedChanges : l.saved,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: _isDirty ? theme.colorScheme.primary : theme.colorScheme.primary,
+              color: _isDirty
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.primary,
             ),
           ),
         ],
@@ -705,8 +869,11 @@ class _EditorViewState extends ConsumerState<EditorView> {
         final text = _controller.text;
         final selection = _controller.selection;
         final insertPos = selection.baseOffset.clamp(0, text.length);
-        _controller.text = text.substring(0, insertPos) + markdown + text.substring(insertPos);
-        _controller.selection = TextSelection.collapsed(offset: insertPos + markdown.length);
+        _controller.text =
+            text.substring(0, insertPos) + markdown + text.substring(insertPos);
+        _controller.selection = TextSelection.collapsed(
+          offset: insertPos + markdown.length,
+        );
       },
       builder: (context, candidateData, rejectedData) {
         return Stack(
@@ -737,7 +904,12 @@ class _EditorViewState extends ConsumerState<EditorView> {
     );
   }
 
-  Widget _buildHighlightedEditor(ThemeData theme, AppSettings settings, Color bgColor, AppLocalizations l) {
+  Widget _buildHighlightedEditor(
+    ThemeData theme,
+    AppSettings settings,
+    Color bgColor,
+    AppLocalizations l,
+  ) {
     _controller.setTheme(theme);
     return TextField(
       controller: _controller,
@@ -759,15 +931,18 @@ class _EditorViewState extends ConsumerState<EditorView> {
         errorBorder: InputBorder.none,
         disabledBorder: InputBorder.none,
         hintText: l.startWritingHint,
-        hintStyle: theme.textTheme.bodyLarge?.copyWith(
-          color: theme.hintColor,
-        ),
+        hintStyle: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
         contentPadding: EdgeInsets.zero,
       ),
     );
   }
 
-  Widget _buildSplitView(ThemeData theme, dynamic note, Color bgColor, AppLocalizations l) {
+  Widget _buildSplitView(
+    ThemeData theme,
+    dynamic note,
+    Color bgColor,
+    AppLocalizations l,
+  ) {
     final settings = ref.watch(settingsProvider);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -797,7 +972,9 @@ class _EditorViewState extends ConsumerState<EditorView> {
                   errorBorder: InputBorder.none,
                   disabledBorder: InputBorder.none,
                   hintText: l.startWritingHint,
-                  hintStyle: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
+                  hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.hintColor,
+                  ),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -809,7 +986,11 @@ class _EditorViewState extends ConsumerState<EditorView> {
     );
   }
 
-  Widget _buildMarkdownPreview(ThemeData theme, dynamic note, AppLocalizations l) {
+  Widget _buildMarkdownPreview(
+    ThemeData theme,
+    dynamic note,
+    AppLocalizations l,
+  ) {
     return Markdown(
       data: note.content,
       padding: const EdgeInsets.all(24),

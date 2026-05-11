@@ -17,7 +17,12 @@ class NoteSidebar extends ConsumerStatefulWidget {
   final VoidCallback? onNoteOpened;
   final ValueChanged<String>? onNotePreview;
   final ValueChanged<String>? onBookmarkOpened;
-  const NoteSidebar({super.key, this.onNoteOpened, this.onNotePreview, this.onBookmarkOpened});
+  const NoteSidebar({
+    super.key,
+    this.onNoteOpened,
+    this.onNotePreview,
+    this.onBookmarkOpened,
+  });
 
   @override
   ConsumerState<NoteSidebar> createState() => _NoteSidebarState();
@@ -65,8 +70,14 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     }
   }
 
-  Future<void> _collectFolders(String basePath, String relativePath, List<String> result) async {
-    final dir = Directory(relativePath.isEmpty ? basePath : '$basePath/$relativePath');
+  Future<void> _collectFolders(
+    String basePath,
+    String relativePath,
+    List<String> result,
+  ) async {
+    final dir = Directory(
+      relativePath.isEmpty ? basePath : '$basePath/$relativePath',
+    );
     if (!await dir.exists()) return;
     await for (final entity in dir.list()) {
       if (entity is Directory) {
@@ -118,34 +129,97 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
       ),
       child: Row(
         children: [
-          Expanded(child: _tabBtn(theme, _SidebarTab.notes, Icons.description_outlined, Icons.description, l.notes, ref.watch(knowledgeProvider).notes.length)),
-          Expanded(child: _tabBtn(theme, _SidebarTab.bookmarks, Icons.bookmark_border, Icons.bookmark, l.bookmarks, ref.watch(browserProvider).bookmarks.length)),
+          Expanded(
+            child: _tabBtn(
+              theme,
+              _SidebarTab.notes,
+              Icons.description_outlined,
+              Icons.description,
+              l.notes,
+              ref.watch(knowledgeProvider).notes.length,
+            ),
+          ),
+          Expanded(
+            child: _tabBtn(
+              theme,
+              _SidebarTab.bookmarks,
+              Icons.bookmark_border,
+              Icons.bookmark,
+              l.bookmarks,
+              ref.watch(browserProvider).bookmarks.length,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _tabBtn(ThemeData theme, _SidebarTab tab, IconData icon, IconData activeIcon, String label, int count) {
+  Widget _tabBtn(
+    ThemeData theme,
+    _SidebarTab tab,
+    IconData icon,
+    IconData activeIcon,
+    String label,
+    int count,
+  ) {
     final isActive = _activeTab == tab;
     final primary = theme.colorScheme.primary;
     return GestureDetector(
       onTap: () => setState(() => _activeTab = tab),
       child: Container(
-        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isActive ? primary : Colors.transparent, width: 2))),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isActive ? primary : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
         child: Center(
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(isActive ? activeIcon : icon, size: 14, color: isActive ? primary : theme.hintColor),
-            const SizedBox(width: 4),
-            Flexible(child: Text(label, style: theme.textTheme.bodySmall?.copyWith(fontSize: _baseFontSize, color: isActive ? primary : theme.hintColor, fontWeight: isActive ? FontWeight.w600 : FontWeight.w400), overflow: TextOverflow.ellipsis)),
-            if (count > 0) ...[
-              const SizedBox(width: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                decoration: BoxDecoration(color: isActive ? primary.withValues(alpha: 0.1) : theme.dividerColor.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(8)),
-                child: Text('$count', style: TextStyle(fontSize: _baseFontSize - 2, color: isActive ? primary : theme.hintColor)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isActive ? activeIcon : icon,
+                size: 14,
+                color: isActive ? primary : theme.hintColor,
               ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: _baseFontSize,
+                    color: isActive ? primary : theme.hintColor,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (count > 0) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? primary.withValues(alpha: 0.1)
+                        : theme.dividerColor.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$count',
+                    style: TextStyle(
+                      fontSize: _baseFontSize - 2,
+                      color: isActive ? primary : theme.hintColor,
+                    ),
+                  ),
+                ),
+              ],
             ],
-          ]),
+          ),
         ),
       ),
     );
@@ -154,41 +228,80 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   Widget _buildNotesToolbar(ThemeData theme, AppLocalizations l) {
     return Padding(
       padding: const EdgeInsets.all(8),
-      child: Row(children: [
-        Expanded(
-          child: TextField(
-            controller: _searchController,
-            style: theme.textTheme.bodySmall,
-            decoration: InputDecoration(
-              hintText: l.searchNotes, hintStyle: theme.textTheme.bodySmall,
-              prefixIcon: const Icon(Icons.search, size: 14), isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 6),
-              suffixIcon: _searchQuery.isNotEmpty ? IconButton(
-                icon: const Icon(Icons.close, size: 12),
-                onPressed: () { _searchController.clear(); setState(() => _searchQuery = ''); },
-                padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-              ) : null,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              style: theme.textTheme.bodySmall,
+              decoration: InputDecoration(
+                hintText: l.searchNotes,
+                hintStyle: theme.textTheme.bodySmall,
+                prefixIcon: const Icon(Icons.search, size: 14),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 6),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.close, size: 12),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                      )
+                    : null,
+              ),
+              onChanged: (q) => setState(() => _searchQuery = q),
             ),
-            onChanged: (q) => setState(() => _searchQuery = q),
           ),
-        ),
-        const SizedBox(width: 4),
-        IconButton(icon: const Icon(Icons.create_new_folder_outlined, size: 14), onPressed: () => _createNoteFolder(''), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28), tooltip: l.newFolder),
-        IconButton(icon: const Icon(Icons.add, size: 16), onPressed: () => _createNewNote(''), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28), tooltip: l.newNote),
-      ]),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: const Icon(Icons.create_new_folder_outlined, size: 14),
+            onPressed: () => _createNoteFolder(''),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            tooltip: l.newFolder,
+          ),
+          IconButton(
+            icon: const Icon(Icons.add, size: 16),
+            onPressed: () => _createNewNote(''),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            tooltip: l.newNote,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildBookmarksToolbar(ThemeData theme, AppLocalizations l) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      child: Row(children: [
-        Icon(Icons.bookmark, size: 14, color: theme.hintColor),
-        const SizedBox(width: 6),
-        Text(l.bookmarkCount(ref.watch(browserProvider).bookmarks.length), style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: _baseFontSize)),
-        const Spacer(),
-        IconButton(icon: const Icon(Icons.create_new_folder_outlined, size: 14), onPressed: () => _createBookmarkFolder('bookmarks-bar'), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 24, minHeight: 24), tooltip: l.newBookmarkFolder),
-      ]),
+      child: Row(
+        children: [
+          Icon(Icons.bookmark, size: 14, color: theme.hintColor),
+          const SizedBox(width: 6),
+          Text(
+            l.bookmarkCount(ref.watch(browserProvider).bookmarks.length),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.hintColor,
+              fontSize: _baseFontSize,
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.create_new_folder_outlined, size: 14),
+            onPressed: () => _createBookmarkFolder('bookmarks-bar'),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+            tooltip: l.newBookmarkFolder,
+          ),
+        ],
+      ),
     );
   }
 
@@ -205,7 +318,9 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
           current.notes.add(note);
         } else {
           final pathSoFar = parts.sublist(0, i + 1).join('/');
-          var child = current.children.where((c) => c.path == pathSoFar).firstOrNull;
+          var child = current.children
+              .where((c) => c.path == pathSoFar)
+              .firstOrNull;
           if (child == null) {
             child = _TrieNode(pathSoFar, current.depth + 1);
             current.children.add(child);
@@ -219,7 +334,9 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
       _TrieNode current = root;
       for (var i = 0; i < parts.length; i++) {
         final pathSoFar = parts.sublist(0, i + 1).join('/');
-        var child = current.children.where((c) => c.path == pathSoFar).firstOrNull;
+        var child = current.children
+            .where((c) => c.path == pathSoFar)
+            .firstOrNull;
         if (child == null) {
           child = _TrieNode(pathSoFar, current.depth + 1);
           current.children.add(child);
@@ -238,40 +355,81 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     }
   }
 
-  Widget _buildNotesTree(ThemeData theme, List<Note> notes, KnowledgeState knowledgeState, AppLocalizations l) {
+  Widget _buildNotesTree(
+    ThemeData theme,
+    List<Note> notes,
+    KnowledgeState knowledgeState,
+    AppLocalizations l,
+  ) {
     if (notes.isEmpty && _diskFolders.isEmpty) {
       return Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.note_add, size: 32, color: theme.hintColor.withValues(alpha: 0.3)),
-          const SizedBox(height: 8),
-          Text(l.noNotes, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
-          const SizedBox(height: 8),
-          FilledButton.tonal(onPressed: () => _createNewNote(''), child: Text(l.createNote)),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.note_add,
+              size: 32,
+              color: theme.hintColor.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l.noNotes,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+            FilledButton.tonal(
+              onPressed: () => _createNewNote(''),
+              child: Text(l.createNote),
+            ),
+          ],
+        ),
       );
     }
 
     final trie = _buildNoteTrie(notes);
-    return ListView(padding: EdgeInsets.zero, children: _buildTrieWidgets(trie, knowledgeState, l));
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: _buildTrieWidgets(trie, knowledgeState, l),
+    );
   }
 
-  List<Widget> _buildTrieWidgets(_TrieNode node, KnowledgeState knowledgeState, AppLocalizations l) {
+  List<Widget> _buildTrieWidgets(
+    _TrieNode node,
+    KnowledgeState knowledgeState,
+    AppLocalizations l,
+  ) {
     final items = <Widget>[];
     for (final child in node.children) {
       final isExpanded = _expandedNoteFolders.contains(child.path);
       final noteCount = child.totalNoteCount;
-      items.add(_noteFolderRow(
-        name: child.name, depth: child.depth, isExpanded: isExpanded,
-        isRoot: child.depth == 0 && child.path.isEmpty, noteCount: noteCount,
-        folderPath: child.path, l: l,
-        onToggle: () => setState(() {
-          if (isExpanded) { _expandedNoteFolders.remove(child.path); } else { _expandedNoteFolders.add(child.path); }
-        }),
-        onNewNote: () => _createNewNote(child.path),
-        onNewFolder: () => _createNoteFolder(child.path),
-        onRename: child.depth > 0 ? () => _renameNoteFolder(child.path) : null,
-        onDelete: child.depth > 0 ? () => _confirmDeleteNoteFolder(child.path) : null,
-      ));
+      items.add(
+        _noteFolderRow(
+          name: child.name,
+          depth: child.depth,
+          isExpanded: isExpanded,
+          isRoot: child.depth == 0 && child.path.isEmpty,
+          noteCount: noteCount,
+          folderPath: child.path,
+          l: l,
+          onToggle: () => setState(() {
+            if (isExpanded) {
+              _expandedNoteFolders.remove(child.path);
+            } else {
+              _expandedNoteFolders.add(child.path);
+            }
+          }),
+          onNewNote: () => _createNewNote(child.path),
+          onNewFolder: () => _createNoteFolder(child.path),
+          onRename: child.depth > 0
+              ? () => _renameNoteFolder(child.path)
+              : null,
+          onDelete: child.depth > 0
+              ? () => _confirmDeleteNoteFolder(child.path)
+              : null,
+        ),
+      );
       if (isExpanded) {
         items.addAll(_buildTrieWidgets(child, knowledgeState, l));
       }
@@ -279,25 +437,43 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     for (final note in node.notes) {
       final isActive = knowledgeState.activeNote?.id == note.id;
       final isHovered = _hoveredNoteId == note.id;
-      items.add(_noteRow(note, node.depth + (node.path.isEmpty ? 0 : 1), isActive, isHovered, l));
+      items.add(
+        _noteRow(
+          note,
+          node.depth + (node.path.isEmpty ? 0 : 1),
+          isActive,
+          isHovered,
+          l,
+        ),
+      );
     }
     return items;
   }
 
   Widget _noteFolderRow({
-    required String name, required int depth, required bool isExpanded,
-    required bool isRoot, required int noteCount, required String folderPath,
+    required String name,
+    required int depth,
+    required bool isExpanded,
+    required bool isRoot,
+    required int noteCount,
+    required String folderPath,
     required AppLocalizations l,
-    required VoidCallback onToggle, required VoidCallback onNewNote,
-    required VoidCallback onNewFolder, VoidCallback? onRename, VoidCallback? onDelete,
+    required VoidCallback onToggle,
+    required VoidCallback onNewNote,
+    required VoidCallback onNewFolder,
+    VoidCallback? onRename,
+    VoidCallback? onDelete,
   }) {
     return DragTarget<String>(
       onWillAcceptWithDetails: (details) => _draggingNoteId != null,
       onAcceptWithDetails: (details) {
         if (_draggingNoteId != null) {
-          ref.read(knowledgeProvider.notifier).moveNote(_draggingNoteId!, folderPath).then((_) {
-            _scanDiskFolders();
-          });
+          ref
+              .read(knowledgeProvider.notifier)
+              .moveNote(_draggingNoteId!, folderPath)
+              .then((_) {
+                _scanDiskFolders();
+              });
         }
       },
       builder: (context, candidateData, rejectedData) {
@@ -308,37 +484,83 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
           onEnter: (_) => setState(() => _hoveredNoteFolder = folderPath),
           onExit: (_) => setState(() => _hoveredNoteFolder = null),
           child: GestureDetector(
-            onSecondaryTapUp: (d) => _showFolderContextMenu(d.globalPosition, onNewNote, onNewFolder, onRename, onDelete, l),
+            onSecondaryTapUp: (d) => _showFolderContextMenu(
+              d.globalPosition,
+              onNewNote,
+              onNewFolder,
+              onRename,
+              onDelete,
+              l,
+            ),
             child: Container(
               padding: EdgeInsets.only(left: depth * 14.0 + 4.0),
-              color: isDragOver ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                  : isHovered ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3) : null,
+              color: isDragOver
+                  ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                  : isHovered
+                  ? theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
+                    )
+                  : null,
               child: InkWell(
                 onTap: onToggle,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
-                  child: Row(children: [
-                    Icon(isExpanded ? Icons.expand_more : Icons.chevron_right, size: 14, color: theme.hintColor),
-                    const SizedBox(width: 2),
-                    Icon(isExpanded ? Icons.folder_open : Icons.folder, size: 15,
-                      color: isRoot ? theme.colorScheme.primary : theme.colorScheme.primary.withValues(alpha: 0.7)),
-                    const SizedBox(width: 5),
-                    Expanded(child: Text(
-                      isRoot && name.isEmpty ? 'Vault' : name,
-                      style: theme.textTheme.bodySmall?.copyWith(fontSize: _baseFontSize, fontWeight: FontWeight.w600, color: isRoot ? theme.colorScheme.primary : null),
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                    )),
-                    if (isHovered && !isRoot) ...[
-                      _ib(Icons.edit_outlined, onRename, l.rename),
-                      _ib(Icons.delete_outline, onDelete, l.delete),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 5,
+                    horizontal: 4,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isExpanded ? Icons.expand_more : Icons.chevron_right,
+                        size: 14,
+                        color: theme.hintColor,
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        isExpanded ? Icons.folder_open : Icons.folder,
+                        size: 15,
+                        color: isRoot
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.primary.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          isRoot && name.isEmpty ? 'Vault' : name,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: _baseFontSize,
+                            fontWeight: FontWeight.w600,
+                            color: isRoot ? theme.colorScheme.primary : null,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isHovered && !isRoot) ...[
+                        _ib(Icons.edit_outlined, onRename, l.rename),
+                        _ib(Icons.delete_outline, onDelete, l.delete),
+                      ],
+                      if (isHovered) ...[
+                        _ib(Icons.add, onNewNote, l.newNote),
+                        _ib(
+                          Icons.create_new_folder_outlined,
+                          onNewFolder,
+                          l.newSubfolder,
+                        ),
+                      ],
+                      if (!isHovered && noteCount > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4),
+                          child: Text(
+                            '$noteCount',
+                            style: TextStyle(
+                              fontSize: _baseFontSize - 2,
+                              color: theme.hintColor.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ),
                     ],
-                    if (isHovered) ...[
-                      _ib(Icons.add, onNewNote, l.newNote),
-                      _ib(Icons.create_new_folder_outlined, onNewFolder, l.newSubfolder),
-                    ],
-                    if (!isHovered && noteCount > 0)
-                      Padding(padding: const EdgeInsets.only(left: 4), child: Text('$noteCount', style: TextStyle(fontSize: _baseFontSize - 2, color: theme.hintColor.withValues(alpha: 0.6)))),
-                  ]),
+                  ),
                 ),
               ),
             ),
@@ -348,21 +570,48 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     );
   }
 
-  Widget _noteRow(Note note, int depth, bool isActive, bool isHovered, AppLocalizations l) {
+  Widget _noteRow(
+    Note note,
+    int depth,
+    bool isActive,
+    bool isHovered,
+    AppLocalizations l,
+  ) {
     return Draggable<String>(
       data: note.id,
       onDragStarted: () => setState(() => _draggingNoteId = note.id),
       onDragEnd: (_) => setState(() => _draggingNoteId = null),
       feedback: Material(
-        elevation: 4, borderRadius: BorderRadius.circular(4),
+        elevation: 4,
+        borderRadius: BorderRadius.circular(4),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(4), border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3))),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.description, size: 14, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 6),
-            Text(note.title, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize)),
-          ]),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.description,
+                size: 14,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                note.title,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize),
+              ),
+            ],
+          ),
         ),
       ),
       child: MouseRegion(
@@ -370,25 +619,58 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         onExit: (_) => setState(() => _hoveredNoteId = null),
         child: Container(
           padding: EdgeInsets.only(left: depth * 14.0 + 4.0),
-          color: isActive ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08) : null,
+          color: isActive
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+              : null,
           child: InkWell(
             onTap: () {
               ref.read(knowledgeProvider.notifier).openNote(note.id);
-              if (widget.onNotePreview != null) { widget.onNotePreview!(note.id); } else { widget.onNoteOpened?.call(); }
+              if (widget.onNotePreview != null) {
+                widget.onNotePreview!(note.id);
+              } else {
+                widget.onNoteOpened?.call();
+              }
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-              child: Row(children: [
-                Icon(Icons.description_outlined, size: 14, color: isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).hintColor),
-                const SizedBox(width: 5),
-                Expanded(child: Text(note.title,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize, color: isActive ? Theme.of(context).colorScheme.primary : null, fontWeight: isActive ? FontWeight.w600 : null),
-                  maxLines: 1, overflow: TextOverflow.ellipsis)),
-                if (isHovered) ...[
-                  _ib(Icons.drive_file_move_outline, () => _showMoveNoteDialog(note), l.move),
-                  _ib(Icons.close, () => _confirmDeleteNote(note.title, note.id), l.delete),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.description_outlined,
+                    size: 14,
+                    color: isActive
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).hintColor,
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      note.title,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontSize: _baseFontSize,
+                        color: isActive
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                        fontWeight: isActive ? FontWeight.w600 : null,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (isHovered) ...[
+                    _ib(
+                      Icons.drive_file_move_outline,
+                      () => _showMoveNoteDialog(note),
+                      l.move,
+                    ),
+                    _ib(
+                      Icons.close,
+                      () => _confirmDeleteNote(note.title, note.id),
+                      l.delete,
+                    ),
+                  ],
                 ],
-              ]),
+              ),
             ),
           ),
         ),
@@ -398,28 +680,102 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
 
   Widget _ib(IconData icon, VoidCallback? onPressed, String tooltip) {
     return IconButton(
-      icon: Icon(icon, size: 12, color: Theme.of(context).hintColor.withValues(alpha: 0.7)),
-      onPressed: onPressed, padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 20, minHeight: 20), tooltip: tooltip,
+      icon: Icon(
+        icon,
+        size: 12,
+        color: Theme.of(context).hintColor.withValues(alpha: 0.7),
+      ),
+      onPressed: onPressed,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+      tooltip: tooltip,
     );
   }
 
-  void _showFolderContextMenu(Offset pos, VoidCallback onNewNote, VoidCallback onNewFolder, VoidCallback? onRename, VoidCallback? onDelete, AppLocalizations l) {
+  void _showFolderContextMenu(
+    Offset pos,
+    VoidCallback onNewNote,
+    VoidCallback onNewFolder,
+    VoidCallback? onRename,
+    VoidCallback? onDelete,
+    AppLocalizations l,
+  ) {
     final items = <PopupMenuEntry<String>>[
-      PopupMenuItem(value: 'new_note', child: Row(children: [Icon(Icons.add, size: 14, color: Theme.of(context).hintColor), const SizedBox(width: 8), Text(l.newNote)])),
-      PopupMenuItem(value: 'new_folder', child: Row(children: [Icon(Icons.create_new_folder_outlined, size: 14, color: Theme.of(context).hintColor), const SizedBox(width: 8), Text(l.newSubfolder)])),
+      PopupMenuItem(
+        value: 'new_note',
+        child: Row(
+          children: [
+            Icon(Icons.add, size: 14, color: Theme.of(context).hintColor),
+            const SizedBox(width: 8),
+            Text(l.newNote),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'new_folder',
+        child: Row(
+          children: [
+            Icon(
+              Icons.create_new_folder_outlined,
+              size: 14,
+              color: Theme.of(context).hintColor,
+            ),
+            const SizedBox(width: 8),
+            Text(l.newSubfolder),
+          ],
+        ),
+      ),
     ];
-    if (onRename != null) items.add(PopupMenuItem(value: 'rename', child: Row(children: [Icon(Icons.edit, size: 14, color: Theme.of(context).hintColor), const SizedBox(width: 8), Text(l.rename)])));
+    if (onRename != null) {
+      items.add(
+        PopupMenuItem(
+          value: 'rename',
+          child: Row(
+            children: [
+              Icon(Icons.edit, size: 14, color: Theme.of(context).hintColor),
+              const SizedBox(width: 8),
+              Text(l.rename),
+            ],
+          ),
+        ),
+      );
+    }
     if (onDelete != null) {
       items.add(const PopupMenuDivider());
-      items.add(PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline, size: 14, color: Theme.of(context).colorScheme.error), const SizedBox(width: 8), Text(l.delete, style: TextStyle(color: Theme.of(context).colorScheme.error))])));
+      items.add(
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(
+                Icons.delete_outline,
+                size: 14,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l.delete,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+          ),
+        ),
+      );
     }
-    showMenu(context: context, position: RelativeRect.fromLTRB(pos.dx, pos.dy, pos.dx + 1, pos.dy + 1), items: items).then((v) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(pos.dx, pos.dy, pos.dx + 1, pos.dy + 1),
+      items: items,
+    ).then((v) {
       switch (v) {
-        case 'new_note': onNewNote();
-        case 'new_folder': onNewFolder();
-        case 'rename': onRename?.call();
-        case 'delete': onDelete?.call();
+        case 'new_note':
+          onNewNote();
+        case 'new_folder':
+          onNewFolder();
+        case 'rename':
+          onRename?.call();
+        case 'delete':
+          onDelete?.call();
       }
     });
   }
@@ -431,21 +787,58 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
 
     if (bookmarks.isEmpty && folders.length <= 1) {
       return Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.bookmark_border, size: 32, color: theme.hintColor.withValues(alpha: 0.3)),
-          const SizedBox(height: 8),
-          Text(l.noBookmarks, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
-          const SizedBox(height: 4),
-          Text(l.bookmarkHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: _baseFontSize)),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.bookmark_border,
+              size: 32,
+              color: theme.hintColor.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l.noBookmarks,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l.bookmarkHint,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+                fontSize: _baseFontSize,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
     final items = <Widget>[];
-    _buildBookmarkFolderWidgets(folders, bookmarks, 'bookmarks-bar', 0, items, l);
+    _buildBookmarkFolderWidgets(
+      folders,
+      bookmarks,
+      'bookmarks-bar',
+      0,
+      items,
+      l,
+    );
     final unfiled = bookmarks.where((b) => b.folderId.isEmpty).toList();
     if (unfiled.isNotEmpty) {
-      items.add(Padding(padding: const EdgeInsets.only(left: 8, top: 6, bottom: 2), child: Text(l.uncategorized, style: theme.textTheme.bodySmall?.copyWith(fontSize: _baseFontSize - 1, fontWeight: FontWeight.w600, color: theme.hintColor))));
+      items.add(
+        Padding(
+          padding: const EdgeInsets.only(left: 8, top: 6, bottom: 2),
+          child: Text(
+            l.uncategorized,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: _baseFontSize - 1,
+              fontWeight: FontWeight.w600,
+              color: theme.hintColor,
+            ),
+          ),
+        ),
+      );
       for (final bm in unfiled) {
         items.add(_bookmarkRow(bm, 1, l));
       }
@@ -453,65 +846,157 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     return ListView(children: items);
   }
 
-  void _buildBookmarkFolderWidgets(List<BookmarkFolder> allFolders, List<Bookmark> allBookmarks, String parentId, int depth, List<Widget> items, AppLocalizations l) {
-    final childFolders = allFolders.where((f) => f.parentId == parentId).toList();
+  void _buildBookmarkFolderWidgets(
+    List<BookmarkFolder> allFolders,
+    List<Bookmark> allBookmarks,
+    String parentId,
+    int depth,
+    List<Widget> items,
+    AppLocalizations l,
+  ) {
+    final childFolders = allFolders
+        .where((f) => f.parentId == parentId)
+        .toList();
     for (final folder in childFolders) {
-      final folderBookmarks = allBookmarks.where((b) => b.folderId == folder.id).toList();
+      final folderBookmarks = allBookmarks
+          .where((b) => b.folderId == folder.id)
+          .toList();
       final isExpanded = _expandedBookmarkFolders.contains(folder.id);
       final isHovered = _hoveredBookmarkFolder == folder.id;
-      final totalBookmarks = _countBookmarksInFolder(allFolders, allBookmarks, folder.id);
+      final totalBookmarks = _countBookmarksInFolder(
+        allFolders,
+        allBookmarks,
+        folder.id,
+      );
 
-      items.add(DragTarget<String>(
-        onWillAcceptWithDetails: (details) => _draggingBookmarkId != null,
-        onAcceptWithDetails: (details) {
-          if (_draggingBookmarkId != null) {
-            ref.read(browserProvider.notifier).moveBookmarkToFolder(_draggingBookmarkId!, folder.id);
-          }
-        },
-        builder: (context, candidateData, rejectedData) {
-          final isDragOver = candidateData.isNotEmpty;
-          final theme = Theme.of(context);
-          return MouseRegion(
-            onEnter: (_) => setState(() => _hoveredBookmarkFolder = folder.id),
-            onExit: (_) => setState(() => _hoveredBookmarkFolder = null),
-            child: Container(
-              padding: EdgeInsets.only(left: depth * 14.0 + 4.0),
-              color: isDragOver ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                  : isHovered ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3) : null,
-              child: InkWell(
-                onTap: () {
-                  ref.read(browserProvider.notifier).toggleBookmarkFolder(folder.id);
-                  setState(() {
-                    if (isExpanded) { _expandedBookmarkFolders.remove(folder.id); } else { _expandedBookmarkFolders.add(folder.id); }
-                  });
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                  child: Row(children: [
-                    Icon(isExpanded ? Icons.expand_more : Icons.chevron_right, size: 14, color: Theme.of(context).hintColor),
-                    const SizedBox(width: 2),
-                    Icon(isExpanded ? Icons.folder_open : Icons.folder, size: 15, color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 5),
-                    Expanded(child: Text(folder.name, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                    if (isHovered && folder.id != 'bookmarks-bar') ...[
-                      _ib(Icons.create_new_folder_outlined, () => _createBookmarkFolder(folder.id), l.newSubBookmarkFolder),
-                      _ib(Icons.edit_outlined, () => _renameBookmarkFolder(folder), l.rename),
-                      _ib(Icons.delete_outline, () => _confirmDeleteBookmarkFolder(folder.name, folder.id), l.delete),
-                    ],
-                    if (isHovered && folder.id == 'bookmarks-bar')
-                      _ib(Icons.create_new_folder_outlined, () => _createBookmarkFolder(folder.id), l.newSubBookmarkFolder),
-                    if (!isHovered && totalBookmarks > 0)
-                      Padding(padding: const EdgeInsets.only(left: 4), child: Text('$totalBookmarks', style: TextStyle(fontSize: _baseFontSize - 2, color: Theme.of(context).hintColor.withValues(alpha: 0.6)))),
-                  ]),
+      items.add(
+        DragTarget<String>(
+          onWillAcceptWithDetails: (details) => _draggingBookmarkId != null,
+          onAcceptWithDetails: (details) {
+            if (_draggingBookmarkId != null) {
+              ref
+                  .read(browserProvider.notifier)
+                  .moveBookmarkToFolder(_draggingBookmarkId!, folder.id);
+            }
+          },
+          builder: (context, candidateData, rejectedData) {
+            final isDragOver = candidateData.isNotEmpty;
+            final theme = Theme.of(context);
+            return MouseRegion(
+              onEnter: (_) =>
+                  setState(() => _hoveredBookmarkFolder = folder.id),
+              onExit: (_) => setState(() => _hoveredBookmarkFolder = null),
+              child: Container(
+                padding: EdgeInsets.only(left: depth * 14.0 + 4.0),
+                color: isDragOver
+                    ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                    : isHovered
+                    ? theme.colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.3,
+                      )
+                    : null,
+                child: InkWell(
+                  onTap: () {
+                    ref
+                        .read(browserProvider.notifier)
+                        .toggleBookmarkFolder(folder.id);
+                    setState(() {
+                      if (isExpanded) {
+                        _expandedBookmarkFolders.remove(folder.id);
+                      } else {
+                        _expandedBookmarkFolders.add(folder.id);
+                      }
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 4,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isExpanded ? Icons.expand_more : Icons.chevron_right,
+                          size: 14,
+                          color: Theme.of(context).hintColor,
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(
+                          isExpanded ? Icons.folder_open : Icons.folder,
+                          size: 15,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            folder.name,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  fontSize: _baseFontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isHovered && folder.id != 'bookmarks-bar') ...[
+                          _ib(
+                            Icons.create_new_folder_outlined,
+                            () => _createBookmarkFolder(folder.id),
+                            l.newSubBookmarkFolder,
+                          ),
+                          _ib(
+                            Icons.edit_outlined,
+                            () => _renameBookmarkFolder(folder),
+                            l.rename,
+                          ),
+                          _ib(
+                            Icons.delete_outline,
+                            () => _confirmDeleteBookmarkFolder(
+                              folder.name,
+                              folder.id,
+                            ),
+                            l.delete,
+                          ),
+                        ],
+                        if (isHovered && folder.id == 'bookmarks-bar')
+                          _ib(
+                            Icons.create_new_folder_outlined,
+                            () => _createBookmarkFolder(folder.id),
+                            l.newSubBookmarkFolder,
+                          ),
+                        if (!isHovered && totalBookmarks > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4),
+                            child: Text(
+                              '$totalBookmarks',
+                              style: TextStyle(
+                                fontSize: _baseFontSize - 2,
+                                color: Theme.of(
+                                  context,
+                                ).hintColor.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      ));
+            );
+          },
+        ),
+      );
 
       if (isExpanded) {
-        _buildBookmarkFolderWidgets(allFolders, allBookmarks, folder.id, depth + 1, items, l);
+        _buildBookmarkFolderWidgets(
+          allFolders,
+          allBookmarks,
+          folder.id,
+          depth + 1,
+          items,
+          l,
+        );
         for (final bm in folderBookmarks) {
           items.add(_bookmarkRow(bm, depth + 1, l));
         }
@@ -519,13 +1004,25 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     }
   }
 
-  int _countBookmarksInFolder(List<BookmarkFolder> allFolders, List<Bookmark> allBookmarks, String folderId, {Set<String>? visited}) {
+  int _countBookmarksInFolder(
+    List<BookmarkFolder> allFolders,
+    List<Bookmark> allBookmarks,
+    String folderId, {
+    Set<String>? visited,
+  }) {
     visited ??= {};
     if (visited.contains(folderId)) return 0;
     visited.add(folderId);
     var count = allBookmarks.where((b) => b.folderId == folderId).length;
-    for (final f in allFolders.where((f) => f.parentId == folderId && f.id != folderId)) {
-      count += _countBookmarksInFolder(allFolders, allBookmarks, f.id, visited: visited);
+    for (final f in allFolders.where(
+      (f) => f.parentId == folderId && f.id != folderId,
+    )) {
+      count += _countBookmarksInFolder(
+        allFolders,
+        allBookmarks,
+        f.id,
+        visited: visited,
+      );
     }
     return count;
   }
@@ -537,15 +1034,36 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
       onDragStarted: () => setState(() => _draggingBookmarkId = bookmark.id),
       onDragEnd: (_) => setState(() => _draggingBookmarkId = null),
       feedback: Material(
-        elevation: 4, borderRadius: BorderRadius.circular(4),
+        elevation: 4,
+        borderRadius: BorderRadius.circular(4),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(4), border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3))),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.bookmark, size: 14, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 6),
-            Text(bookmark.title, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize)),
-          ]),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.bookmark,
+                size: 14,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                bookmark.title,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize),
+              ),
+            ],
+          ),
         ),
       ),
       child: MouseRegion(
@@ -557,17 +1075,51 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
             padding: EdgeInsets.only(left: depth * 14.0 + 18.0, right: 4),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-              child: Row(children: [
-                _favicon(bookmark), const SizedBox(width: 5),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(bookmark.title, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  if (_domain(bookmark).isNotEmpty) Text(_domain(bookmark), style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize - 2, color: Theme.of(context).hintColor), maxLines: 1, overflow: TextOverflow.ellipsis),
-                ])),
-                if (isHovered) ...[
-                  _ib(Icons.drive_file_move_outline, () => _showMoveBookmarkDialog(bookmark), l.move),
-                  _ib(Icons.close, () => ref.read(browserProvider.notifier).removeBookmark(bookmark.id), l.remove),
+              child: Row(
+                children: [
+                  _favicon(bookmark),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          bookmark.title,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(fontSize: _baseFontSize),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (_domain(bookmark).isNotEmpty)
+                          Text(
+                            _domain(bookmark),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  fontSize: _baseFontSize - 2,
+                                  color: Theme.of(context).hintColor,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (isHovered) ...[
+                    _ib(
+                      Icons.drive_file_move_outline,
+                      () => _showMoveBookmarkDialog(bookmark),
+                      l.move,
+                    ),
+                    _ib(
+                      Icons.close,
+                      () => ref
+                          .read(browserProvider.notifier)
+                          .removeBookmark(bookmark.id),
+                      l.remove,
+                    ),
+                  ],
                 ],
-              ]),
+              ),
             ),
           ),
         ),
@@ -577,9 +1129,22 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
 
   Widget _favicon(Bookmark bookmark) {
     return Container(
-      width: 16, height: 16,
-      decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(3)),
-      child: Center(child: Text(bookmark.title.isNotEmpty ? bookmark.title[0].toUpperCase() : '?', style: TextStyle(fontSize: _baseFontSize - 3, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary))),
+      width: 16,
+      height: 16,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Center(
+        child: Text(
+          bookmark.title.isNotEmpty ? bookmark.title[0].toUpperCase() : '?',
+          style: TextStyle(
+            fontSize: _baseFontSize - 3,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      ),
     );
   }
 
@@ -596,10 +1161,20 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         final controller = TextEditingController();
         return AlertDialog(
           title: Text(l.newFolder),
-          content: TextField(controller: controller, autofocus: true, decoration: InputDecoration(hintText: l.folderName, isDense: true)),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(hintText: l.folderName, isDense: true),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
-            FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: Text(l.create)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, controller.text),
+              child: Text(l.create),
+            ),
           ],
         );
       },
@@ -625,16 +1200,26 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
       if (folderPath.isNotEmpty) {
         final vaultState = ref.read(vaultProvider);
         if (vaultState.currentVault != null) {
-          final fileName = title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_').replaceAll(RegExp(r'\s+'), '-');
+          final fileName = title
+              .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+              .replaceAll(RegExp(r'\s+'), '-');
           final relativePath = '$folderPath/$fileName.md';
-          final note = Note(title: title, filePath: relativePath, content: '# $title\n\n');
+          final note = Note(
+            title: title,
+            filePath: relativePath,
+            content: '# $title\n\n',
+          );
           final file = File('${vaultState.currentVault!.path}/$relativePath');
           final dir = Directory('${vaultState.currentVault!.path}/$folderPath');
           if (!await dir.exists()) await dir.create(recursive: true);
           await file.writeAsString(note.toMarkdown());
           await ref.read(knowledgeProvider.notifier).loadAllNotes();
           ref.read(knowledgeProvider.notifier).openNote(note.id);
-          if (widget.onNotePreview != null) { widget.onNotePreview!(note.id); } else { widget.onNoteOpened?.call(); }
+          if (widget.onNotePreview != null) {
+            widget.onNotePreview!(note.id);
+          } else {
+            widget.onNoteOpened?.call();
+          }
         }
       } else {
         await ref.read(knowledgeProvider.notifier).createNote(title: title);
@@ -651,22 +1236,45 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l.renameFolder),
-        content: TextField(controller: controller, autofocus: true, decoration: const InputDecoration(isDense: true)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(isDense: true),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: Text(l.confirm)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: Text(l.confirm),
+          ),
         ],
       ),
     );
     if (newName != null && newName.isNotEmpty && newName != oldName) {
       final vaultState = ref.read(vaultProvider);
       if (vaultState.currentVault != null) {
-        final parentPath = parts.length > 1 ? parts.sublist(0, parts.length - 1).join('/') : '';
-        final newFolderPath = parentPath.isEmpty ? newName : '$parentPath/$newName';
-        final oldDir = Directory('${vaultState.currentVault!.path}/$folderPath');
-        final newDir = Directory('${vaultState.currentVault!.path}/$newFolderPath');
-        if (await oldDir.exists() && !await newDir.exists()) await oldDir.rename(newDir.path);
-        if (_expandedNoteFolders.contains(folderPath)) { _expandedNoteFolders.remove(folderPath); _expandedNoteFolders.add(newFolderPath); }
+        final parentPath = parts.length > 1
+            ? parts.sublist(0, parts.length - 1).join('/')
+            : '';
+        final newFolderPath = parentPath.isEmpty
+            ? newName
+            : '$parentPath/$newName';
+        final oldDir = Directory(
+          '${vaultState.currentVault!.path}/$folderPath',
+        );
+        final newDir = Directory(
+          '${vaultState.currentVault!.path}/$newFolderPath',
+        );
+        if (await oldDir.exists() && !await newDir.exists()) {
+          await oldDir.rename(newDir.path);
+        }
+        if (_expandedNoteFolders.contains(folderPath)) {
+          _expandedNoteFolders.remove(folderPath);
+          _expandedNoteFolders.add(newFolderPath);
+        }
         await ref.read(knowledgeProvider.notifier).loadAllNotes();
         await _scanDiskFolders();
       }
@@ -676,15 +1284,26 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
   void _confirmDeleteNoteFolder(String folderPath) async {
     final l = AppLocalizations.of(context)!;
     final knowledgeState = ref.read(knowledgeProvider);
-    final count = knowledgeState.notes.where((n) => n.filePath.startsWith('$folderPath/')).length;
+    final count = knowledgeState.notes
+        .where((n) => n.filePath.startsWith('$folderPath/'))
+        .length;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l.deleteFolder),
         content: Text(l.deleteFolderConfirm(folderPath, count)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error), child: Text(l.delete)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: Text(l.delete),
+          ),
         ],
       ),
     );
@@ -708,16 +1327,31 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         final controller = TextEditingController();
         return AlertDialog(
           title: Text(l.newBookmarkFolder),
-          content: TextField(controller: controller, autofocus: true, decoration: InputDecoration(hintText: l.bookmarkFolderName, isDense: true)),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: l.bookmarkFolderName,
+              isDense: true,
+            ),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
-            FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: Text(l.create)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, controller.text),
+              child: Text(l.create),
+            ),
           ],
         );
       },
     );
     if (name != null && name.isNotEmpty) {
-      ref.read(browserProvider.notifier).createBookmarkFolder(name, parentId: parentFolderId);
+      ref
+          .read(browserProvider.notifier)
+          .createBookmarkFolder(name, parentId: parentFolderId);
     }
   }
 
@@ -728,15 +1362,27 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l.renameBookmarkFolder),
-        content: TextField(controller: controller, autofocus: true, decoration: const InputDecoration(isDense: true)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(isDense: true),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: Text(l.confirm)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: Text(l.confirm),
+          ),
         ],
       ),
     );
     if (newName != null && newName.isNotEmpty && newName != folder.name) {
-      ref.read(browserProvider.notifier).renameBookmarkFolder(folder.id, newName);
+      ref
+          .read(browserProvider.notifier)
+          .renameBookmarkFolder(folder.id, newName);
     }
   }
 
@@ -748,12 +1394,23 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         title: Text(l.deleteBookmarkFolder),
         content: Text(l.deleteBookmarkFolderConfirm(name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error), child: Text(l.delete)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: Text(l.delete),
+          ),
         ],
       ),
     );
-    if (confirmed == true) ref.read(browserProvider.notifier).deleteBookmarkFolder(folderId);
+    if (confirmed == true) {
+      ref.read(browserProvider.notifier).deleteBookmarkFolder(folderId);
+    }
   }
 
   void _showMoveBookmarkDialog(Bookmark bookmark) async {
@@ -765,12 +1422,24 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
       builder: (ctx) => SimpleDialog(
         title: Text(l.moveTo),
         children: [
-          SimpleDialogOption(onPressed: () => Navigator.pop(ctx, ''), child: Text(l.uncategorized)),
-          ...folders.map((f) => SimpleDialogOption(onPressed: () => Navigator.pop(ctx, f.id), child: Text(f.name))),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, ''),
+            child: Text(l.uncategorized),
+          ),
+          ...folders.map(
+            (f) => SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, f.id),
+              child: Text(f.name),
+            ),
+          ),
         ],
       ),
     );
-    if (folderId != null) ref.read(browserProvider.notifier).moveBookmarkToFolder(bookmark.id, folderId);
+    if (folderId != null) {
+      ref
+          .read(browserProvider.notifier)
+          .moveBookmarkToFolder(bookmark.id, folderId);
+    }
   }
 
   void _showMoveNoteDialog(Note note) async {
@@ -778,20 +1447,36 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     final knowledgeState = ref.read(knowledgeProvider);
     final allFolders = _getAllFolderPaths(knowledgeState.notes);
     final currentFolder = note.filePath.split('/').length > 1
-        ? note.filePath.split('/').sublist(0, note.filePath.split('/').length - 1).join('/') : '';
+        ? note.filePath
+              .split('/')
+              .sublist(0, note.filePath.split('/').length - 1)
+              .join('/')
+        : '';
 
     final targetFolder = await showDialog<String>(
       context: context,
       builder: (ctx) => SimpleDialog(
         title: Text(l.moveToFolder),
         children: [
-          SimpleDialogOption(onPressed: () => Navigator.pop(ctx, ''), child: Text(l.rootDirectory)),
-          ...allFolders.where((f) => f != currentFolder).map((f) => SimpleDialogOption(onPressed: () => Navigator.pop(ctx, f), child: Text(f))),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, ''),
+            child: Text(l.rootDirectory),
+          ),
+          ...allFolders
+              .where((f) => f != currentFolder)
+              .map(
+                (f) => SimpleDialogOption(
+                  onPressed: () => Navigator.pop(ctx, f),
+                  child: Text(f),
+                ),
+              ),
         ],
       ),
     );
     if (targetFolder != null && targetFolder != currentFolder) {
-      await ref.read(knowledgeProvider.notifier).moveNote(note.id, targetFolder);
+      await ref
+          .read(knowledgeProvider.notifier)
+          .moveNote(note.id, targetFolder);
       await _scanDiskFolders();
     }
   }
@@ -815,34 +1500,104 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     final filter = knowledgeState.noteFilter;
     if (filter == NoteFilter.hasLinks) {
       final links = knowledgeState.links;
-      filtered = notes.where((n) => links.any((l) => l.sourceId == n.id || l.targetId == n.id)).toList();
+      filtered = notes
+          .where(
+            (n) => links.any((l) => l.sourceId == n.id || l.targetId == n.id),
+          )
+          .toList();
     } else if (filter == NoteFilter.hasTags) {
       filtered = notes.where((n) => n.tags.isNotEmpty).toList();
     } else if (filter == NoteFilter.hasAttachments) {
-      filtered = notes.where((n) => n.frontMatter.containsKey('attachments')).toList();
+      filtered = notes
+          .where((n) => n.frontMatter.containsKey('attachments'))
+          .toList();
     }
     if (_searchQuery.isEmpty) return filtered;
     final q = _searchQuery.toLowerCase();
-    return filtered.where((n) => n.title.toLowerCase().contains(q) || n.tags.any((t) => t.toLowerCase().contains(q)) || n.content.toLowerCase().contains(q)).toList();
+    return filtered
+        .where(
+          (n) =>
+              n.title.toLowerCase().contains(q) ||
+              n.tags.any((t) => t.toLowerCase().contains(q)) ||
+              n.content.toLowerCase().contains(q),
+        )
+        .toList();
   }
 
   Widget _buildNoVaultPrompt(ThemeData theme, AppLocalizations l) {
-    return Column(children: [
-      Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.dividerColor))),
-        child: Row(children: [Icon(Icons.folder_open, size: 16, color: theme.colorScheme.primary), const SizedBox(width: 8), Expanded(child: Text(l.notes, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)))])),
-      Expanded(child: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Icon(Icons.folder_off, size: 40, color: theme.hintColor), const SizedBox(height: 12),
-        Text(l.noVaultConnected, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)), const SizedBox(height: 4),
-        Text(l.openVaultToManageNotes, style: theme.textTheme.bodySmall, textAlign: TextAlign.center), const SizedBox(height: 16),
-        FilledButton.icon(onPressed: () => _openVault(), icon: const Icon(Icons.folder_open, size: 16), label: Text(l.openVault)), const SizedBox(height: 8),
-        OutlinedButton.icon(onPressed: () => _createVault(), icon: const Icon(Icons.create_new_folder, size: 16), label: Text(l.createVault)),
-      ])))),
-    ]);
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: theme.dividerColor)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.folder_open,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l.notes,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.folder_off, size: 40, color: theme.hintColor),
+                  const SizedBox(height: 12),
+                  Text(
+                    l.noVaultConnected,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l.openVaultToManageNotes,
+                    style: theme.textTheme.bodySmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: () => _openVault(),
+                    icon: const Icon(Icons.folder_open, size: 16),
+                    label: Text(l.openVault),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => _createVault(),
+                    icon: const Icon(Icons.create_new_folder, size: 16),
+                    label: Text(l.createVault),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _openVault() async {
     final l = AppLocalizations.of(context)!;
-    final result = await FilePicker.platform.getDirectoryPath(dialogTitle: l.selectVaultLocation);
+    final result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: l.selectVaultLocation,
+    );
     if (result != null) {
       await ref.read(vaultProvider.notifier).openVault(result);
       ref.read(knowledgeProvider.notifier).loadAllNotes();
@@ -853,7 +1608,9 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
 
   Future<void> _createVault() async {
     final l = AppLocalizations.of(context)!;
-    final result = await FilePicker.platform.getDirectoryPath(dialogTitle: l.selectVaultLocation);
+    final result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: l.selectVaultLocation,
+    );
     if (result != null) {
       await ref.read(vaultProvider.notifier).createVault(result);
       ref.read(knowledgeProvider.notifier).loadAllNotes();
@@ -867,14 +1624,26 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l.deleteNote), content: Text(l.deleteNoteConfirm(title)),
+        title: Text(l.deleteNote),
+        content: Text(l.deleteNoteConfirm(title)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error), child: Text(l.delete)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: Text(l.delete),
+          ),
         ],
       ),
     );
-    if (confirmed == true) ref.read(knowledgeProvider.notifier).deleteNote(noteId);
+    if (confirmed == true) {
+      ref.read(knowledgeProvider.notifier).deleteNote(noteId);
+    }
   }
 }
 

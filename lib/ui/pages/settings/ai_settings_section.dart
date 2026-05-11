@@ -97,9 +97,7 @@ class AISettingsSection extends ConsumerWidget {
     AIModel? activeModel,
   ) {
     final isActive = activeProvider?.id == provider.id;
-    final models = ref
-        .read(aiConfigProvider)
-        .modelsForProvider(provider.id);
+    final models = ref.read(aiConfigProvider).modelsForProvider(provider.id);
 
     return ExpansionTile(
       initiallyExpanded: isActive,
@@ -131,7 +129,9 @@ class AISettingsSection extends ConsumerWidget {
               ),
               child: Text(
                 l.disabled,
-                style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.error),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
               ),
             ),
         ],
@@ -271,9 +271,7 @@ class AISettingsSection extends ConsumerWidget {
       ),
       subtitle: Text(
         model.id,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.hintColor,
-        ),
+        style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
         overflow: TextOverflow.ellipsis,
       ),
       onTap: () {
@@ -336,7 +334,7 @@ class AISettingsSection extends ConsumerWidget {
       case 'toggle':
         ref
             .read(aiConfigProvider.notifier)
-        .setProviderEnabled(provider.id, !provider.isEnabled);
+            .setProviderEnabled(provider.id, !provider.isEnabled);
         break;
       case 'addModel':
         _showAddCustomModelDialog(context, ref, provider, l);
@@ -689,9 +687,7 @@ class AISettingsSection extends ConsumerWidget {
     AppLocalizations l,
   ) {
     final aiConfig = ref.read(aiConfigProvider);
-    final providers = aiConfig.providers
-        .where((p) => p.isEnabled)
-        .toList();
+    final providers = aiConfig.providers.where((p) => p.isEnabled).toList();
     final activeConfig = aiConfig.activeConfig;
 
     showDialog(
@@ -710,9 +706,7 @@ class AISettingsSection extends ConsumerWidget {
                   itemCount: providers.length,
                   itemBuilder: (ctx, index) {
                     final provider = providers[index];
-                    final models = aiConfig.modelsForProvider(
-                      provider.id,
-                    );
+                    final models = aiConfig.modelsForProvider(provider.id);
                     return ExpansionTile(
                       initiallyExpanded:
                           activeConfig?.providerId == provider.id,

@@ -127,10 +127,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     _syncLinks();
   }
 
-  Future<Note> createNote({
-    required String title,
-    String content = '',
-  }) async {
+  Future<Note> createNote({required String title, String content = ''}) async {
     final note = await _noteSvc.createNote(title: title, content: content);
     state = state.copyWith(
       notes: ref.read(noteServiceProvider).notes,
@@ -247,8 +244,17 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
   LocalGraphResult getLocalGraph(String centerNoteId, {int depth = 1}) =>
       _linkSvc.getLocalGraph(centerNoteId, state.notes, depth: depth);
 
-  Future<void> linkMention(String sourceNoteId, String targetTitle, int position) async {
-    await _linkSvc.linkMention(sourceNoteId, targetTitle, position, state.notes);
+  Future<void> linkMention(
+    String sourceNoteId,
+    String targetTitle,
+    int position,
+  ) async {
+    await _linkSvc.linkMention(
+      sourceNoteId,
+      targetTitle,
+      position,
+      state.notes,
+    );
     _syncLinks();
   }
 

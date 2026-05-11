@@ -29,7 +29,11 @@ class NodeDetailPanel extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline, size: 14, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -43,10 +47,17 @@ class NodeDetailPanel extends ConsumerWidget {
                 ),
                 if (onClose != null)
                   IconButton(
-                    icon: Icon(Icons.chevron_right, size: 16, color: theme.hintColor),
+                    icon: Icon(
+                      Icons.chevron_right,
+                      size: 16,
+                      color: theme.hintColor,
+                    ),
                     onPressed: onClose,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
                     tooltip: l.closePanel,
                   ),
               ],
@@ -85,11 +96,31 @@ class NodeDetailPanel extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        _infoRow(theme, Icons.label_outline, 'ID', activeNote.id),
+                        _infoRow(
+                          theme,
+                          Icons.label_outline,
+                          'ID',
+                          activeNote.id,
+                        ),
                         if (activeNote.tags.isNotEmpty)
-                          _infoRow(theme, Icons.tag, l.tags, activeNote.tags.join(', ')),
-                        _infoRow(theme, Icons.link, l.backlinks, '${knowledgeState.backlinks.length}'),
-                        _infoRow(theme, Icons.access_time, l.modifiedTime, _formatDate(activeNote.modified)),
+                          _infoRow(
+                            theme,
+                            Icons.tag,
+                            l.tags,
+                            activeNote.tags.join(', '),
+                          ),
+                        _infoRow(
+                          theme,
+                          Icons.link,
+                          l.backlinks,
+                          '${knowledgeState.backlinks.length}',
+                        ),
+                        _infoRow(
+                          theme,
+                          Icons.access_time,
+                          l.modifiedTime,
+                          _formatDate(activeNote.modified),
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           l.contentPreview,
@@ -103,14 +134,17 @@ class NodeDetailPanel extends ConsumerWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                            color: theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             activeNote.content.length > 300
                                 ? '${activeNote.content.substring(0, 300)}...'
                                 : activeNote.content,
-                            style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              height: 1.5,
+                            ),
                             maxLines: 10,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -131,12 +165,17 @@ class NodeDetailPanel extends ConsumerWidget {
         children: [
           Icon(icon, size: 12, color: theme.hintColor),
           const SizedBox(width: 4),
-          Text('$label: ', style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.hintColor,
-          )),
+          Text(
+            '$label: ',
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          ),
           Expanded(
-            child: Text(value, style: theme.textTheme.bodySmall,
-              maxLines: 1, overflow: TextOverflow.ellipsis),
+            child: Text(
+              value,
+              style: theme.textTheme.bodySmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

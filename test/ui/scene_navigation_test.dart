@@ -26,8 +26,9 @@ void main() {
       expect(find.text('Ctrl+3'), findsOneWidget);
     });
 
-    testWidgets('E1-AC2: clicking scene button triggers onSceneChanged',
-        (tester) async {
+    testWidgets('E1-AC2: clicking scene button triggers onSceneChanged', (
+      tester,
+    ) async {
       SceneType? changedTo;
       await tester.pumpWidget(
         MaterialApp(
@@ -86,8 +87,9 @@ void main() {
       expect(find.text('Connect View'), findsNothing);
     });
 
-    testWidgets('E1-AC5: scene switch triggers animation <= 350ms',
-        (tester) async {
+    testWidgets('E1-AC5: scene switch triggers animation <= 350ms', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

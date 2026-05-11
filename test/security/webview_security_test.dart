@@ -13,45 +13,94 @@ void main() {
       });
 
       test('blocks javascript: scheme', () {
-        expect(agentWebView.shouldOverrideUrlLoading('javascript:alert(1)'), isTrue);
-        expect(agentWebView.shouldOverrideUrlLoading('javascript:void(0)'), isTrue);
-        expect(agentWebView.shouldOverrideUrlLoading('JAVASCRIPT:alert(1)'), isTrue);
+        expect(
+          agentWebView.shouldOverrideUrlLoading('javascript:alert(1)'),
+          isTrue,
+        );
+        expect(
+          agentWebView.shouldOverrideUrlLoading('javascript:void(0)'),
+          isTrue,
+        );
+        expect(
+          agentWebView.shouldOverrideUrlLoading('JAVASCRIPT:alert(1)'),
+          isTrue,
+        );
       });
 
       test('blocks file: scheme', () {
-        expect(agentWebView.shouldOverrideUrlLoading('file:///etc/passwd'), isTrue);
-        expect(agentWebView.shouldOverrideUrlLoading('file:///C:/Windows/System32/config/SAM'), isTrue);
+        expect(
+          agentWebView.shouldOverrideUrlLoading('file:///etc/passwd'),
+          isTrue,
+        );
+        expect(
+          agentWebView.shouldOverrideUrlLoading(
+            'file:///C:/Windows/System32/config/SAM',
+          ),
+          isTrue,
+        );
       });
 
       test('blocks data: scheme', () {
         expect(
-          agentWebView.shouldOverrideUrlLoading('data:text/html,<script>alert(1)</script>'),
+          agentWebView.shouldOverrideUrlLoading(
+            'data:text/html,<script>alert(1)</script>',
+          ),
           isTrue,
         );
-        expect(agentWebView.shouldOverrideUrlLoading('data:image/svg+xml;base64,PHN2Zy8+'), isTrue);
+        expect(
+          agentWebView.shouldOverrideUrlLoading(
+            'data:image/svg+xml;base64,PHN2Zy8+',
+          ),
+          isTrue,
+        );
       });
 
       test('blocks ftp: and other non-HTTP schemes', () {
-        expect(agentWebView.shouldOverrideUrlLoading('ftp://malicious.com/malware.exe'), isTrue);
-        expect(agentWebView.shouldOverrideUrlLoading('vbscript:msgbox("hi")'), isTrue);
-        expect(agentWebView.shouldOverrideUrlLoading('chrome://settings'), isTrue);
+        expect(
+          agentWebView.shouldOverrideUrlLoading(
+            'ftp://malicious.com/malware.exe',
+          ),
+          isTrue,
+        );
+        expect(
+          agentWebView.shouldOverrideUrlLoading('vbscript:msgbox("hi")'),
+          isTrue,
+        );
+        expect(
+          agentWebView.shouldOverrideUrlLoading('chrome://settings'),
+          isTrue,
+        );
       });
 
       test('allows http: and https: schemes', () {
-        expect(agentWebView.shouldOverrideUrlLoading('http://example.com'), isFalse);
-        expect(agentWebView.shouldOverrideUrlLoading('https://secure.example.com/path'), isFalse);
+        expect(
+          agentWebView.shouldOverrideUrlLoading('http://example.com'),
+          isFalse,
+        );
+        expect(
+          agentWebView.shouldOverrideUrlLoading(
+            'https://secure.example.com/path',
+          ),
+          isFalse,
+        );
         expect(agentWebView.shouldOverrideUrlLoading('about:blank'), isFalse);
       });
 
       test('blocks malformed URLs', () {
-        expect(agentWebView.shouldOverrideUrlLoading('not-a-valid-url'), isTrue);
+        expect(
+          agentWebView.shouldOverrideUrlLoading('not-a-valid-url'),
+          isTrue,
+        );
         expect(agentWebView.shouldOverrideUrlLoading(''), isTrue);
       });
 
       test('navigateTo blocks dangerous URLs', () async {
         await agentWebView.navigateTo('javascript:alert(1)');
-        expect(agentWebView.currentUrl, isNull,
-            reason: 'Should not navigate to blocked URL');
+        expect(
+          agentWebView.currentUrl,
+          isNull,
+          reason: 'Should not navigate to blocked URL',
+        );
       });
     });
 

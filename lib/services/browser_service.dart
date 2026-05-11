@@ -21,7 +21,9 @@ class BrowserState {
     this.activeTabId,
     this.bookmarks = const [],
     List<BookmarkFolder>? bookmarkFolders,
-  }) : bookmarkFolders = bookmarkFolders ?? [BookmarkFolder(id: 'bookmarks-bar', name: '收藏夹栏', parentId: '')];
+  }) : bookmarkFolders =
+           bookmarkFolders ??
+           [BookmarkFolder(id: 'bookmarks-bar', name: '收藏夹栏', parentId: '')];
 
   BrowserTab? get activeTab =>
       tabs.where((t) => t.id == activeTabId).firstOrNull;
@@ -32,8 +34,7 @@ class BrowserState {
   List<BrowserTab> tabsInGroup(String groupId) =>
       tabs.where((t) => t.groupId == groupId).toList();
 
-  bool isBookmarked(String url) =>
-      bookmarks.any((b) => b.url == url);
+  bool isBookmarked(String url) => bookmarks.any((b) => b.url == url);
 
   BrowserState copyWith({
     List<BrowserTab>? tabs,
@@ -52,7 +53,8 @@ class BrowserState {
   }
 }
 
-typedef PageContentFetcher = Future<({String html, String text})> Function(String tabId);
+typedef PageContentFetcher =
+    Future<({String html, String text})> Function(String tabId);
 typedef SelectedTextFetcher = Future<String> Function(String tabId);
 typedef ScreenshotFetcher = Future<Uint8List?> Function(String tabId);
 
@@ -112,9 +114,18 @@ class BrowserNotifier extends Notifier<BrowserState> {
     final file = File(path);
     if (!await file.exists()) return;
     try {
-      final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-      final folders = (json['folders'] as List?)?.map((e) => BookmarkFolder.fromJson(e as Map<String, dynamic>)).toList() ?? [];
-      final bookmarks = (json['bookmarks'] as List?)?.map((e) => Bookmark.fromJson(e as Map<String, dynamic>)).toList() ?? [];
+      final json =
+          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      final folders =
+          (json['folders'] as List?)
+              ?.map((e) => BookmarkFolder.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [];
+      final bookmarks =
+          (json['bookmarks'] as List?)
+              ?.map((e) => Bookmark.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [];
       state = state.copyWith(bookmarkFolders: folders, bookmarks: bookmarks);
     } catch (_) {}
   }
@@ -271,7 +282,11 @@ class BrowserNotifier extends Notifier<BrowserState> {
       final updated = state.bookmarks.where((b) => b.url != url).toList();
       state = state.copyWith(bookmarks: updated);
     } else {
-      final bookmark = Bookmark(url: url, title: title, folderId: 'bookmarks-bar');
+      final bookmark = Bookmark(
+        url: url,
+        title: title,
+        folderId: 'bookmarks-bar',
+      );
       state = state.copyWith(bookmarks: [...state.bookmarks, bookmark]);
     }
     _persistBookmarks();
@@ -319,7 +334,10 @@ class BrowserNotifier extends Notifier<BrowserState> {
     var i = 0;
     while (i < toDelete.length) {
       final current = toDelete[i];
-      final children = state.bookmarkFolders.where((f) => f.parentId == current).map((f) => f.id).toList();
+      final children = state.bookmarkFolders
+          .where((f) => f.parentId == current)
+          .map((f) => f.id)
+          .toList();
       toDelete.addAll(children);
       i++;
     }
@@ -328,7 +346,9 @@ class BrowserNotifier extends Notifier<BrowserState> {
       return b;
     }).toList();
     state = state.copyWith(
-      bookmarkFolders: state.bookmarkFolders.where((f) => !toDelete.contains(f.id)).toList(),
+      bookmarkFolders: state.bookmarkFolders
+          .where((f) => !toDelete.contains(f.id))
+          .toList(),
       bookmarks: updatedBookmarks,
     );
     _persistBookmarks();
@@ -373,7 +393,14 @@ class BrowserNotifier extends Notifier<BrowserState> {
     }
 
     final groups = <ProposedGroup>[];
-    final groupColors = [0xFF2196F3, 0xFF4CAF50, 0xFFFF9800, 0xFF9C27B0, 0xFFF44336, 0xFF00BCD4];
+    final groupColors = [
+      0xFF2196F3,
+      0xFF4CAF50,
+      0xFFFF9800,
+      0xFF9C27B0,
+      0xFFF44336,
+      0xFF00BCD4,
+    ];
     var colorIdx = 0;
 
     for (final entry in domainGroups.entries) {

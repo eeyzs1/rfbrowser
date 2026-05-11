@@ -165,9 +165,11 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     if (_results.isNotEmpty && _selectedIndex < _results.length) {
       final selected = _results[_selectedIndex];
       final knowledge = ref.read(knowledgeProvider);
-      final noteMatch = knowledge.notes.where(
-        (n) => n.filePath == selected.filePath || n.id == selected.filePath,
-      ).firstOrNull;
+      final noteMatch = knowledge.notes
+          .where(
+            (n) => n.filePath == selected.filePath || n.id == selected.filePath,
+          )
+          .firstOrNull;
       if (noteMatch != null) {
         ref.read(knowledgeProvider.notifier).openNote(noteMatch.id);
       }
@@ -175,9 +177,9 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       return;
     }
 
-    final matchingCommand = _buildCommands(AppLocalizations.of(context)!).where(
-      (c) => c.label.toLowerCase().contains(text.toLowerCase()),
-    );
+    final matchingCommand = _buildCommands(
+      AppLocalizations.of(context)!,
+    ).where((c) => c.label.toLowerCase().contains(text.toLowerCase()));
     if (matchingCommand.length == 1) {
       widget.onCommand(matchingCommand.first.label);
       return;
@@ -220,11 +222,7 @@ class _CommandBarState extends ConsumerState<CommandBar> {
   }
 
   void _showCreateQuickMoveDialog(String cmdName) {
-    showCreateQuickMoveDialog(
-      context,
-      ref,
-      prefillName: cmdName,
-    );
+    showCreateQuickMoveDialog(context, ref, prefillName: cmdName);
   }
 
   void _selectItem(int index) {
@@ -248,9 +246,12 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       if (resultIndex < _results.length) {
         final selected = _results[resultIndex];
         final knowledge = ref.read(knowledgeProvider);
-        final noteMatch = knowledge.notes.where(
-          (n) => n.filePath == selected.filePath || n.id == selected.filePath,
-        ).firstOrNull;
+        final noteMatch = knowledge.notes
+            .where(
+              (n) =>
+                  n.filePath == selected.filePath || n.id == selected.filePath,
+            )
+            .firstOrNull;
         if (noteMatch != null) {
           ref.read(knowledgeProvider.notifier).openNote(noteMatch.id);
         }
@@ -275,7 +276,8 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     final theme = Theme.of(context);
     final commands = _commandResults;
     final showCommands =
-        !_isQuickMoveMode && (_controller.text.trim().isEmpty || commands.isNotEmpty);
+        !_isQuickMoveMode &&
+        (_controller.text.trim().isEmpty || commands.isNotEmpty);
 
     return Center(
       child: Container(
@@ -376,8 +378,9 @@ class _CommandBarState extends ConsumerState<CommandBar> {
                       () => _selectItem(globalIndex),
                     );
                   }
-                  final resultIndex =
-                      showCommands ? index - commands.length : index;
+                  final resultIndex = showCommands
+                      ? index - commands.length
+                      : index;
                   final globalIndex = index;
                   if (resultIndex < _results.length) {
                     final result = _results[resultIndex];
@@ -408,11 +411,7 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       dense: true,
       selected: isSelected,
       selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-      leading: Icon(
-        move.icon,
-        size: 16,
-        color: move.color,
-      ),
+      leading: Icon(move.icon, size: 16, color: move.color),
       title: Row(
         children: [
           Expanded(
@@ -439,9 +438,7 @@ class _CommandBarState extends ConsumerState<CommandBar> {
           : null,
       trailing: Text(
         move.type == QuickMoveType.preset ? 'Preset' : 'Quick Move',
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.hintColor,
-        ),
+        style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
       ),
     );
   }
@@ -460,9 +457,7 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       title: Text(cmd.label, style: theme.textTheme.bodyMedium),
       trailing: Text(
         'Command',
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.hintColor,
-        ),
+        style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
       ),
       onTap: onTap,
     );

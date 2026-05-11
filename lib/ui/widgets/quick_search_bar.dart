@@ -31,9 +31,11 @@ class _QuickSearchBarState extends ConsumerState<QuickSearchBar> {
     if (_query.isEmpty) return const [];
     final lowerQuery = _query.toLowerCase();
     return knowledgeState.notes
-        .where((n) =>
-            n.title.toLowerCase().contains(lowerQuery) ||
-            n.content.toLowerCase().contains(lowerQuery))
+        .where(
+          (n) =>
+              n.title.toLowerCase().contains(lowerQuery) ||
+              n.content.toLowerCase().contains(lowerQuery),
+        )
         .take(8)
         .toList();
   }
@@ -50,9 +52,7 @@ class _QuickSearchBarState extends ConsumerState<QuickSearchBar> {
         vertical: DesignSpacing.sm,
       ),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: theme.dividerColor),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -104,8 +104,7 @@ class _QuickSearchBarState extends ConsumerState<QuickSearchBar> {
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 itemCount: filtered.length,
-                separatorBuilder: (context, idx) =>
-                    const Divider(height: 1),
+                separatorBuilder: (context, idx) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final note = filtered[index];
                   return ListTile(
@@ -115,10 +114,7 @@ class _QuickSearchBarState extends ConsumerState<QuickSearchBar> {
                       size: 16,
                       color: theme.hintColor,
                     ),
-                    title: Text(
-                      note.title,
-                      style: theme.textTheme.bodySmall,
-                    ),
+                    title: Text(note.title, style: theme.textTheme.bodySmall),
                     subtitle: Text(
                       note.content.length > 80
                           ? '${note.content.substring(0, 80)}...'

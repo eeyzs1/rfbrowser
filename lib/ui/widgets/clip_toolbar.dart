@@ -22,7 +22,9 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
 
     setState(() => _isClipping = true);
     try {
-      final content = await ref.read(browserProvider.notifier).fetchPageContent(tab.id);
+      final content = await ref
+          .read(browserProvider.notifier)
+          .fetchPageContent(tab.id);
       final htmlContent = content?.html ?? '';
       final textContent = content?.text ?? '';
       final knowledgeNotifier = ref.read(knowledgeProvider.notifier);
@@ -50,7 +52,9 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
 
     setState(() => _isClipping = true);
     try {
-      final selectedText = await ref.read(browserProvider.notifier).fetchSelectedText(tab.id);
+      final selectedText = await ref
+          .read(browserProvider.notifier)
+          .fetchSelectedText(tab.id);
       if (selectedText.isEmpty) {
         if (!mounted) return;
         final l = AppLocalizations.of(context)!;
@@ -96,17 +100,29 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
         backgroundColor: DesignColors.semanticSuccess,
         content: Row(
           children: [
-            Icon(Icons.check_circle, color: Theme.of(context).colorScheme.onInverseSurface, size: 18),
+            Icon(
+              Icons.check_circle,
+              color: Theme.of(context).colorScheme.onInverseSurface,
+              size: 18,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l.savedToKnowledgeBase, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onInverseSurface)),
+                  Text(
+                    l.savedToKnowledgeBase,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onInverseSurface,
+                    ),
+                  ),
                   Text(
                     title,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onInverseSurface),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onInverseSurface,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -144,7 +160,8 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
     final browserState = ref.watch(browserProvider);
-    final hasPage = browserState.activeTab != null &&
+    final hasPage =
+        browserState.activeTab != null &&
         browserState.activeTab!.url.isNotEmpty &&
         browserState.activeTab!.url != 'about:blank';
 
@@ -179,7 +196,8 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
               icon: browserState.isBookmarked(browserState.activeTab?.url ?? '')
                   ? Icons.bookmark
                   : Icons.bookmark_outline,
-              label: browserState.isBookmarked(browserState.activeTab?.url ?? '')
+              label:
+                  browserState.isBookmarked(browserState.activeTab?.url ?? '')
                   ? l.bookmark
                   : l.bookmark,
               onPressed: hasPage ? _toggleBookmark : null,

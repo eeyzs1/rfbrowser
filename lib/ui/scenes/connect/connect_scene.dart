@@ -44,9 +44,14 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
     final canvasData = ref.watch(canvasProvider);
     final theme = Theme.of(context);
 
-    if (_viewMode == ConnectViewMode.canvas && (canvasData.selectedCardIds.isNotEmpty || canvasData.selectedConnectionId != null) && !widget.rightPanelExpanded) {
+    if (_viewMode == ConnectViewMode.canvas &&
+        (canvasData.selectedCardIds.isNotEmpty ||
+            canvasData.selectedConnectionId != null) &&
+        !widget.rightPanelExpanded) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && widget.onToggleRightPanel != null) widget.onToggleRightPanel!();
+        if (mounted && widget.onToggleRightPanel != null) {
+          widget.onToggleRightPanel!();
+        }
       });
     }
 
@@ -72,9 +77,15 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
                     width: 24,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface,
-                      border: Border(right: BorderSide(color: theme.dividerColor)),
+                      border: Border(
+                        right: BorderSide(color: theme.dividerColor),
+                      ),
                     ),
-                    child: Icon(Icons.chevron_right, size: 14, color: theme.hintColor),
+                    child: Icon(
+                      Icons.chevron_right,
+                      size: 14,
+                      color: theme.hintColor,
+                    ),
                   ),
                 ),
               ),
@@ -86,8 +97,8 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
                     child: knowledgeState.notes.isEmpty
                         ? _buildConnectEmptyState(context)
                         : _viewMode == ConnectViewMode.graph
-                            ? const GraphView()
-                            : const CanvasPage(),
+                        ? const GraphView()
+                        : const CanvasPage(),
                   ),
                 ],
               ),
@@ -101,9 +112,15 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
                     width: 24,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface,
-                      border: Border(left: BorderSide(color: theme.dividerColor)),
+                      border: Border(
+                        left: BorderSide(color: theme.dividerColor),
+                      ),
                     ),
-                    child: Icon(Icons.chevron_left, size: 14, color: theme.hintColor),
+                    child: Icon(
+                      Icons.chevron_left,
+                      size: 14,
+                      color: theme.hintColor,
+                    ),
                   ),
                 ),
               ),
@@ -115,7 +132,9 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
                 isLeft: false,
                 child: _viewMode == ConnectViewMode.canvas
                     ? _buildCanvasRightPanel(canvasData)
-                    : NodeDetailPanel(onClose: widget.onToggleRightPanel ?? () {}),
+                    : NodeDetailPanel(
+                        onClose: widget.onToggleRightPanel ?? () {},
+                      ),
               ),
           ],
         ),
@@ -126,7 +145,9 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
 
   Widget _buildCanvasRightPanel(CanvasData canvasData) {
     if (canvasData.selectedConnectionId != null) {
-      return ConnectionPropertiesPanel(onClose: widget.onToggleRightPanel ?? () {});
+      return ConnectionPropertiesPanel(
+        onClose: widget.onToggleRightPanel ?? () {},
+      );
     }
     if (canvasData.selectedCardIds.isNotEmpty) {
       return CardPropertiesPanel(onClose: widget.onToggleRightPanel ?? () {});
@@ -161,7 +182,9 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
       width: 280,
       height: 200,
       title: note.title,
-      content: note.content.length > 500 ? '${note.content.substring(0, 500)}...' : note.content,
+      content: note.content.length > 500
+          ? '${note.content.substring(0, 500)}...'
+          : note.content,
       noteId: note.id,
     );
     ref.read(canvasProvider.notifier).addCard(card);
@@ -177,14 +200,24 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
       ),
       child: Row(
         children: [
-          _viewModeTab(theme, ConnectViewMode.canvas, Icons.dashboard, l.canvas),
+          _viewModeTab(
+            theme,
+            ConnectViewMode.canvas,
+            Icons.dashboard,
+            l.canvas,
+          ),
           _viewModeTab(theme, ConnectViewMode.graph, Icons.hub, l.graph),
         ],
       ),
     );
   }
 
-  Widget _viewModeTab(ThemeData theme, ConnectViewMode mode, IconData icon, String label) {
+  Widget _viewModeTab(
+    ThemeData theme,
+    ConnectViewMode mode,
+    IconData icon,
+    String label,
+  ) {
     final isActive = _viewMode == mode;
     return Expanded(
       child: GestureDetector(
@@ -193,7 +226,9 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: isActive ? theme.colorScheme.primary : Colors.transparent,
+                color: isActive
+                    ? theme.colorScheme.primary
+                    : Colors.transparent,
                 width: 2,
               ),
             ),
@@ -202,12 +237,18 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 14, color: isActive ? theme.colorScheme.primary : theme.hintColor),
+                Icon(
+                  icon,
+                  size: 14,
+                  color: isActive ? theme.colorScheme.primary : theme.hintColor,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   label,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: isActive ? theme.colorScheme.primary : theme.hintColor,
+                    color: isActive
+                        ? theme.colorScheme.primary
+                        : theme.hintColor,
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
@@ -281,9 +322,11 @@ class _CanvasNotePanelState extends ConsumerState<_CanvasNotePanel> {
     if (_searchQuery.isNotEmpty) {
       final lower = _searchQuery.toLowerCase();
       filteredNotes = filteredNotes
-          .where((n) =>
-              n.title.toLowerCase().contains(lower) ||
-              n.tags.any((t) => t.toLowerCase().contains(lower)))
+          .where(
+            (n) =>
+                n.title.toLowerCase().contains(lower) ||
+                n.tags.any((t) => t.toLowerCase().contains(lower)),
+          )
           .toList();
     }
 
@@ -298,7 +341,11 @@ class _CanvasNotePanelState extends ConsumerState<_CanvasNotePanel> {
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
             child: Row(
               children: [
-                Icon(Icons.description_outlined, size: 14, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.description_outlined,
+                  size: 14,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   l.notesOnCanvas,
@@ -309,7 +356,9 @@ class _CanvasNotePanelState extends ConsumerState<_CanvasNotePanel> {
                 const Spacer(),
                 Text(
                   '${filteredNotes.length}',
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
                 ),
               ],
             ),
@@ -323,15 +372,24 @@ class _CanvasNotePanelState extends ConsumerState<_CanvasNotePanel> {
                 decoration: InputDecoration(
                   hintText: l.searchNotes,
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? GestureDetector(
                           onTap: () {
                             _searchController.clear();
                             setState(() => _searchQuery = '');
                           },
-                          child: Icon(Icons.close, size: 12, color: theme.hintColor),
+                          child: Icon(
+                            Icons.close,
+                            size: 12,
+                            color: theme.hintColor,
+                          ),
                         )
                       : null,
                 ),
@@ -357,7 +415,9 @@ class _CanvasNotePanelState extends ConsumerState<_CanvasNotePanel> {
                 ? Center(
                     child: Text(
                       l.noNotes,
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.hintColor,
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -408,7 +468,9 @@ class _NoteTile extends StatelessWidget {
             Icon(
               isOnCanvas ? Icons.check_circle : Icons.add_circle_outline,
               size: 14,
-              color: isOnCanvas ? theme.colorScheme.primary.withValues(alpha: 0.5) : theme.hintColor,
+              color: isOnCanvas
+                  ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                  : theme.hintColor,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -421,7 +483,9 @@ class _NoteTile extends StatelessWidget {
                       fontSize: baseFontSize,
                       fontWeight: FontWeight.w500,
                       color: isOnCanvas ? theme.hintColor : null,
-                      decoration: isOnCanvas ? TextDecoration.lineThrough : null,
+                      decoration: isOnCanvas
+                          ? TextDecoration.lineThrough
+                          : null,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

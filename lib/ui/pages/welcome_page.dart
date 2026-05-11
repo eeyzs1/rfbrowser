@@ -8,7 +8,8 @@ import '../../services/browser_service.dart';
 import '../../l10n/app_localizations.dart';
 
 // ignore: unused_element
-bool get _isDesktop => !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+bool get _isDesktop =>
+    !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
 class WelcomePage extends ConsumerWidget {
   final VoidCallback onVaultOpened;

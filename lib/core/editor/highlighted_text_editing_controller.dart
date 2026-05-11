@@ -35,36 +35,38 @@ class HighlightedTextEditingController extends TextEditingController {
 
     for (final range in ranges) {
       if (range.start > currentPos) {
-        spans.add(TextSpan(
-          text: text.substring(currentPos, range.start),
-          style: style,
-        ));
+        spans.add(
+          TextSpan(text: text.substring(currentPos, range.start), style: style),
+        );
       }
       if (range.start >= currentPos) {
         final rangeText = text.substring(
           range.start,
           range.end.clamp(0, text.length),
         );
-        spans.add(TextSpan(
-          text: rangeText,
-          style: range.style(theme).merge(style?.copyWith(
-            color: null,
-            fontWeight: null,
-            fontStyle: null,
-            fontSize: null,
-            decoration: null,
-            backgroundColor: null,
-          )),
-        ));
+        spans.add(
+          TextSpan(
+            text: rangeText,
+            style: range
+                .style(theme)
+                .merge(
+                  style?.copyWith(
+                    color: null,
+                    fontWeight: null,
+                    fontStyle: null,
+                    fontSize: null,
+                    decoration: null,
+                    backgroundColor: null,
+                  ),
+                ),
+          ),
+        );
         currentPos = range.end;
       }
     }
 
     if (currentPos < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(currentPos),
-        style: style,
-      ));
+      spans.add(TextSpan(text: text.substring(currentPos), style: style));
     }
 
     return TextSpan(style: style, children: spans);

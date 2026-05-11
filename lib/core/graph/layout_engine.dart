@@ -22,7 +22,11 @@ class LayoutEdge {
   final String targetId;
   final double weight;
 
-  LayoutEdge({required this.sourceId, required this.targetId, this.weight = 1.0});
+  LayoutEdge({
+    required this.sourceId,
+    required this.targetId,
+    this.weight = 1.0,
+  });
 }
 
 class LayoutResult {

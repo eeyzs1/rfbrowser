@@ -48,9 +48,7 @@ class AppConfigStore {
     final file = File(path);
     final dir = Directory(p.dirname(path));
     if (!await dir.exists()) await dir.create(recursive: true);
-    await file.writeAsString(
-      JsonEncoder.withIndent('  ').convert(config),
-    );
+    await file.writeAsString(JsonEncoder.withIndent('  ').convert(config));
   }
 
   Future<void> migrateFromSharedPreferences() async {

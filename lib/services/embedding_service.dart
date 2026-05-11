@@ -9,17 +9,18 @@ import '../data/stores/vector_store.dart' hide SearchResult;
 import '../data/stores/hnsw_index.dart';
 import '../data/stores/index_store.dart';
 import '../data/models/note.dart';
-import 'tantivy_bridge_stub.dart'
-    if (dart.library.ffi) 'tantivy_bridge.dart';
+import 'tantivy_bridge_stub.dart' if (dart.library.ffi) 'tantivy_bridge.dart';
 
-typedef FtsSearchFn = Future<List<Map<String, dynamic>>> Function(String query, {int limit});
+typedef FtsSearchFn =
+    Future<List<Map<String, dynamic>>> Function(String query, {int limit});
 
 class EmbeddingService {
   final Dio _dio = DioFactory.instance;
   HnswIndex? _hnswIndex;
   VectorStore? _vectorStore;
 
-  HnswIndex get hnswIndex => _hnswIndex ??= HnswIndex(M: 16, efConstruction: 200);
+  HnswIndex get hnswIndex =>
+      _hnswIndex ??= HnswIndex(M: 16, efConstruction: 200);
   VectorStore get store => _vectorStore ??= VectorStore();
 
   String _ollamaBaseUrl = 'http://localhost:11434';
@@ -28,7 +29,8 @@ class EmbeddingService {
     _ollamaBaseUrl = url;
   }
 
-  Future<List<double>> embed(String text, {
+  Future<List<double>> embed(
+    String text, {
     AIProvider? provider,
     String? apiKey,
     String? modelId,
@@ -109,14 +111,20 @@ class EmbeddingService {
 
     for (var i = 0; i < lower.length - 1; i++) {
       final bigram = lower.substring(i, i + 2);
-      final hash = bigram.codeUnits.fold(0, (h, c) => ((h << 5) - h + c) & 0x7FFFFFFF);
+      final hash = bigram.codeUnits.fold(
+        0,
+        (h, c) => ((h << 5) - h + c) & 0x7FFFFFFF,
+      );
       final idx = hash.abs() % dimensions;
       embedding[idx] += 1.0;
     }
 
     for (var i = 0; i < lower.length - 2; i++) {
       final trigram = lower.substring(i, i + 3);
-      final hash = trigram.codeUnits.fold(0, (h, c) => ((h << 5) - h + c) & 0x7FFFFFFF);
+      final hash = trigram.codeUnits.fold(
+        0,
+        (h, c) => ((h << 5) - h + c) & 0x7FFFFFFF,
+      );
       final idx = hash.abs() % dimensions;
       embedding[idx] += 0.5;
     }
@@ -131,16 +139,19 @@ class EmbeddingService {
 
     if (!_hasWarnedLocalEmbedding) {
       _hasWarnedLocalEmbedding = true;
-      debugPrint('EmbeddingService: WARNING - Using local n-gram hashing fallback. '
-          'Semantic search quality will be degraded. '
-          'Configure Ollama (http://localhost:11434) or an API-based embedding model for accurate results.');
+      debugPrint(
+        'EmbeddingService: WARNING - Using local n-gram hashing fallback. '
+        'Semantic search quality will be degraded. '
+        'Configure Ollama (http://localhost:11434) or an API-based embedding model for accurate results.',
+      );
     }
     return embedding;
   }
 
   static bool _hasWarnedLocalEmbedding = false;
 
-  Future<void> onNoteSaved(Note note, {
+  Future<void> onNoteSaved(
+    Note note, {
     AIProvider? provider,
     String? apiKey,
     String? embeddingModelId,
@@ -156,7 +167,8 @@ class EmbeddingService {
     store.insert(note.id, embedding, metadata: metadata);
   }
 
-  Future<int> batchEmbed(List<Note> notes, {
+  Future<int> batchEmbed(
+    List<Note> notes, {
     AIProvider? provider,
     String? apiKey,
     String? embeddingModelId,
@@ -192,9 +204,12 @@ class HybridSearch {
   final TantivyBridge? _tantivyBridge;
   static const int _rrfK = 60;
 
-  HybridSearch(this._semanticSearch, {FtsSearchFn? ftsSearchFn, TantivyBridge? tantivyBridge})
-      : _ftsSearchFn = ftsSearchFn,
-        _tantivyBridge = tantivyBridge;
+  HybridSearch(
+    this._semanticSearch, {
+    FtsSearchFn? ftsSearchFn,
+    TantivyBridge? tantivyBridge,
+  }) : _ftsSearchFn = ftsSearchFn,
+       _tantivyBridge = tantivyBridge;
 
   Future<List<HybridSearchResult>> search(String query, {int topK = 20}) async {
     final semanticResults = await _semanticSearch.search(query, topK: topK);

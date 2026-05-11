@@ -201,16 +201,8 @@ void main() {
     test('AC-P2-2-4: truncates low-priority items when over budget', () {
       final budget = TokenBudget(maxTokens: 1000);
       final items = [
-        ContextItem(
-          type: ContextType.note,
-          id: 'note1',
-          content: 'A' * 4000,
-        ),
-        ContextItem(
-          type: ContextType.webPage,
-          id: 'web1',
-          content: 'B' * 4000,
-        ),
+        ContextItem(type: ContextType.note, id: 'note1', content: 'A' * 4000),
+        ContextItem(type: ContextType.webPage, id: 'web1', content: 'B' * 4000),
       ];
 
       final result = budget.trim(items);
@@ -221,16 +213,8 @@ void main() {
     test('preserves high-priority items first', () {
       final budget = TokenBudget(maxTokens: 2000);
       final items = [
-        ContextItem(
-          type: ContextType.webPage,
-          id: 'web1',
-          content: 'B' * 4000,
-        ),
-        ContextItem(
-          type: ContextType.note,
-          id: 'note1',
-          content: 'A' * 200,
-        ),
+        ContextItem(type: ContextType.webPage, id: 'web1', content: 'B' * 4000),
+        ContextItem(type: ContextType.note, id: 'note1', content: 'A' * 200),
       ];
 
       final ranked = PriorityRanker().rank(items);
@@ -255,43 +239,46 @@ void main() {
   });
 
   group('Assembler', () {
-    test('AC-P2-2-5: resolves multiple references of different types', () async {
-      final assembler = Assembler(maxTokens: 100000);
-      final notes = [
-        Note(
-          id: '1',
-          title: 'A',
-          filePath: 'a.md',
-          content: 'Note A content',
-          tags: [],
-          aliases: [],
-          created: DateTime.now(),
-          modified: DateTime.now(),
-        ),
-        Note(
-          id: '2',
-          title: 'B',
-          filePath: 'b.md',
-          content: 'Note B content',
-          tags: [],
-          aliases: [],
-          created: DateTime.now(),
-          modified: DateTime.now(),
-        ),
-      ];
+    test(
+      'AC-P2-2-5: resolves multiple references of different types',
+      () async {
+        final assembler = Assembler(maxTokens: 100000);
+        final notes = [
+          Note(
+            id: '1',
+            title: 'A',
+            filePath: 'a.md',
+            content: 'Note A content',
+            tags: [],
+            aliases: [],
+            created: DateTime.now(),
+            modified: DateTime.now(),
+          ),
+          Note(
+            id: '2',
+            title: 'B',
+            filePath: 'b.md',
+            content: 'Note B content',
+            tags: [],
+            aliases: [],
+            created: DateTime.now(),
+            modified: DateTime.now(),
+          ),
+        ];
 
-      final assembly = await assembler.assemble(
-        '分析 @note[A] 和 @note[B] 和 @web[current]',
-        allNotes: notes,
-        currentWebUrl: 'https://example.com',
-        currentWebTitle: 'Example',
-        currentWebContent: 'Example page',
-      );
+        final assembly = await assembler.assemble(
+          '分析 @note[A] 和 @note[B] 和 @web[current]',
+          allNotes: notes,
+          currentWebUrl: 'https://example.com',
+          currentWebTitle: 'Example',
+          currentWebContent: 'Example page',
+        );
 
-      expect(assembly.items.length, 3);
-      final types = assembly.items.map((i) => i.type).toSet();
-      expect(types, containsAll([ContextType.note, ContextType.webPage]));
-    });
+        expect(assembly.items.length, 3);
+        final types = assembly.items.map((i) => i.type).toSet();
+        expect(types, containsAll([ContextType.note, ContextType.webPage]));
+      },
+    );
 
     test('AC-P2-2-6: toPrompt outputs structured format', () async {
       final assembler = Assembler();
@@ -334,10 +321,7 @@ void main() {
         currentNote: currentNote,
       );
 
-      expect(
-        assembly.items.any((i) => i.type == ContextType.note),
-        true,
-      );
+      expect(assembly.items.any((i) => i.type == ContextType.note), true);
     });
 
     test('does not duplicate current note when @note[title] matches', () async {

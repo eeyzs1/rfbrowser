@@ -64,8 +64,16 @@ enum CanvasCardType {
   };
 
   bool get isGeometric => switch (this) {
-    rectangle || roundedRect || ellipse || diamond || hexagon ||
-    parallelogram || triangle || cylinder || star || table => true,
+    rectangle ||
+    roundedRect ||
+    ellipse ||
+    diamond ||
+    hexagon ||
+    parallelogram ||
+    triangle ||
+    cylinder ||
+    star ||
+    table => true,
     _ => false,
   };
 
@@ -187,19 +195,21 @@ class CanvasCardStyle {
     'comicEffect': comicEffect,
   };
 
-  factory CanvasCardStyle.fromJson(Map<String, dynamic> json) => CanvasCardStyle(
-    fillColor: json['fillColor'] as int? ?? 0xFFFFFFFF,
-    gradientColor: json['gradientColor'] as int?,
-    gradientDirection: GradientDirection.values[json['gradientDirection'] as int? ?? 0],
-    borderColor: json['borderColor'] as int? ?? 0xFFE0E0E0,
-    borderWidth: (json['borderWidth'] as num?)?.toDouble() ?? 1.0,
-    borderStyle: CardBorderStyle.values[json['borderStyle'] as int? ?? 0],
-    borderRadius: (json['borderRadius'] as num?)?.toDouble() ?? 8.0,
-    opacity: (json['opacity'] as num?)?.toDouble() ?? 1.0,
-    shadow: json['shadow'] as bool? ?? true,
-    glassEffect: json['glassEffect'] as bool? ?? false,
-    comicEffect: json['comicEffect'] as bool? ?? false,
-  );
+  factory CanvasCardStyle.fromJson(Map<String, dynamic> json) =>
+      CanvasCardStyle(
+        fillColor: json['fillColor'] as int? ?? 0xFFFFFFFF,
+        gradientColor: json['gradientColor'] as int?,
+        gradientDirection:
+            GradientDirection.values[json['gradientDirection'] as int? ?? 0],
+        borderColor: json['borderColor'] as int? ?? 0xFFE0E0E0,
+        borderWidth: (json['borderWidth'] as num?)?.toDouble() ?? 1.0,
+        borderStyle: CardBorderStyle.values[json['borderStyle'] as int? ?? 0],
+        borderRadius: (json['borderRadius'] as num?)?.toDouble() ?? 8.0,
+        opacity: (json['opacity'] as num?)?.toDouble() ?? 1.0,
+        shadow: json['shadow'] as bool? ?? true,
+        glassEffect: json['glassEffect'] as bool? ?? false,
+        comicEffect: json['comicEffect'] as bool? ?? false,
+      );
 }
 
 enum TextAlignH { left, center, right }
@@ -211,12 +221,16 @@ enum RichTextSegmentType { text, bold, italic, underline, code, strikethrough }
 class RichTextSegment {
   final String text;
   final RichTextSegmentType type;
-  const RichTextSegment({required this.text, this.type = RichTextSegmentType.text});
+  const RichTextSegment({
+    required this.text,
+    this.type = RichTextSegmentType.text,
+  });
   Map<String, dynamic> toJson() => {'text': text, 'type': type.index};
-  factory RichTextSegment.fromJson(Map<String, dynamic> json) => RichTextSegment(
-    text: json['text'] as String? ?? '',
-    type: RichTextSegmentType.values[json['type'] as int? ?? 0],
-  );
+  factory RichTextSegment.fromJson(Map<String, dynamic> json) =>
+      RichTextSegment(
+        text: json['text'] as String? ?? '',
+        type: RichTextSegmentType.values[json['type'] as int? ?? 0],
+      );
 }
 
 class CanvasCardMetadata {
@@ -227,22 +241,31 @@ class CanvasCardMetadata {
     if (properties.isNotEmpty) 'properties': properties,
     if (hyperlink != null) 'hyperlink': hyperlink,
   };
-  factory CanvasCardMetadata.fromJson(Map<String, dynamic> json) => CanvasCardMetadata(
-    properties: (json['properties'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, v.toString())) ?? {},
-    hyperlink: json['hyperlink'] as String?,
+  factory CanvasCardMetadata.fromJson(Map<String, dynamic> json) =>
+      CanvasCardMetadata(
+        properties:
+            (json['properties'] as Map<String, dynamic>?)?.map(
+              (k, v) => MapEntry(k, v.toString()),
+            ) ??
+            {},
+        hyperlink: json['hyperlink'] as String?,
+      );
+  CanvasCardMetadata copyWith({
+    Map<String, String>? properties,
+    String? hyperlink,
+    bool clearHyperlink = false,
+  }) => CanvasCardMetadata(
+    properties: properties ?? this.properties,
+    hyperlink: clearHyperlink ? null : (hyperlink ?? this.hyperlink),
   );
-  CanvasCardMetadata copyWith({Map<String, String>? properties, String? hyperlink, bool clearHyperlink = false}) =>
-    CanvasCardMetadata(
-      properties: properties ?? this.properties,
-      hyperlink: clearHyperlink ? null : (hyperlink ?? this.hyperlink),
-    );
 }
 
 class CanvasTableCell {
   final String text;
   const CanvasTableCell({this.text = ''});
   Map<String, dynamic> toJson() => {'text': text};
-  factory CanvasTableCell.fromJson(Map<String, dynamic> json) => CanvasTableCell(text: json['text'] as String? ?? '');
+  factory CanvasTableCell.fromJson(Map<String, dynamic> json) =>
+      CanvasTableCell(text: json['text'] as String? ?? '');
 }
 
 class CanvasCard {
@@ -316,45 +339,84 @@ class CanvasCard {
     this.connectionPointOffsetY = 0.5,
   });
 
-  double effectiveFontSize(double base) => fontSize > 0 ? fontSize : base * 0.85;
+  double effectiveFontSize(double base) =>
+      fontSize > 0 ? fontSize : base * 0.85;
 
   CanvasCard copyWith({
-    double? x, double? y, double? width, double? height,
-    String? title, String? content, int? colorValue, String? noteId,
-    double? fontSize, CanvasCardStyle? style, bool clearStyle = false,
-    List<String>? childIds, bool? collapsed, String? layerId, bool clearLayerId = false,
-    List<String>? tags, TextAlignH? textAlignH, TextAlignV? textAlignV,
-    List<RichTextSegment>? richContent, CanvasCardMetadata? metadata, bool clearMetadata = false,
-    bool? autoNumber, List<Offset>? freehandPoints,
-    int? tableRows, int? tableCols, List<CanvasTableCell>? tableCells, bool? verticalText,
-    String? fontFamily, int? textColorValue, String? latexFormula, bool clearLatex = false,
-    String? htmlContent, bool clearHtml = false, String? customSvgData, bool clearSvg = false,
-    double? connectionPointOffsetX, double? connectionPointOffsetY,
+    double? x,
+    double? y,
+    double? width,
+    double? height,
+    String? title,
+    String? content,
+    int? colorValue,
+    String? noteId,
+    double? fontSize,
+    CanvasCardStyle? style,
+    bool clearStyle = false,
+    List<String>? childIds,
+    bool? collapsed,
+    String? layerId,
+    bool clearLayerId = false,
+    List<String>? tags,
+    TextAlignH? textAlignH,
+    TextAlignV? textAlignV,
+    List<RichTextSegment>? richContent,
+    CanvasCardMetadata? metadata,
+    bool clearMetadata = false,
+    bool? autoNumber,
+    List<Offset>? freehandPoints,
+    int? tableRows,
+    int? tableCols,
+    List<CanvasTableCell>? tableCells,
+    bool? verticalText,
+    String? fontFamily,
+    int? textColorValue,
+    String? latexFormula,
+    bool clearLatex = false,
+    String? htmlContent,
+    bool clearHtml = false,
+    String? customSvgData,
+    bool clearSvg = false,
+    double? connectionPointOffsetX,
+    double? connectionPointOffsetY,
   }) {
     return CanvasCard(
-      id: id, type: type,
-      x: x ?? this.x, y: y ?? this.y, width: width ?? this.width, height: height ?? this.height,
-      title: title ?? this.title, content: content ?? this.content,
-      colorValue: colorValue ?? this.colorValue, noteId: noteId ?? this.noteId,
+      id: id,
+      type: type,
+      x: x ?? this.x,
+      y: y ?? this.y,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      colorValue: colorValue ?? this.colorValue,
+      noteId: noteId ?? this.noteId,
       fontSize: fontSize ?? this.fontSize,
       style: clearStyle ? null : (style ?? this.style),
-      childIds: childIds ?? this.childIds, collapsed: collapsed ?? this.collapsed,
+      childIds: childIds ?? this.childIds,
+      collapsed: collapsed ?? this.collapsed,
       layerId: clearLayerId ? null : (layerId ?? this.layerId),
       tags: tags ?? this.tags,
-      textAlignH: textAlignH ?? this.textAlignH, textAlignV: textAlignV ?? this.textAlignV,
+      textAlignH: textAlignH ?? this.textAlignH,
+      textAlignV: textAlignV ?? this.textAlignV,
       richContent: richContent ?? this.richContent,
       metadata: clearMetadata ? null : (metadata ?? this.metadata),
       autoNumber: autoNumber ?? this.autoNumber,
       freehandPoints: freehandPoints ?? this.freehandPoints,
-      tableRows: tableRows ?? this.tableRows, tableCols: tableCols ?? this.tableCols,
-      tableCells: tableCells ?? this.tableCells, verticalText: verticalText ?? this.verticalText,
+      tableRows: tableRows ?? this.tableRows,
+      tableCols: tableCols ?? this.tableCols,
+      tableCells: tableCells ?? this.tableCells,
+      verticalText: verticalText ?? this.verticalText,
       fontFamily: fontFamily ?? this.fontFamily,
       textColorValue: textColorValue ?? this.textColorValue,
       latexFormula: clearLatex ? null : (latexFormula ?? this.latexFormula),
       htmlContent: clearHtml ? null : (htmlContent ?? this.htmlContent),
       customSvgData: clearSvg ? null : (customSvgData ?? this.customSvgData),
-      connectionPointOffsetX: connectionPointOffsetX ?? this.connectionPointOffsetX,
-      connectionPointOffsetY: connectionPointOffsetY ?? this.connectionPointOffsetY,
+      connectionPointOffsetX:
+          connectionPointOffsetX ?? this.connectionPointOffsetX,
+      connectionPointOffsetY:
+          connectionPointOffsetY ?? this.connectionPointOffsetY,
     );
   }
 
@@ -381,13 +443,19 @@ class CanvasCard {
     if (tags.isNotEmpty) 'tags': tags,
     'textAlignH': textAlignH.index,
     'textAlignV': textAlignV.index,
-    if (richContent.isNotEmpty) 'richContent': richContent.map((s) => s.toJson()).toList(),
+    if (richContent.isNotEmpty)
+      'richContent': richContent.map((s) => s.toJson()).toList(),
     if (metadata != null) 'metadata': metadata!.toJson(),
     if (autoNumber) 'autoNumber': autoNumber,
-    if (freehandPoints.isNotEmpty) 'freehandPoints': freehandPoints.map((p) => {'x': p.dx, 'y': p.dy}).toList(),
+    if (freehandPoints.isNotEmpty)
+      'freehandPoints': freehandPoints
+          .map((p) => {'x': p.dx, 'y': p.dy})
+          .toList(),
     if (type == CanvasCardType.table) ...{
-      'tableRows': tableRows, 'tableCols': tableCols,
-      if (tableCells.isNotEmpty) 'tableCells': tableCells.map((c) => c.toJson()).toList(),
+      'tableRows': tableRows,
+      'tableCols': tableCols,
+      if (tableCells.isNotEmpty)
+        'tableCells': tableCells.map((c) => c.toJson()).toList(),
     },
     if (verticalText) 'verticalText': verticalText,
     if (fontFamily.isNotEmpty) 'fontFamily': fontFamily,
@@ -395,13 +463,19 @@ class CanvasCard {
     if (latexFormula != null) 'latexFormula': latexFormula,
     if (htmlContent != null) 'htmlContent': htmlContent,
     if (customSvgData != null) 'customSvgData': customSvgData,
-    if (connectionPointOffsetX != 0.5) 'connectionPointOffsetX': connectionPointOffsetX,
-    if (connectionPointOffsetY != 0.5) 'connectionPointOffsetY': connectionPointOffsetY,
+    if (connectionPointOffsetX != 0.5)
+      'connectionPointOffsetX': connectionPointOffsetX,
+    if (connectionPointOffsetY != 0.5)
+      'connectionPointOffsetY': connectionPointOffsetY,
   };
 
   factory CanvasCard.fromJson(Map<String, dynamic> json) => CanvasCard(
     id: json['id'] as String,
-    type: CanvasCardType.values[(json['type'] as int).clamp(0, CanvasCardType.values.length - 1)],
+    type:
+        CanvasCardType.values[(json['type'] as int).clamp(
+          0,
+          CanvasCardType.values.length - 1,
+        )],
     x: (json['x'] as num).toDouble(),
     y: (json['y'] as num).toDouble(),
     width: (json['width'] as num).toDouble(),
@@ -411,31 +485,47 @@ class CanvasCard {
     colorValue: json['colorValue'] as int? ?? 0xFFFFFFFF,
     noteId: json['noteId'] as String?,
     fontSize: (json['fontSize'] as num?)?.toDouble() ?? 0,
-    style: json['style'] != null ? CanvasCardStyle.fromJson(json['style'] as Map<String, dynamic>) : null,
+    style: json['style'] != null
+        ? CanvasCardStyle.fromJson(json['style'] as Map<String, dynamic>)
+        : null,
     childIds: (json['childIds'] as List?)?.cast<String>() ?? [],
     collapsed: json['collapsed'] as bool? ?? false,
     layerId: json['layerId'] as String?,
     tags: (json['tags'] as List?)?.cast<String>() ?? [],
     textAlignH: TextAlignH.values[json['textAlignH'] as int? ?? 0],
     textAlignV: TextAlignV.values[json['textAlignV'] as int? ?? 0],
-    richContent: (json['richContent'] as List?)?.map((s) => RichTextSegment.fromJson(s as Map<String, dynamic>)).toList() ?? [],
-    metadata: json['metadata'] != null ? CanvasCardMetadata.fromJson(json['metadata'] as Map<String, dynamic>) : null,
+    richContent:
+        (json['richContent'] as List?)
+            ?.map((s) => RichTextSegment.fromJson(s as Map<String, dynamic>))
+            .toList() ??
+        [],
+    metadata: json['metadata'] != null
+        ? CanvasCardMetadata.fromJson(json['metadata'] as Map<String, dynamic>)
+        : null,
     autoNumber: json['autoNumber'] as bool? ?? false,
-    freehandPoints: (json['freehandPoints'] as List?)?.map((p) {
-      final m = p as Map<String, dynamic>;
-      return Offset((m['x'] as num).toDouble(), (m['y'] as num).toDouble());
-    }).toList() ?? [],
+    freehandPoints:
+        (json['freehandPoints'] as List?)?.map((p) {
+          final m = p as Map<String, dynamic>;
+          return Offset((m['x'] as num).toDouble(), (m['y'] as num).toDouble());
+        }).toList() ??
+        [],
     tableRows: json['tableRows'] as int? ?? 3,
     tableCols: json['tableCols'] as int? ?? 3,
-    tableCells: (json['tableCells'] as List?)?.map((c) => CanvasTableCell.fromJson(c as Map<String, dynamic>)).toList() ?? [],
+    tableCells:
+        (json['tableCells'] as List?)
+            ?.map((c) => CanvasTableCell.fromJson(c as Map<String, dynamic>))
+            .toList() ??
+        [],
     verticalText: json['verticalText'] as bool? ?? false,
     fontFamily: json['fontFamily'] as String? ?? '',
     textColorValue: json['textColorValue'] as int? ?? 0xFF000000,
     latexFormula: json['latexFormula'] as String?,
     htmlContent: json['htmlContent'] as String?,
     customSvgData: json['customSvgData'] as String?,
-    connectionPointOffsetX: (json['connectionPointOffsetX'] as num?)?.toDouble() ?? 0.5,
-    connectionPointOffsetY: (json['connectionPointOffsetY'] as num?)?.toDouble() ?? 0.5,
+    connectionPointOffsetX:
+        (json['connectionPointOffsetX'] as num?)?.toDouble() ?? 0.5,
+    connectionPointOffsetY:
+        (json['connectionPointOffsetY'] as num?)?.toDouble() ?? 0.5,
   );
 }
 
@@ -447,7 +537,10 @@ enum ConnectionSide {
 
   Offset point(Rect rect, [double offset = 0.5]) => switch (this) {
     ConnectionSide.top => Offset(rect.left + rect.width * offset, rect.top),
-    ConnectionSide.bottom => Offset(rect.left + rect.width * offset, rect.bottom),
+    ConnectionSide.bottom => Offset(
+      rect.left + rect.width * offset,
+      rect.bottom,
+    ),
     ConnectionSide.left => Offset(rect.left, rect.top + rect.height * offset),
     ConnectionSide.right => Offset(rect.right, rect.top + rect.height * offset),
   };
@@ -530,19 +623,22 @@ class CanvasConnectionStyle {
     'waypointSize': waypointSize,
   };
 
-  factory CanvasConnectionStyle.fromJson(Map<String, dynamic> json) => CanvasConnectionStyle(
-    pathType: ConnectionPath.values[json['pathType'] as int? ?? 0],
-    arrowStyle: ArrowStyle.values[json['arrowStyle'] as int? ?? 2],
-    startArrowStyle: ArrowStyle.values[json['startArrowStyle'] as int? ?? 0],
-    strokeWidth: (json['strokeWidth'] as num?)?.toDouble() ?? 2.0,
-    colorValue: json['colorValue'] as int? ?? 0xFF000000,
-    lineJumpStyle: LineJumpStyle.values[json['lineJumpStyle'] as int? ?? 0],
-    lineJumpSize: (json['lineJumpSize'] as num?)?.toDouble() ?? 8.0,
-    flowAnimation: FlowAnimationStyle.values[json['flowAnimation'] as int? ?? 0],
-    arrowSize: (json['arrowSize'] as num?)?.toDouble() ?? 8.0,
-    labelFontSize: (json['labelFontSize'] as num?)?.toDouble() ?? 0.0,
-    waypointSize: (json['waypointSize'] as num?)?.toDouble() ?? 6.0,
-  );
+  factory CanvasConnectionStyle.fromJson(Map<String, dynamic> json) =>
+      CanvasConnectionStyle(
+        pathType: ConnectionPath.values[json['pathType'] as int? ?? 0],
+        arrowStyle: ArrowStyle.values[json['arrowStyle'] as int? ?? 2],
+        startArrowStyle:
+            ArrowStyle.values[json['startArrowStyle'] as int? ?? 0],
+        strokeWidth: (json['strokeWidth'] as num?)?.toDouble() ?? 2.0,
+        colorValue: json['colorValue'] as int? ?? 0xFF000000,
+        lineJumpStyle: LineJumpStyle.values[json['lineJumpStyle'] as int? ?? 0],
+        lineJumpSize: (json['lineJumpSize'] as num?)?.toDouble() ?? 8.0,
+        flowAnimation:
+            FlowAnimationStyle.values[json['flowAnimation'] as int? ?? 0],
+        arrowSize: (json['arrowSize'] as num?)?.toDouble() ?? 8.0,
+        labelFontSize: (json['labelFontSize'] as num?)?.toDouble() ?? 0.0,
+        waypointSize: (json['waypointSize'] as num?)?.toDouble() ?? 6.0,
+      );
 }
 
 class CanvasConnection {
@@ -572,7 +668,10 @@ class CanvasConnection {
     this.waypoints = const [],
   });
 
-  static (ConnectionSide, ConnectionSide) computeSides(CanvasCard from, CanvasCard to) {
+  static (ConnectionSide, ConnectionSide) computeSides(
+    CanvasCard from,
+    CanvasCard to,
+  ) {
     final dx = to.center.dx - from.center.dx;
     final dy = to.center.dy - from.center.dy;
     final fromSide = dx.abs() > dy.abs()
@@ -584,7 +683,19 @@ class CanvasConnection {
     return (fromSide, toSide);
   }
 
-  CanvasConnection copyWith({String? fromCardId, String? toCardId, ConnectionSide? fromSide, ConnectionSide? toSide, double? fromSideOffset, double? toSideOffset, String? label, bool? isAuto, CanvasConnectionStyle? style, bool clearStyle = false, List<Offset>? waypoints}) => CanvasConnection(
+  CanvasConnection copyWith({
+    String? fromCardId,
+    String? toCardId,
+    ConnectionSide? fromSide,
+    ConnectionSide? toSide,
+    double? fromSideOffset,
+    double? toSideOffset,
+    String? label,
+    bool? isAuto,
+    CanvasConnectionStyle? style,
+    bool clearStyle = false,
+    List<Offset>? waypoints,
+  }) => CanvasConnection(
     id: id,
     fromCardId: fromCardId ?? this.fromCardId,
     toCardId: toCardId ?? this.toCardId,
@@ -609,26 +720,32 @@ class CanvasConnection {
     'label': label,
     'isAuto': isAuto,
     if (style != null) 'style': style!.toJson(),
-    if (waypoints.isNotEmpty) 'waypoints': waypoints.map((w) => {'x': w.dx, 'y': w.dy}).toList(),
+    if (waypoints.isNotEmpty)
+      'waypoints': waypoints.map((w) => {'x': w.dx, 'y': w.dy}).toList(),
   };
 
-  factory CanvasConnection.fromJson(Map<String, dynamic> json) =>
-      CanvasConnection(
-        id: json['id'] as String,
-        fromCardId: json['fromCardId'] as String,
-        toCardId: json['toCardId'] as String,
-        fromSide: ConnectionSide.values[json['fromSide'] as int? ?? 3],
-        toSide: ConnectionSide.values[json['toSide'] as int? ?? 2],
-        fromSideOffset: (json['fromSideOffset'] as num?)?.toDouble() ?? 0.5,
-        toSideOffset: (json['toSideOffset'] as num?)?.toDouble() ?? 0.5,
-        label: json['label'] as String? ?? '',
-        isAuto: json['isAuto'] as bool? ?? false,
-        style: json['style'] != null ? CanvasConnectionStyle.fromJson(json['style'] as Map<String, dynamic>) : null,
-        waypoints: (json['waypoints'] as List?)?.map((w) {
+  factory CanvasConnection.fromJson(
+    Map<String, dynamic> json,
+  ) => CanvasConnection(
+    id: json['id'] as String,
+    fromCardId: json['fromCardId'] as String,
+    toCardId: json['toCardId'] as String,
+    fromSide: ConnectionSide.values[json['fromSide'] as int? ?? 3],
+    toSide: ConnectionSide.values[json['toSide'] as int? ?? 2],
+    fromSideOffset: (json['fromSideOffset'] as num?)?.toDouble() ?? 0.5,
+    toSideOffset: (json['toSideOffset'] as num?)?.toDouble() ?? 0.5,
+    label: json['label'] as String? ?? '',
+    isAuto: json['isAuto'] as bool? ?? false,
+    style: json['style'] != null
+        ? CanvasConnectionStyle.fromJson(json['style'] as Map<String, dynamic>)
+        : null,
+    waypoints:
+        (json['waypoints'] as List?)?.map((w) {
           final m = w as Map<String, dynamic>;
           return Offset((m['x'] as num).toDouble(), (m['y'] as num).toDouble());
-        }).toList() ?? [],
-      );
+        }).toList() ??
+        [],
+  );
 }
 
 class CanvasGroup {
@@ -670,7 +787,16 @@ class CanvasGroup {
   );
 }
 
-enum AlignmentGuideType { centerVertical, centerHorizontal, leftEdge, rightEdge, topEdge, bottomEdge, equalSpacingH, equalSpacingV }
+enum AlignmentGuideType {
+  centerVertical,
+  centerHorizontal,
+  leftEdge,
+  rightEdge,
+  topEdge,
+  bottomEdge,
+  equalSpacingH,
+  equalSpacingV,
+}
 
 class CanvasLayer {
   final String id;
@@ -756,11 +882,17 @@ class ScratchpadItem {
   factory ScratchpadItem.fromJson(Map<String, dynamic> json) => ScratchpadItem(
     id: json['id'] as String,
     name: json['name'] as String? ?? '',
-    type: CanvasCardType.values[(json['type'] as int).clamp(0, CanvasCardType.values.length - 1)],
+    type:
+        CanvasCardType.values[(json['type'] as int).clamp(
+          0,
+          CanvasCardType.values.length - 1,
+        )],
     width: (json['width'] as num?)?.toDouble() ?? 240,
     height: (json['height'] as num?)?.toDouble() ?? 160,
     colorValue: json['colorValue'] as int? ?? 0xFFFFFFFF,
-    style: json['style'] != null ? CanvasCardStyle.fromJson(json['style'] as Map<String, dynamic>) : null,
+    style: json['style'] != null
+        ? CanvasCardStyle.fromJson(json['style'] as Map<String, dynamic>)
+        : null,
     category: json['category'] as String? ?? 'General',
   );
 }
@@ -770,7 +902,11 @@ class AlignmentGuide {
   final Offset end;
   final AlignmentGuideType type;
 
-  const AlignmentGuide({required this.start, required this.end, required this.type});
+  const AlignmentGuide({
+    required this.start,
+    required this.end,
+    required this.type,
+  });
 }
 
 enum AlignmentType { left, centerH, right, top, centerV, bottom }
@@ -812,13 +948,20 @@ class CanvasSettings {
     bool? rulersVisible,
   }) {
     return CanvasSettings(
-      autoConnectionsEnabled: autoConnectionsEnabled ?? this.autoConnectionsEnabled,
+      autoConnectionsEnabled:
+          autoConnectionsEnabled ?? this.autoConnectionsEnabled,
       snapToGrid: snapToGrid ?? this.snapToGrid,
       gridVisible: gridVisible ?? this.gridVisible,
       lastModified: lastModified ?? this.lastModified,
-      backgroundColorValue: clearBackgroundColor ? null : (backgroundColorValue ?? this.backgroundColorValue),
-      defaultCardStyle: clearDefaultCardStyle ? null : (defaultCardStyle ?? this.defaultCardStyle),
-      defaultConnectionStyle: clearDefaultConnectionStyle ? null : (defaultConnectionStyle ?? this.defaultConnectionStyle),
+      backgroundColorValue: clearBackgroundColor
+          ? null
+          : (backgroundColorValue ?? this.backgroundColorValue),
+      defaultCardStyle: clearDefaultCardStyle
+          ? null
+          : (defaultCardStyle ?? this.defaultCardStyle),
+      defaultConnectionStyle: clearDefaultConnectionStyle
+          ? null
+          : (defaultConnectionStyle ?? this.defaultConnectionStyle),
       rulersVisible: rulersVisible ?? this.rulersVisible,
     );
   }
@@ -828,9 +971,12 @@ class CanvasSettings {
     'snapToGrid': snapToGrid,
     'gridVisible': gridVisible,
     'lastModified': lastModified.toIso8601String(),
-    if (backgroundColorValue != null) 'backgroundColorValue': backgroundColorValue,
-    if (defaultCardStyle != null) 'defaultCardStyle': defaultCardStyle!.toJson(),
-    if (defaultConnectionStyle != null) 'defaultConnectionStyle': defaultConnectionStyle!.toJson(),
+    if (backgroundColorValue != null)
+      'backgroundColorValue': backgroundColorValue,
+    if (defaultCardStyle != null)
+      'defaultCardStyle': defaultCardStyle!.toJson(),
+    if (defaultConnectionStyle != null)
+      'defaultConnectionStyle': defaultConnectionStyle!.toJson(),
     'rulersVisible': rulersVisible,
   };
 
@@ -842,8 +988,16 @@ class CanvasSettings {
         ? DateTime.tryParse(json['lastModified'] as String)
         : null,
     backgroundColorValue: json['backgroundColorValue'] as int?,
-    defaultCardStyle: json['defaultCardStyle'] != null ? CanvasCardStyle.fromJson(json['defaultCardStyle'] as Map<String, dynamic>) : null,
-    defaultConnectionStyle: json['defaultConnectionStyle'] != null ? CanvasConnectionStyle.fromJson(json['defaultConnectionStyle'] as Map<String, dynamic>) : null,
+    defaultCardStyle: json['defaultCardStyle'] != null
+        ? CanvasCardStyle.fromJson(
+            json['defaultCardStyle'] as Map<String, dynamic>,
+          )
+        : null,
+    defaultConnectionStyle: json['defaultConnectionStyle'] != null
+        ? CanvasConnectionStyle.fromJson(
+            json['defaultConnectionStyle'] as Map<String, dynamic>,
+          )
+        : null,
     rulersVisible: json['rulersVisible'] as bool? ?? false,
   );
 }
@@ -914,9 +1068,15 @@ class CanvasData {
       groups: groups ?? this.groups,
       layers: layers ?? this.layers,
       settings: settings ?? this.settings,
-      selectedCardIds: clearSelectedCardIds ? [] : (selectedCardIds ?? this.selectedCardIds),
-      inlineEditingCardId: clearInlineEditingCardId ? null : (inlineEditingCardId ?? this.inlineEditingCardId),
-      selectedConnectionId: clearSelectedConnectionId ? null : (selectedConnectionId ?? this.selectedConnectionId),
+      selectedCardIds: clearSelectedCardIds
+          ? []
+          : (selectedCardIds ?? this.selectedCardIds),
+      inlineEditingCardId: clearInlineEditingCardId
+          ? null
+          : (inlineEditingCardId ?? this.inlineEditingCardId),
+      selectedConnectionId: clearSelectedConnectionId
+          ? null
+          : (selectedConnectionId ?? this.selectedConnectionId),
     );
   }
 

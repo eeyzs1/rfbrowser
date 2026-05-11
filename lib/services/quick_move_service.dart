@@ -80,9 +80,13 @@ class QuickMoveNotifier extends Notifier<QuickMoveState> {
     final userMoves = state.moves
         .where((m) => m.type == QuickMoveType.user)
         .toList();
-    final existingPresetIds =
-        state.moves.where((m) => m.type == QuickMoveType.preset).map((m) => m.id).toSet();
-    final mergedPresets = presets.where((p) => !existingPresetIds.contains(p.id)).toList();
+    final existingPresetIds = state.moves
+        .where((m) => m.type == QuickMoveType.preset)
+        .map((m) => m.id)
+        .toSet();
+    final mergedPresets = presets
+        .where((p) => !existingPresetIds.contains(p.id))
+        .toList();
     final updatedMoves = [...userMoves, ...mergedPresets];
     state = state.copyWith(moves: updatedMoves);
     await _store.save(state);
@@ -123,8 +127,9 @@ class QuickMoveNotifier extends Notifier<QuickMoveState> {
   }
 }
 
-final quickMoveProvider =
-    NotifierProvider<QuickMoveNotifier, QuickMoveState>(QuickMoveNotifier.new);
+final quickMoveProvider = NotifierProvider<QuickMoveNotifier, QuickMoveState>(
+  QuickMoveNotifier.new,
+);
 
 class QuickMoveContextNotifier extends Notifier<QuickMoveContext> {
   @override
@@ -137,4 +142,5 @@ class QuickMoveContextNotifier extends Notifier<QuickMoveContext> {
 
 final quickMoveContextProvider =
     NotifierProvider<QuickMoveContextNotifier, QuickMoveContext>(
-        QuickMoveContextNotifier.new);
+      QuickMoveContextNotifier.new,
+    );

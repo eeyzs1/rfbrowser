@@ -28,9 +28,15 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(browserProvider.notifier).registerContentFetcher(_fetchPageContent);
-      ref.read(browserProvider.notifier).registerSelectedTextFetcher(_fetchSelectedText);
-      ref.read(browserProvider.notifier).registerScreenshotFetcher(_takeScreenshot);
+      ref
+          .read(browserProvider.notifier)
+          .registerContentFetcher(_fetchPageContent);
+      ref
+          .read(browserProvider.notifier)
+          .registerSelectedTextFetcher(_fetchSelectedText);
+      ref
+          .read(browserProvider.notifier)
+          .registerScreenshotFetcher(_takeScreenshot);
     });
   }
 
@@ -39,9 +45,11 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     if (controller == null) return (html: '', text: '');
     try {
       final html = await controller.getHtml() ?? '';
-      final textResult = await controller.evaluateJavascript(
-        source: 'document.body.innerText',
-      ) ?? '';
+      final textResult =
+          await controller.evaluateJavascript(
+            source: 'document.body.innerText',
+          ) ??
+          '';
       final text = textResult is String ? textResult : textResult.toString();
       return (html: html, text: text);
     } catch (_) {
@@ -114,10 +122,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
             const SizedBox(height: 20),
             Text(l.startBrowsing, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 6),
-            Text(
-              l.openNewTabExplore,
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(l.openNewTabExplore, style: theme.textTheme.bodySmall),
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () {
@@ -134,8 +139,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     }
 
     if (_lastActiveTabId != activeTab.id) {
-      _urlController.text =
-          activeTab.url == 'about:blank' ? '' : activeTab.url;
+      _urlController.text = activeTab.url == 'about:blank' ? '' : activeTab.url;
       _lastActiveTabId = activeTab.id;
     }
 
@@ -243,21 +247,29 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
             onLoadStart: (controller, url) {
               ref.read(browserProvider.notifier).setTabLoading(tab.id, true);
               if (url != null) {
-                ref.read(browserProvider.notifier).updateTabUrl(tab.id, url.toString());
-                if (mounted && tab.id == ref.read(browserProvider).activeTabId) {
-                  _urlController.text =
-                      url.toString() == 'about:blank' ? '' : url.toString();
+                ref
+                    .read(browserProvider.notifier)
+                    .updateTabUrl(tab.id, url.toString());
+                if (mounted &&
+                    tab.id == ref.read(browserProvider).activeTabId) {
+                  _urlController.text = url.toString() == 'about:blank'
+                      ? ''
+                      : url.toString();
                 }
               }
             },
             onLoadStop: (controller, url) async {
               ref.read(browserProvider.notifier).setTabLoading(tab.id, false);
               if (url != null) {
-                ref.read(browserProvider.notifier).updateTabUrl(tab.id, url.toString());
+                ref
+                    .read(browserProvider.notifier)
+                    .updateTabUrl(tab.id, url.toString());
               }
               final title = await controller.getTitle();
               if (title != null) {
-                ref.read(browserProvider.notifier).updateTabTitle(tab.id, title);
+                ref
+                    .read(browserProvider.notifier)
+                    .updateTabTitle(tab.id, title);
               }
               if (tab.id == ref.read(browserProvider).activeTabId) {
                 _updateQuickMoveContext(controller, url, title);
@@ -311,7 +323,9 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
           if (index == tabs.length) {
             return IconButton(
               icon: Icon(Icons.add, size: 16, color: theme.hintColor),
-              onPressed: () => ref.read(browserProvider.notifier).createTab(url: 'https://www.bing.com'),
+              onPressed: () => ref
+                  .read(browserProvider.notifier)
+                  .createTab(url: 'https://www.bing.com'),
               padding: const EdgeInsets.symmetric(horizontal: 8),
               constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
               tooltip: l.newTab,
@@ -320,13 +334,18 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
           final tab = tabs[index];
           final isActive = tab.id == browserState.activeTabId;
           return GestureDetector(
-            onTap: () => ref.read(browserProvider.notifier).setActiveTab(tab.id),
+            onTap: () =>
+                ref.read(browserProvider.notifier).setActiveTab(tab.id),
             child: Container(
               constraints: const BoxConstraints(maxWidth: 180),
               padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
-                color: isActive ? theme.colorScheme.primary.withValues(alpha: 0.08) : Colors.transparent,
-                border: Border(right: BorderSide(color: theme.dividerColor, width: 0.5)),
+                color: isActive
+                    ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                    : Colors.transparent,
+                border: Border(
+                  right: BorderSide(color: theme.dividerColor, width: 0.5),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -335,17 +354,28 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                     SizedBox(
                       width: 12,
                       height: 12,
-                      child: CircularProgressIndicator(strokeWidth: 1.5, color: theme.colorScheme.primary),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        color: theme.colorScheme.primary,
+                      ),
                     )
                   else
-                    Icon(Icons.language, size: 12, color: isActive ? theme.colorScheme.primary : theme.hintColor),
+                    Icon(
+                      Icons.language,
+                      size: 12,
+                      color: isActive
+                          ? theme.colorScheme.primary
+                          : theme.hintColor,
+                    ),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       tab.title.isNotEmpty ? tab.title : tab.url,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: isActive ? theme.colorScheme.primary : null,
-                        fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: isActive
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -353,7 +383,8 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                   ),
                   const SizedBox(width: 4),
                   GestureDetector(
-                    onTap: () => ref.read(browserProvider.notifier).closeTab(tab.id),
+                    onTap: () =>
+                        ref.read(browserProvider.notifier).closeTab(tab.id),
                     child: Icon(Icons.close, size: 12, color: theme.hintColor),
                   ),
                 ],
@@ -365,7 +396,11 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     );
   }
 
-  Widget _buildBookmarkButton(ThemeData theme, BrowserState browserState, BrowserTab activeTab) {
+  Widget _buildBookmarkButton(
+    ThemeData theme,
+    BrowserState browserState,
+    BrowserTab activeTab,
+  ) {
     final l = AppLocalizations.of(context)!;
     final isBookmarked = browserState.isBookmarked(activeTab.url);
     return IconButton(
@@ -376,12 +411,19 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
       ),
       onPressed: () {
         if (isBookmarked) {
-          ref.read(browserProvider.notifier).removeBookmark(
-            browserState.bookmarks.firstWhere((b) => b.url == activeTab.url).id,
-          );
+          ref
+              .read(browserProvider.notifier)
+              .removeBookmark(
+                browserState.bookmarks
+                    .firstWhere((b) => b.url == activeTab.url)
+                    .id,
+              );
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(duration: const Duration(seconds: 2), content: Text(l.unbookmarked)),
+            SnackBar(
+              duration: const Duration(seconds: 2),
+              content: Text(l.unbookmarked),
+            ),
           );
         } else {
           _showAddBookmarkDialog(browserState, activeTab);
@@ -393,20 +435,32 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     );
   }
 
-  void _showAddBookmarkDialog(BrowserState browserState, BrowserTab activeTab) async {
+  void _showAddBookmarkDialog(
+    BrowserState browserState,
+    BrowserTab activeTab,
+  ) async {
     final l = AppLocalizations.of(context)!;
     final folders = browserState.bookmarkFolders;
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) {
-        return _AddBookmarkDialog(folders: folders, pageTitle: activeTab.title, pageUrl: activeTab.url);
+        return _AddBookmarkDialog(
+          folders: folders,
+          pageTitle: activeTab.title,
+          pageUrl: activeTab.url,
+        );
       },
     );
     if (result != null && mounted) {
-      ref.read(browserProvider.notifier).addBookmark(activeTab.url, activeTab.title, result);
+      ref
+          .read(browserProvider.notifier)
+          .addBookmark(activeTab.url, activeTab.title, result);
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(duration: const Duration(seconds: 2), content: Text(l.bookmarked(activeTab.title))),
+        SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text(l.bookmarked(activeTab.title)),
+        ),
       );
     }
   }
@@ -546,8 +600,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
       final pageText = await controller.evaluateJavascript(
         source: 'document.body.innerText',
       );
-      final textContent =
-          pageText is String ? pageText : pageText.toString();
+      final textContent = pageText is String ? pageText : pageText.toString();
 
       final ctx = QuickMoveContext(
         currentUrl: url?.toString(),
@@ -725,18 +778,22 @@ class _AddBookmarkDialogState extends State<_AddBookmarkDialog> {
             },
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: widget.folders.map((f) => ListTile(
-                leading: Icon(
-                  f.isExpanded ? Icons.folder_open : Icons.folder,
-                  size: 18,
-                  color: theme.colorScheme.primary,
-                ),
-                title: Text(f.name),
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                trailing: Radio<String>(value: f.id),
-                onTap: () => setState(() => _selectedFolderId = f.id),
-              )).toList(),
+              children: widget.folders
+                  .map(
+                    (f) => ListTile(
+                      leading: Icon(
+                        f.isExpanded ? Icons.folder_open : Icons.folder,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
+                      title: Text(f.name),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      trailing: Radio<String>(value: f.id),
+                      onTap: () => setState(() => _selectedFolderId = f.id),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         ],

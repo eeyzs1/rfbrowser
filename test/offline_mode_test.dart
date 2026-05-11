@@ -13,7 +13,10 @@ void main() {
 
     test('copyWith works correctly', () {
       final state = ConnectivityState();
-      final updated = state.copyWith(isOnline: false, syncQueue: ['a.md', 'b.md']);
+      final updated = state.copyWith(
+        isOnline: false,
+        syncQueue: ['a.md', 'b.md'],
+      );
       expect(updated.isOnline, false);
       expect(updated.syncQueue.length, 2);
     });
@@ -44,26 +47,29 @@ void main() {
       expect(notifier.state.isOnline, true);
     });
 
-    test('AC-P5-5-4: offline create enqueues, online flush clears queue', () async {
-      final notifier = _TestConnectivity();
-      final executed = <List<String>>[];
+    test(
+      'AC-P5-5-4: offline create enqueues, online flush clears queue',
+      () async {
+        final notifier = _TestConnectivity();
+        final executed = <List<String>>[];
 
-      notifier.setSyncExecutor((filePaths) async {
-        executed.add(filePaths);
-      });
+        notifier.setSyncExecutor((filePaths) async {
+          executed.add(filePaths);
+        });
 
-      notifier.setOnline(false);
-      notifier.enqueueSync('notes/a.md');
-      notifier.enqueueSync('notes/b.md');
-      expect(notifier.state.syncQueue.length, 2);
+        notifier.setOnline(false);
+        notifier.enqueueSync('notes/a.md');
+        notifier.enqueueSync('notes/b.md');
+        expect(notifier.state.syncQueue.length, 2);
 
-      notifier.setOnline(true);
-      await Future.delayed(const Duration(milliseconds: 100));
+        notifier.setOnline(true);
+        await Future.delayed(const Duration(milliseconds: 100));
 
-      expect(notifier.state.syncQueue.isEmpty, true);
-      expect(executed.length, 1);
-      expect(executed.first.length, 2);
-    });
+        expect(notifier.state.syncQueue.isEmpty, true);
+        expect(executed.length, 1);
+        expect(executed.first.length, 2);
+      },
+    );
 
     test('enqueueSync deduplicates', () {
       final notifier = _TestConnectivity();

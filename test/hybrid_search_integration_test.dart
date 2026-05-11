@@ -32,7 +32,12 @@ void main() {
     );
   }
 
-  Future<void> indexForSemanticSearch(ProviderContainer c, String id, String text, {Map<String, dynamic>? metadata}) async {
+  Future<void> indexForSemanticSearch(
+    ProviderContainer c,
+    String id,
+    String text, {
+    Map<String, dynamic>? metadata,
+  }) async {
     final embeddingService = c.read(embeddingServiceProvider);
     final embedding = await embeddingService.embed(text);
     embeddingService.hnswIndex.insert(id, embedding, metadata: metadata);
@@ -42,8 +47,13 @@ void main() {
   test('AC-IMP-3-1: hybrid search returns results from both sources', () async {
     final indexStore = container.read(indexStoreProvider);
 
-    final note1 = makeNote('n1', '微服务Dubbo', 'Apache Dubbo是高性能RPC微服务框架�?, '微服务Dubbo.md');
-    final note2 = makeNote('n2', '周末计划', '周六去爬山周日在家休息看书�?, '周末计划.md');
+    final note1 = makeNote(
+      'n1',
+      '微服务Dubbo',
+      'Apache Dubbo是高性能RPC微服务框架',
+      '微服务Dubbo.md',
+    );
+    final note2 = makeNote('n2', '周末计划', '周六去爬山周日在家休息看书', '周末计划.md');
 
     await indexStore.indexNote(note1);
     await indexStore.indexNote(note2);
@@ -54,10 +64,11 @@ void main() {
     final semanticSearch = container.read(semanticSearchProvider);
     final hybridSearch = HybridSearch(
       semanticSearch,
-      ftsSearchFn: (query, {limit = 50}) => indexStore.searchNotes(query, limit: limit),
+      ftsSearchFn: (query, {limit = 50}) =>
+          indexStore.searchNotes(query, limit: limit),
     );
 
-    final results = await hybridSearch.search('微服�?);
+    final results = await hybridSearch.search('微服务');
 
     final sourceSet = results.map((r) => r.source).toSet();
     expect(sourceSet.any((s) => s == 'semantic' || s == 'fts'), isTrue);
@@ -66,14 +77,20 @@ void main() {
   test('AC-IMP-3-2: results include source field and metadata', () async {
     final indexStore = container.read(indexStoreProvider);
 
-    final note = makeNote('src1', 'API设计', 'REST API使用正确的HTTP方法和状态码�?, 'API设计.md');
+    final note = makeNote(
+      'src1',
+      'API设计',
+      'REST API使用正确的HTTP方法和状态码',
+      'API设计.md',
+    );
     await indexStore.indexNote(note);
     await indexForSemanticSearch(container, note.id, note.content);
 
     final semanticSearch = container.read(semanticSearchProvider);
     final hybridSearch = HybridSearch(
       semanticSearch,
-      ftsSearchFn: (query, {limit = 50}) => indexStore.searchNotes(query, limit: limit),
+      ftsSearchFn: (query, {limit = 50}) =>
+          indexStore.searchNotes(query, limit: limit),
     );
 
     final results = await hybridSearch.search('API 设计');
@@ -88,7 +105,7 @@ void main() {
   test('AC-IMP-3-3: FTS failure still returns semantic results', () async {
     final indexStore = container.read(indexStoreProvider);
 
-    final note = makeNote('fail1', '量子计算', '这是一份关于量子计算的基础教程�?, '量子计算.md');
+    final note = makeNote('fail1', '量子计算', '这是一份关于量子计算的基础教程', '量子计算.md');
     await indexStore.indexNote(note);
     await indexForSemanticSearch(container, note.id, note.content);
 
@@ -108,8 +125,18 @@ void main() {
   test('keyword search finds exact match via FTS', () async {
     final indexStore = container.read(indexStoreProvider);
 
-    final noteDart = makeNote('kw1', 'Dart编程', 'Dart是一种客户端优化的编程语言�?, 'Dart编程.md');
-    final notePython = makeNote('kw2', 'Python笔记', 'Python适合数据科学�?, 'Python笔记.md');
+    final noteDart = makeNote(
+      'kw1',
+      'Dart编程',
+      'Dart是一种客户端优化的编程语言',
+      'Dart编程.md',
+    );
+    final notePython = makeNote(
+      'kw2',
+      'Python笔记',
+      'Python适合数据科学',
+      'Python笔记.md',
+    );
 
     await indexStore.indexNote(noteDart);
     await indexStore.indexNote(notePython);

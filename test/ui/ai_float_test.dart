@@ -9,11 +9,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: const Stack(
-                children: [AIFloat()],
-              ),
-            ),
+            home: Scaffold(body: const Stack(children: [AIFloat()])),
           ),
         ),
       );
@@ -22,15 +18,13 @@ void main() {
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
-    testWidgets('E2-AC2: tapping collapsed AI Float expands it', (tester) async {
+    testWidgets('E2-AC2: tapping collapsed AI Float expands it', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: const Stack(
-                children: [AIFloat()],
-              ),
-            ),
+            home: Scaffold(body: const Stack(children: [AIFloat()])),
           ),
         ),
       );
@@ -46,11 +40,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: const Stack(
-                children: [AIFloat()],
-              ),
-            ),
+            home: Scaffold(body: const Stack(children: [AIFloat()])),
           ),
         ),
       );
@@ -72,11 +62,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: const Stack(
-                children: [AIFloat()],
-              ),
-            ),
+            home: Scaffold(body: const Stack(children: [AIFloat()])),
           ),
         ),
       );

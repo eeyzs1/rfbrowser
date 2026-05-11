@@ -26,42 +26,44 @@ void main() {
     );
   }
 
-  test('AC-IMP-5-1: assembler includes currentNote content in assembly', () async {
-    final currentNote = makeNote('n1', 'test_note', '量子叠加原理是量子力学的核心概念之一�?);
+  test(
+    'AC-IMP-5-1: assembler includes currentNote content in assembly',
+    () async {
+      final currentNote = makeNote('n1', 'test_note', '量子叠加原理是量子力学的核心概念之一');
 
-    final assembly = await assembler.assemble(
-      '总结一�?,
-      currentNote: currentNote,
-    );
+      final assembly = await assembler.assemble(
+        '总结一下',
+        currentNote: currentNote,
+      );
 
-    expect(assembly.items.any((item) => item.id == 'n1'), isTrue);
-    final noteItem = assembly.items.firstWhere((item) => item.id == 'n1');
-    expect(noteItem.content, contains('量子叠加原理'));
-    expect(noteItem.metadata['title'], equals('test_note'));
-  });
+      expect(assembly.items.any((item) => item.id == 'n1'), isTrue);
+      final noteItem = assembly.items.firstWhere((item) => item.id == 'n1');
+      expect(noteItem.content, contains('量子叠加原理'));
+      expect(noteItem.metadata['title'], equals('test_note'));
+    },
+  );
 
-  test('AC-IMP-5-2: @note reference triggers Context block in prompt', () async {
-    final notes = [
-      makeNote('learning', '学习笔记', '这是一份关于机器学习和深度学习的笔记�?),
-    ];
+  test(
+    'AC-IMP-5-2: @note reference triggers Context block in prompt',
+    () async {
+      final notes = [makeNote('learning', '学习笔记', '这是一份关于机器学习和深度学习的笔记')];
 
-    final assembly = await assembler.assemble(
-      '帮我分析 @note[学习笔记]',
-      allNotes: notes,
-    );
+      final assembly = await assembler.assemble(
+        '帮我分析 @note[学习笔记]',
+        allNotes: notes,
+      );
 
-    final prompt = assembly.toPrompt();
-    expect(prompt, contains('[Context:'));
-    expect(prompt, contains('学习笔记'));
-    expect(prompt, contains('机器学习'));
-  });
+      final prompt = assembly.toPrompt();
+      expect(prompt, contains('[Context:'));
+      expect(prompt, contains('学习笔记'));
+      expect(prompt, contains('机器学习'));
+    },
+  );
 
   test('AC-IMP-5-3: assembly truncated when exceeding token budget', () async {
     final tinyAssembler = Assembler(maxTokens: 10);
 
-    final currentNote = makeNote('big', 'big_note',
-      'A' * 5000,
-    );
+    final currentNote = makeNote('big', 'big_note', 'A' * 5000);
 
     final assembly = await tinyAssembler.assemble(
       'test',

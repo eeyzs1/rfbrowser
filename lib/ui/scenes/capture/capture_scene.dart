@@ -63,9 +63,13 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
                   onNotePreview: _onNotePreview,
                   onBookmarkOpened: (url) {
                     final bs = ref.read(browserProvider);
-                    final existingTab = bs.tabs.where((t) => t.url == url).firstOrNull;
+                    final existingTab = bs.tabs
+                        .where((t) => t.url == url)
+                        .firstOrNull;
                     if (existingTab != null) {
-                      ref.read(browserProvider.notifier).setActiveTab(existingTab.id);
+                      ref
+                          .read(browserProvider.notifier)
+                          .setActiveTab(existingTab.id);
                     } else {
                       ref.read(browserProvider.notifier).createTab(url: url);
                     }
@@ -81,9 +85,15 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
                     width: 24,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface,
-                      border: Border(right: BorderSide(color: theme.dividerColor)),
+                      border: Border(
+                        right: BorderSide(color: theme.dividerColor),
+                      ),
                     ),
-                    child: Icon(Icons.chevron_right, size: 14, color: theme.hintColor),
+                    child: Icon(
+                      Icons.chevron_right,
+                      size: 14,
+                      color: theme.hintColor,
+                    ),
                   ),
                 ),
               ),
@@ -104,9 +114,15 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
                     width: 24,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface,
-                      border: Border(left: BorderSide(color: theme.dividerColor)),
+                      border: Border(
+                        left: BorderSide(color: theme.dividerColor),
+                      ),
                     ),
-                    child: Icon(Icons.chevron_left, size: 14, color: theme.hintColor),
+                    child: Icon(
+                      Icons.chevron_left,
+                      size: 14,
+                      color: theme.hintColor,
+                    ),
                   ),
                 ),
               ),
@@ -121,7 +137,9 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
                         note: knowledgeState.activeNote,
                         onClose: widget.onToggleRightPanel,
                         onEdit: widget.onNoteOpened,
-                        onBack: () => setState(() => _rightPanelMode = _RightPanelMode.summary),
+                        onBack: () => setState(
+                          () => _rightPanelMode = _RightPanelMode.summary,
+                        ),
                       )
                     : _AiSummaryPanel(
                         url: browserState.activeTab?.url,
@@ -129,7 +147,10 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
                         activeNote: knowledgeState.activeNote,
                         onClose: widget.onToggleRightPanel,
                         onBack: knowledgeState.activeNote != null
-                            ? () => setState(() => _rightPanelMode = _RightPanelMode.notePreview)
+                            ? () => setState(
+                                () => _rightPanelMode =
+                                    _RightPanelMode.notePreview,
+                              )
                             : null,
                       ),
               ),
@@ -150,7 +171,13 @@ class _AiSummaryPanel extends ConsumerStatefulWidget {
   final VoidCallback? onClose;
   final VoidCallback? onBack;
 
-  const _AiSummaryPanel({this.url, this.pageTitle, this.activeNote, this.onClose, this.onBack});
+  const _AiSummaryPanel({
+    this.url,
+    this.pageTitle,
+    this.activeNote,
+    this.onClose,
+    this.onBack,
+  });
 
   @override
   ConsumerState<_AiSummaryPanel> createState() => _AiSummaryPanelState();
@@ -162,9 +189,12 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
   String? _error;
   bool _summarizeNote = false;
 
-  bool get _canSummarize => _summarizeNote ? widget.activeNote != null : (widget.url != null && widget.url!.isNotEmpty);
+  bool get _canSummarize => _summarizeNote
+      ? widget.activeNote != null
+      : (widget.url != null && widget.url!.isNotEmpty);
 
-  String _sourceLabel(AppLocalizations l) => _summarizeNote ? l.note : l.webPage;
+  String _sourceLabel(AppLocalizations l) =>
+      _summarizeNote ? l.note : l.webPage;
 
   void _requestSummary() {
     if (!_canSummarize) return;
@@ -180,13 +210,15 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
       final note = widget.activeNote!;
       aiNotifier.sendMessage(
         'Please summarize the main content and key points of this note in Chinese:\n\nTitle: ${note.title}\n\nContent:\n${note.content}',
-        systemPrompt: 'You are a helpful research assistant. Provide concise, well-structured summaries in Chinese. Focus on key arguments, findings, and insights.',
+        systemPrompt:
+            'You are a helpful research assistant. Provide concise, well-structured summaries in Chinese. Focus on key arguments, findings, and insights.',
       );
     } else {
       final pageInfo = '${widget.pageTitle ?? 'Page'}\n${widget.url!}';
       aiNotifier.sendMessage(
         'Please summarize the main content and key points of this web page in Chinese:\n\n$pageInfo',
-        systemPrompt: 'You are a helpful research assistant. Provide concise, well-structured summaries in Chinese. Focus on key arguments, findings, and insights.',
+        systemPrompt:
+            'You are a helpful research assistant. Provide concise, well-structured summaries in Chinese. Focus on key arguments, findings, and insights.',
       );
     }
   }
@@ -194,15 +226,20 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
   void _saveAsNote() async {
     if (_summary == null || _summary!.isEmpty) return;
     final l = AppLocalizations.of(context)!;
-    final title = l.summaryTitle(_sourceLabel(l), widget.pageTitle ?? widget.activeNote?.title ?? 'Untitled');
-    await ref.read(knowledgeProvider.notifier).createNote(
-      title: title,
-      content: _summary!,
+    final title = l.summaryTitle(
+      _sourceLabel(l),
+      widget.pageTitle ?? widget.activeNote?.title ?? 'Untitled',
     );
+    await ref
+        .read(knowledgeProvider.notifier)
+        .createNote(title: title, content: _summary!);
     if (mounted) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(duration: const Duration(seconds: 2), content: Text(l.savedAsNote(title))),
+        SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text(l.savedAsNote(title)),
+        ),
       );
     }
   }
@@ -221,8 +258,12 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
 
     ref.listen(aiProvider, (prev, next) {
       final lastMsg = next.messages.isNotEmpty ? next.messages.last : null;
-      if (lastMsg != null && lastMsg.role == 'assistant' && !lastMsg.isStreaming) {
-        final prevLastMsg = prev?.messages.isNotEmpty == true ? prev!.messages.last : null;
+      if (lastMsg != null &&
+          lastMsg.role == 'assistant' &&
+          !lastMsg.isStreaming) {
+        final prevLastMsg = prev?.messages.isNotEmpty == true
+            ? prev!.messages.last
+            : null;
         if (prevLastMsg != lastMsg) {
           setState(() {
             _summary = lastMsg.content;
@@ -230,12 +271,17 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
             _error = next.error;
           });
         }
-      } else if (next.isLoading && lastMsg != null && lastMsg.role == 'assistant' && lastMsg.isStreaming) {
+      } else if (next.isLoading &&
+          lastMsg != null &&
+          lastMsg.role == 'assistant' &&
+          lastMsg.isStreaming) {
         setState(() {
           _summary = lastMsg.content;
           _mode = _SummaryMode.loading;
         });
-      } else if (!next.isLoading && next.error != null && _mode == _SummaryMode.loading) {
+      } else if (!next.isLoading &&
+          next.error != null &&
+          _mode == _SummaryMode.loading) {
         setState(() {
           _mode = _SummaryMode.error;
           _error = next.error;
@@ -271,15 +317,21 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
           Expanded(
             child: Text(
               l.aiSourceSummary(_sourceLabel(l)),
-              style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-              maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (_mode == _SummaryMode.idle)
-            _toggleSourceBtn(theme),
+          if (_mode == _SummaryMode.idle) _toggleSourceBtn(theme),
           if (_canSummarize && _mode != _SummaryMode.loading)
             IconButton(
-              icon: Icon(Icons.auto_awesome, size: 16, color: theme.colorScheme.primary),
+              icon: Icon(
+                Icons.auto_awesome,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
               onPressed: _requestSummary,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -287,7 +339,11 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
             ),
           if (_mode == _SummaryMode.done)
             IconButton(
-              icon: Icon(Icons.save_outlined, size: 16, color: theme.colorScheme.primary),
+              icon: Icon(
+                Icons.save_outlined,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
               onPressed: _saveAsNote,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -336,16 +392,54 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
         });
       },
       itemBuilder: (ctx) => [
-        PopupMenuItem(value: 'page', child: Row(children: [
-          Icon(Icons.language, size: 14, color: !_summarizeNote ? theme.colorScheme.primary : theme.hintColor),
-          const SizedBox(width: 8),
-          Text(l.webPageSummary, style: !_summarizeNote ? TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w600) : null),
-        ])),
-        PopupMenuItem(value: 'note', child: Row(children: [
-          Icon(Icons.description, size: 14, color: _summarizeNote ? theme.colorScheme.primary : theme.hintColor),
-          const SizedBox(width: 8),
-          Text(l.noteSummary, style: _summarizeNote ? TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w600) : null),
-        ])),
+        PopupMenuItem(
+          value: 'page',
+          child: Row(
+            children: [
+              Icon(
+                Icons.language,
+                size: 14,
+                color: !_summarizeNote
+                    ? theme.colorScheme.primary
+                    : theme.hintColor,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l.webPageSummary,
+                style: !_summarizeNote
+                    ? TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      )
+                    : null,
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'note',
+          child: Row(
+            children: [
+              Icon(
+                Icons.description,
+                size: 14,
+                color: _summarizeNote
+                    ? theme.colorScheme.primary
+                    : theme.hintColor,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l.noteSummary,
+                style: _summarizeNote
+                    ? TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      )
+                    : null,
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -359,12 +453,19 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(_summarizeNote ? Icons.description_outlined : Icons.open_in_browser,
-                size: 32, color: theme.hintColor.withValues(alpha: 0.3)),
+              Icon(
+                _summarizeNote
+                    ? Icons.description_outlined
+                    : Icons.open_in_browser,
+                size: 32,
+                color: theme.hintColor.withValues(alpha: 0.3),
+              ),
               const SizedBox(height: 8),
               Text(
                 _summarizeNote ? l.selectNoteForSummary : l.openPageForSummary,
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -380,11 +481,21 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, size: 32, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 32,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 8),
-              Text(_error ?? 'Unknown error',
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
-                textAlign: TextAlign.center, maxLines: 4, overflow: TextOverflow.ellipsis),
+              Text(
+                _error ?? 'Unknown error',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: _requestSummary,
@@ -404,11 +515,19 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.summarize, size: 32, color: theme.hintColor.withValues(alpha: 0.3)),
+              Icon(
+                Icons.summarize,
+                size: 32,
+                color: theme.hintColor.withValues(alpha: 0.3),
+              ),
               const SizedBox(height: 8),
-              Text(l.clickToGenerateSummary(_sourceLabel(l)),
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-                textAlign: TextAlign.center),
+              Text(
+                l.clickToGenerateSummary(_sourceLabel(l)),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: _requestSummary,
@@ -421,7 +540,8 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
       );
     }
 
-    if (_mode == _SummaryMode.loading && (_summary == null || _summary!.isEmpty)) {
+    if (_mode == _SummaryMode.loading &&
+        (_summary == null || _summary!.isEmpty)) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -433,24 +553,39 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
           if (!_summarizeNote && widget.url != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Text(widget.url!,
-                style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
-                maxLines: 2, overflow: TextOverflow.ellipsis),
+              child: Text(
+                widget.url!,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.hintColor,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           if (_summarizeNote && widget.activeNote != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Text(widget.activeNote!.title,
-                style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor, fontWeight: FontWeight.w600),
-                maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(
+                widget.activeNote!.title,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.hintColor,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          SelectableText(_summary ?? '',
-            style: theme.textTheme.bodySmall?.copyWith(height: 1.5)),
+          SelectableText(
+            _summary ?? '',
+            style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+          ),
           if (_mode == _SummaryMode.loading)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: LinearProgressIndicator(
-                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.1,
+                ),
               ),
             ),
           if (_mode == _SummaryMode.done) ...[
@@ -497,35 +632,65 @@ class _NotePreviewPanel extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.description, size: 16, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.description,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(l.notePreview,
-                    style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    l.notePreview,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 if (onBack != null)
                   IconButton(
-                    icon: Icon(Icons.auto_awesome, size: 16, color: theme.hintColor),
+                    icon: Icon(
+                      Icons.auto_awesome,
+                      size: 16,
+                      color: theme.hintColor,
+                    ),
                     onPressed: onBack,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
                     tooltip: l.aiSummary,
                   ),
                 if (onEdit != null)
                   IconButton(
-                    icon: Icon(Icons.edit_note, size: 16, color: theme.colorScheme.primary),
+                    icon: Icon(
+                      Icons.edit_note,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
                     onPressed: onEdit,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
                     tooltip: l.editNote,
                   ),
                 if (onClose != null)
                   IconButton(
-                    icon: Icon(Icons.chevron_right, size: 16, color: theme.hintColor),
+                    icon: Icon(
+                      Icons.chevron_right,
+                      size: 16,
+                      color: theme.hintColor,
+                    ),
                     onPressed: onClose,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
                     tooltip: l.closePanel,
                   ),
               ],
@@ -537,9 +702,18 @@ class _NotePreviewPanel extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.description_outlined, size: 32, color: theme.hintColor.withValues(alpha: 0.3)),
+                        Icon(
+                          Icons.description_outlined,
+                          size: 32,
+                          color: theme.hintColor.withValues(alpha: 0.3),
+                        ),
                         const SizedBox(height: 8),
-                        Text(l.clickNoteToPreview, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+                        Text(
+                          l.clickNoteToPreview,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                          ),
+                        ),
                       ],
                     ),
                   )
@@ -548,20 +722,44 @@ class _NotePreviewPanel extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(note.title ?? '', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                        Text(
+                          note.title ?? '',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         if (note.tags != null && note.tags.isNotEmpty) ...[
                           const SizedBox(height: 6),
                           Wrap(
                             spacing: 4,
-                            children: note.tags.map<Widget>((tag) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(color: theme.colorScheme.secondary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(3)),
-                              child: Text('#$tag', style: theme.textTheme.labelSmall),
-                            )).toList(),
+                            children: note.tags
+                                .map<Widget>(
+                                  (tag) => Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.secondary
+                                          .withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                    child: Text(
+                                      '#$tag',
+                                      style: theme.textTheme.labelSmall,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
                           ),
                         ],
                         const Divider(height: 20),
-                        Text(note.content ?? '', style: theme.textTheme.bodySmall?.copyWith(height: 1.6)),
+                        Text(
+                          note.content ?? '',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            height: 1.6,
+                          ),
+                        ),
                         const SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,

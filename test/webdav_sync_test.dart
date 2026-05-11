@@ -7,11 +7,13 @@ void main() {
     test('AC-P3-3-2: stores and retrieves ETag', () async {
       final store = SyncStore(inMemoryOnly: true);
       await store.load();
-      await store.setMeta(SyncMeta(
-        relativePath: 'notes/A.md',
-        etag: 'etag-123',
-        lastSynced: DateTime(2025, 1, 1),
-      ));
+      await store.setMeta(
+        SyncMeta(
+          relativePath: 'notes/A.md',
+          etag: 'etag-123',
+          lastSynced: DateTime(2025, 1, 1),
+        ),
+      );
 
       expect(store.getEtag('notes/A.md'), 'etag-123');
     });
@@ -26,10 +28,9 @@ void main() {
       final store = SyncStore(inMemoryOnly: true);
       await store.load();
       final now = DateTime(2025, 5, 4);
-      await store.setMeta(SyncMeta(
-        relativePath: 'notes/B.md',
-        lastSynced: now,
-      ));
+      await store.setMeta(
+        SyncMeta(relativePath: 'notes/B.md', lastSynced: now),
+      );
 
       expect(store.getLastSynced('notes/B.md'), now);
     });
@@ -62,7 +63,10 @@ void main() {
     test('has three resolution options', () {
       expect(ConflictResolution.values.length, 3);
       expect(ConflictResolution.values, contains(ConflictResolution.keepLocal));
-      expect(ConflictResolution.values, contains(ConflictResolution.keepRemote));
+      expect(
+        ConflictResolution.values,
+        contains(ConflictResolution.keepRemote),
+      );
       expect(ConflictResolution.values, contains(ConflictResolution.keepBoth));
     });
   });

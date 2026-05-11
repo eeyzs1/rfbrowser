@@ -1,8 +1,4 @@
-enum ConflictResolution {
-  keepLocal,
-  keepRemote,
-  keepBoth,
-}
+enum ConflictResolution { keepLocal, keepRemote, keepBoth }
 
 class SyncConflict {
   final String relativePath;

@@ -61,9 +61,7 @@ class AppTheme {
     final divider = highContrast
         ? const Color(0xFF444444)
         : (surfaceIsLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B));
-    final inputBg = highContrast
-        ? const Color(0xFF1A1A1A)
-        : surfaceC;
+    final inputBg = highContrast ? const Color(0xFF1A1A1A) : surfaceC;
     final br = s.effectiveBorderRadius;
     final iconSz = s.iconSize.toDouble();
     final fontSize = s.editorFontSize;
@@ -135,7 +133,10 @@ class AppTheme {
           fontSize: fontSize - 3,
         ),
       ),
-      iconTheme: IconThemeData(color: cs.primary.withValues(alpha: tintAlpha), size: iconSz),
+      iconTheme: IconThemeData(
+        color: cs.primary.withValues(alpha: tintAlpha),
+        size: iconSz,
+      ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: cs.primary,
         foregroundColor: cs.onPrimary,
@@ -190,7 +191,9 @@ class AppTheme {
           return null;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return cs.primary.withValues(alpha: 0.5);
+          if (states.contains(WidgetState.selected)) {
+            return cs.primary.withValues(alpha: 0.5);
+          }
           return null;
         }),
       ),
@@ -200,7 +203,9 @@ class AppTheme {
           return Colors.transparent;
         }),
         checkColor: WidgetStatePropertyAll(cs.onPrimary),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br * 0.5)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(br * 0.5),
+        ),
       ),
       radioTheme: RadioThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) {
@@ -259,9 +264,9 @@ class AppTheme {
             return onSurfaceVariant;
           }),
           side: WidgetStatePropertyAll(BorderSide(color: divider)),
-          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(br),
-          )),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
+          ),
         ),
       ),
       tabBarTheme: TabBarThemeData(
@@ -277,8 +282,15 @@ class AppTheme {
       navigationRailTheme: NavigationRailThemeData(
         selectedIconTheme: IconThemeData(color: cs.primary, size: iconSz),
         unselectedIconTheme: IconThemeData(color: muted, size: iconSz),
-        selectedLabelTextStyle: TextStyle(color: cs.primary, fontWeight: FontWeight.w600, fontSize: fontSize - 2),
-        unselectedLabelTextStyle: TextStyle(color: muted, fontSize: fontSize - 2),
+        selectedLabelTextStyle: TextStyle(
+          color: cs.primary,
+          fontWeight: FontWeight.w600,
+          fontSize: fontSize - 2,
+        ),
+        unselectedLabelTextStyle: TextStyle(
+          color: muted,
+          fontSize: fontSize - 2,
+        ),
       ),
       popupMenuTheme: PopupMenuThemeData(
         color: surfaceC,

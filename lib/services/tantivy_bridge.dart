@@ -21,25 +21,29 @@ DynamicLibrary _loadLibrary() {
 typedef InitNative = Uint32 Function(Pointer<Utf8> indexPath);
 typedef InitDart = int Function(Pointer<Utf8> indexPath);
 
-typedef IndexNative = Int32 Function(
-  Uint32 handle,
-  Pointer<Utf8> id,
-  Pointer<Utf8> title,
-  Pointer<Utf8> content,
-  Pointer<Utf8> tags,
-  Pointer<Utf8> filePath,
-);
-typedef IndexDart = int Function(
-  int handle,
-  Pointer<Utf8> id,
-  Pointer<Utf8> title,
-  Pointer<Utf8> content,
-  Pointer<Utf8> tags,
-  Pointer<Utf8> filePath,
-);
+typedef IndexNative =
+    Int32 Function(
+      Uint32 handle,
+      Pointer<Utf8> id,
+      Pointer<Utf8> title,
+      Pointer<Utf8> content,
+      Pointer<Utf8> tags,
+      Pointer<Utf8> filePath,
+    );
+typedef IndexDart =
+    int Function(
+      int handle,
+      Pointer<Utf8> id,
+      Pointer<Utf8> title,
+      Pointer<Utf8> content,
+      Pointer<Utf8> tags,
+      Pointer<Utf8> filePath,
+    );
 
-typedef SearchNative = Pointer<Utf8> Function(Uint32 handle, Pointer<Utf8> query, Uint32 topK);
-typedef SearchDart = Pointer<Utf8> Function(int handle, Pointer<Utf8> query, int topK);
+typedef SearchNative =
+    Pointer<Utf8> Function(Uint32 handle, Pointer<Utf8> query, Uint32 topK);
+typedef SearchDart =
+    Pointer<Utf8> Function(int handle, Pointer<Utf8> query, int topK);
 
 typedef RemoveNative = Int32 Function(Uint32 handle, Pointer<Utf8> noteId);
 typedef RemoveDart = int Function(int handle, Pointer<Utf8> noteId);
@@ -81,12 +85,12 @@ class TantivyBridge {
     required RemoveDart remove,
     required CloseDart close,
     required FreeStringDart freeString,
-  })  : _handle = handle,
-        _index = index,
-        _search = search,
-        _remove = remove,
-        _close = close,
-        _freeString = freeString;
+  }) : _handle = handle,
+       _index = index,
+       _search = search,
+       _remove = remove,
+       _close = close,
+       _freeString = freeString;
 
   static bool get isAvailable {
     if (_triedLoad) return _available;
@@ -103,18 +107,25 @@ class TantivyBridge {
   static Future<TantivyBridge?> initialize(String indexPath) async {
     if (!isAvailable) return null;
     try {
-      final initFn = _nativeLibrary
-          .lookupFunction<InitNative, InitDart>('tantivy_bridge_init');
-      final indexFn = _nativeLibrary
-          .lookupFunction<IndexNative, IndexDart>('tantivy_bridge_index');
-      final searchFn = _nativeLibrary
-          .lookupFunction<SearchNative, SearchDart>('tantivy_bridge_search');
-      final removeFn = _nativeLibrary
-          .lookupFunction<RemoveNative, RemoveDart>('tantivy_bridge_remove');
-      final closeFn = _nativeLibrary
-          .lookupFunction<CloseNative, CloseDart>('tantivy_bridge_close');
-      final freeStr = _nativeLibrary.lookupFunction<FreeStringNative,
-          FreeStringDart>('tantivy_bridge_free_string');
+      final initFn = _nativeLibrary.lookupFunction<InitNative, InitDart>(
+        'tantivy_bridge_init',
+      );
+      final indexFn = _nativeLibrary.lookupFunction<IndexNative, IndexDart>(
+        'tantivy_bridge_index',
+      );
+      final searchFn = _nativeLibrary.lookupFunction<SearchNative, SearchDart>(
+        'tantivy_bridge_search',
+      );
+      final removeFn = _nativeLibrary.lookupFunction<RemoveNative, RemoveDart>(
+        'tantivy_bridge_remove',
+      );
+      final closeFn = _nativeLibrary.lookupFunction<CloseNative, CloseDart>(
+        'tantivy_bridge_close',
+      );
+      final freeStr = _nativeLibrary
+          .lookupFunction<FreeStringNative, FreeStringDart>(
+            'tantivy_bridge_free_string',
+          );
 
       final pathPtr = indexPath.toNativeUtf8();
       final handle = initFn(pathPtr);

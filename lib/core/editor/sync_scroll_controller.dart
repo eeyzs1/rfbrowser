@@ -32,7 +32,10 @@ class SyncScrollController {
     previewController.removeListener(_onPreviewScroll);
   }
 
-  void updateHeadingPositions(List<int> headingLineNumbers, List<double> previewHeadingOffsets) {
+  void updateHeadingPositions(
+    List<int> headingLineNumbers,
+    List<double> previewHeadingOffsets,
+  ) {
     _headingLineNumbers = headingLineNumbers;
   }
 
@@ -71,9 +74,7 @@ class SyncScrollController {
       final previewMax = previewController.position.maxScrollExtent;
       final targetOffset = ratio * previewMax;
 
-      previewController.jumpTo(
-        targetOffset.clamp(0, previewMax),
-      );
+      previewController.jumpTo(targetOffset.clamp(0, previewMax));
     } finally {
       _syncing = false;
     }
@@ -93,9 +94,7 @@ class SyncScrollController {
       final editorMax = editorController.position.maxScrollExtent;
       final targetOffset = ratio * editorMax;
 
-      editorController.jumpTo(
-        targetOffset.clamp(0, editorMax),
-      );
+      editorController.jumpTo(targetOffset.clamp(0, editorMax));
     } finally {
       _syncing = false;
     }

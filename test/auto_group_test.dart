@@ -26,7 +26,14 @@ class AutoGroupEngine {
     }
 
     final groups = <ProposedGroup>[];
-    final groupColors = [0xFF2196F3, 0xFF4CAF50, 0xFFFF9800, 0xFF9C27B0, 0xFFF44336, 0xFF00BCD4];
+    final groupColors = [
+      0xFF2196F3,
+      0xFF4CAF50,
+      0xFFFF9800,
+      0xFF9C27B0,
+      0xFFF44336,
+      0xFF00BCD4,
+    ];
     var colorIdx = 0;
 
     for (final entry in domainGroups.entries) {
@@ -92,11 +99,15 @@ void main() {
       final proposal = AutoGroupEngine.generateProposal(tabs);
       expect(proposal.groups.length, greaterThanOrEqualTo(2));
 
-      final githubGroup = proposal.groups.where((g) => g.name == 'github.com').firstOrNull;
+      final githubGroup = proposal.groups
+          .where((g) => g.name == 'github.com')
+          .firstOrNull;
       expect(githubGroup, isNotNull);
       expect(githubGroup!.tabIds.length, 2);
 
-      final newsGroup = proposal.groups.where((g) => g.name == 'site.com').firstOrNull;
+      final newsGroup = proposal.groups
+          .where((g) => g.name == 'site.com')
+          .firstOrNull;
       expect(newsGroup, isNotNull);
       expect(newsGroup!.tabIds.length, 3);
     });

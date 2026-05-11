@@ -21,7 +21,12 @@ class HighlightRange {
   final HighlightType type;
   final String? language;
 
-  HighlightRange({required this.start, required this.end, required this.type, this.language});
+  HighlightRange({
+    required this.start,
+    required this.end,
+    required this.type,
+    this.language,
+  });
 
   TextStyle style(ThemeData theme) {
     switch (type) {
@@ -37,7 +42,10 @@ class HighlightRange {
           color: theme.colorScheme.onSurface,
         );
       case HighlightType.italic:
-        return TextStyle(fontStyle: FontStyle.italic, color: theme.colorScheme.onSurface);
+        return TextStyle(
+          fontStyle: FontStyle.italic,
+          color: theme.colorScheme.onSurface,
+        );
       case HighlightType.code:
         return TextStyle(
           fontFamily: 'monospace',
@@ -67,10 +75,7 @@ class HighlightRange {
       case HighlightType.list:
         return TextStyle(color: theme.colorScheme.primary);
       case HighlightType.blockquote:
-        return TextStyle(
-          color: theme.hintColor,
-          fontStyle: FontStyle.italic,
-        );
+        return TextStyle(color: theme.hintColor, fontStyle: FontStyle.italic);
       case HighlightType.tag:
         return TextStyle(
           color: theme.colorScheme.tertiary,
@@ -96,106 +101,132 @@ class MarkdownHighlighter {
   static final _embedRegex = RegExp(r'!\[\[([^\]]+)\]\]');
   static final _listRegex = RegExp(r'^[\s]*[-*+]\s+', multiLine: true);
   static final _blockquoteRegex = RegExp(r'^>\s+.+$', multiLine: true);
-  static final _tagRegex = RegExp(r'(?:^|\s)#[a-zA-Z\u4e00-\u9fff][\w\u4e00-\u9fff-]*');
-  static final _contextRefRegex = RegExp(r'@(note|web|file|agent|clip)\[([^\]]+)\]');
+  static final _tagRegex = RegExp(
+    r'(?:^|\s)#[a-zA-Z\u4e00-\u9fff][\w\u4e00-\u9fff-]*',
+  );
+  static final _contextRefRegex = RegExp(
+    r'@(note|web|file|agent|clip)\[([^\]]+)\]',
+  );
 
   List<HighlightRange> highlight(String text) {
     final ranges = <HighlightRange>[];
 
     for (final match in _embedRegex.allMatches(text)) {
-      ranges.add(HighlightRange(
-        start: match.start,
-        end: match.end,
-        type: HighlightType.embed,
-      ));
+      ranges.add(
+        HighlightRange(
+          start: match.start,
+          end: match.end,
+          type: HighlightType.embed,
+        ),
+      );
     }
 
     for (final match in _wikilinkRegex.allMatches(text)) {
       if (!ranges.any((r) => r.start <= match.start && r.end >= match.end)) {
-        ranges.add(HighlightRange(
-          start: match.start,
-          end: match.end,
-          type: HighlightType.wikilink,
-        ));
+        ranges.add(
+          HighlightRange(
+            start: match.start,
+            end: match.end,
+            type: HighlightType.wikilink,
+          ),
+        );
       }
     }
 
     for (final match in _headingRegex.allMatches(text)) {
-      ranges.add(HighlightRange(
-        start: match.start,
-        end: match.end,
-        type: HighlightType.heading,
-      ));
+      ranges.add(
+        HighlightRange(
+          start: match.start,
+          end: match.end,
+          type: HighlightType.heading,
+        ),
+      );
     }
 
     for (final match in _boldRegex.allMatches(text)) {
-      ranges.add(HighlightRange(
-        start: match.start,
-        end: match.end,
-        type: HighlightType.bold,
-      ));
+      ranges.add(
+        HighlightRange(
+          start: match.start,
+          end: match.end,
+          type: HighlightType.bold,
+        ),
+      );
     }
 
     for (final match in _codeBlockRegex.allMatches(text)) {
       final blockText = match.group(0) ?? '';
       final langMatch = _codeBlockLangRegex.firstMatch(blockText);
       final language = langMatch?.group(1);
-      ranges.add(HighlightRange(
-        start: match.start,
-        end: match.end,
-        type: HighlightType.codeBlock,
-        language: language,
-      ));
+      ranges.add(
+        HighlightRange(
+          start: match.start,
+          end: match.end,
+          type: HighlightType.codeBlock,
+          language: language,
+        ),
+      );
     }
 
     for (final match in _inlineCodeRegex.allMatches(text)) {
       if (!ranges.any((r) => r.start <= match.start && r.end >= match.end)) {
-        ranges.add(HighlightRange(
-          start: match.start,
-          end: match.end,
-          type: HighlightType.code,
-        ));
+        ranges.add(
+          HighlightRange(
+            start: match.start,
+            end: match.end,
+            type: HighlightType.code,
+          ),
+        );
       }
     }
 
     for (final match in _linkRegex.allMatches(text)) {
-      ranges.add(HighlightRange(
-        start: match.start,
-        end: match.end,
-        type: HighlightType.link,
-      ));
+      ranges.add(
+        HighlightRange(
+          start: match.start,
+          end: match.end,
+          type: HighlightType.link,
+        ),
+      );
     }
 
     for (final match in _listRegex.allMatches(text)) {
-      ranges.add(HighlightRange(
-        start: match.start,
-        end: match.end,
-        type: HighlightType.list,
-      ));
+      ranges.add(
+        HighlightRange(
+          start: match.start,
+          end: match.end,
+          type: HighlightType.list,
+        ),
+      );
     }
 
     for (final match in _blockquoteRegex.allMatches(text)) {
-      ranges.add(HighlightRange(
-        start: match.start,
-        end: match.end,
-        type: HighlightType.blockquote,
-      ));
+      ranges.add(
+        HighlightRange(
+          start: match.start,
+          end: match.end,
+          type: HighlightType.blockquote,
+        ),
+      );
     }
 
     for (final match in _tagRegex.allMatches(text)) {
-      ranges.add(HighlightRange(
-        start: match.start,
-        end: match.end,
-        type: HighlightType.tag,
-      ));
+      ranges.add(
+        HighlightRange(
+          start: match.start,
+          end: match.end,
+          type: HighlightType.tag,
+        ),
+      );
     }
 
     for (final match in _contextRefRegex.allMatches(text)) {
-      ranges.add(HighlightRange(
-        start: match.start,
-        end: match.end,
-        type: HighlightType.contextRef,
-      ));
+      ranges.add(
+        HighlightRange(
+          start: match.start,
+          end: match.end,
+          type: HighlightType.contextRef,
+        ),
+      );
     }
 
     return ranges;

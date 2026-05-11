@@ -21,7 +21,12 @@ const _themePresets = [
   _PresetColor('amber', 'Amber', Icons.wb_sunny, Color(0xFFF59E0B)),
   _PresetColor('indigo', 'Indigo', Icons.nights_stay, Color(0xFF6366F1)),
   _PresetColor('teal', 'Teal', Icons.water_drop, Color(0xFF14B8A6)),
-  _PresetColor('coral', 'Coral', Icons.local_fire_department, Color(0xFFFF6B6B)),
+  _PresetColor(
+    'coral',
+    'Coral',
+    Icons.local_fire_department,
+    Color(0xFFFF6B6B),
+  ),
   _PresetColor('mint', 'Mint', Icons.local_florist, Color(0xFF2DD4BF)),
   _PresetColor('slate', 'Slate', Icons.invert_colors_on, Color(0xFF64748B)),
 ];
@@ -66,7 +71,11 @@ class ThemeSettingsSection extends ConsumerWidget {
       children: [
         const SizedBox(height: 8),
         _buildColorSection(
-          context, ref, settings, theme, l,
+          context,
+          ref,
+          settings,
+          theme,
+          l,
           title: l.themeColor,
           presets: _themePresets,
           currentVal: settings.accentColorValue,
@@ -75,16 +84,25 @@ class ThemeSettingsSection extends ConsumerWidget {
         ),
         const Divider(height: 24),
         _buildColorSection(
-          context, ref, settings, theme, l,
+          context,
+          ref,
+          settings,
+          theme,
+          l,
           title: l.backgroundColor,
           presets: _bgPresets,
           currentVal: settings.scaffoldBgColorValue,
-          setter: (c) => ref.read(settingsProvider.notifier).setScaffoldBgColor(c),
+          setter: (c) =>
+              ref.read(settingsProvider.notifier).setScaffoldBgColor(c),
           isAccent: false,
         ),
         const Divider(height: 24),
         _buildColorSection(
-          context, ref, settings, theme, l,
+          context,
+          ref,
+          settings,
+          theme,
+          l,
           title: l.surfaceColor,
           presets: _surfacePresets,
           currentVal: settings.surfaceColorValue,
@@ -117,80 +135,105 @@ class ThemeSettingsSection extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           child: Text(
             title,
-            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: LayoutBuilder(builder: (context, constraints) {
-            const itemSize = 56.0;
-            const gap = 6.0;
-            final cols = ((constraints.maxWidth + gap) / (itemSize + gap)).floor();
-            return Wrap(
-              alignment: WrapAlignment.start,
-              spacing: gap,
-              runSpacing: gap,
-              children: presets.map((preset) {
-                final isSelected = currentVal == preset.color.toARGB32();
-                return SizedBox(
-                  width: (constraints.maxWidth - (cols - 1) * gap) / cols,
-                  child: GestureDetector(
-                    onTap: () => setter(preset.color),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      height: itemSize,
-                      decoration: BoxDecoration(
-                        color: isAccent
-                            ? preset.color.withValues(alpha: 0.12)
-                            : preset.color,
-                        borderRadius: BorderRadius.circular(10),
-                        border: isSelected
-                            ? Border.all(color: isAccent ? preset.color : theme.colorScheme.primary, width: 2.5)
-                            : Border.all(color: isAccent ? Colors.transparent : theme.colorScheme.onSurface.withValues(alpha: 0.08), width: 1),
-                        boxShadow: isSelected ? [
-                          BoxShadow(
-                            color: (isAccent ? preset.color : theme.colorScheme.primary).withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ] : null,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            preset.icon,
-                            size: 16,
-                            color: isAccent
-                                ? preset.color
-                                : _contrastText(preset.color),
-                          ),
-                          const SizedBox(height: 2),
-                          Flexible(
-                            child: Text(
-                              preset.label,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                fontSize: 10,
-                                color: isAccent
-                                    ? preset.color
-                                    : _contrastText(preset.color),
-                                height: 1.2,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const itemSize = 56.0;
+              const gap = 6.0;
+              final cols = ((constraints.maxWidth + gap) / (itemSize + gap))
+                  .floor();
+              return Wrap(
+                alignment: WrapAlignment.start,
+                spacing: gap,
+                runSpacing: gap,
+                children: presets.map((preset) {
+                  final isSelected = currentVal == preset.color.toARGB32();
+                  return SizedBox(
+                    width: (constraints.maxWidth - (cols - 1) * gap) / cols,
+                    child: GestureDetector(
+                      onTap: () => setter(preset.color),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: itemSize,
+                        decoration: BoxDecoration(
+                          color: isAccent
+                              ? preset.color.withValues(alpha: 0.12)
+                              : preset.color,
+                          borderRadius: BorderRadius.circular(10),
+                          border: isSelected
+                              ? Border.all(
+                                  color: isAccent
+                                      ? preset.color
+                                      : theme.colorScheme.primary,
+                                  width: 2.5,
+                                )
+                              : Border.all(
+                                  color: isAccent
+                                      ? Colors.transparent
+                                      : theme.colorScheme.onSurface.withValues(
+                                          alpha: 0.08,
+                                        ),
+                                  width: 1,
+                                ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color:
+                                        (isAccent
+                                                ? preset.color
+                                                : theme.colorScheme.primary)
+                                            .withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              preset.icon,
+                              size: 16,
+                              color: isAccent
+                                  ? preset.color
+                                  : _contrastText(preset.color),
+                            ),
+                            const SizedBox(height: 2),
+                            Flexible(
+                              child: Text(
+                                preset.label,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  fontSize: 10,
+                                  color: isAccent
+                                      ? preset.color
+                                      : _contrastText(preset.color),
+                                  height: 1.2,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
-            );
-          }),
+                  );
+                }).toList(),
+              );
+            },
+          ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -227,7 +270,9 @@ class ThemeSettingsSection extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           child: Text(
             l.opacity,
-            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
         ListTile(

@@ -50,18 +50,21 @@ void main() {
       expect(json['isAuto'], isTrue);
     });
 
-    test('AC-M-5: old JSON without isAuto -> isAuto=false after deserialization', () {
-      final json = <String, dynamic>{
-        'id': 'old_conn',
-        'fromCardId': 'a',
-        'toCardId': 'b',
-        'fromSide': 3,
-        'toSide': 2,
-        'label': '',
-      };
-      final conn = CanvasConnection.fromJson(json);
-      expect(conn.isAuto, isFalse);
-    });
+    test(
+      'AC-M-5: old JSON without isAuto -> isAuto=false after deserialization',
+      () {
+        final json = <String, dynamic>{
+          'id': 'old_conn',
+          'fromCardId': 'a',
+          'toCardId': 'b',
+          'fromSide': 3,
+          'toSide': 2,
+          'label': '',
+        };
+        final conn = CanvasConnection.fromJson(json);
+        expect(conn.isAuto, isFalse);
+      },
+    );
   });
 
   group('CanvasSettings', () {
@@ -187,10 +190,7 @@ void main() {
     });
 
     test('old JSON without cardIds -> empty list', () {
-      final json = <String, dynamic>{
-        'id': 'g2',
-        'name': 'Empty',
-      };
+      final json = <String, dynamic>{'id': 'g2', 'name': 'Empty'};
       final restored = CanvasGroup.fromJson(json);
       expect(restored.cardIds, isEmpty);
       expect(restored.colorValue, equals(0xFFFFFFFF));
@@ -340,19 +340,29 @@ void main() {
       expect(restored.cards.first.title, equals('Test'));
       expect(restored.cards.first.noteId, equals('note-1'));
       expect(restored.cards.first.style?.borderRadius, equals(12.0));
-      expect(restored.cards.first.style?.borderStyle, equals(CardBorderStyle.dotted));
+      expect(
+        restored.cards.first.style?.borderStyle,
+        equals(CardBorderStyle.dotted),
+      );
       expect(restored.cards[1].type, equals(CanvasCardType.container));
       expect(restored.cards[1].childIds, equals(['c1']));
       expect(restored.connections.length, equals(1));
-      expect(restored.connections.first.style?.pathType, equals(ConnectionPath.straight));
-      expect(restored.connections.first.style?.arrowStyle, equals(ArrowStyle.diamond));
+      expect(
+        restored.connections.first.style?.pathType,
+        equals(ConnectionPath.straight),
+      );
+      expect(
+        restored.connections.first.style?.arrowStyle,
+        equals(ArrowStyle.diamond),
+      );
       expect(restored.groups.length, equals(1));
       expect(restored.groups.first.name, equals('Group 1'));
       expect(restored.settings.autoConnectionsEnabled, isFalse);
     });
 
     test('old JSON without groups -> groups is empty', () {
-      final json = '{"cards":[],"connections":[],"settings":{"autoConnectionsEnabled":true,"snapToGrid":true,"gridVisible":true,"lastModified":"2026-01-01T00:00:00.000"}}';
+      final json =
+          '{"cards":[],"connections":[],"settings":{"autoConnectionsEnabled":true,"snapToGrid":true,"gridVisible":true,"lastModified":"2026-01-01T00:00:00.000"}}';
       final data = CanvasData.fromJsonString(json);
       expect(data.groups, isEmpty);
       expect(data.selectedCardIds, isEmpty);
@@ -372,7 +382,10 @@ void main() {
 
     test('copyWith updates fields correctly', () {
       final state = CanvasSearchState(query: 'test');
-      final updated = state.copyWith(matchedCardIds: ['c1', 'c2'], activeIndex: 1);
+      final updated = state.copyWith(
+        matchedCardIds: ['c1', 'c2'],
+        activeIndex: 1,
+      );
       expect(updated.query, equals('test'));
       expect(updated.matchedCardIds, equals(['c1', 'c2']));
       expect(updated.activeIndex, equals(1));
@@ -442,7 +455,12 @@ void main() {
 
     test('copyWith updates fields correctly', () {
       const layer = CanvasLayer(id: 'l1', name: 'A', order: 0);
-      final updated = layer.copyWith(name: 'B', visible: false, locked: true, order: 3);
+      final updated = layer.copyWith(
+        name: 'B',
+        visible: false,
+        locked: true,
+        order: 3,
+      );
       expect(updated.name, equals('B'));
       expect(updated.visible, isFalse);
       expect(updated.locked, isTrue);
@@ -471,7 +489,11 @@ void main() {
     });
 
     test('copyWith clearLayerId sets layerId to null', () {
-      final card = CanvasCard(id: 'c1', type: CanvasCardType.note, layerId: 'l1');
+      final card = CanvasCard(
+        id: 'c1',
+        type: CanvasCardType.note,
+        layerId: 'l1',
+      );
       final cleared = card.copyWith(clearLayerId: true);
       expect(cleared.layerId, isNull);
     });
@@ -575,7 +597,8 @@ void main() {
     });
 
     test('old JSON without layers -> empty list', () {
-      final json = '{"cards":[],"connections":[],"settings":{"autoConnectionsEnabled":true,"snapToGrid":true,"gridVisible":true,"lastModified":"2026-01-01T00:00:00.000"}}';
+      final json =
+          '{"cards":[],"connections":[],"settings":{"autoConnectionsEnabled":true,"snapToGrid":true,"gridVisible":true,"lastModified":"2026-01-01T00:00:00.000"}}';
       final data = CanvasData.fromJsonString(json);
       expect(data.layers, isEmpty);
     });

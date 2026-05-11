@@ -19,11 +19,13 @@ class NoteContentSource extends ContentSource {
       return null;
     }
 
-    final note = notes.where(
-      (n) =>
-          n.title.toLowerCase() == ref.target.toLowerCase() ||
-          n.aliases.any((a) => a.toLowerCase() == ref.target.toLowerCase()),
-    ).firstOrNull;
+    final note = notes
+        .where(
+          (n) =>
+              n.title.toLowerCase() == ref.target.toLowerCase() ||
+              n.aliases.any((a) => a.toLowerCase() == ref.target.toLowerCase()),
+        )
+        .firstOrNull;
 
     if (note == null) {
       return ContextItem(
@@ -87,11 +89,7 @@ class WebContentSource extends ContentSource {
   final String? currentTitle;
   final String? currentContent;
 
-  WebContentSource({
-    this.currentUrl,
-    this.currentTitle,
-    this.currentContent,
-  });
+  WebContentSource({this.currentUrl, this.currentTitle, this.currentContent});
 
   @override
   Future<ContextItem?> resolve(ParsedReference ref) async {

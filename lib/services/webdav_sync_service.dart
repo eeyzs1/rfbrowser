@@ -59,7 +59,9 @@ class WebDAVSyncState {
 }
 
 class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
-  final Dio _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 30)));
+  final Dio _dio = Dio(
+    BaseOptions(connectTimeout: const Duration(seconds: 30)),
+  );
   final SyncStore _syncStore = SyncStore();
   final _secureStorage = const FlutterSecureStorage();
   Timer? _autoSyncTimer;
@@ -159,7 +161,9 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
 
       final hrefRegex = RegExp(r'<d:href>([^<]+)</d:href>');
       final etagRegex = RegExp(r'<d:getetag>([^<]*)</d:getetag>');
-      final modifiedRegex = RegExp(r'<d:getlastmodified>([^<]*)</d:getlastmodified>');
+      final modifiedRegex = RegExp(
+        r'<d:getlastmodified>([^<]*)</d:getlastmodified>',
+      );
 
       final hrefs = hrefRegex.allMatches(body).toList();
       final etags = etagRegex.allMatches(body).toList();
@@ -170,11 +174,13 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
         if (!href.endsWith('.md')) continue;
         final etag = i < etags.length ? etags[i].group(1) : null;
         final modified = i < modifieds.length ? modifieds[i].group(1) : null;
-        files.add(RemoteFileInfo(
-          href: href,
-          etag: etag,
-          lastModified: modified != null ? _parseHttpDate(modified) : null,
-        ));
+        files.add(
+          RemoteFileInfo(
+            href: href,
+            etag: etag,
+            lastModified: modified != null ? _parseHttpDate(modified) : null,
+          ),
+        );
       }
 
       return files;
@@ -192,7 +198,10 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
     try {
       final response = await _dio.get(
         '${state.serverUrl}$remotePath',
-        options: Options(headers: _authOptions.headers, responseType: ResponseType.plain),
+        options: Options(
+          headers: _authOptions.headers,
+          responseType: ResponseType.plain,
+        ),
       );
       return response.data?.toString();
     } catch (_) {
@@ -220,7 +229,10 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
 
     state = state.copyWith(
       status: SyncStatus.syncing,
-      progress: SyncProgress(totalFiles: remoteFiles.length, isUploading: false),
+      progress: SyncProgress(
+        totalFiles: remoteFiles.length,
+        isUploading: false,
+      ),
     );
 
     for (var i = 0; i < remoteFiles.length; i++) {
@@ -237,15 +249,17 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
         final localModified = await localFile.lastModified();
         final syncMeta = _syncStore.getMeta(relativePath);
         final wasSyncedBefore = syncMeta?.lastSynced != null;
-        final localChangedSinceSync = wasSyncedBefore &&
-            localModified.isAfter(syncMeta!.lastSynced!);
+        final localChangedSinceSync =
+            wasSyncedBefore && localModified.isAfter(syncMeta!.lastSynced!);
 
         if (localChangedSinceSync) {
-          conflicts.add(SyncConflict(
-            relativePath: relativePath,
-            localModified: localModified,
-            remoteModified: remote.lastModified,
-          ));
+          conflicts.add(
+            SyncConflict(
+              relativePath: relativePath,
+              localModified: localModified,
+              remoteModified: remote.lastModified,
+            ),
+          );
           continue;
         }
       }
@@ -253,11 +267,13 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
       final content = await downloadFile(relativePath);
       if (content != null) {
         await File(localPath).writeAsString(content);
-        await _syncStore.setMeta(SyncMeta(
-          relativePath: relativePath,
-          etag: remote.etag,
-          lastSynced: DateTime.now(),
-        ));
+        await _syncStore.setMeta(
+          SyncMeta(
+            relativePath: relativePath,
+            etag: remote.etag,
+            lastSynced: DateTime.now(),
+          ),
+        );
         downloaded++;
       }
 
@@ -293,7 +309,9 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
     final mdFiles = <File>[];
     await for (final entity in dir.list(recursive: true)) {
       if (entity is File && entity.path.endsWith('.md')) {
-        final relative = entity.path.replaceFirst(vaultPath, '').replaceAll('\\', '/');
+        final relative = entity.path
+            .replaceFirst(vaultPath, '')
+            .replaceAll('\\', '/');
         if (relative.contains('.rfbrowser')) continue;
         mdFiles.add(entity);
       }
@@ -309,7 +327,9 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
 
     for (var i = 0; i < mdFiles.length; i++) {
       final file = mdFiles[i];
-      final relative = file.path.replaceFirst(vaultPath, '').replaceAll('\\', '/');
+      final relative = file.path
+          .replaceFirst(vaultPath, '')
+          .replaceAll('\\', '/');
       final remotePath = '$remoteBasePath$relative';
 
       final lastSynced = _syncStore.getLastSynced(relative);
@@ -319,11 +339,13 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
 
       final content = await file.readAsString();
       await uploadFile(remotePath, content);
-      await _syncStore.setMeta(SyncMeta(
-        relativePath: relative,
-        lastSynced: DateTime.now(),
-        localModified: localModified,
-      ));
+      await _syncStore.setMeta(
+        SyncMeta(
+          relativePath: relative,
+          lastSynced: DateTime.now(),
+          localModified: localModified,
+        ),
+      );
       uploaded++;
 
       state = state.copyWith(
@@ -346,9 +368,9 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
     String? vaultPath,
     String? remoteBasePath,
   }) async {
-    final conflict = state.conflicts.where(
-      (c) => c.relativePath == relativePath,
-    ).firstOrNull;
+    final conflict = state.conflicts
+        .where((c) => c.relativePath == relativePath)
+        .firstOrNull;
     if (conflict == null) return;
 
     switch (resolution) {
@@ -386,10 +408,9 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState> {
         break;
     }
 
-    await _syncStore.setMeta(SyncMeta(
-      relativePath: relativePath,
-      lastSynced: DateTime.now(),
-    ));
+    await _syncStore.setMeta(
+      SyncMeta(relativePath: relativePath, lastSynced: DateTime.now()),
+    );
 
     final remaining = state.conflicts
         .where((c) => c.relativePath != relativePath)
@@ -434,9 +455,10 @@ class SyncResult {
   SyncResult({required this.downloaded, required this.conflicts});
 }
 
-final webdavSyncProvider = NotifierProvider<WebDAVSyncNotifier, WebDAVSyncState>(
-  WebDAVSyncNotifier.new,
-);
+final webdavSyncProvider =
+    NotifierProvider<WebDAVSyncNotifier, WebDAVSyncState>(
+      WebDAVSyncNotifier.new,
+    );
 
 String _extractFileName(String href) {
   final parts = href.split('/');

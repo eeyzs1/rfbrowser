@@ -66,11 +66,7 @@ class SearchNotifier extends Notifier<SearchState> {
       if (embedding.isNotEmpty) {
         final results = embeddingService.store.search(embedding, topK: 20);
         for (final r in results) {
-          semanticResults.add({
-            'id': r.id,
-            'noteId': r.id,
-            'score': r.score,
-          });
+          semanticResults.add({'id': r.id, 'noteId': r.id, 'score': r.score});
         }
       }
 

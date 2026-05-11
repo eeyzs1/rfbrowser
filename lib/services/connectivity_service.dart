@@ -21,19 +21,20 @@ class ConnectivityState {
     bool? isOnline,
     List<String>? syncQueue,
     bool? isSyncing,
-  }) =>
-      ConnectivityState(
-        isOnline: isOnline ?? this.isOnline,
-        syncQueue: syncQueue ?? this.syncQueue,
-        isSyncing: isSyncing ?? this.isSyncing,
-      );
+  }) => ConnectivityState(
+    isOnline: isOnline ?? this.isOnline,
+    syncQueue: syncQueue ?? this.syncQueue,
+    isSyncing: isSyncing ?? this.isSyncing,
+  );
 }
 
 class ConnectivityNotifier extends Notifier<ConnectivityState> {
-  final Dio _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 5),
-  ));
+  final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 5),
+    ),
+  );
   Timer? _monitorTimer;
   SyncExecutor? _syncExecutor;
 
@@ -108,9 +109,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityState> {
 
   void enqueueSync(String filePath) {
     if (state.syncQueue.contains(filePath)) return;
-    state = state.copyWith(
-      syncQueue: [...state.syncQueue, filePath],
-    );
+    state = state.copyWith(syncQueue: [...state.syncQueue, filePath]);
   }
 
   Future<void> flushSyncQueue() async {
@@ -132,9 +131,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityState> {
     final aiConfig = ref.read(aiConfigProvider);
     final providers = aiConfig.providers;
     try {
-      return providers.firstWhere(
-        (p) => p.protocol == ApiProtocol.ollama,
-      );
+      return providers.firstWhere((p) => p.protocol == ApiProtocol.ollama);
     } catch (_) {
       return null;
     }
@@ -150,13 +147,15 @@ class ConnectivityNotifier extends Notifier<ConnectivityState> {
 
 final connectivityProvider =
     NotifierProvider<ConnectivityNotifier, ConnectivityState>(
-  ConnectivityNotifier.new,
-);
+      ConnectivityNotifier.new,
+    );
 
 class OfflineNoModelError implements Exception {
   final String message;
 
-  OfflineNoModelError([this.message = 'No local model configured for offline use']);
+  OfflineNoModelError([
+    this.message = 'No local model configured for offline use',
+  ]);
 
   @override
   String toString() => 'OfflineNoModelError: $message';

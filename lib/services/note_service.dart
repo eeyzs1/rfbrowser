@@ -97,10 +97,7 @@ class NoteNotifier extends Notifier<NoteState> {
     state = state.copyWith(notes: notes);
   }
 
-  Future<Note> createNote({
-    required String title,
-    String content = '',
-  }) async {
+  Future<Note> createNote({required String title, String content = ''}) async {
     final vault = ref.read(vaultProvider).currentVault;
     if (vault == null) throw StateError('No vault open');
 
@@ -160,7 +157,9 @@ class NoteNotifier extends Notifier<NoteState> {
 
     final newFileName = _sanitizeFileName(newName);
     final dirName = p.dirname(oldPath);
-    final newPath = dirName == '.' ? '$newFileName.md' : p.join(dirName, '$newFileName.md');
+    final newPath = dirName == '.'
+        ? '$newFileName.md'
+        : p.join(dirName, '$newFileName.md');
 
     final oldFile = File(p.join(vault.path, oldPath));
     final newFile = File(p.join(vault.path, newPath));
@@ -228,7 +227,9 @@ class NoteNotifier extends Notifier<NoteState> {
     final now = DateTime.now();
     final cutoff = now.subtract(Duration(days: days));
     return state.notes
-        .where((n) => n.tags.contains('daily-note') && n.created.isAfter(cutoff))
+        .where(
+          (n) => n.tags.contains('daily-note') && n.created.isAfter(cutoff),
+        )
         .toList()
       ..sort((a, b) => b.created.compareTo(a.created));
   }
@@ -298,7 +299,11 @@ class NoteNotifier extends Notifier<NoteState> {
     return note;
   }
 
-  Future<String?> _saveRawHtml(String vaultPath, String htmlContent, String fileName) async {
+  Future<String?> _saveRawHtml(
+    String vaultPath,
+    String htmlContent,
+    String fileName,
+  ) async {
     if (htmlContent.isEmpty) return null;
     try {
       final dateStr = DateTime.now().toIso8601String().substring(0, 10);
@@ -316,7 +321,11 @@ class NoteNotifier extends Notifier<NoteState> {
     }
   }
 
-  Future<String?> _saveScreenshot(String vaultPath, Uint8List screenshotData, String fileName) async {
+  Future<String?> _saveScreenshot(
+    String vaultPath,
+    Uint8List screenshotData,
+    String fileName,
+  ) async {
     try {
       final dateStr = DateTime.now().toIso8601String().substring(0, 10);
       final attachDir = Directory(p.join(vaultPath, 'attachments'));
@@ -389,9 +398,15 @@ class NoteNotifier extends Notifier<NoteState> {
 
     if (tabId != null) {
       try {
-        final screenshotData = await ref.read(browserProvider.notifier).takeScreenshot(tabId);
+        final screenshotData = await ref
+            .read(browserProvider.notifier)
+            .takeScreenshot(tabId);
         if (screenshotData != null) {
-          screenshotRelPath = await _saveScreenshot(vault.path, screenshotData, fileName);
+          screenshotRelPath = await _saveScreenshot(
+            vault.path,
+            screenshotData,
+            fileName,
+          );
         }
       } catch (e) {
         debugPrint('NoteService: screenshot capture failed: $e');
@@ -516,7 +531,8 @@ class NoteNotifier extends Notifier<NoteState> {
         id: 'summarize-page',
         name: 'Summarize Page',
         description: 'Summarize the current web page',
-        prompt: 'Please summarize the following web page content:\n\n@web[current]',
+        prompt:
+            'Please summarize the following web page content:\n\n@web[current]',
         isBuiltin: true,
       ),
       Skill(
@@ -554,7 +570,8 @@ class NoteNotifier extends Notifier<NoteState> {
         id: 'generate-outline',
         name: 'Generate Outline',
         description: 'Generate an outline for a topic',
-        prompt: 'Generate a detailed outline for the following topic:\n\n{{topic}}',
+        prompt:
+            'Generate a detailed outline for the following topic:\n\n{{topic}}',
         params: {
           'topic': SkillParam(
             name: 'topic',

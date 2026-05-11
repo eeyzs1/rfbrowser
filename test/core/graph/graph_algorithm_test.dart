@@ -21,40 +21,48 @@ void main() {
   group('shortestPath', () {
     test('AC-2.1 finds path in simple chain A-B-C', () {
       final notes = _notes(3);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-        _link(notes[1].id, notes[2].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [
+          _link(notes[0].id, notes[1].id),
+          _link(notes[1].id, notes[2].id),
+        ],
+      );
       final path = alg.shortestPath(notes[0].id, notes[2].id);
       expect(path, [notes[0].id, notes[1].id, notes[2].id]);
     });
 
     test('AC-2.2 returns empty list when disconnected', () {
       final notes = _notes(2);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [_link(notes[0].id, notes[1].id)],
+      );
       final path = alg.shortestPath(notes[0].id, 'Z');
       expect(path, isEmpty);
     });
 
     test('AC-2.3 same node returns single-element path', () {
       final notes = _notes(2);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [_link(notes[0].id, notes[1].id)],
+      );
       final path = alg.shortestPath(notes[0].id, notes[0].id);
       expect(path, [notes[0].id]);
     });
 
     test('finds shortest path in diamond graph', () {
       final notes = _notes(4);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-        _link(notes[0].id, notes[2].id),
-        _link(notes[1].id, notes[3].id),
-        _link(notes[2].id, notes[3].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [
+          _link(notes[0].id, notes[1].id),
+          _link(notes[0].id, notes[2].id),
+          _link(notes[1].id, notes[3].id),
+          _link(notes[2].id, notes[3].id),
+        ],
+      );
       final path = alg.shortestPath(notes[0].id, notes[3].id);
       expect(path.length, 3);
       expect(path.first, notes[0].id);
@@ -63,9 +71,10 @@ void main() {
 
     test('handles non-existent node gracefully', () {
       final notes = _notes(2);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [_link(notes[0].id, notes[1].id)],
+      );
       final path = alg.shortestPath('nonexistent', notes[0].id);
       expect(path, isEmpty);
     });
@@ -74,19 +83,23 @@ void main() {
   group('pageRank', () {
     test('AC-2.4 directed A->B: B has higher rank than A', () {
       final notes = _notes(2);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [_link(notes[0].id, notes[1].id)],
+      );
       final ranks = alg.pageRank(iterations: 200, damping: 0.85);
       expect(ranks[notes[1].id]!, greaterThan(ranks[notes[0].id]!));
     });
 
     test('AC-2.5 values sum to 1.0', () {
       final notes = _notes(2);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-        _link(notes[1].id, notes[0].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [
+          _link(notes[0].id, notes[1].id),
+          _link(notes[1].id, notes[0].id),
+        ],
+      );
       final ranks = alg.pageRank();
       final sum = ranks.values.fold(0.0, (a, b) => a + b);
       expect(sum, closeTo(1.0, 0.01));
@@ -111,10 +124,13 @@ void main() {
   group('connectedComponents', () {
     test('fully connected graph returns one component', () {
       final notes = _notes(3);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-        _link(notes[1].id, notes[2].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [
+          _link(notes[0].id, notes[1].id),
+          _link(notes[1].id, notes[2].id),
+        ],
+      );
       final result = alg.connectedComponents();
       expect(result.componentCount, 1);
       expect(result.maxComponentSize, 3);
@@ -122,10 +138,13 @@ void main() {
 
     test('disconnected graph returns multiple components', () {
       final notes = _notes(4);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-        _link(notes[2].id, notes[3].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [
+          _link(notes[0].id, notes[1].id),
+          _link(notes[2].id, notes[3].id),
+        ],
+      );
       final result = alg.connectedComponents();
       expect(result.componentCount, 2);
       expect(result.maxComponentSize, 2);
@@ -135,10 +154,13 @@ void main() {
   group('getBridgeNodes', () {
     test('identifies bridge node in chain A-B-C', () {
       final notes = _notes(3);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-        _link(notes[1].id, notes[2].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [
+          _link(notes[0].id, notes[1].id),
+          _link(notes[1].id, notes[2].id),
+        ],
+      );
       final bridges = alg.getBridgeNodes();
       final bridgeIds = bridges.map((b) => b.noteId).toSet();
 
@@ -149,20 +171,24 @@ void main() {
 
     test('cycle graph has no bridges', () {
       final notes = _notes(3);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-        _link(notes[1].id, notes[2].id),
-        _link(notes[2].id, notes[0].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [
+          _link(notes[0].id, notes[1].id),
+          _link(notes[1].id, notes[2].id),
+          _link(notes[2].id, notes[0].id),
+        ],
+      );
       final bridges = alg.getBridgeNodes();
       expect(bridges, isEmpty);
     });
 
     test('bridge nodes contain note titles when available', () {
       final notes = _notes(2);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [_link(notes[0].id, notes[1].id)],
+      );
       final bridges = alg.getBridgeNodes();
       expect(bridges.length, 2);
       for (final b in bridges) {
@@ -174,10 +200,13 @@ void main() {
   group('getGraphStats', () {
     test('AC-2.6 stats for 3 nodes, 2 edges', () {
       final notes = _notes(3);
-      final alg = GraphAlgorithm(allNotes: notes, allLinks: [
-        _link(notes[0].id, notes[1].id),
-        _link(notes[1].id, notes[2].id),
-      ]);
+      final alg = GraphAlgorithm(
+        allNotes: notes,
+        allLinks: [
+          _link(notes[0].id, notes[1].id),
+          _link(notes[1].id, notes[2].id),
+        ],
+      );
       final stats = alg.getGraphStats();
       expect(stats.totalNodes, 3);
       expect(stats.totalEdges, 2);

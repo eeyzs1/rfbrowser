@@ -38,7 +38,10 @@ void main() {
       hnsw.insert(
         'doc-1',
         _makeEmbedding('test document one'),
-        metadata: {'title': 'Document One', 'tags': ['test']},
+        metadata: {
+          'title': 'Document One',
+          'tags': ['test'],
+        },
       );
 
       final results = hnsw.search(_makeEmbedding('test'), k: 1, ef: 50);

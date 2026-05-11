@@ -9,7 +9,11 @@ Future<Map<String, dynamic>> _testApiHandler(
     case 'knowledge.getNote':
       return {'id': args['id'], 'title': 'Test Note', 'content': 'Hello world'};
     case 'knowledge.search':
-      return {'results': [{'id': '1', 'title': 'Result'}]};
+      return {
+        'results': [
+          {'id': '1', 'title': 'Result'},
+        ],
+      };
     case 'browser.getCurrentUrl':
       return {'url': 'https://example.com'};
     case 'browser.extractText':
@@ -39,73 +43,86 @@ void main() {
       await sandbox.stop();
     });
 
-    test('AC-P4-1-2: plugin Isolate error triggers onError callback, main app survives', () async {
-      final manifest = PluginManifest(
-        id: 'crash-plugin',
-        name: 'Crash Plugin',
-        permissions: [Permission.knowledgeRead],
-      );
-      final sandbox = Sandbox(
-        pluginId: manifest.id,
-        manifest: manifest,
-        apiHandler: _testApiHandler,
-      );
-      await sandbox.start();
-      expect(sandbox.isRunning, true);
+    test(
+      'AC-P4-1-2: plugin Isolate error triggers onError callback, main app survives',
+      () async {
+        final manifest = PluginManifest(
+          id: 'crash-plugin',
+          name: 'Crash Plugin',
+          permissions: [Permission.knowledgeRead],
+        );
+        final sandbox = Sandbox(
+          pluginId: manifest.id,
+          manifest: manifest,
+          apiHandler: _testApiHandler,
+        );
+        await sandbox.start();
+        expect(sandbox.isRunning, true);
 
-      final errorFuture = sandbox.onError.first;
+        final errorFuture = sandbox.onError.first;
 
-      sandbox.simulateCrashForTest();
+        sandbox.simulateCrashForTest();
 
-      final error = await errorFuture.timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => 'timeout',
-      );
-      expect(error, isNot(equals('timeout')));
-    });
+        final error = await errorFuture.timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => 'timeout',
+        );
+        expect(error, isNot(equals('timeout')));
+      },
+    );
 
-    test('AC-P4-1-3: callApi without permission throws PermissionDeniedError', () async {
-      final manifest = PluginManifest(
-        id: 'no-perm-plugin',
-        name: 'No Permission Plugin',
-        permissions: [],
-      );
-      final sandbox = Sandbox(
-        pluginId: manifest.id,
-        manifest: manifest,
-        apiHandler: _testApiHandler,
-      );
-      await sandbox.start();
+    test(
+      'AC-P4-1-3: callApi without permission throws PermissionDeniedError',
+      () async {
+        final manifest = PluginManifest(
+          id: 'no-perm-plugin',
+          name: 'No Permission Plugin',
+          permissions: [],
+        );
+        final sandbox = Sandbox(
+          pluginId: manifest.id,
+          manifest: manifest,
+          apiHandler: _testApiHandler,
+        );
+        await sandbox.start();
 
-      expect(
-        () => sandbox.callApi('knowledge.getNote', {}, requiredPermission: Permission.knowledgeRead),
-        throwsA(isA<PermissionDeniedError>()),
-      );
-      await sandbox.stop();
-    });
+        expect(
+          () => sandbox.callApi(
+            'knowledge.getNote',
+            {},
+            requiredPermission: Permission.knowledgeRead,
+          ),
+          throwsA(isA<PermissionDeniedError>()),
+        );
+        await sandbox.stop();
+      },
+    );
 
-    test('AC-P4-1-4: callApi with permission succeeds and returns result', () async {
-      final manifest = PluginManifest(
-        id: 'perm-plugin',
-        name: 'Permission Plugin',
-        permissions: [Permission.knowledgeRead],
-      );
-      final sandbox = Sandbox(
-        pluginId: manifest.id,
-        manifest: manifest,
-        apiHandler: _testApiHandler,
-      );
-      await sandbox.start();
+    test(
+      'AC-P4-1-4: callApi with permission succeeds and returns result',
+      () async {
+        final manifest = PluginManifest(
+          id: 'perm-plugin',
+          name: 'Permission Plugin',
+          permissions: [Permission.knowledgeRead],
+        );
+        final sandbox = Sandbox(
+          pluginId: manifest.id,
+          manifest: manifest,
+          apiHandler: _testApiHandler,
+        );
+        await sandbox.start();
 
-      final result = await sandbox.callApi<Map<String, dynamic>>(
-        'knowledge.getNote',
-        {'id': 'note-1'},
-        requiredPermission: Permission.knowledgeRead,
-      );
-      expect(result, isNotNull);
-      expect(result!['title'], 'Test Note');
-      await sandbox.stop();
-    });
+        final result = await sandbox.callApi<Map<String, dynamic>>(
+          'knowledge.getNote',
+          {'id': 'note-1'},
+          requiredPermission: Permission.knowledgeRead,
+        );
+        expect(result, isNotNull);
+        expect(result!['title'], 'Test Note');
+        await sandbox.stop();
+      },
+    );
 
     test('AC-P4-1-8: stop sets isRunning to false and kills Isolate', () async {
       final manifest = PluginManifest(id: 'stop-test', name: 'Stop Test');
@@ -133,7 +150,11 @@ void main() {
       );
 
       expect(
-        () => sandbox.callApi('test', {}, requiredPermission: Permission.knowledgeRead),
+        () => sandbox.callApi(
+          'test',
+          {},
+          requiredPermission: Permission.knowledgeRead,
+        ),
         throwsA(isA<StateError>()),
       );
     });
@@ -161,10 +182,10 @@ void main() {
         permissions: [Permission.knowledgeRead],
       );
 
-      final missing = checker.missingPermissions(
-        manifest,
-        [Permission.knowledgeRead, Permission.knowledgeWrite],
-      );
+      final missing = checker.missingPermissions(manifest, [
+        Permission.knowledgeRead,
+        Permission.knowledgeWrite,
+      ]);
       expect(missing.length, 1);
       expect(missing.first, Permission.knowledgeWrite);
     });
@@ -199,7 +220,11 @@ void main() {
       final manifest = PluginManifest(id: 'cmd-plugin', name: 'Cmd Plugin');
       await host.enablePlugin(manifest);
 
-      final cmd = PluginCommand(id: 'cmd1', label: 'Run Test', pluginId: 'cmd-plugin');
+      final cmd = PluginCommand(
+        id: 'cmd1',
+        label: 'Run Test',
+        pluginId: 'cmd-plugin',
+      );
       host.registerCommand(cmd);
 
       final commands = host.getPluginCommands('cmd-plugin');
@@ -214,31 +239,38 @@ void main() {
       await host.enablePlugin(m1);
       await host.enablePlugin(m2);
 
-      host.registerCommand(PluginCommand(id: 'c1', label: 'C1', pluginId: 'p1'));
-      host.registerCommand(PluginCommand(id: 'c2', label: 'C2', pluginId: 'p2'));
+      host.registerCommand(
+        PluginCommand(id: 'c1', label: 'C1', pluginId: 'p1'),
+      );
+      host.registerCommand(
+        PluginCommand(id: 'c2', label: 'C2', pluginId: 'p2'),
+      );
 
       final all = host.getAllCommands();
       expect(all.length, 2);
     });
 
-    test('AC-P4-1-7: crash recovery restarts sandbox within 3 seconds', () async {
-      final host = _PurePluginHost();
-      final manifest = PluginManifest(
-        id: 'crash-recover',
-        name: 'Crash Recover',
-        permissions: [Permission.knowledgeRead],
-      );
-      await host.enablePlugin(manifest);
-      final sandbox = host.getSandbox('crash-recover')!;
-      expect(sandbox.isRunning, true);
+    test(
+      'AC-P4-1-7: crash recovery restarts sandbox within 3 seconds',
+      () async {
+        final host = _PurePluginHost();
+        final manifest = PluginManifest(
+          id: 'crash-recover',
+          name: 'Crash Recover',
+          permissions: [Permission.knowledgeRead],
+        );
+        await host.enablePlugin(manifest);
+        final sandbox = host.getSandbox('crash-recover')!;
+        expect(sandbox.isRunning, true);
 
-      sandbox.simulateCrashForTest();
-      expect(sandbox.isRunning, false);
+        sandbox.simulateCrashForTest();
+        expect(sandbox.isRunning, false);
 
-      await Future.delayed(const Duration(seconds: 4));
-      expect(sandbox.isRunning, true);
-      expect(sandbox.crashCount, 1);
-    });
+        await Future.delayed(const Duration(seconds: 4));
+        expect(sandbox.isRunning, true);
+        expect(sandbox.crashCount, 1);
+      },
+    );
   });
 
   group('PluginManifest', () {

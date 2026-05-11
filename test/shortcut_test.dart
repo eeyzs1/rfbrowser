@@ -26,10 +26,7 @@ void main() {
 
     test('re-register same action with same shortcut succeeds', () {
       service.register('new_note', 'Ctrl+N');
-      expect(
-        () => service.register('new_note', 'Ctrl+N'),
-        returnsNormally,
-      );
+      expect(() => service.register('new_note', 'Ctrl+N'), returnsNormally);
     });
 
     test('AC-P5-1-3: resetToDefaults restores default bindings', () {
@@ -94,8 +91,11 @@ void main() {
     test('AC-K-2: Ctrl+Shift+C does not conflict with existing shortcuts', () {
       for (final entry in service.defaults.entries) {
         if (entry.key == 'toggle_canvas') continue;
-        expect(entry.value, isNot(equals('Ctrl+Shift+C')),
-            reason: 'toggle_canvas conflicts with ${entry.key}');
+        expect(
+          entry.value,
+          isNot(equals('Ctrl+Shift+C')),
+          reason: 'toggle_canvas conflicts with ${entry.key}',
+        );
       }
     });
 

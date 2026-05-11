@@ -37,7 +37,8 @@ class TokenBudget {
           ContextItem(
             type: item.type,
             id: item.id,
-            content: '${item.content.substring(0, maxChars.clamp(0, item.content.length))}\n...(truncated)',
+            content:
+                '${item.content.substring(0, maxChars.clamp(0, item.content.length))}\n...(truncated)',
             summary: item.summary,
             metadata: {...item.metadata, 'truncated': true},
           ),

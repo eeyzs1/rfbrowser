@@ -29,10 +29,7 @@ class StatusBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Text(
-              'RFBrowser v0.3.0',
-            style: theme.textTheme.bodySmall,
-          ),
+          Text('RFBrowser v0.3.0', style: theme.textTheme.bodySmall),
           const SizedBox(width: 12),
           Container(
             width: 6,
@@ -42,8 +39,8 @@ class StatusBar extends ConsumerWidget {
               color: isOffline
                   ? const Color(0xFFEF4444)
                   : hasVault
-                      ? const Color(0xFF2DD4BF)
-                      : const Color(0xFFFBBF24),
+                  ? const Color(0xFF2DD4BF)
+                  : const Color(0xFFFBBF24),
             ),
           ),
           const SizedBox(width: 6),
@@ -80,10 +77,7 @@ class StatusBar extends ConsumerWidget {
             const SizedBox(width: 12),
             Icon(Icons.sync, size: 10, color: theme.hintColor),
             const SizedBox(width: 4),
-            Text(
-              'Git',
-              style: theme.textTheme.bodySmall,
-            ),
+            Text('Git', style: theme.textTheme.bodySmall),
           ],
         ],
       ),

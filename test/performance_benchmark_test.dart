@@ -20,10 +20,7 @@ void main() {
         store.insert('note-$i', embedding, metadata: {'title': 'Note $i'});
       }
 
-      final query = List.generate(
-        dimensions,
-        (_) => rng.nextDouble() * 2 - 1,
-      );
+      final query = List.generate(dimensions, (_) => rng.nextDouble() * 2 - 1);
 
       final sw = Stopwatch()..start();
       final results = store.search(query, topK: 20);
@@ -41,11 +38,9 @@ void main() {
       final edges = <LayoutEdge>[];
 
       for (var i = 0; i < 500; i++) {
-        nodes.add(LayoutNode(
-          id: 'n$i',
-          x: (i % 25) * 40.0,
-          y: (i ~/ 25) * 40.0,
-        ));
+        nodes.add(
+          LayoutNode(id: 'n$i', x: (i % 25) * 40.0, y: (i ~/ 25) * 40.0),
+        );
       }
 
       for (var i = 0; i < 500; i++) {

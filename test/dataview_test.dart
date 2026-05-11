@@ -24,7 +24,11 @@ void main() {
       expect(query.type, QueryType.table);
       expect(query.fields, ['title', 'created']);
       final tagFilters = query.filters.whereType<TagFilter>().toList();
-      expect(tagFilters.length, 1, reason: 'Expected 1 TagFilter but got filters: ${query.filters}');
+      expect(
+        tagFilters.length,
+        1,
+        reason: 'Expected 1 TagFilter but got filters: ${query.filters}',
+      );
       expect(tagFilters.first.tag, 'project');
       expect(query.sorts.length, 1);
       expect(query.sorts.first.field, 'created');
@@ -63,7 +67,9 @@ void main() {
     });
 
     test('parse multiple filters with tag and date', () {
-      final query = parser.parse('LIST WHERE tag = #project AND created >= 2025-01-01');
+      final query = parser.parse(
+        'LIST WHERE tag = #project AND created >= 2025-01-01',
+      );
       expect(query.filters.length, 2);
     });
   });
@@ -71,33 +77,71 @@ void main() {
   group('QueryEngine', () {
     List<Note> createTestNotes() {
       return [
-        Note(id: '1', title: 'Project A', filePath: 'a.md', content: 'Content A',
-            tags: ['project', 'active'], aliases: [],
-            created: DateTime(2025, 3, 15), modified: DateTime(2025, 4, 1)),
-        Note(id: '2', title: 'Project B', filePath: 'b.md', content: 'Content B',
-            tags: ['project'], aliases: [],
-            created: DateTime(2024, 11, 1), modified: DateTime(2024, 12, 1)),
-        Note(id: '3', title: 'Personal Note', filePath: 'c.md', content: 'Content C',
-            tags: ['personal'], aliases: [],
-            created: DateTime(2025, 1, 10), modified: DateTime(2025, 2, 1)),
-        Note(id: '4', title: 'Project C', filePath: 'd.md', content: 'Content D',
-            tags: ['project', 'archived'], aliases: [],
-            created: DateTime(2025, 5, 20), modified: DateTime(2025, 6, 1)),
-        Note(id: '5', title: 'Meeting Notes', filePath: 'e.md', content: 'Content E',
-            tags: ['project', 'meeting'], aliases: [],
-            created: DateTime(2025, 2, 28), modified: DateTime(2025, 3, 1)),
+        Note(
+          id: '1',
+          title: 'Project A',
+          filePath: 'a.md',
+          content: 'Content A',
+          tags: ['project', 'active'],
+          aliases: [],
+          created: DateTime(2025, 3, 15),
+          modified: DateTime(2025, 4, 1),
+        ),
+        Note(
+          id: '2',
+          title: 'Project B',
+          filePath: 'b.md',
+          content: 'Content B',
+          tags: ['project'],
+          aliases: [],
+          created: DateTime(2024, 11, 1),
+          modified: DateTime(2024, 12, 1),
+        ),
+        Note(
+          id: '3',
+          title: 'Personal Note',
+          filePath: 'c.md',
+          content: 'Content C',
+          tags: ['personal'],
+          aliases: [],
+          created: DateTime(2025, 1, 10),
+          modified: DateTime(2025, 2, 1),
+        ),
+        Note(
+          id: '4',
+          title: 'Project C',
+          filePath: 'd.md',
+          content: 'Content D',
+          tags: ['project', 'archived'],
+          aliases: [],
+          created: DateTime(2025, 5, 20),
+          modified: DateTime(2025, 6, 1),
+        ),
+        Note(
+          id: '5',
+          title: 'Meeting Notes',
+          filePath: 'e.md',
+          content: 'Content E',
+          tags: ['project', 'meeting'],
+          aliases: [],
+          created: DateTime(2025, 2, 28),
+          modified: DateTime(2025, 3, 1),
+        ),
       ];
     }
 
-    test('AC-P4-4-3: 5 notes with #project tag, LIST WHERE tag=#project returns 4', () {
-      final engine = QueryEngine(createTestNotes());
-      final query = DqlQuery(
-        type: QueryType.list,
-        filters: [TagFilter('project')],
-      );
-      final result = engine.execute(query);
-      expect(result.rows.length, 4);
-    });
+    test(
+      'AC-P4-4-3: 5 notes with #project tag, LIST WHERE tag=#project returns 4',
+      () {
+        final engine = QueryEngine(createTestNotes());
+        final query = DqlQuery(
+          type: QueryType.list,
+          filters: [TagFilter('project')],
+        );
+        final result = engine.execute(query);
+        expect(result.rows.length, 4);
+      },
+    );
 
     test('AC-P4-4-4: date filter created >= 2025-01-01 returns 4 results', () {
       final engine = QueryEngine(createTestNotes());
@@ -113,13 +157,21 @@ void main() {
       final manyNotes = List.generate(
         200,
         (i) => Note(
-          id: '$i', title: 'Note $i', filePath: 'n$i.md', content: 'C$i',
-          tags: ['test'], aliases: [],
-          created: DateTime(2025), modified: DateTime(2025),
+          id: '$i',
+          title: 'Note $i',
+          filePath: 'n$i.md',
+          content: 'C$i',
+          tags: ['test'],
+          aliases: [],
+          created: DateTime(2025),
+          modified: DateTime(2025),
         ),
       );
       final engine = QueryEngine(manyNotes);
-      final query = DqlQuery(type: QueryType.list, filters: [TagFilter('test')]);
+      final query = DqlQuery(
+        type: QueryType.list,
+        filters: [TagFilter('test')],
+      );
       final result = engine.execute(query);
       expect(result.rows.length, 100);
     });

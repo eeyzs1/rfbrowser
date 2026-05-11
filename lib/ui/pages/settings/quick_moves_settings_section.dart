@@ -37,10 +37,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.add, size: 18),
-                    onPressed: () => showCreateQuickMoveDialog(
-                      context,
-                      ref,
-                    ),
+                    onPressed: () => showCreateQuickMoveDialog(context, ref),
                     tooltip: 'Add Command',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
@@ -69,9 +66,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                         ),
                       );
                       if (confirm == true) {
-                        ref
-                            .read(quickMoveProvider.notifier)
-                            .restoreDefaults();
+                        ref.read(quickMoveProvider.notifier).restoreDefaults();
                       }
                     },
                     tooltip: 'Restore Defaults',
@@ -140,8 +135,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                   child: Center(
                     child: Column(
                       children: [
-                        Icon(Icons.bolt,
-                            size: 32, color: theme.hintColor),
+                        Icon(Icons.bolt, size: 32, color: theme.hintColor),
                         const SizedBox(height: 8),
                         Text(
                           'No quick moves yet',
@@ -151,10 +145,8 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         TextButton.icon(
-                          onPressed: () => showCreateQuickMoveDialog(
-                            context,
-                            ref,
-                          ),
+                          onPressed: () =>
+                              showCreateQuickMoveDialog(context, ref),
                           icon: const Icon(Icons.add, size: 14),
                           label: const Text('Create your first quick move'),
                         ),
@@ -236,11 +228,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
       ),
       child: ListTile(
         dense: true,
-        leading: Icon(
-          move.icon,
-          size: 18,
-          color: move.color,
-        ),
+        leading: Icon(move.icon, size: 18, color: move.color),
         title: Text(
           '/${move.name}',
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -278,14 +266,9 @@ class QuickMovesSettingsSection extends ConsumerWidget {
     );
   }
 
-  void _editQuickMove(
-    BuildContext context,
-    WidgetRef ref,
-    QuickMove move,
-  ) {
+  void _editQuickMove(BuildContext context, WidgetRef ref, QuickMove move) {
     final nameController = TextEditingController(text: move.name);
-    final promptController =
-        TextEditingController(text: move.promptTemplate);
+    final promptController = TextEditingController(text: move.promptTemplate);
     var iconCodePoint = move.iconCodePoint;
     var colorValue = move.colorValue;
 
@@ -296,8 +279,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
           final theme = Theme.of(context);
           return AlertDialog(
             title: const Text('Edit Quick Move'),
-            contentPadding:
-                const EdgeInsets.fromLTRB(24, 16, 24, 0),
+            contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
             content: SingleChildScrollView(
               child: SizedBox(
                 width: 420,
@@ -335,8 +317,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                       spacing: 4,
                       runSpacing: 4,
                       children: _iconOptions.map((icon) {
-                        final isSelected =
-                            icon.codePoint == iconCodePoint;
+                        final isSelected = icon.codePoint == iconCodePoint;
                         return GestureDetector(
                           onTap: () {
                             setDialogState(() {
@@ -348,8 +329,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                             height: 36,
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? Color(colorValue)
-                                      .withValues(alpha: 0.15)
+                                  ? Color(colorValue).withValues(alpha: 0.15)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                               border: isSelected
@@ -357,8 +337,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                                       color: Color(colorValue),
                                       width: 2,
                                     )
-                                  : Border.all(
-                                      color: Colors.transparent),
+                                  : Border.all(color: Colors.transparent),
                             ),
                             child: Icon(
                               icon,
@@ -398,13 +377,18 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                               shape: BoxShape.circle,
                               border: isSelected
                                   ? Border.all(
-                                      color: Theme.of(context).colorScheme.primary, width: 3)
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      width: 3,
+                                    )
                                   : null,
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: Color(colorVal)
-                                            .withValues(alpha: 0.4),
+                                        color: Color(
+                                          colorVal,
+                                        ).withValues(alpha: 0.4),
                                         blurRadius: 8,
                                         spreadRadius: 1,
                                       ),
@@ -412,8 +396,17 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                                   : null,
                             ),
                             child: isSelected
-                                ? Icon(Icons.check,
-                                    size: 14, color: (Color(colorVal).r * 0.299 + Color(colorVal).g * 0.587 + Color(colorVal).b * 0.114) > 128 ? Colors.black : Colors.white)
+                                ? Icon(
+                                    Icons.check,
+                                    size: 14,
+                                    color:
+                                        (Color(colorVal).r * 0.299 +
+                                                Color(colorVal).g * 0.587 +
+                                                Color(colorVal).b * 0.114) >
+                                            128
+                                        ? Colors.black
+                                        : Colors.white,
+                                  )
                                 : null,
                           ),
                         );
@@ -434,7 +427,9 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                   final prompt = promptController.text.trim();
                   if (name.isEmpty || prompt.isEmpty) return;
 
-                  ref.read(quickMoveProvider.notifier).updateMove(
+                  ref
+                      .read(quickMoveProvider.notifier)
+                      .updateMove(
                         move.id,
                         name: name,
                         promptTemplate: prompt,

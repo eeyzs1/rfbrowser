@@ -105,23 +105,23 @@ class AINotifier extends Notifier<AIState> {
     if (state.isLoading) return;
 
     var provider =
-        state.activeProvider ??
-        ref.read(aiConfigProvider).activeProvider;
-    var model =
-        state.activeModel ?? ref.read(aiConfigProvider).activeModel;
+        state.activeProvider ?? ref.read(aiConfigProvider).activeProvider;
+    var model = state.activeModel ?? ref.read(aiConfigProvider).activeModel;
 
     final connectivity = ref.read(connectivityProvider);
     if (!connectivity.isOnline) {
       if (provider != null && provider.protocol != ApiProtocol.ollama) {
-        final offlineProvider = ref.read(connectivityProvider.notifier).getOfflineProvider();
-        final offlineModel = ref.read(connectivityProvider.notifier).getOfflineModel(offlineProvider);
+        final offlineProvider = ref
+            .read(connectivityProvider.notifier)
+            .getOfflineProvider();
+        final offlineModel = ref
+            .read(connectivityProvider.notifier)
+            .getOfflineModel(offlineProvider);
         if (offlineProvider != null && offlineModel != null) {
           provider = offlineProvider;
           model = offlineModel;
         } else {
-          state = state.copyWith(
-            error: OfflineNoModelError().toString(),
-          );
+          state = state.copyWith(error: OfflineNoModelError().toString());
           return;
         }
       }

@@ -35,8 +35,10 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   bool _rightPanelExpanded = true;
 
   void _switchScene(SceneType scene) => setState(() => _currentScene = scene);
-  void _toggleLeftPanel() => setState(() => _leftPanelExpanded = !_leftPanelExpanded);
-  void _toggleRightPanel() => setState(() => _rightPanelExpanded = !_rightPanelExpanded);
+  void _toggleLeftPanel() =>
+      setState(() => _leftPanelExpanded = !_leftPanelExpanded);
+  void _toggleRightPanel() =>
+      setState(() => _rightPanelExpanded = !_rightPanelExpanded);
   void _onNoteOpened() {
     if (_currentScene != SceneType.think) {
       _switchScene(SceneType.think);
@@ -48,9 +50,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     final vaultState = ref.watch(vaultProvider);
     if (vaultState.currentVault == null && !vaultState.isLoading) {
       return Scaffold(
-        body: EmptyVaultGuide(
-          onCreateVault: () => _openVaultDialog(),
-        ),
+        body: EmptyVaultGuide(onCreateVault: () => _openVaultDialog()),
       );
     }
     return Scaffold(
@@ -114,12 +114,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     b[const SingleActivator(LogicalKeyboardKey.escape)] = () {
       if (_showCommandBar) setState(() => _showCommandBar = false);
     };
-    b[const SingleActivator(LogicalKeyboardKey.digit1, control: true)] =
-        () => _switchScene(SceneType.capture);
-    b[const SingleActivator(LogicalKeyboardKey.digit2, control: true)] =
-        () => _switchScene(SceneType.think);
-    b[const SingleActivator(LogicalKeyboardKey.digit3, control: true)] =
-        () => _switchScene(SceneType.connect);
+    b[const SingleActivator(LogicalKeyboardKey.digit1, control: true)] = () =>
+        _switchScene(SceneType.capture);
+    b[const SingleActivator(LogicalKeyboardKey.digit2, control: true)] = () =>
+        _switchScene(SceneType.think);
+    b[const SingleActivator(LogicalKeyboardKey.digit3, control: true)] = () =>
+        _switchScene(SceneType.connect);
     return b;
   }
 
@@ -190,10 +190,19 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     final ctx = ref.read(quickMoveContextProvider);
     final args = <String, String>{
       'input': parts.skip(1).join(' '),
-      if (ctx.pageContent != null) 'pageContent': ctx.pageContent!.length > 8000 ? ctx.pageContent!.substring(0, 8000) : ctx.pageContent!,
-      if (ctx.selectedText != null) 'selectedText': ctx.selectedText!.length > 4000 ? ctx.selectedText!.substring(0, 4000) : ctx.selectedText!,
+      if (ctx.pageContent != null)
+        'pageContent': ctx.pageContent!.length > 8000
+            ? ctx.pageContent!.substring(0, 8000)
+            : ctx.pageContent!,
+      if (ctx.selectedText != null)
+        'selectedText': ctx.selectedText!.length > 4000
+            ? ctx.selectedText!.substring(0, 4000)
+            : ctx.selectedText!,
       if (ctx.currentUrl != null) 'pageUrl': ctx.currentUrl!,
-      if (ctx.noteContent != null) 'noteContent': ctx.noteContent!.length > 8000 ? ctx.noteContent!.substring(0, 8000) : ctx.noteContent!,
+      if (ctx.noteContent != null)
+        'noteContent': ctx.noteContent!.length > 8000
+            ? ctx.noteContent!.substring(0, 8000)
+            : ctx.noteContent!,
     };
     ref.read(aiProvider.notifier).sendMessage(match.resolvePrompt(args));
   }

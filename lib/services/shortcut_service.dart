@@ -9,7 +9,8 @@ class ShortcutConflictError implements Exception {
   ShortcutConflictError(this.message, this.existingAction);
 
   @override
-  String toString() => 'ShortcutConflictError: $message (conflicts with $existingAction)';
+  String toString() =>
+      'ShortcutConflictError: $message (conflicts with $existingAction)';
 }
 
 class ShortcutService {
@@ -51,7 +52,8 @@ class ShortcutService {
     _bindings[action] = shortcut;
   }
 
-  String? findActionForShortcut(String shortcut) => _findActionForShortcut(shortcut);
+  String? findActionForShortcut(String shortcut) =>
+      _findActionForShortcut(shortcut);
 
   String? _findActionForShortcut(String shortcut) {
     for (final entry in _bindings.entries) {

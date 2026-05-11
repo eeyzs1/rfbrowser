@@ -18,7 +18,9 @@ class BacklinksPanel extends ConsumerWidget {
     final backlinks = knowledgeState.backlinks;
 
     final unlinkedMentions = activeNote != null
-        ? ref.read(knowledgeProvider.notifier).getUnlinkedMentions(activeNote.id)
+        ? ref
+              .read(knowledgeProvider.notifier)
+              .getUnlinkedMentions(activeNote.id)
         : <UnlinkedMentionResult>[];
 
     return Column(
@@ -53,10 +55,17 @@ class BacklinksPanel extends ConsumerWidget {
               const Spacer(),
               if (onClose != null)
                 IconButton(
-                  icon: Icon(Icons.chevron_right, size: 16, color: theme.hintColor),
+                  icon: Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: theme.hintColor,
+                  ),
                   onPressed: onClose,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
                   tooltip: l.closePanel,
                 ),
             ],
@@ -74,22 +83,18 @@ class BacklinksPanel extends ConsumerWidget {
               : backlinks.isEmpty && unlinkedMentions.isEmpty
               ? Padding(
                   padding: const EdgeInsets.all(12),
-                  child: Text(
-                    l.noBacklinks,
-                    style: theme.textTheme.bodySmall,
-                  ),
+                  child: Text(l.noBacklinks, style: theme.textTheme.bodySmall),
                 )
               : ListView(
                   padding: EdgeInsets.zero,
                   children: [
-                    ...backlinks
-                        .map(
-                          (link) => _BacklinkItem(
-                            sourceId: link.sourceId,
-                            linkContext: link.context,
-                            type: link.type,
-                          ),
-                        ),
+                    ...backlinks.map(
+                      (link) => _BacklinkItem(
+                        sourceId: link.sourceId,
+                        linkContext: link.context,
+                        type: link.type,
+                      ),
+                    ),
                     if (unlinkedMentions.isNotEmpty) ...[
                       Padding(
                         padding: const EdgeInsets.symmetric(
@@ -118,8 +123,9 @@ class BacklinksPanel extends ConsumerWidget {
                                 vertical: 1,
                               ),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.tertiary
-                                    .withValues(alpha: 0.15),
+                                color: theme.colorScheme.tertiary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
@@ -132,15 +138,18 @@ class BacklinksPanel extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      ...unlinkedMentions
-                          .map(
-                            (m) => _UnlinkedMentionItem(
-                              mention: m,
-                              onLink: () => ref
-                                .read(knowledgeProvider.notifier)
-                                .linkMention(m.sourceNoteId, m.targetTitle, m.position),
-                            ),
-                          ),
+                      ...unlinkedMentions.map(
+                        (m) => _UnlinkedMentionItem(
+                          mention: m,
+                          onLink: () => ref
+                              .read(knowledgeProvider.notifier)
+                              .linkMention(
+                                m.sourceNoteId,
+                                m.targetTitle,
+                                m.position,
+                              ),
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -232,10 +241,7 @@ class _UnlinkedMentionItem extends ConsumerWidget {
   final UnlinkedMentionResult mention;
   final VoidCallback onLink;
 
-  const _UnlinkedMentionItem({
-    required this.mention,
-    required this.onLink,
-  });
+  const _UnlinkedMentionItem({required this.mention, required this.onLink});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -246,7 +252,9 @@ class _UnlinkedMentionItem extends ConsumerWidget {
       onTap: () {
         final knowledgeState = ref.read(knowledgeProvider);
         final note = knowledgeState.notes
-            .where((n) => n.title.toLowerCase() == mention.targetTitle.toLowerCase())
+            .where(
+              (n) => n.title.toLowerCase() == mention.targetTitle.toLowerCase(),
+            )
             .firstOrNull;
         if (note != null) {
           ref.read(knowledgeProvider.notifier).openNote(note.id);
@@ -291,7 +299,10 @@ class _UnlinkedMentionItem extends ConsumerWidget {
                   ),
                   onPressed: onLink,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 20,
+                  ),
                   tooltip: l.link,
                 ),
               ],
