@@ -98,7 +98,10 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   Widget build(BuildContext context) {
     final browserState = ref.watch(browserProvider);
     final theme = Theme.of(context);
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) {
+      return const SizedBox.shrink();
+    }
     final activeTab = browserState.activeTab;
 
     if (activeTab == null) {
@@ -306,7 +309,8 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   }
 
   Widget _buildTabBar(ThemeData theme, BrowserState browserState) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return const SizedBox.shrink();
     final tabs = browserState.tabs;
     if (tabs.isEmpty) return const SizedBox.shrink();
 
@@ -401,7 +405,8 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     BrowserState browserState,
     BrowserTab activeTab,
   ) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return const SizedBox.shrink();
     final isBookmarked = browserState.isBookmarked(activeTab.url);
     return IconButton(
       icon: Icon(
@@ -439,7 +444,8 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     BrowserState browserState,
     BrowserTab activeTab,
   ) async {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return;
     final folders = browserState.bookmarkFolders;
     final result = await showDialog<String>(
       context: context,
@@ -748,7 +754,8 @@ class _AddBookmarkDialogState extends State<_AddBookmarkDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return const SizedBox.shrink();
     return AlertDialog(
       title: Text(l.addBookmark),
       content: Column(

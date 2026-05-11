@@ -225,7 +225,8 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
 
   void _saveAsNote() async {
     if (_summary == null || _summary!.isEmpty) return;
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return;
     final title = l.summaryTitle(
       _sourceLabel(l),
       widget.pageTitle ?? widget.activeNote?.title ?? 'Untitled',
@@ -303,7 +304,8 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
   }
 
   Widget _buildHeader(ThemeData theme) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return const SizedBox.shrink();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -379,7 +381,8 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
   }
 
   Widget _toggleSourceBtn(ThemeData theme) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return const SizedBox.shrink();
     return PopupMenuButton<String>(
       icon: Icon(Icons.swap_horiz, size: 16, color: theme.hintColor),
       padding: EdgeInsets.zero,
@@ -445,7 +448,8 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
   }
 
   Widget _buildContent(ThemeData theme) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return const SizedBox.shrink();
     if (!_canSummarize) {
       return Center(
         child: Padding(
@@ -616,7 +620,8 @@ class _NotePreviewPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return const SizedBox.shrink();
 
     return Container(
       decoration: BoxDecoration(

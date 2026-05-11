@@ -38,8 +38,8 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
       _showClipSuccess(note.title, note.id);
     } catch (e) {
       if (!mounted) return;
-      final l = AppLocalizations.of(context)!;
-      _showToast(l.clipFailed(e.toString()), isError: true);
+      final l = AppLocalizations.of(context);
+      if (l != null) _showToast(l.clipFailed(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _isClipping = false);
     }
@@ -57,13 +57,14 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
           .fetchSelectedText(tab.id);
       if (selectedText.isEmpty) {
         if (!mounted) return;
-        final l = AppLocalizations.of(context)!;
-        _showToast(l.selectTextFirst, isError: true);
+        final l = AppLocalizations.of(context);
+        if (l != null) _showToast(l.selectTextFirst, isError: true);
         return;
       }
       final knowledgeNotifier = ref.read(knowledgeProvider.notifier);
       if (!mounted) return;
-      final l = AppLocalizations.of(context)!;
+      final l = AppLocalizations.of(context);
+      if (l == null) return;
       final note = await knowledgeNotifier.clipSelection(
         url: tab.url,
         title: l.clipTitle(tab.title),
@@ -72,8 +73,8 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
       _showClipSuccess(note.title, note.id);
     } catch (e) {
       if (!mounted) return;
-      final l = AppLocalizations.of(context)!;
-      _showToast(l.clipFailed(e.toString()), isError: true);
+      final l = AppLocalizations.of(context);
+      if (l != null) _showToast(l.clipFailed(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _isClipping = false);
     }
@@ -85,14 +86,16 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
     if (tab == null) return;
 
     final isBookmarked = browserState.isBookmarked(tab.url);
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return;
     ref.read(browserProvider.notifier).toggleBookmark(tab.url, tab.title);
     _showToast(isBookmarked ? l.unbookmarked : l.bookmarked(tab.title));
   }
 
   void _showClipSuccess(String title, String noteId) {
     if (!mounted) return;
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return;
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -158,7 +161,10 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) {
+      return const SizedBox.shrink();
+    }
     final browserState = ref.watch(browserProvider);
     final hasPage =
         browserState.activeTab != null &&
