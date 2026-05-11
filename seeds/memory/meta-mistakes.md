@@ -111,3 +111,24 @@ Root Cause: `isDarkMode` was a stored boolean toggle independent of background/s
 Lesson: `isDarkMode` should be a computed getter derived from the surface/background color luminance, not an independent stored value. This ensures text contrast automatically adapts to color changes.
 Constraint Added: A-11 — "isDarkMode should be a computed property from luminance, not a stored toggle"
 Evidence: After changing background to a light color, text remained white (unreadable) because isDarkMode was still true
+
+## Meta-Mistake 018: FocusNode disposed while still focused
+Status: Resolved
+Root Cause: `_startInlineEditing` unconditionally disposed `_inlineTitleFocus` and `_inlineContentFocus` even when they still had focus, causing "disposed FocusNode" errors on subsequent interactions
+Lesson: Before disposing a FocusNode, check `hasFocus`. If the node is still focused, skip disposal — it will be cleaned up when focus transfers naturally. Alternatively, only dispose when creating new nodes for a different card.
+Constraint Added: C049 — "FocusNode must not be disposed while hasFocus is true — check before disposing"
+Evidence: "A FocusNode was disposed while it still had focus" runtime error in canvas inline editing
+
+## Meta-Mistake 019: Canvas setState on every pan/zoom frame
+Status: Resolved
+Root Cause: `_onScaleUpdate` called `setState()` on every camera movement (pan/zoom), causing the entire canvas widget tree to rebuild at 60fps during drag. This wasted CPU on rebuilding toolbar, sidebar, and other non-camera-dependent widgets.
+Lesson: Camera state (position, scale) should be managed by a separate ChangeNotifier, not by widget setState. Wrap camera-dependent widgets (CustomPaint, minimap, zoom controls) with ListenableBuilder to isolate rebuilds.
+Constraint Added: C050 — "Never call setState on every frame for camera/scroll state — use ChangeNotifier + ListenableBuilder to isolate rebuilds"
+Evidence: CPU usage spiked during canvas panning because entire widget tree rebuilt on every frame
+
+## Meta-Mistake 020: Connection line unselectable due to missing hit test in gesture start
+Status: Resolved
+Root Cause: `_onScaleStart` had no `_hitTestConnectionLine` check. When clicking a connection line, no hit target was found, so `_draggingCardId` was set to null, triggering canvas pan in `_onScaleUpdate`. The ScaleGestureRecognizer won the gesture arena, preventing `_onTapUp` from firing, making connection lines permanently unselectable.
+Lesson: Every clickable element must be hit-tested in the gesture start handler, not just in the tap handler. If a gesture recognizer claims the pointer before tap fires, the tap handler never executes. Add a flag-based approach: detect the hit in start, set a flag to prevent conflicting gestures, and select in end/tap.
+Constraint Added: C051 — "Every clickable element must be hit-tested in onScaleStart — tap-only hit testing fails when ScaleGestureRecognizer claims the pointer"
+Evidence: Connection lines between two cards could not be selected by clicking — only waypoints worked

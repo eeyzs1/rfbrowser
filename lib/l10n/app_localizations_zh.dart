@@ -153,7 +153,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeColor => '主题色';
 
   @override
-  String get backgroundColor => '背景色';
+  String get backgroundColor => '背景颜色';
 
   @override
   String get surfaceColor => '面板色';
@@ -1016,7 +1016,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get imagePath => '图片路径';
 
   @override
-  String get url => '网址';
+  String get url => '链接';
 
   @override
   String get selectNote => '选择笔记';
@@ -1294,4 +1294,513 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deleteConnection => '删除连接';
+
+  @override
+  String get alignLeft => '左对齐';
+
+  @override
+  String get alignCenterH => '水平居中';
+
+  @override
+  String get alignRight => '右对齐';
+
+  @override
+  String get alignTop => '顶部对齐';
+
+  @override
+  String get alignCenterV => '垂直居中';
+
+  @override
+  String get alignBottom => '底部对齐';
+
+  @override
+  String get distributeH => '水平分布';
+
+  @override
+  String get distributeV => '垂直分布';
+
+  @override
+  String get rectangle => '矩形';
+
+  @override
+  String get roundedRect => '圆角矩形';
+
+  @override
+  String get ellipse => '椭圆';
+
+  @override
+  String get diamond => '菱形';
+
+  @override
+  String get hexagon => '六边形';
+
+  @override
+  String get parallelogram => '平行四边形';
+
+  @override
+  String get triangle => '三角形';
+
+  @override
+  String get cylinder => '圆柱体';
+
+  @override
+  String get star => '星形';
+
+  @override
+  String get swimlaneH => '水平泳道';
+
+  @override
+  String get swimlaneV => '垂直泳道';
+
+  @override
+  String get freehand => '自由绘制';
+
+  @override
+  String get loadTemplate => '加载模板';
+
+  @override
+  String get loadTemplateConfirm => '这将替换当前画布内容，是否继续？';
+
+  @override
+  String get flowchart => '流程图';
+
+  @override
+  String get umlClass => 'UML类图';
+
+  @override
+  String get swimlane => '泳道图';
+
+  @override
+  String get mindMap => '思维导图';
+
+  @override
+  String get network => '网络图';
+
+  @override
+  String get erDiagram => 'ER图';
+
+  @override
+  String get kanban => '看板';
+
+  @override
+  String get orgChart => '组织架构图';
+
+  @override
+  String get stateMachine => '状态机';
+
+  @override
+  String get vennDiagram => '韦恩图';
+
+  @override
+  String get timeline => '时间线';
+
+  @override
+  String get gantt => '甘特图';
+
+  @override
+  String get decisionTree => '决策树';
+
+  @override
+  String get forceDirected => '力导向布局';
+
+  @override
+  String get hierarchical => '层次布局';
+
+  @override
+  String get gridLayout => '网格布局';
+
+  @override
+  String get exportPng => '导出PNG';
+
+  @override
+  String get exportSvg => '导出SVG';
+
+  @override
+  String get exportPdf => '导出PDF';
+
+  @override
+  String get exportMarkdown => '导出Markdown';
+
+  @override
+  String get exportHtml => '导出HTML';
+
+  @override
+  String get exportJpeg => '导出JPEG';
+
+  @override
+  String get exportSvgWithData => '导出SVG（含数据）';
+
+  @override
+  String get clearBackground => '清除背景';
+
+  @override
+  String get defaultCardStyle => '默认卡片样式';
+
+  @override
+  String get enumerateShapes => '编号形状';
+
+  @override
+  String get importCsv => '导入CSV';
+
+  @override
+  String get importMermaid => '导入Mermaid';
+
+  @override
+  String get importSvg => '导入SVG';
+
+  @override
+  String get shareViaUrl => '通过URL分享';
+
+  @override
+  String get shapes => '形状';
+
+  @override
+  String get autoLayout => '自动布局';
+
+  @override
+  String get canvasSettings => '画布设置';
+
+  @override
+  String get zoomIn => '放大';
+
+  @override
+  String get zoomOut => '缩小';
+
+  @override
+  String get resetZoom => '重置缩放';
+
+  @override
+  String get connectionStyle => '连接样式';
+
+  @override
+  String get arrowStyle => '箭头样式';
+
+  @override
+  String get width => '宽度';
+
+  @override
+  String get color => '颜色';
+
+  @override
+  String get saveToScratchpad => '保存到剪贴板';
+
+  @override
+  String get templateName => '模板名称';
+
+  @override
+  String get category => '分类';
+
+  @override
+  String get general => '通用';
+
+  @override
+  String savedToScratchpad(String name) {
+    return '已将\"$name\"保存到剪贴板';
+  }
+
+  @override
+  String get moveToLayer => '移至图层';
+
+  @override
+  String get noLayerDefault => '无图层（默认）';
+
+  @override
+  String get reset => '重置';
+
+  @override
+  String get fillColor => '填充颜色';
+
+  @override
+  String get borderRadius => '圆角半径';
+
+  @override
+  String get borderWidth => '边框宽度';
+
+  @override
+  String get removeWaypoint => '移除路径点';
+
+  @override
+  String get removeAllWaypoints => '移除所有路径点';
+
+  @override
+  String get container => '容器';
+
+  @override
+  String get straightPath => '直线路径';
+
+  @override
+  String get curvedPath => '曲线路径';
+
+  @override
+  String get orthogonalPath => '正交路径';
+
+  @override
+  String get addWaypoint => '添加路径点';
+
+  @override
+  String get clearWaypoints => '清除路径点';
+
+  @override
+  String get copyStyle => '复制样式';
+
+  @override
+  String get pasteStyle => '粘贴样式';
+
+  @override
+  String get addTag => '添加标签...';
+
+  @override
+  String get removeTag => '移除标签...';
+
+  @override
+  String get groupSelection => '组合选中项';
+
+  @override
+  String get ungroup => '取消组合';
+
+  @override
+  String get title => '标题';
+
+  @override
+  String get editStyle => '编辑样式';
+
+  @override
+  String get tagName => '标签名称';
+
+  @override
+  String get layerName => '图层名称';
+
+  @override
+  String get moveUp => '上移';
+
+  @override
+  String get moveDown => '下移';
+
+  @override
+  String get deleteLayer => '删除图层';
+
+  @override
+  String get renameLayer => '重命名图层';
+
+  @override
+  String get addLayer => '添加图层';
+
+  @override
+  String get layers => '图层';
+
+  @override
+  String get layer => '图层';
+
+  @override
+  String get scratchpad => '剪贴板';
+
+  @override
+  String get rulers => '标尺';
+
+  @override
+  String get styleBrush => '样式画笔';
+
+  @override
+  String get gridOn => '网格：开';
+
+  @override
+  String get gridOff => '网格：关';
+
+  @override
+  String get snapOn => '吸附：开';
+
+  @override
+  String get snapOff => '吸附：关';
+
+  @override
+  String get fit => '适应';
+
+  @override
+  String get importData => '导入数据';
+
+  @override
+  String get importDataHint => '在此粘贴CSV、Mermaid图或SVG代码...';
+
+  @override
+  String get shareUrlCopied => '分享链接已复制到剪贴板';
+
+  @override
+  String get exportFailedNotRendered => '导出失败：画布未渲染';
+
+  @override
+  String get exportFailedPng => '导出失败：无法生成PNG';
+
+  @override
+  String exportedPngTo(String path) {
+    return '已导出PNG至 $path';
+  }
+
+  @override
+  String pngExportFailed(String error) {
+    return 'PNG导出失败：$error';
+  }
+
+  @override
+  String exportedTo(String path) {
+    return '已导出至 $path';
+  }
+
+  @override
+  String exportFailed(String error) {
+    return '导出失败：$error';
+  }
+
+  @override
+  String get selectedClickToEdit => '已选中 · 点击编辑 · Del删除 · 拖拽角调整大小';
+
+  @override
+  String get editingEsc => '编辑中 · Esc完成';
+
+  @override
+  String get clickToConnect => '点击卡片连接 · Esc取消';
+
+  @override
+  String get styleBrushHint => '样式画笔：点击卡片应用样式 · Esc取消';
+
+  @override
+  String changeColorMulti(int count) {
+    return '更改颜色（$count张卡片）';
+  }
+
+  @override
+  String get noteContent => '笔记内容...';
+
+  @override
+  String get typeSomething => '输入内容...';
+
+  @override
+  String get richText => '富文本';
+
+  @override
+  String get underline => '下划线';
+
+  @override
+  String get code => '代码';
+
+  @override
+  String get text => '文本';
+
+  @override
+  String editSegment(String type) {
+    return '编辑$type';
+  }
+
+  @override
+  String get alignH => '水平对齐';
+
+  @override
+  String get alignV => '垂直对齐';
+
+  @override
+  String get font => '字体';
+
+  @override
+  String get textColor => '文字颜色';
+
+  @override
+  String get noLayersYet => '暂无图层';
+
+  @override
+  String get addLayersHint => '添加图层来组织卡片';
+
+  @override
+  String get noTemplatesYet => '暂无模板';
+
+  @override
+  String get saveToScratchpadHint => '右键卡片 → 保存到剪贴板';
+
+  @override
+  String get renameLayerTitle => '重命名图层';
+
+  @override
+  String get ok => '确定';
+
+  @override
+  String get unlock => '解锁';
+
+  @override
+  String get lock => '锁定';
+
+  @override
+  String get all => '全部';
+
+  @override
+  String get expand => '展开';
+
+  @override
+  String get collapse => '折叠';
+
+  @override
+  String get load => '加载';
+
+  @override
+  String get straight => '直线';
+
+  @override
+  String get curved => '曲线';
+
+  @override
+  String get orthogonal => '正交';
+
+  @override
+  String get align => '对齐';
+
+  @override
+  String get group => '分组';
+
+  @override
+  String importFormat(String format) {
+    return '导入 $format';
+  }
+
+  @override
+  String get import => '导入';
+
+  @override
+  String get grid => '网格';
+
+  @override
+  String get export => '导出';
+
+  @override
+  String canvasStatusCardsConnectionsGroups(
+    int cardCount,
+    int connectionCount,
+    int groupCount,
+  ) {
+    return '$cardCount 张卡片 · $connectionCount 条连接 · $groupCount 个分组';
+  }
+
+  @override
+  String selectedGroupHint(int count) {
+    return '已选 $count 项 · Ctrl+G 分组 · Del 删除';
+  }
+
+  @override
+  String get selectedSingleHint => '已选中 · 点击编辑 · Del 删除 · 拖拽角调整大小';
+
+  @override
+  String get editingHint => '编辑中 · Esc 完成';
+
+  @override
+  String get connectCardHint => '点击卡片连接 · Esc 取消';
+
+  @override
+  String get addLayersToOrganize => '添加图层来组织你的卡片';
+
+  @override
+  String get scratchpadEmptyHint => '右键点击卡片 → 保存到便签本';
+
+  @override
+  String get add => '添加';
+
+  @override
+  String layerNameWithNumber(int number) {
+    return '图层 $number';
+  }
 }

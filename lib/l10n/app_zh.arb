@@ -537,5 +537,236 @@
   "flowAnimation": "流动动画",
   "label": "标签",
   "connectionLabel": "连接标签",
-  "deleteConnection": "删除连接"
+  "deleteConnection": "删除连接",
+  "alignLeft": "左对齐",
+  "alignCenterH": "水平居中",
+  "alignRight": "右对齐",
+  "alignTop": "顶部对齐",
+  "alignCenterV": "垂直居中",
+  "alignBottom": "底部对齐",
+  "distributeH": "水平分布",
+  "distributeV": "垂直分布",
+  "rectangle": "矩形",
+  "roundedRect": "圆角矩形",
+  "ellipse": "椭圆",
+  "diamond": "菱形",
+  "hexagon": "六边形",
+  "parallelogram": "平行四边形",
+  "triangle": "三角形",
+  "cylinder": "圆柱体",
+  "star": "星形",
+  "swimlaneH": "水平泳道",
+  "swimlaneV": "垂直泳道",
+  "table": "表格",
+  "freehand": "自由绘制",
+  "loadTemplate": "加载模板",
+  "loadTemplateConfirm": "这将替换当前画布内容，是否继续？",
+  "flowchart": "流程图",
+  "umlClass": "UML类图",
+  "swimlane": "泳道图",
+  "mindMap": "思维导图",
+  "network": "网络图",
+  "erDiagram": "ER图",
+  "kanban": "看板",
+  "orgChart": "组织架构图",
+  "stateMachine": "状态机",
+  "vennDiagram": "韦恩图",
+  "timeline": "时间线",
+  "gantt": "甘特图",
+  "decisionTree": "决策树",
+  "forceDirected": "力导向布局",
+  "hierarchical": "层次布局",
+  "gridLayout": "网格布局",
+  "exportPng": "导出PNG",
+  "exportSvg": "导出SVG",
+  "exportPdf": "导出PDF",
+  "exportMarkdown": "导出Markdown",
+  "exportHtml": "导出HTML",
+  "exportJpeg": "导出JPEG",
+  "exportSvgWithData": "导出SVG（含数据）",
+  "backgroundColor": "背景颜色",
+  "clearBackground": "清除背景",
+  "defaultCardStyle": "默认卡片样式",
+  "enumerateShapes": "编号形状",
+  "importCsv": "导入CSV",
+  "importMermaid": "导入Mermaid",
+  "importSvg": "导入SVG",
+  "shareViaUrl": "通过URL分享",
+  "shapes": "形状",
+  "autoLayout": "自动布局",
+  "canvasSettings": "画布设置",
+  "zoomIn": "放大",
+  "zoomOut": "缩小",
+  "resetZoom": "重置缩放",
+  "connectionStyle": "连接样式",
+  "arrowStyle": "箭头样式",
+  "width": "宽度",
+  "color": "颜色",
+  "saveToScratchpad": "保存到剪贴板",
+  "templateName": "模板名称",
+  "category": "分类",
+  "general": "通用",
+  "savedToScratchpad": "已将\"{name}\"保存到剪贴板",
+  "@savedToScratchpad": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "moveToLayer": "移至图层",
+  "noLayerDefault": "无图层（默认）",
+  "clear": "清除",
+  "close": "关闭",
+  "reset": "重置",
+  "fillColor": "填充颜色",
+  "borderRadius": "圆角半径",
+  "borderWidth": "边框宽度",
+  "removeWaypoint": "移除路径点",
+  "removeAllWaypoints": "移除所有路径点",
+  "container": "容器",
+  "straightPath": "直线路径",
+  "curvedPath": "曲线路径",
+  "orthogonalPath": "正交路径",
+  "addWaypoint": "添加路径点",
+  "clearWaypoints": "清除路径点",
+  "copyStyle": "复制样式",
+  "pasteStyle": "粘贴样式",
+  "addTag": "添加标签...",
+  "removeTag": "移除标签...",
+  "groupSelection": "组合选中项",
+  "ungroup": "取消组合",
+  "title": "标题",
+  "editStyle": "编辑样式",
+  "tagName": "标签名称",
+  "layerName": "图层名称",
+  "moveUp": "上移",
+  "moveDown": "下移",
+  "deleteLayer": "删除图层",
+  "addToCanvas": "添加到画布",
+  "renameLayer": "重命名图层",
+  "addLayer": "添加图层",
+  "layers": "图层",
+  "layer": "图层",
+  "scratchpad": "剪贴板",
+  "rulers": "标尺",
+  "styleBrush": "样式画笔",
+  "gridOn": "网格：开",
+  "gridOff": "网格：关",
+  "snapOn": "吸附：开",
+  "snapOff": "吸附：关",
+  "fit": "适应",
+  "importData": "导入数据",
+  "importDataHint": "在此粘贴CSV、Mermaid图或SVG代码...",
+  "shareUrlCopied": "分享链接已复制到剪贴板",
+  "exportFailedNotRendered": "导出失败：画布未渲染",
+  "exportFailedPng": "导出失败：无法生成PNG",
+  "exportedPngTo": "已导出PNG至 {path}",
+  "@exportedPngTo": {
+    "placeholders": {
+      "path": {"type": "String"}
+    }
+  },
+  "pngExportFailed": "PNG导出失败：{error}",
+  "@pngExportFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "exportedTo": "已导出至 {path}",
+  "@exportedTo": {
+    "placeholders": {
+      "path": {"type": "String"}
+    }
+  },
+  "exportFailed": "导出失败：{error}",
+  "@exportFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "selectedClickToEdit": "已选中 · 点击编辑 · Del删除 · 拖拽角调整大小",
+  "editingEsc": "编辑中 · Esc完成",
+  "clickToConnect": "点击卡片连接 · Esc取消",
+  "styleBrushHint": "样式画笔：点击卡片应用样式 · Esc取消",
+  "changeColorMulti": "更改颜色（{count}张卡片）",
+  "@changeColorMulti": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noteContent": "笔记内容...",
+  "typeSomething": "输入内容...",
+  "imagePath": "图片路径",
+  "url": "链接",
+  "contentPreview": "内容预览",
+  "richText": "富文本",
+  "bold": "粗体",
+  "italic": "斜体",
+  "underline": "下划线",
+  "code": "代码",
+  "strikethrough": "删除线",
+  "text": "文本",
+  "editSegment": "编辑{type}",
+  "@editSegment": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "alignH": "水平对齐",
+  "alignV": "垂直对齐",
+  "font": "字体",
+  "textColor": "文字颜色",
+  "noLayersYet": "暂无图层",
+  "addLayersHint": "添加图层来组织卡片",
+  "noTemplatesYet": "暂无模板",
+  "saveToScratchpadHint": "右键卡片 → 保存到剪贴板",
+  "renameLayerTitle": "重命名图层",
+  "selectNote": "选择笔记",
+  "ok": "确定",
+  "unlock": "解锁",
+  "lock": "锁定",
+  "all": "全部",
+  "expand": "展开",
+  "collapse": "折叠",
+  "container": "容器",
+  "load": "加载",
+  "straight": "直线",
+  "curved": "曲线",
+  "orthogonal": "正交",
+  "align": "对齐",
+  "group": "分组",
+  "importFormat": "导入 {format}",
+  "@importFormat": {
+    "placeholders": {
+      "format": {"type": "String"}
+    }
+  },
+  "import": "导入",
+  "grid": "网格",
+  "export": "导出",
+  "canvasStatusCardsConnectionsGroups": "{cardCount} 张卡片 · {connectionCount} 条连接 · {groupCount} 个分组",
+  "@canvasStatusCardsConnectionsGroups": {
+    "placeholders": {
+      "cardCount": {"type": "int"},
+      "connectionCount": {"type": "int"},
+      "groupCount": {"type": "int"}
+    }
+  },
+  "selectedGroupHint": "已选 {count} 项 · Ctrl+G 分组 · Del 删除",
+  "@selectedGroupHint": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "selectedSingleHint": "已选中 · 点击编辑 · Del 删除 · 拖拽角调整大小",
+  "editingHint": "编辑中 · Esc 完成",
+  "connectCardHint": "点击卡片连接 · Esc 取消",
+  "addLayersToOrganize": "添加图层来组织你的卡片",
+  "scratchpadEmptyHint": "右键点击卡片 → 保存到便签本",
+  "add": "添加",
+  "layerNameWithNumber": "图层 {number}",
+  "@layerNameWithNumber": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  }
 }

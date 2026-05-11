@@ -290,6 +290,24 @@ harness_genome:
       last_triggered: "2026-05-08"
       trigger_count: 1
       status: active
+    - id: C049
+      rule: "FocusNode must not be disposed while hasFocus is true — check before disposing"
+      source: "meta-mistake: FocusNode disposed while focused in canvas inline editing"
+      last_triggered: "2026-05-11"
+      trigger_count: 1
+      status: active
+    - id: C050
+      rule: "Never call setState on every frame for camera/scroll state — use ChangeNotifier + ListenableBuilder to isolate rebuilds"
+      source: "meta-mistake: canvas setState on every pan/zoom frame"
+      last_triggered: "2026-05-11"
+      trigger_count: 1
+      status: active
+    - id: C051
+      rule: "Every clickable element must be hit-tested in onScaleStart — tap-only hit testing fails when ScaleGestureRecognizer claims the pointer"
+      source: "meta-mistake: connection line unselectable due to missing hit test in gesture start"
+      last_triggered: "2026-05-11"
+      trigger_count: 1
+      status: active
   workflows:
     - id: W001
       name: "base flow"

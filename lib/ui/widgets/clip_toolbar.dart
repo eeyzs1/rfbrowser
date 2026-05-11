@@ -35,6 +35,7 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
       );
       _showClipSuccess(note.title, note.id);
     } catch (e) {
+      if (!mounted) return;
       final l = AppLocalizations.of(context)!;
       _showToast(l.clipFailed(e.toString()), isError: true);
     } finally {
@@ -51,11 +52,13 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
     try {
       final selectedText = await ref.read(browserProvider.notifier).fetchSelectedText(tab.id);
       if (selectedText.isEmpty) {
+        if (!mounted) return;
         final l = AppLocalizations.of(context)!;
         _showToast(l.selectTextFirst, isError: true);
         return;
       }
       final knowledgeNotifier = ref.read(knowledgeProvider.notifier);
+      if (!mounted) return;
       final l = AppLocalizations.of(context)!;
       final note = await knowledgeNotifier.clipSelection(
         url: tab.url,
@@ -64,6 +67,7 @@ class _ClipToolbarState extends ConsumerState<ClipToolbar> {
       );
       _showClipSuccess(note.title, note.id);
     } catch (e) {
+      if (!mounted) return;
       final l = AppLocalizations.of(context)!;
       _showToast(l.clipFailed(e.toString()), isError: true);
     } finally {

@@ -153,7 +153,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeColor => 'Theme Color';
 
   @override
-  String get backgroundColor => 'Background';
+  String get backgroundColor => 'Background Color';
 
   @override
   String get surfaceColor => 'Surface';
@@ -1225,7 +1225,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Supports Obsidian-compatible Markdown files';
 
   @override
-  String get addToCanvas => 'Add to Canvas';
+  String get addToCanvas => 'Add to canvas';
 
   @override
   String get notesOnCanvas => 'Notes';
@@ -1308,4 +1308,518 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteConnection => 'Delete Connection';
+
+  @override
+  String get alignLeft => 'Align Left';
+
+  @override
+  String get alignCenterH => 'Align Center H';
+
+  @override
+  String get alignRight => 'Align Right';
+
+  @override
+  String get alignTop => 'Align Top';
+
+  @override
+  String get alignCenterV => 'Align Center V';
+
+  @override
+  String get alignBottom => 'Align Bottom';
+
+  @override
+  String get distributeH => 'Distribute H';
+
+  @override
+  String get distributeV => 'Distribute V';
+
+  @override
+  String get rectangle => 'Rectangle';
+
+  @override
+  String get roundedRect => 'Rounded Rect';
+
+  @override
+  String get ellipse => 'Ellipse';
+
+  @override
+  String get diamond => 'Diamond';
+
+  @override
+  String get hexagon => 'Hexagon';
+
+  @override
+  String get parallelogram => 'Parallelogram';
+
+  @override
+  String get triangle => 'Triangle';
+
+  @override
+  String get cylinder => 'Cylinder';
+
+  @override
+  String get star => 'Star';
+
+  @override
+  String get swimlaneH => 'Swimlane H';
+
+  @override
+  String get swimlaneV => 'Swimlane V';
+
+  @override
+  String get freehand => 'Freehand';
+
+  @override
+  String get loadTemplate => 'Load Template';
+
+  @override
+  String get loadTemplateConfirm =>
+      'This will replace the current canvas content. Continue?';
+
+  @override
+  String get flowchart => 'Flowchart';
+
+  @override
+  String get umlClass => 'UML Class';
+
+  @override
+  String get swimlane => 'Swimlane';
+
+  @override
+  String get mindMap => 'Mind Map';
+
+  @override
+  String get network => 'Network';
+
+  @override
+  String get erDiagram => 'ER Diagram';
+
+  @override
+  String get kanban => 'Kanban';
+
+  @override
+  String get orgChart => 'Org Chart';
+
+  @override
+  String get stateMachine => 'State Machine';
+
+  @override
+  String get vennDiagram => 'Venn Diagram';
+
+  @override
+  String get timeline => 'Timeline';
+
+  @override
+  String get gantt => 'Gantt';
+
+  @override
+  String get decisionTree => 'Decision Tree';
+
+  @override
+  String get forceDirected => 'Force Directed';
+
+  @override
+  String get hierarchical => 'Hierarchical';
+
+  @override
+  String get gridLayout => 'Grid';
+
+  @override
+  String get exportPng => 'Export PNG';
+
+  @override
+  String get exportSvg => 'Export SVG';
+
+  @override
+  String get exportPdf => 'Export PDF';
+
+  @override
+  String get exportMarkdown => 'Export Markdown';
+
+  @override
+  String get exportHtml => 'Export HTML';
+
+  @override
+  String get exportJpeg => 'Export JPEG';
+
+  @override
+  String get exportSvgWithData => 'Export SVG (with data)';
+
+  @override
+  String get clearBackground => 'Clear Background';
+
+  @override
+  String get defaultCardStyle => 'Default Card Style';
+
+  @override
+  String get enumerateShapes => 'Enumerate Shapes';
+
+  @override
+  String get importCsv => 'Import CSV';
+
+  @override
+  String get importMermaid => 'Import Mermaid';
+
+  @override
+  String get importSvg => 'Import SVG';
+
+  @override
+  String get shareViaUrl => 'Share via URL';
+
+  @override
+  String get shapes => 'Shapes';
+
+  @override
+  String get autoLayout => 'Auto Layout';
+
+  @override
+  String get canvasSettings => 'Canvas Settings';
+
+  @override
+  String get zoomIn => 'Zoom In';
+
+  @override
+  String get zoomOut => 'Zoom Out';
+
+  @override
+  String get resetZoom => 'Reset Zoom';
+
+  @override
+  String get connectionStyle => 'Connection Style';
+
+  @override
+  String get arrowStyle => 'Arrow Style';
+
+  @override
+  String get width => 'Width';
+
+  @override
+  String get color => 'Color';
+
+  @override
+  String get saveToScratchpad => 'Save to Scratchpad';
+
+  @override
+  String get templateName => 'Template Name';
+
+  @override
+  String get category => 'Category';
+
+  @override
+  String get general => 'General';
+
+  @override
+  String savedToScratchpad(String name) {
+    return 'Saved \"$name\" to Scratchpad';
+  }
+
+  @override
+  String get moveToLayer => 'Move to Layer';
+
+  @override
+  String get noLayerDefault => 'No Layer (Default)';
+
+  @override
+  String get reset => 'Reset';
+
+  @override
+  String get fillColor => 'Fill Color';
+
+  @override
+  String get borderRadius => 'Border Radius';
+
+  @override
+  String get borderWidth => 'Border Width';
+
+  @override
+  String get removeWaypoint => 'Remove Waypoint';
+
+  @override
+  String get removeAllWaypoints => 'Remove All Waypoints';
+
+  @override
+  String get container => 'Container';
+
+  @override
+  String get straightPath => 'Straight';
+
+  @override
+  String get curvedPath => 'Curved';
+
+  @override
+  String get orthogonalPath => 'Orthogonal';
+
+  @override
+  String get addWaypoint => 'Add Waypoint';
+
+  @override
+  String get clearWaypoints => 'Clear Waypoints';
+
+  @override
+  String get copyStyle => 'Copy Style';
+
+  @override
+  String get pasteStyle => 'Paste Style';
+
+  @override
+  String get addTag => 'Add Tag...';
+
+  @override
+  String get removeTag => 'Remove Tag...';
+
+  @override
+  String get groupSelection => 'Group Selection';
+
+  @override
+  String get ungroup => 'Ungroup';
+
+  @override
+  String get title => 'Title';
+
+  @override
+  String get editStyle => 'Edit Style';
+
+  @override
+  String get tagName => 'Tag name';
+
+  @override
+  String get layerName => 'Layer name';
+
+  @override
+  String get moveUp => 'Move Up';
+
+  @override
+  String get moveDown => 'Move Down';
+
+  @override
+  String get deleteLayer => 'Delete Layer';
+
+  @override
+  String get renameLayer => 'Rename Layer';
+
+  @override
+  String get addLayer => 'Add Layer';
+
+  @override
+  String get layers => 'Layers';
+
+  @override
+  String get layer => 'Layer';
+
+  @override
+  String get scratchpad => 'Scratchpad';
+
+  @override
+  String get rulers => 'Rulers';
+
+  @override
+  String get styleBrush => 'Style Brush';
+
+  @override
+  String get gridOn => 'Grid: On';
+
+  @override
+  String get gridOff => 'Grid: Off';
+
+  @override
+  String get snapOn => 'Snap: On';
+
+  @override
+  String get snapOff => 'Snap: Off';
+
+  @override
+  String get fit => 'Fit';
+
+  @override
+  String get importData => 'Import Data';
+
+  @override
+  String get importDataHint =>
+      'Paste CSV, Mermaid diagram, or SVG code here...';
+
+  @override
+  String get shareUrlCopied => 'Share URL copied to clipboard';
+
+  @override
+  String get exportFailedNotRendered => 'Export failed: canvas not rendered';
+
+  @override
+  String get exportFailedPng => 'Export failed: could not generate PNG';
+
+  @override
+  String exportedPngTo(String path) {
+    return 'Exported PNG to $path';
+  }
+
+  @override
+  String pngExportFailed(String error) {
+    return 'PNG export failed: $error';
+  }
+
+  @override
+  String exportedTo(String path) {
+    return 'Exported to $path';
+  }
+
+  @override
+  String exportFailed(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String get selectedClickToEdit =>
+      'Selected · Click to edit · Del to delete · Drag corner to resize';
+
+  @override
+  String get editingEsc => 'Editing · Esc to finish';
+
+  @override
+  String get clickToConnect => 'Click a card to connect · Esc to cancel';
+
+  @override
+  String get styleBrushHint =>
+      'Style Brush: click a card to apply style · Esc to cancel';
+
+  @override
+  String changeColorMulti(int count) {
+    return 'Change Color ($count cards)';
+  }
+
+  @override
+  String get noteContent => 'Note content...';
+
+  @override
+  String get typeSomething => 'Type something...';
+
+  @override
+  String get richText => 'Rich Text';
+
+  @override
+  String get underline => 'Underline';
+
+  @override
+  String get code => 'Code';
+
+  @override
+  String get text => 'Text';
+
+  @override
+  String editSegment(String type) {
+    return 'Edit $type';
+  }
+
+  @override
+  String get alignH => 'Align H';
+
+  @override
+  String get alignV => 'Align V';
+
+  @override
+  String get font => 'Font';
+
+  @override
+  String get textColor => 'Text Color';
+
+  @override
+  String get noLayersYet => 'No layers yet';
+
+  @override
+  String get addLayersHint => 'Add layers to organize your cards';
+
+  @override
+  String get noTemplatesYet => 'No templates yet';
+
+  @override
+  String get saveToScratchpadHint => 'Right-click a card → Save to Scratchpad';
+
+  @override
+  String get renameLayerTitle => 'Rename Layer';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get unlock => 'Unlock';
+
+  @override
+  String get lock => 'Lock';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get expand => 'Expand';
+
+  @override
+  String get collapse => 'Collapse';
+
+  @override
+  String get load => 'Load';
+
+  @override
+  String get straight => 'Straight';
+
+  @override
+  String get curved => 'Curved';
+
+  @override
+  String get orthogonal => 'Orthogonal';
+
+  @override
+  String get align => 'Align';
+
+  @override
+  String get group => 'Group';
+
+  @override
+  String importFormat(String format) {
+    return 'Import $format';
+  }
+
+  @override
+  String get import => 'Import';
+
+  @override
+  String get grid => 'Grid';
+
+  @override
+  String get export => 'Export';
+
+  @override
+  String canvasStatusCardsConnectionsGroups(
+    int cardCount,
+    int connectionCount,
+    int groupCount,
+  ) {
+    return '$cardCount cards · $connectionCount connections · $groupCount groups';
+  }
+
+  @override
+  String selectedGroupHint(int count) {
+    return '$count selected · Ctrl+G group · Del delete';
+  }
+
+  @override
+  String get selectedSingleHint =>
+      'Selected · Click to edit · Del to delete · Drag corner to resize';
+
+  @override
+  String get editingHint => 'Editing · Esc to finish';
+
+  @override
+  String get connectCardHint => 'Click a card to connect · Esc to cancel';
+
+  @override
+  String get addLayersToOrganize => 'Add layers to organize your cards';
+
+  @override
+  String get scratchpadEmptyHint => 'Right-click a card → Save to Scratchpad';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String layerNameWithNumber(int number) {
+    return 'Layer $number';
+  }
 }

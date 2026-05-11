@@ -1,8 +1,8 @@
-version: 7
+version: 8
 status: solid
-updated_at: "2026-05-08T12:00:00"
+updated_at: "2026-05-11T12:00:00"
 task: "RFBrowser — AI-Powered Knowledge Browser"
-current_iteration: 4
+current_iteration: 5
 next_phase: "v1.0 Release: 项目完成度~99%，所有核心Epic已验证通过。可进入打包发布阶段"
 progress:
   completed_criteria:
@@ -72,6 +72,11 @@ progress:
     - "LayoutBuilder for color preset grid alignment"
     - "9 new AGENTS.md rules: U-7~U-10, A-10~A-11, F-9~F-10, UX-11~UX-15"
     - "5 new meta-mistakes documented: MM-013~MM-017"
+    - "Canvas FocusNode memory leak fixed: hasFocus checks before dispose"
+    - "Canvas performance optimized: _CameraNotifier + ListenableBuilder for camera state"
+    - "Canvas l10n complete: 100+ new l10n keys, all hardcoded strings replaced"
+    - "Canvas connection line selection bug fixed: _hitTestConnectionLine in _onScaleStart"
+    - "Canvas overlapping connection cycle-select: click same spot to switch between lines"
   failed_criteria: []
   in_progress: []
   pending:
@@ -107,16 +112,21 @@ checkpoints:
     created_at: "2026-05-08T18:00:00"
     description: "Editor UX overhaul: formatting toolbar, status bar, SegmentedButton view switcher, save feedback. Theme system overhaul: independent scaffold/surface/accent colors, computed isDarkMode, removed dark/light toggle. l10n compliance: 33 new keys, all hardcoded strings replaced. Color preset redesign with distinct hues. 9 new AGENTS.md rules, 5 new meta-mistakes."
     completed_criteria_count: 16
+  - id: "ckpt-013"
+    name: "canvas-refactor-and-bugfix-session"
+    created_at: "2026-05-11T12:00:00"
+    description: "Canvas page deep refactor: FocusNode memory leak fix (hasFocus check), performance optimization (_CameraNotifier + ListenableBuilder isolating camera rebuilds), l10n completion (100+ new keys, all hardcoded strings replaced), connection line selection bug fix (_hitTestConnectionLine added to _onScaleStart, _isClickingConnection flag prevents canvas pan), overlapping connection cycle-select (click same spot to switch between overlapping lines). 3 new meta-mistakes, 3 new genome constraints."
+    completed_criteria_count: 5
 metrics:
-  total_criteria: 83
-  completed: 83
+  total_criteria: 88
+  completed: 88
   satisfaction_rate: 1.0
   lint_issues: 0
   constraint_violations: 0
   test_count: 97
 evolution_counts:
-  mutations_applied: 33
-  constraints_added: 57
+  mutations_applied: 36
+  constraints_added: 60
   innovations_proposed: 6
-  constraints_activated: 47
-  constraints_verified: 57
+  constraints_activated: 50
+  constraints_verified: 60

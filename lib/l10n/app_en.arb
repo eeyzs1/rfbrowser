@@ -537,5 +537,236 @@
   "flowAnimation": "Flow Animation",
   "label": "Label",
   "connectionLabel": "Connection label",
-  "deleteConnection": "Delete Connection"
+  "deleteConnection": "Delete Connection",
+  "alignLeft": "Align Left",
+  "alignCenterH": "Align Center H",
+  "alignRight": "Align Right",
+  "alignTop": "Align Top",
+  "alignCenterV": "Align Center V",
+  "alignBottom": "Align Bottom",
+  "distributeH": "Distribute H",
+  "distributeV": "Distribute V",
+  "rectangle": "Rectangle",
+  "roundedRect": "Rounded Rect",
+  "ellipse": "Ellipse",
+  "diamond": "Diamond",
+  "hexagon": "Hexagon",
+  "parallelogram": "Parallelogram",
+  "triangle": "Triangle",
+  "cylinder": "Cylinder",
+  "star": "Star",
+  "swimlaneH": "Swimlane H",
+  "swimlaneV": "Swimlane V",
+  "table": "Table",
+  "freehand": "Freehand",
+  "loadTemplate": "Load Template",
+  "loadTemplateConfirm": "This will replace the current canvas content. Continue?",
+  "flowchart": "Flowchart",
+  "umlClass": "UML Class",
+  "swimlane": "Swimlane",
+  "mindMap": "Mind Map",
+  "network": "Network",
+  "erDiagram": "ER Diagram",
+  "kanban": "Kanban",
+  "orgChart": "Org Chart",
+  "stateMachine": "State Machine",
+  "vennDiagram": "Venn Diagram",
+  "timeline": "Timeline",
+  "gantt": "Gantt",
+  "decisionTree": "Decision Tree",
+  "forceDirected": "Force Directed",
+  "hierarchical": "Hierarchical",
+  "gridLayout": "Grid",
+  "exportPng": "Export PNG",
+  "exportSvg": "Export SVG",
+  "exportPdf": "Export PDF",
+  "exportMarkdown": "Export Markdown",
+  "exportHtml": "Export HTML",
+  "exportJpeg": "Export JPEG",
+  "exportSvgWithData": "Export SVG (with data)",
+  "backgroundColor": "Background Color",
+  "clearBackground": "Clear Background",
+  "defaultCardStyle": "Default Card Style",
+  "enumerateShapes": "Enumerate Shapes",
+  "importCsv": "Import CSV",
+  "importMermaid": "Import Mermaid",
+  "importSvg": "Import SVG",
+  "shareViaUrl": "Share via URL",
+  "shapes": "Shapes",
+  "autoLayout": "Auto Layout",
+  "canvasSettings": "Canvas Settings",
+  "zoomIn": "Zoom In",
+  "zoomOut": "Zoom Out",
+  "resetZoom": "Reset Zoom",
+  "connectionStyle": "Connection Style",
+  "arrowStyle": "Arrow Style",
+  "width": "Width",
+  "color": "Color",
+  "saveToScratchpad": "Save to Scratchpad",
+  "templateName": "Template Name",
+  "category": "Category",
+  "general": "General",
+  "savedToScratchpad": "Saved \"{name}\" to Scratchpad",
+  "@savedToScratchpad": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "moveToLayer": "Move to Layer",
+  "noLayerDefault": "No Layer (Default)",
+  "clear": "Clear",
+  "close": "Close",
+  "reset": "Reset",
+  "fillColor": "Fill Color",
+  "borderRadius": "Border Radius",
+  "borderWidth": "Border Width",
+  "removeWaypoint": "Remove Waypoint",
+  "removeAllWaypoints": "Remove All Waypoints",
+  "container": "Container",
+  "straightPath": "Straight",
+  "curvedPath": "Curved",
+  "orthogonalPath": "Orthogonal",
+  "addWaypoint": "Add Waypoint",
+  "clearWaypoints": "Clear Waypoints",
+  "copyStyle": "Copy Style",
+  "pasteStyle": "Paste Style",
+  "addTag": "Add Tag...",
+  "removeTag": "Remove Tag...",
+  "groupSelection": "Group Selection",
+  "ungroup": "Ungroup",
+  "title": "Title",
+  "editStyle": "Edit Style",
+  "tagName": "Tag name",
+  "layerName": "Layer name",
+  "moveUp": "Move Up",
+  "moveDown": "Move Down",
+  "deleteLayer": "Delete Layer",
+  "addToCanvas": "Add to canvas",
+  "renameLayer": "Rename Layer",
+  "addLayer": "Add Layer",
+  "layers": "Layers",
+  "layer": "Layer",
+  "scratchpad": "Scratchpad",
+  "rulers": "Rulers",
+  "styleBrush": "Style Brush",
+  "gridOn": "Grid: On",
+  "gridOff": "Grid: Off",
+  "snapOn": "Snap: On",
+  "snapOff": "Snap: Off",
+  "fit": "Fit",
+  "importData": "Import Data",
+  "importDataHint": "Paste CSV, Mermaid diagram, or SVG code here...",
+  "shareUrlCopied": "Share URL copied to clipboard",
+  "exportFailedNotRendered": "Export failed: canvas not rendered",
+  "exportFailedPng": "Export failed: could not generate PNG",
+  "exportedPngTo": "Exported PNG to {path}",
+  "@exportedPngTo": {
+    "placeholders": {
+      "path": {"type": "String"}
+    }
+  },
+  "pngExportFailed": "PNG export failed: {error}",
+  "@pngExportFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "exportedTo": "Exported to {path}",
+  "@exportedTo": {
+    "placeholders": {
+      "path": {"type": "String"}
+    }
+  },
+  "exportFailed": "Export failed: {error}",
+  "@exportFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "selectedClickToEdit": "Selected · Click to edit · Del to delete · Drag corner to resize",
+  "editingEsc": "Editing · Esc to finish",
+  "clickToConnect": "Click a card to connect · Esc to cancel",
+  "styleBrushHint": "Style Brush: click a card to apply style · Esc to cancel",
+  "changeColorMulti": "Change Color ({count} cards)",
+  "@changeColorMulti": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noteContent": "Note content...",
+  "typeSomething": "Type something...",
+  "imagePath": "Image Path",
+  "url": "URL",
+  "contentPreview": "Content Preview",
+  "richText": "Rich Text",
+  "bold": "Bold",
+  "italic": "Italic",
+  "underline": "Underline",
+  "code": "Code",
+  "strikethrough": "Strikethrough",
+  "text": "Text",
+  "editSegment": "Edit {type}",
+  "@editSegment": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "alignH": "Align H",
+  "alignV": "Align V",
+  "font": "Font",
+  "textColor": "Text Color",
+  "noLayersYet": "No layers yet",
+  "addLayersHint": "Add layers to organize your cards",
+  "noTemplatesYet": "No templates yet",
+  "saveToScratchpadHint": "Right-click a card → Save to Scratchpad",
+  "renameLayerTitle": "Rename Layer",
+  "selectNote": "Select Note",
+  "ok": "OK",
+  "unlock": "Unlock",
+  "lock": "Lock",
+  "all": "All",
+  "expand": "Expand",
+  "collapse": "Collapse",
+  "container": "Container",
+  "load": "Load",
+  "straight": "Straight",
+  "curved": "Curved",
+  "orthogonal": "Orthogonal",
+  "align": "Align",
+  "group": "Group",
+  "importFormat": "Import {format}",
+  "@importFormat": {
+    "placeholders": {
+      "format": {"type": "String"}
+    }
+  },
+  "import": "Import",
+  "grid": "Grid",
+  "export": "Export",
+  "canvasStatusCardsConnectionsGroups": "{cardCount} cards · {connectionCount} connections · {groupCount} groups",
+  "@canvasStatusCardsConnectionsGroups": {
+    "placeholders": {
+      "cardCount": {"type": "int"},
+      "connectionCount": {"type": "int"},
+      "groupCount": {"type": "int"}
+    }
+  },
+  "selectedGroupHint": "{count} selected · Ctrl+G group · Del delete",
+  "@selectedGroupHint": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "selectedSingleHint": "Selected · Click to edit · Del to delete · Drag corner to resize",
+  "editingHint": "Editing · Esc to finish",
+  "connectCardHint": "Click a card to connect · Esc to cancel",
+  "addLayersToOrganize": "Add layers to organize your cards",
+  "scratchpadEmptyHint": "Right-click a card → Save to Scratchpad",
+  "add": "Add",
+  "layerNameWithNumber": "Layer {number}",
+  "@layerNameWithNumber": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  }
 }

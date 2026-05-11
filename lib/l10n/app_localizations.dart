@@ -389,7 +389,7 @@ abstract class AppLocalizations {
   /// No description provided for @backgroundColor.
   ///
   /// In en, this message translates to:
-  /// **'Background'**
+  /// **'Background Color'**
   String get backgroundColor;
 
   /// No description provided for @surfaceColor.
@@ -2399,7 +2399,7 @@ abstract class AppLocalizations {
   /// No description provided for @addToCanvas.
   ///
   /// In en, this message translates to:
-  /// **'Add to Canvas'**
+  /// **'Add to canvas'**
   String get addToCanvas;
 
   /// No description provided for @notesOnCanvas.
@@ -2563,6 +2563,976 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete Connection'**
   String get deleteConnection;
+
+  /// No description provided for @alignLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Align Left'**
+  String get alignLeft;
+
+  /// No description provided for @alignCenterH.
+  ///
+  /// In en, this message translates to:
+  /// **'Align Center H'**
+  String get alignCenterH;
+
+  /// No description provided for @alignRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Align Right'**
+  String get alignRight;
+
+  /// No description provided for @alignTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Align Top'**
+  String get alignTop;
+
+  /// No description provided for @alignCenterV.
+  ///
+  /// In en, this message translates to:
+  /// **'Align Center V'**
+  String get alignCenterV;
+
+  /// No description provided for @alignBottom.
+  ///
+  /// In en, this message translates to:
+  /// **'Align Bottom'**
+  String get alignBottom;
+
+  /// No description provided for @distributeH.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribute H'**
+  String get distributeH;
+
+  /// No description provided for @distributeV.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribute V'**
+  String get distributeV;
+
+  /// No description provided for @rectangle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get rectangle;
+
+  /// No description provided for @roundedRect.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounded Rect'**
+  String get roundedRect;
+
+  /// No description provided for @ellipse.
+  ///
+  /// In en, this message translates to:
+  /// **'Ellipse'**
+  String get ellipse;
+
+  /// No description provided for @diamond.
+  ///
+  /// In en, this message translates to:
+  /// **'Diamond'**
+  String get diamond;
+
+  /// No description provided for @hexagon.
+  ///
+  /// In en, this message translates to:
+  /// **'Hexagon'**
+  String get hexagon;
+
+  /// No description provided for @parallelogram.
+  ///
+  /// In en, this message translates to:
+  /// **'Parallelogram'**
+  String get parallelogram;
+
+  /// No description provided for @triangle.
+  ///
+  /// In en, this message translates to:
+  /// **'Triangle'**
+  String get triangle;
+
+  /// No description provided for @cylinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Cylinder'**
+  String get cylinder;
+
+  /// No description provided for @star.
+  ///
+  /// In en, this message translates to:
+  /// **'Star'**
+  String get star;
+
+  /// No description provided for @swimlaneH.
+  ///
+  /// In en, this message translates to:
+  /// **'Swimlane H'**
+  String get swimlaneH;
+
+  /// No description provided for @swimlaneV.
+  ///
+  /// In en, this message translates to:
+  /// **'Swimlane V'**
+  String get swimlaneV;
+
+  /// No description provided for @freehand.
+  ///
+  /// In en, this message translates to:
+  /// **'Freehand'**
+  String get freehand;
+
+  /// No description provided for @loadTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Load Template'**
+  String get loadTemplate;
+
+  /// No description provided for @loadTemplateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This will replace the current canvas content. Continue?'**
+  String get loadTemplateConfirm;
+
+  /// No description provided for @flowchart.
+  ///
+  /// In en, this message translates to:
+  /// **'Flowchart'**
+  String get flowchart;
+
+  /// No description provided for @umlClass.
+  ///
+  /// In en, this message translates to:
+  /// **'UML Class'**
+  String get umlClass;
+
+  /// No description provided for @swimlane.
+  ///
+  /// In en, this message translates to:
+  /// **'Swimlane'**
+  String get swimlane;
+
+  /// No description provided for @mindMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind Map'**
+  String get mindMap;
+
+  /// No description provided for @network.
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get network;
+
+  /// No description provided for @erDiagram.
+  ///
+  /// In en, this message translates to:
+  /// **'ER Diagram'**
+  String get erDiagram;
+
+  /// No description provided for @kanban.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanban'**
+  String get kanban;
+
+  /// No description provided for @orgChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Org Chart'**
+  String get orgChart;
+
+  /// No description provided for @stateMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'State Machine'**
+  String get stateMachine;
+
+  /// No description provided for @vennDiagram.
+  ///
+  /// In en, this message translates to:
+  /// **'Venn Diagram'**
+  String get vennDiagram;
+
+  /// No description provided for @timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get timeline;
+
+  /// No description provided for @gantt.
+  ///
+  /// In en, this message translates to:
+  /// **'Gantt'**
+  String get gantt;
+
+  /// No description provided for @decisionTree.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision Tree'**
+  String get decisionTree;
+
+  /// No description provided for @forceDirected.
+  ///
+  /// In en, this message translates to:
+  /// **'Force Directed'**
+  String get forceDirected;
+
+  /// No description provided for @hierarchical.
+  ///
+  /// In en, this message translates to:
+  /// **'Hierarchical'**
+  String get hierarchical;
+
+  /// No description provided for @gridLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get gridLayout;
+
+  /// No description provided for @exportPng.
+  ///
+  /// In en, this message translates to:
+  /// **'Export PNG'**
+  String get exportPng;
+
+  /// No description provided for @exportSvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Export SVG'**
+  String get exportSvg;
+
+  /// No description provided for @exportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export PDF'**
+  String get exportPdf;
+
+  /// No description provided for @exportMarkdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Markdown'**
+  String get exportMarkdown;
+
+  /// No description provided for @exportHtml.
+  ///
+  /// In en, this message translates to:
+  /// **'Export HTML'**
+  String get exportHtml;
+
+  /// No description provided for @exportJpeg.
+  ///
+  /// In en, this message translates to:
+  /// **'Export JPEG'**
+  String get exportJpeg;
+
+  /// No description provided for @exportSvgWithData.
+  ///
+  /// In en, this message translates to:
+  /// **'Export SVG (with data)'**
+  String get exportSvgWithData;
+
+  /// No description provided for @clearBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Background'**
+  String get clearBackground;
+
+  /// No description provided for @defaultCardStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Card Style'**
+  String get defaultCardStyle;
+
+  /// No description provided for @enumerateShapes.
+  ///
+  /// In en, this message translates to:
+  /// **'Enumerate Shapes'**
+  String get enumerateShapes;
+
+  /// No description provided for @importCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Import CSV'**
+  String get importCsv;
+
+  /// No description provided for @importMermaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Mermaid'**
+  String get importMermaid;
+
+  /// No description provided for @importSvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Import SVG'**
+  String get importSvg;
+
+  /// No description provided for @shareViaUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Share via URL'**
+  String get shareViaUrl;
+
+  /// No description provided for @shapes.
+  ///
+  /// In en, this message translates to:
+  /// **'Shapes'**
+  String get shapes;
+
+  /// No description provided for @autoLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Layout'**
+  String get autoLayout;
+
+  /// No description provided for @canvasSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas Settings'**
+  String get canvasSettings;
+
+  /// No description provided for @zoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom In'**
+  String get zoomIn;
+
+  /// No description provided for @zoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom Out'**
+  String get zoomOut;
+
+  /// No description provided for @resetZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Zoom'**
+  String get resetZoom;
+
+  /// No description provided for @connectionStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Style'**
+  String get connectionStyle;
+
+  /// No description provided for @arrowStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow Style'**
+  String get arrowStyle;
+
+  /// No description provided for @width.
+  ///
+  /// In en, this message translates to:
+  /// **'Width'**
+  String get width;
+
+  /// No description provided for @color.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get color;
+
+  /// No description provided for @saveToScratchpad.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to Scratchpad'**
+  String get saveToScratchpad;
+
+  /// No description provided for @templateName.
+  ///
+  /// In en, this message translates to:
+  /// **'Template Name'**
+  String get templateName;
+
+  /// No description provided for @category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get category;
+
+  /// No description provided for @general.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get general;
+
+  /// No description provided for @savedToScratchpad.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved \"{name}\" to Scratchpad'**
+  String savedToScratchpad(String name);
+
+  /// No description provided for @moveToLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to Layer'**
+  String get moveToLayer;
+
+  /// No description provided for @noLayerDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'No Layer (Default)'**
+  String get noLayerDefault;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @fillColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill Color'**
+  String get fillColor;
+
+  /// No description provided for @borderRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Border Radius'**
+  String get borderRadius;
+
+  /// No description provided for @borderWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Border Width'**
+  String get borderWidth;
+
+  /// No description provided for @removeWaypoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Waypoint'**
+  String get removeWaypoint;
+
+  /// No description provided for @removeAllWaypoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove All Waypoints'**
+  String get removeAllWaypoints;
+
+  /// No description provided for @container.
+  ///
+  /// In en, this message translates to:
+  /// **'Container'**
+  String get container;
+
+  /// No description provided for @straightPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Straight'**
+  String get straightPath;
+
+  /// No description provided for @curvedPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Curved'**
+  String get curvedPath;
+
+  /// No description provided for @orthogonalPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Orthogonal'**
+  String get orthogonalPath;
+
+  /// No description provided for @addWaypoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Waypoint'**
+  String get addWaypoint;
+
+  /// No description provided for @clearWaypoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Waypoints'**
+  String get clearWaypoints;
+
+  /// No description provided for @copyStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Style'**
+  String get copyStyle;
+
+  /// No description provided for @pasteStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste Style'**
+  String get pasteStyle;
+
+  /// No description provided for @addTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Tag...'**
+  String get addTag;
+
+  /// No description provided for @removeTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Tag...'**
+  String get removeTag;
+
+  /// No description provided for @groupSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Selection'**
+  String get groupSelection;
+
+  /// No description provided for @ungroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Ungroup'**
+  String get ungroup;
+
+  /// No description provided for @title.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get title;
+
+  /// No description provided for @editStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Style'**
+  String get editStyle;
+
+  /// No description provided for @tagName.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag name'**
+  String get tagName;
+
+  /// No description provided for @layerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Layer name'**
+  String get layerName;
+
+  /// No description provided for @moveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move Up'**
+  String get moveUp;
+
+  /// No description provided for @moveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move Down'**
+  String get moveDown;
+
+  /// No description provided for @deleteLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Layer'**
+  String get deleteLayer;
+
+  /// No description provided for @renameLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Layer'**
+  String get renameLayer;
+
+  /// No description provided for @addLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Layer'**
+  String get addLayer;
+
+  /// No description provided for @layers.
+  ///
+  /// In en, this message translates to:
+  /// **'Layers'**
+  String get layers;
+
+  /// No description provided for @layer.
+  ///
+  /// In en, this message translates to:
+  /// **'Layer'**
+  String get layer;
+
+  /// No description provided for @scratchpad.
+  ///
+  /// In en, this message translates to:
+  /// **'Scratchpad'**
+  String get scratchpad;
+
+  /// No description provided for @rulers.
+  ///
+  /// In en, this message translates to:
+  /// **'Rulers'**
+  String get rulers;
+
+  /// No description provided for @styleBrush.
+  ///
+  /// In en, this message translates to:
+  /// **'Style Brush'**
+  String get styleBrush;
+
+  /// No description provided for @gridOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid: On'**
+  String get gridOn;
+
+  /// No description provided for @gridOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid: Off'**
+  String get gridOff;
+
+  /// No description provided for @snapOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Snap: On'**
+  String get snapOn;
+
+  /// No description provided for @snapOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Snap: Off'**
+  String get snapOff;
+
+  /// No description provided for @fit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit'**
+  String get fit;
+
+  /// No description provided for @importData.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Data'**
+  String get importData;
+
+  /// No description provided for @importDataHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste CSV, Mermaid diagram, or SVG code here...'**
+  String get importDataHint;
+
+  /// No description provided for @shareUrlCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Share URL copied to clipboard'**
+  String get shareUrlCopied;
+
+  /// No description provided for @exportFailedNotRendered.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: canvas not rendered'**
+  String get exportFailedNotRendered;
+
+  /// No description provided for @exportFailedPng.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: could not generate PNG'**
+  String get exportFailedPng;
+
+  /// No description provided for @exportedPngTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported PNG to {path}'**
+  String exportedPngTo(String path);
+
+  /// No description provided for @pngExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'PNG export failed: {error}'**
+  String pngExportFailed(String error);
+
+  /// No description provided for @exportedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported to {path}'**
+  String exportedTo(String path);
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String exportFailed(String error);
+
+  /// No description provided for @selectedClickToEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected · Click to edit · Del to delete · Drag corner to resize'**
+  String get selectedClickToEdit;
+
+  /// No description provided for @editingEsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing · Esc to finish'**
+  String get editingEsc;
+
+  /// No description provided for @clickToConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Click a card to connect · Esc to cancel'**
+  String get clickToConnect;
+
+  /// No description provided for @styleBrushHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Style Brush: click a card to apply style · Esc to cancel'**
+  String get styleBrushHint;
+
+  /// No description provided for @changeColorMulti.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Color ({count} cards)'**
+  String changeColorMulti(int count);
+
+  /// No description provided for @noteContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Note content...'**
+  String get noteContent;
+
+  /// No description provided for @typeSomething.
+  ///
+  /// In en, this message translates to:
+  /// **'Type something...'**
+  String get typeSomething;
+
+  /// No description provided for @richText.
+  ///
+  /// In en, this message translates to:
+  /// **'Rich Text'**
+  String get richText;
+
+  /// No description provided for @underline.
+  ///
+  /// In en, this message translates to:
+  /// **'Underline'**
+  String get underline;
+
+  /// No description provided for @code.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get code;
+
+  /// No description provided for @text.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get text;
+
+  /// No description provided for @editSegment.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {type}'**
+  String editSegment(String type);
+
+  /// No description provided for @alignH.
+  ///
+  /// In en, this message translates to:
+  /// **'Align H'**
+  String get alignH;
+
+  /// No description provided for @alignV.
+  ///
+  /// In en, this message translates to:
+  /// **'Align V'**
+  String get alignV;
+
+  /// No description provided for @font.
+  ///
+  /// In en, this message translates to:
+  /// **'Font'**
+  String get font;
+
+  /// No description provided for @textColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Text Color'**
+  String get textColor;
+
+  /// No description provided for @noLayersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No layers yet'**
+  String get noLayersYet;
+
+  /// No description provided for @addLayersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add layers to organize your cards'**
+  String get addLayersHint;
+
+  /// No description provided for @noTemplatesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No templates yet'**
+  String get noTemplatesYet;
+
+  /// No description provided for @saveToScratchpadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click a card → Save to Scratchpad'**
+  String get saveToScratchpadHint;
+
+  /// No description provided for @renameLayerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Layer'**
+  String get renameLayerTitle;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlock;
+
+  /// No description provided for @lock.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock'**
+  String get lock;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @expand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get expand;
+
+  /// No description provided for @collapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get collapse;
+
+  /// No description provided for @load.
+  ///
+  /// In en, this message translates to:
+  /// **'Load'**
+  String get load;
+
+  /// No description provided for @straight.
+  ///
+  /// In en, this message translates to:
+  /// **'Straight'**
+  String get straight;
+
+  /// No description provided for @curved.
+  ///
+  /// In en, this message translates to:
+  /// **'Curved'**
+  String get curved;
+
+  /// No description provided for @orthogonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Orthogonal'**
+  String get orthogonal;
+
+  /// No description provided for @align.
+  ///
+  /// In en, this message translates to:
+  /// **'Align'**
+  String get align;
+
+  /// No description provided for @group.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get group;
+
+  /// No description provided for @importFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Import {format}'**
+  String importFormat(String format);
+
+  /// No description provided for @import.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get import;
+
+  /// No description provided for @grid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get grid;
+
+  /// No description provided for @export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get export;
+
+  /// No description provided for @canvasStatusCardsConnectionsGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'{cardCount} cards · {connectionCount} connections · {groupCount} groups'**
+  String canvasStatusCardsConnectionsGroups(
+    int cardCount,
+    int connectionCount,
+    int groupCount,
+  );
+
+  /// No description provided for @selectedGroupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected · Ctrl+G group · Del delete'**
+  String selectedGroupHint(int count);
+
+  /// No description provided for @selectedSingleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected · Click to edit · Del to delete · Drag corner to resize'**
+  String get selectedSingleHint;
+
+  /// No description provided for @editingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing · Esc to finish'**
+  String get editingHint;
+
+  /// No description provided for @connectCardHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Click a card to connect · Esc to cancel'**
+  String get connectCardHint;
+
+  /// No description provided for @addLayersToOrganize.
+  ///
+  /// In en, this message translates to:
+  /// **'Add layers to organize your cards'**
+  String get addLayersToOrganize;
+
+  /// No description provided for @scratchpadEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click a card → Save to Scratchpad'**
+  String get scratchpadEmptyHint;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @layerNameWithNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Layer {number}'**
+  String layerNameWithNumber(int number);
 }
 
 class _AppLocalizationsDelegate
