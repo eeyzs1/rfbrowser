@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rfbrowser/l10n/app_localizations.dart';
 import 'package:rfbrowser/services/quick_move_service.dart';
 import 'package:rfbrowser/data/models/quick_move.dart';
 import 'package:rfbrowser/data/stores/quick_move_store.dart';
@@ -46,6 +47,9 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale('zh'),
             home: Scaffold(
               body: CommandBar(onCommand: _noop, onClose: _noop),
             ),
@@ -58,8 +62,8 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
-      expect(find.text('命令不存在'), findsOneWidget);
-      expect(find.text('创建'), findsOneWidget);
+      expect(find.text('Command not found'), findsOneWidget);
+      expect(find.text('Create'), findsOneWidget);
     });
   });
 
@@ -123,6 +127,9 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale('zh'),
             home: Scaffold(
               body: CommandBar(onCommand: _noop, onClose: _noop),
             ),
@@ -145,6 +152,9 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale('zh'),
             home: Scaffold(
               body: CommandBar(onCommand: _noop, onClose: _noop),
             ),
@@ -153,10 +163,12 @@ void main() {
       );
 
       await tester.enterText(find.byType(TextField), '/');
-      await tester.pumpAndSettle(const Duration(milliseconds: 500));
-      await tester.tap(find.text('/翻译'));
-      await tester.pumpAndSettle();
-
+      await tester.pump(const Duration(milliseconds: 350));
+      final translationFinder = find.widgetWithText(ListTile, '/翻译');
+      expect(translationFinder, findsOneWidget);
+      await tester.tap(translationFinder);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
       final tf = tester.widget<TextField>(find.byType(TextField));
       expect(tf.controller!.text, '/翻译 ');
       expect(tf.controller!.selection.baseOffset, '/翻译 '.length);

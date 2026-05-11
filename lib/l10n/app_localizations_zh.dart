@@ -783,6 +783,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get quickMoveExampleHint => 'e.g. 翻译';
 
   @override
+  String get quickMoves => '快捷命令';
+
+  @override
   String noteCount(int count) {
     return '$count 条笔记';
   }

@@ -286,6 +286,7 @@
   "folderName": "Folder name",
   "bookmarkFolderName": "Bookmark folder name",
   "quickMoveExampleHint": "e.g. Translate",
+  "quickMoves": "Quick Moves",
   "noteCount": "{count} notes",
   "@noteCount": {
     "placeholders": {

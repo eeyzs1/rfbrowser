@@ -789,6 +789,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickMoveExampleHint => 'e.g. Translate';
 
   @override
+  String get quickMoves => 'Quick Moves';
+
+  @override
   String noteCount(int count) {
     return '$count notes';
   }

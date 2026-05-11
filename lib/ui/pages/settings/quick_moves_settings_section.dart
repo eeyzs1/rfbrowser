@@ -15,10 +15,10 @@ class QuickMovesSettingsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final quickMoveState = ref.watch(quickMoveProvider);
     final theme = Theme.of(context);
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
 
     return SettingsSection(
-      title: 'Quick Moves',
+      title: l?.quickMoves ?? 'Quick Moves',
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
@@ -51,16 +51,22 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          title: Text(l.restoreDefaultCommands),
-                          content: Text(l.restoreDefaultCommandsDesc),
+                          title: Text(
+                            l?.restoreDefaultCommands ??
+                                'Restore Default Commands',
+                          ),
+                          content: Text(
+                            l?.restoreDefaultCommandsDesc ??
+                                'Restore default commands?',
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(ctx, false),
-                              child: Text(l.cancel),
+                              child: Text(l?.cancel ?? 'Cancel'),
                             ),
                             FilledButton(
                               onPressed: () => Navigator.pop(ctx, true),
-                              child: Text(l.restore),
+                              child: Text(l?.restore ?? 'Restore'),
                             ),
                           ],
                         ),
@@ -93,7 +99,9 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                success ? l.importSuccess : l.importFailed,
+                                success
+                                    ? (l?.importSuccess ?? 'Import successful')
+                                    : (l?.importFailed ?? 'Import failed'),
                               ),
                             ),
                           );
@@ -190,7 +198,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
     QuickMove move, {
     Key? key,
   }) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     return Dismissible(
       key: key ?? ValueKey(move.id),
       direction: DismissDirection.endToStart,
@@ -198,19 +206,21 @@ class QuickMovesSettingsSection extends ConsumerWidget {
         final confirm = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: Text(l.deleteCommand),
-            content: Text(l.deleteCommandConfirm(move.name)),
+            title: Text(l?.deleteCommand ?? 'Delete Command'),
+            content: Text(
+              l?.deleteCommandConfirm(move.name) ?? 'Delete "${move.name}"?',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text(l.cancel),
+                child: Text(l?.cancel ?? 'Cancel'),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 style: FilledButton.styleFrom(
                   backgroundColor: theme.colorScheme.error,
                 ),
-                child: Text(l.delete),
+                child: Text(l?.delete ?? 'Delete'),
               ),
             ],
           ),

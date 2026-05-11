@@ -1610,6 +1610,12 @@ abstract class AppLocalizations {
   /// **'e.g. Translate'**
   String get quickMoveExampleHint;
 
+  /// No description provided for @quickMoves.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Moves'**
+  String get quickMoves;
+
   /// No description provided for @noteCount.
   ///
   /// In en, this message translates to:

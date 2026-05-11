@@ -286,6 +286,7 @@
   "folderName": "文件夹名称",
   "bookmarkFolderName": "收藏夹名称",
   "quickMoveExampleHint": "e.g. 翻译",
+  "quickMoves": "快捷命令",
   "noteCount": "{count} 条笔记",
   "@noteCount": {
     "placeholders": {

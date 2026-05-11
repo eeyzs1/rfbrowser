@@ -177,8 +177,14 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       return;
     }
 
+    final l = AppLocalizations.of(context);
+    if (l == null) {
+      widget.onCommand(text);
+      widget.onClose();
+      return;
+    }
     final matchingCommand = _buildCommands(
-      AppLocalizations.of(context)!,
+      l,
     ).where((c) => c.label.toLowerCase().contains(text.toLowerCase()));
     if (matchingCommand.length == 1) {
       widget.onCommand(matchingCommand.first.label);
@@ -262,7 +268,8 @@ class _CommandBarState extends ConsumerState<CommandBar> {
 
   List<_CommandDef> get _commandResults {
     if (_isQuickMoveMode) return [];
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
+    if (l == null) return [];
     final commands = _buildCommands(l);
     final query = _controller.text.trim().toLowerCase();
     if (query.isEmpty) return commands;
@@ -412,6 +419,7 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       selected: isSelected,
       selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.08),
       leading: Icon(move.icon, size: 16, color: move.color),
+      onTap: onTap,
       title: Row(
         children: [
           Expanded(
