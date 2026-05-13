@@ -5,8 +5,8 @@ import '../../../services/browser_service.dart';
 import '../../../services/knowledge_service.dart';
 import '../../../services/ai_service.dart';
 import '../../../data/models/note.dart';
+import '../../theme/design_tokens.dart';
 import '../../widgets/note_sidebar.dart';
-import '../../widgets/clip_toolbar.dart';
 import '../../widgets/ai_float.dart';
 import '../../widgets/resizable_panel.dart';
 import '../../pages/browser_page.dart';
@@ -47,7 +47,6 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
   Widget build(BuildContext context) {
     final browserState = ref.watch(browserProvider);
     final knowledgeState = ref.watch(knowledgeProvider);
-    final theme = Theme.of(context);
 
     return Stack(
       children: [
@@ -77,54 +76,17 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
                 ),
               ),
             if (!widget.leftPanelExpanded)
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: widget.onToggleLeftPanel,
-                  child: Container(
-                    width: 24,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      border: Border(
-                        right: BorderSide(color: theme.dividerColor),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.chevron_right,
-                      size: 14,
-                      color: theme.hintColor,
-                    ),
-                  ),
-                ),
+              _PanelCollapseButton(
+                alignment: Alignment.centerLeft,
+                icon: Icons.chevron_right,
+                onTap: widget.onToggleLeftPanel,
               ),
-            Expanded(
-              child: Column(
-                children: [
-                  const Expanded(child: BrowserView()),
-                  const ClipToolbar(),
-                ],
-              ),
-            ),
+            Expanded(child: BrowserView()),
             if (!widget.rightPanelExpanded)
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: widget.onToggleRightPanel,
-                  child: Container(
-                    width: 24,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      border: Border(
-                        left: BorderSide(color: theme.dividerColor),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.chevron_left,
-                      size: 14,
-                      color: theme.hintColor,
-                    ),
-                  ),
-                ),
+              _PanelCollapseButton(
+                alignment: Alignment.centerRight,
+                icon: Icons.chevron_left,
+                onTap: widget.onToggleRightPanel,
               ),
             if (widget.rightPanelExpanded)
               ResizablePanel(
@@ -162,7 +124,62 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
   }
 }
 
+class _PanelCollapseButton extends StatefulWidget {
+  final Alignment alignment;
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  const _PanelCollapseButton({
+    required this.alignment,
+    required this.icon,
+    this.onTap,
+  });
+
+  @override
+  State<_PanelCollapseButton> createState() => _PanelCollapseButtonState();
+}
+
+class _PanelCollapseButtonState extends State<_PanelCollapseButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: _isHovered
+          ? DesignColors.primaryHover
+          : theme.colorScheme.surface,
+      child: InkWell(
+        onTap: widget.onTap,
+        onHover: (hovered) => setState(() => _isHovered = hovered),
+        child: Container(
+          width: DesignTouchTarget.panelCollapseWidth,
+          constraints: const BoxConstraints(minHeight: DesignTouchTarget.minSize),
+          alignment: widget.alignment,
+          decoration: BoxDecoration(
+            border: Border(
+              left: widget.alignment == Alignment.centerRight
+                  ? BorderSide(color: theme.dividerColor)
+                  : BorderSide.none,
+              right: widget.alignment == Alignment.centerLeft
+                  ? BorderSide(color: theme.dividerColor)
+                  : BorderSide.none,
+            ),
+          ),
+          child: Icon(
+            widget.icon,
+            size: 16,
+            color: _isHovered ? theme.colorScheme.primary : theme.hintColor,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 enum _SummaryMode { idle, loading, done, error }
+
+enum _ErrorType { network, rateLimit, noContent, unknown }
 
 class _AiSummaryPanel extends ConsumerStatefulWidget {
   final String? url;
@@ -187,6 +204,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
   _SummaryMode _mode = _SummaryMode.idle;
   String? _summary;
   String? _error;
+  _ErrorType _errorType = _ErrorType.unknown;
   bool _summarizeNote = false;
 
   bool get _canSummarize => _summarizeNote
@@ -195,6 +213,38 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
 
   String _sourceLabel(AppLocalizations l) =>
       _summarizeNote ? l.note : l.webPage;
+
+  _ErrorType _classifyError(String? error) {
+    if (error == null) return _ErrorType.unknown;
+    final lower = error.toLowerCase();
+    if (lower.contains('network') ||
+        lower.contains('connection') ||
+        lower.contains('timeout') ||
+        lower.contains('socket')) {
+      return _ErrorType.network;
+    }
+    if (lower.contains('rate') ||
+        lower.contains('limit') ||
+        lower.contains('429') ||
+        lower.contains('quota')) {
+      return _ErrorType.rateLimit;
+    }
+    if (lower.contains('empty') ||
+        lower.contains('no content') ||
+        lower.contains('no text')) {
+      return _ErrorType.noContent;
+    }
+    return _ErrorType.unknown;
+  }
+
+  String _errorRecoveryHint(AppLocalizations l) {
+    return switch (_errorType) {
+      _ErrorType.network => '请检查网络连接后重试',
+      _ErrorType.rateLimit => 'API 调用频率超限，请稍后重试',
+      _ErrorType.noContent => '当前内容为空，请先打开网页或选择笔记',
+      _ErrorType.unknown => '发生未知错误，请重试或更换内容',
+    };
+  }
 
   void _requestSummary() {
     if (!_canSummarize) return;
@@ -286,6 +336,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
         setState(() {
           _mode = _SummaryMode.error;
           _error = next.error;
+          _errorType = _classifyError(next.error);
         });
       }
     });
@@ -308,14 +359,17 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
     if (l == null) return const SizedBox.shrink();
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignSpacing.md,
+        vertical: DesignSpacing.sm,
+      ),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         children: [
-          Icon(Icons.psychology, size: 16, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
+          Icon(Icons.psychology, size: 18, color: theme.colorScheme.primary),
+          const SizedBox(width: DesignSpacing.sm),
           Expanded(
             child: Text(
               l.aiSourceSummary(_sourceLabel(l)),
@@ -331,49 +385,59 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
             IconButton(
               icon: Icon(
                 Icons.auto_awesome,
-                size: 16,
+                size: 18,
                 color: theme.colorScheme.primary,
               ),
               onPressed: _requestSummary,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               tooltip: l.generateSummary,
+              constraints: const BoxConstraints(
+                minWidth: DesignTouchTarget.iconButtonSize,
+                minHeight: DesignTouchTarget.iconButtonSize,
+              ),
             ),
           if (_mode == _SummaryMode.done)
             IconButton(
               icon: Icon(
-                Icons.save_outlined,
-                size: 16,
+                Icons.save,
+                size: 18,
                 color: theme.colorScheme.primary,
               ),
               onPressed: _saveAsNote,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               tooltip: l.saveAsNote,
+              constraints: const BoxConstraints(
+                minWidth: DesignTouchTarget.iconButtonSize,
+                minHeight: DesignTouchTarget.iconButtonSize,
+              ),
             ),
           if (_mode == _SummaryMode.done || _mode == _SummaryMode.error)
             IconButton(
-              icon: Icon(Icons.arrow_back, size: 16, color: theme.hintColor),
+              icon: Icon(Icons.arrow_back, size: 18, color: theme.hintColor),
               onPressed: _reset,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               tooltip: l.goBack,
+              constraints: const BoxConstraints(
+                minWidth: DesignTouchTarget.iconButtonSize,
+                minHeight: DesignTouchTarget.iconButtonSize,
+              ),
             ),
           if (widget.onBack != null)
             IconButton(
-              icon: Icon(Icons.arrow_back, size: 16, color: theme.hintColor),
+              icon: Icon(Icons.arrow_back, size: 18, color: theme.hintColor),
               onPressed: widget.onBack,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               tooltip: l.backToNotePreview,
+              constraints: const BoxConstraints(
+                minWidth: DesignTouchTarget.iconButtonSize,
+                minHeight: DesignTouchTarget.iconButtonSize,
+              ),
             ),
           if (widget.onClose != null)
             IconButton(
-              icon: Icon(Icons.chevron_right, size: 16, color: theme.hintColor),
+              icon: Icon(Icons.chevron_right, size: 18, color: theme.hintColor),
               onPressed: widget.onClose,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               tooltip: l.closePanel,
+              constraints: const BoxConstraints(
+                minWidth: DesignTouchTarget.iconButtonSize,
+                minHeight: DesignTouchTarget.iconButtonSize,
+              ),
             ),
         ],
       ),
@@ -384,10 +448,12 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
     final l = AppLocalizations.of(context);
     if (l == null) return const SizedBox.shrink();
     return PopupMenuButton<String>(
-      icon: Icon(Icons.swap_horiz, size: 16, color: theme.hintColor),
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+      icon: Icon(Icons.swap_horiz, size: 18, color: theme.hintColor),
       tooltip: l.switchSummaryTarget,
+      constraints: const BoxConstraints(
+        minWidth: DesignTouchTarget.iconButtonSize,
+        minHeight: DesignTouchTarget.iconButtonSize,
+      ),
       onSelected: (value) {
         setState(() {
           _summarizeNote = value == 'note';
@@ -401,12 +467,12 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
             children: [
               Icon(
                 Icons.language,
-                size: 14,
+                size: 16,
                 color: !_summarizeNote
                     ? theme.colorScheme.primary
                     : theme.hintColor,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: DesignSpacing.sm),
               Text(
                 l.webPageSummary,
                 style: !_summarizeNote
@@ -425,12 +491,12 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
             children: [
               Icon(
                 Icons.description,
-                size: 14,
+                size: 16,
                 color: _summarizeNote
                     ? theme.colorScheme.primary
                     : theme.hintColor,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: DesignSpacing.sm),
               Text(
                 l.noteSummary,
                 style: _summarizeNote
@@ -453,7 +519,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
     if (!_canSummarize) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(DesignSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -464,7 +530,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
                 size: 32,
                 color: theme.hintColor.withValues(alpha: 0.3),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: DesignSpacing.sm),
               Text(
                 _summarizeNote ? l.selectNoteForSummary : l.openPageForSummary,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -481,7 +547,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
     if (_mode == _SummaryMode.error) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(DesignSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -490,7 +556,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
                 size: 32,
                 color: theme.colorScheme.error,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: DesignSpacing.sm),
               Text(
                 _error ?? 'Unknown error',
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -500,10 +566,18 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
                 maxLines: 4,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: DesignSpacing.sm),
+              Text(
+                _errorRecoveryHint(l),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: DesignSpacing.md),
               OutlinedButton.icon(
                 onPressed: _requestSummary,
-                icon: const Icon(Icons.refresh, size: 14),
+                icon: const Icon(Icons.refresh, size: 16),
                 label: Text(l.retry),
               ),
             ],
@@ -515,7 +589,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
     if (_mode == _SummaryMode.idle) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(DesignSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -524,7 +598,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
                 size: 32,
                 color: theme.hintColor.withValues(alpha: 0.3),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: DesignSpacing.sm),
               Text(
                 l.clickToGenerateSummary(_sourceLabel(l)),
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -532,10 +606,10 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: DesignSpacing.md),
               FilledButton.icon(
                 onPressed: _requestSummary,
-                icon: const Icon(Icons.auto_awesome, size: 14),
+                icon: const Icon(Icons.auto_awesome, size: 16),
                 label: Text(l.generateSourceSummary(_sourceLabel(l))),
               ),
             ],
@@ -550,13 +624,13 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(DesignSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!_summarizeNote && widget.url != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: DesignSpacing.sm),
               child: Text(
                 widget.url!,
                 style: theme.textTheme.labelSmall?.copyWith(
@@ -568,7 +642,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
             ),
           if (_summarizeNote && widget.activeNote != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: DesignSpacing.sm),
               child: Text(
                 widget.activeNote!.title,
                 style: theme.textTheme.labelSmall?.copyWith(
@@ -585,7 +659,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
           ),
           if (_mode == _SummaryMode.loading)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.only(top: DesignSpacing.sm),
               child: LinearProgressIndicator(
                 backgroundColor: theme.colorScheme.primary.withValues(
                   alpha: 0.1,
@@ -593,12 +667,12 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
               ),
             ),
           if (_mode == _SummaryMode.done) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignSpacing.lg),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: _saveAsNote,
-                icon: const Icon(Icons.save_outlined, size: 14),
+                icon: const Icon(Icons.save, size: 16),
                 label: Text(l.saveAsNote),
               ),
             ),
@@ -631,7 +705,10 @@ class _NotePreviewPanel extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignSpacing.md,
+              vertical: DesignSpacing.sm,
+            ),
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: theme.dividerColor)),
             ),
@@ -639,10 +716,10 @@ class _NotePreviewPanel extends StatelessWidget {
               children: [
                 Icon(
                   Icons.description,
-                  size: 16,
+                  size: 18,
                   color: theme.colorScheme.primary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: DesignSpacing.sm),
                 Expanded(
                   child: Text(
                     l.notePreview,
@@ -657,46 +734,43 @@ class _NotePreviewPanel extends StatelessWidget {
                   IconButton(
                     icon: Icon(
                       Icons.auto_awesome,
-                      size: 16,
+                      size: 18,
                       color: theme.hintColor,
                     ),
                     onPressed: onBack,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 28,
-                      minHeight: 28,
-                    ),
                     tooltip: l.aiSummary,
+                    constraints: const BoxConstraints(
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
+                    ),
                   ),
                 if (onEdit != null)
                   IconButton(
                     icon: Icon(
                       Icons.edit_note,
-                      size: 16,
+                      size: 18,
                       color: theme.colorScheme.primary,
                     ),
                     onPressed: onEdit,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 28,
-                      minHeight: 28,
-                    ),
                     tooltip: l.editNote,
+                    constraints: const BoxConstraints(
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
+                    ),
                   ),
                 if (onClose != null)
                   IconButton(
                     icon: Icon(
                       Icons.chevron_right,
-                      size: 16,
+                      size: 18,
                       color: theme.hintColor,
                     ),
                     onPressed: onClose,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 28,
-                      minHeight: 28,
-                    ),
                     tooltip: l.closePanel,
+                    constraints: const BoxConstraints(
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
+                    ),
                   ),
               ],
             ),
@@ -712,7 +786,7 @@ class _NotePreviewPanel extends StatelessWidget {
                           size: 32,
                           color: theme.hintColor.withValues(alpha: 0.3),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: DesignSpacing.sm),
                         Text(
                           l.clickNoteToPreview,
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -723,7 +797,7 @@ class _NotePreviewPanel extends StatelessWidget {
                     ),
                   )
                 : SingleChildScrollView(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(DesignSpacing.md),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -734,20 +808,22 @@ class _NotePreviewPanel extends StatelessWidget {
                           ),
                         ),
                         if (note.tags != null && note.tags.isNotEmpty) ...[
-                          const SizedBox(height: 6),
+                          const SizedBox(height: DesignSpacing.sm),
                           Wrap(
-                            spacing: 4,
+                            spacing: DesignSpacing.xs,
                             children: note.tags
                                 .map<Widget>(
                                   (tag) => Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
+                                      horizontal: DesignSpacing.sm,
+                                      vertical: DesignSpacing.xs,
                                     ),
                                     decoration: BoxDecoration(
                                       color: theme.colorScheme.secondary
                                           .withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(3),
+                                      borderRadius: BorderRadius.circular(
+                                        DesignRadius.sm,
+                                      ),
                                     ),
                                     child: Text(
                                       '#$tag',
@@ -765,12 +841,12 @@ class _NotePreviewPanel extends StatelessWidget {
                             height: 1.6,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: DesignSpacing.lg),
                         SizedBox(
                           width: double.infinity,
                           child: FilledButton.icon(
                             onPressed: onEdit,
-                            icon: const Icon(Icons.edit_note, size: 16),
+                            icon: const Icon(Icons.edit_note, size: 18),
                             label: Text(l.openInEditor),
                           ),
                         ),

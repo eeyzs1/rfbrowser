@@ -593,6 +593,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shortcutsReset => '快捷键已恢复默认';
 
   @override
+  String get globalShortcuts => '全局快捷键';
+
+  @override
+  String get canvasShortcuts => '画布快捷键';
+
+  @override
   String get shortcutConflict => '快捷键冲突';
 
   @override
@@ -1434,6 +1440,204 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exportSvgWithData => '导出SVG（含数据）';
 
   @override
+  String get promoteToNote => '提升为笔记';
+
+  @override
+  String get promoteToNoteSuccess => '已提升为笔记';
+
+  @override
+  String get exportGraphPng => '导出图谱为PNG';
+
+  @override
+  String get exportGraphSvg => '导出图谱为SVG';
+
+  @override
+  String get exportGraphJson => '导出图谱为JSON';
+
+  @override
+  String get tooltipAddCard => '添加卡片 — 在画布中心创建新笔记卡片';
+
+  @override
+  String get tooltipAutoConnect => '自动连接 — 从笔记的维基链接推导连接关系';
+
+  @override
+  String get tooltipUndo => '撤销 — 回退上一步操作';
+
+  @override
+  String get tooltipRedo => '重做 — 恢复已撤销的操作';
+
+  @override
+  String get tooltipGroup => '分组 — 将选中的卡片合并为一组';
+
+  @override
+  String get tooltipGrid => '网格 — 切换背景网格显示';
+
+  @override
+  String get tooltipSnap => '对齐 — 切换吸附到网格对齐';
+
+  @override
+  String get tooltipContainer => '容器 — 添加可折叠的容器卡片';
+
+  @override
+  String get tooltipStyleBrush => '样式刷 — 从一张卡片复制样式，应用到其他卡片';
+
+  @override
+  String get tooltipFit => '适应 — 缩放以适应所有内容';
+
+  @override
+  String get tooltipLayers => '图层 — 管理卡片可见性图层';
+
+  @override
+  String get tooltipScratchpad => '草稿箱 — 已保存的卡片模板';
+
+  @override
+  String get tooltipRulers => '标尺 — 切换画布标尺';
+
+  @override
+  String get tooltipFreehand => '手绘 — 在画布上自由绘制';
+
+  @override
+  String get tooltipClear => '清除 — 移除所有卡片和连接';
+
+  @override
+  String get tooltipSearch => '搜索 — 按标题或内容查找卡片';
+
+  @override
+  String get toolbarView => '视图';
+
+  @override
+  String get toolbarViewDesc => '网格、对齐、标尺、适应';
+
+  @override
+  String get toolbarCreate => '创建';
+
+  @override
+  String get toolbarCreateDesc => '容器、手绘';
+
+  @override
+  String get toolbarOrganize => '组织';
+
+  @override
+  String get toolbarOrganizeDesc => '分组、图层、草稿箱';
+
+  @override
+  String get tooltipAlign => '对齐 — 对齐和分布选中的卡片';
+
+  @override
+  String get tooltipShapes => '形状 — 添加几何形状到画布';
+
+  @override
+  String get tooltipTemplates => '模板 — 加载预置图表模板';
+
+  @override
+  String get tooltipAutoLayout => '自动布局 — 自动排列卡片';
+
+  @override
+  String get tooltipExport => '导出 — 保存画布为图片或文档';
+
+  @override
+  String get tooltipCanvasSettings => '设置 — 背景、样式、导入等';
+
+  @override
+  String get ttAlignLeft => '对齐选中卡片的左边缘';
+
+  @override
+  String get ttAlignCenterH => '水平居中对齐选中卡片';
+
+  @override
+  String get ttAlignRight => '对齐选中卡片的右边缘';
+
+  @override
+  String get ttAlignTop => '对齐选中卡片的上边缘';
+
+  @override
+  String get ttAlignCenterV => '垂直居中对齐选中卡片';
+
+  @override
+  String get ttAlignBottom => '对齐选中卡片的下边缘';
+
+  @override
+  String get ttDistributeH => '水平均匀分布选中卡片';
+
+  @override
+  String get ttDistributeV => '垂直均匀分布选中卡片';
+
+  @override
+  String get ttGrid => '切换背景网格显示';
+
+  @override
+  String get ttSnap => '切换吸附到网格对齐';
+
+  @override
+  String get ttRulers => '切换画布标尺';
+
+  @override
+  String get ttFit => '缩放以适应所有内容';
+
+  @override
+  String get ttContainer => '添加可折叠的容器卡片';
+
+  @override
+  String get ttFreehand => '在画布上自由绘制';
+
+  @override
+  String get ttForceDirected => '力导向图布局';
+
+  @override
+  String get ttHierarchical => '层次树布局';
+
+  @override
+  String get ttGridLayout => '网格布局排列';
+
+  @override
+  String get ttExportPng => '导出画布为PNG图片';
+
+  @override
+  String get ttExportSvg => '导出画布为SVG矢量图';
+
+  @override
+  String get ttExportMarkdown => '导出画布为Markdown文本';
+
+  @override
+  String get ttExportHtml => '导出画布为HTML页面';
+
+  @override
+  String get ttExportSvgMeta => '导出含嵌入元数据的SVG';
+
+  @override
+  String get ttLayers => '管理卡片可见性图层';
+
+  @override
+  String get ttScratchpad => '已保存的卡片模板';
+
+  @override
+  String get ttBackground => '设置画布背景颜色';
+
+  @override
+  String get ttClearBackground => '移除画布背景颜色';
+
+  @override
+  String get ttDefaultCardStyle => '设置新卡片的默认样式';
+
+  @override
+  String get ttEnumerate => '为所有形状编号';
+
+  @override
+  String get ttImportCsv => '从CSV文件导入数据';
+
+  @override
+  String get ttImportMermaid => '从Mermaid文本导入图表';
+
+  @override
+  String get ttImportSvg => '从SVG文件导入';
+
+  @override
+  String get ttShareUrl => '通过URL链接分享画布';
+
+  @override
+  String get ttClearCanvas => '移除所有卡片和连接';
+
+  @override
   String get clearBackground => '清除背景';
 
   @override
@@ -1541,7 +1745,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addWaypoint => '添加路径点';
 
   @override
-  String get clearWaypoints => '清除路径点';
+  String get clearWaypoint => '清除路径点';
+
+  @override
+  String get clearAllWaypoints => '清除所有路径点';
 
   @override
   String get copyStyle => '复制样式';

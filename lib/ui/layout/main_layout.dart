@@ -112,7 +112,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       if (a != null && h != null) b[a] = h;
     }
     b[const SingleActivator(LogicalKeyboardKey.escape)] = () {
-      if (_showCommandBar) setState(() => _showCommandBar = false);
+      if (_showCommandBar) {
+        setState(() => _showCommandBar = false);
+      }
     };
     b[const SingleActivator(LogicalKeyboardKey.digit1, control: true)] = () =>
         _switchScene(SceneType.capture);

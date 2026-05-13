@@ -1250,6 +1250,18 @@ abstract class AppLocalizations {
   /// **'Shortcuts reset to defaults'**
   String get shortcutsReset;
 
+  /// No description provided for @globalShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Global Shortcuts'**
+  String get globalShortcuts;
+
+  /// No description provided for @canvasShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas Shortcuts'**
+  String get canvasShortcuts;
+
   /// No description provided for @shortcutConflict.
   ///
   /// In en, this message translates to:
@@ -2840,6 +2852,402 @@ abstract class AppLocalizations {
   /// **'Export SVG (with data)'**
   String get exportSvgWithData;
 
+  /// No description provided for @promoteToNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Promote to Note'**
+  String get promoteToNote;
+
+  /// No description provided for @promoteToNoteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Promoted to note'**
+  String get promoteToNoteSuccess;
+
+  /// No description provided for @exportGraphPng.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Graph as PNG'**
+  String get exportGraphPng;
+
+  /// No description provided for @exportGraphSvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Graph as SVG'**
+  String get exportGraphSvg;
+
+  /// No description provided for @exportGraphJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Graph as JSON'**
+  String get exportGraphJson;
+
+  /// No description provided for @tooltipAddCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Card — Create a new note card at center'**
+  String get tooltipAddCard;
+
+  /// No description provided for @tooltipAutoConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Connect — Derive links from note wikilinks'**
+  String get tooltipAutoConnect;
+
+  /// No description provided for @tooltipUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo — Revert last action'**
+  String get tooltipUndo;
+
+  /// No description provided for @tooltipRedo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo — Restore undone action'**
+  String get tooltipRedo;
+
+  /// No description provided for @tooltipGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Group — Combine selected cards into a group'**
+  String get tooltipGroup;
+
+  /// No description provided for @tooltipGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid — Toggle background grid visibility'**
+  String get tooltipGrid;
+
+  /// No description provided for @tooltipSnap.
+  ///
+  /// In en, this message translates to:
+  /// **'Snap — Toggle snap-to-grid alignment'**
+  String get tooltipSnap;
+
+  /// No description provided for @tooltipContainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Container — Add a collapsible container card'**
+  String get tooltipContainer;
+
+  /// No description provided for @tooltipStyleBrush.
+  ///
+  /// In en, this message translates to:
+  /// **'Style Brush — Copy style from one card, apply to others'**
+  String get tooltipStyleBrush;
+
+  /// No description provided for @tooltipFit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit — Zoom to fit all content in view'**
+  String get tooltipFit;
+
+  /// No description provided for @tooltipLayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Layers — Manage card visibility layers'**
+  String get tooltipLayers;
+
+  /// No description provided for @tooltipScratchpad.
+  ///
+  /// In en, this message translates to:
+  /// **'Scratchpad — Saved card templates'**
+  String get tooltipScratchpad;
+
+  /// No description provided for @tooltipRulers.
+  ///
+  /// In en, this message translates to:
+  /// **'Rulers — Toggle canvas rulers'**
+  String get tooltipRulers;
+
+  /// No description provided for @tooltipFreehand.
+  ///
+  /// In en, this message translates to:
+  /// **'Freehand — Draw freehand strokes on canvas'**
+  String get tooltipFreehand;
+
+  /// No description provided for @tooltipClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear — Remove all cards and connections'**
+  String get tooltipClear;
+
+  /// No description provided for @tooltipSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search — Find cards by title or content'**
+  String get tooltipSearch;
+
+  /// No description provided for @toolbarView.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get toolbarView;
+
+  /// No description provided for @toolbarViewDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid, snap, rulers, fit'**
+  String get toolbarViewDesc;
+
+  /// No description provided for @toolbarCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get toolbarCreate;
+
+  /// No description provided for @toolbarCreateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Container, freehand drawing'**
+  String get toolbarCreateDesc;
+
+  /// No description provided for @toolbarOrganize.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize'**
+  String get toolbarOrganize;
+
+  /// No description provided for @toolbarOrganizeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Group, layers, scratchpad'**
+  String get toolbarOrganizeDesc;
+
+  /// No description provided for @tooltipAlign.
+  ///
+  /// In en, this message translates to:
+  /// **'Align — Align and distribute selected cards'**
+  String get tooltipAlign;
+
+  /// No description provided for @tooltipShapes.
+  ///
+  /// In en, this message translates to:
+  /// **'Shapes — Add geometric shapes to canvas'**
+  String get tooltipShapes;
+
+  /// No description provided for @tooltipTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Templates — Load pre-built diagram templates'**
+  String get tooltipTemplates;
+
+  /// No description provided for @tooltipAutoLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Layout — Automatically arrange cards'**
+  String get tooltipAutoLayout;
+
+  /// No description provided for @tooltipExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export — Save canvas as image or document'**
+  String get tooltipExport;
+
+  /// No description provided for @tooltipCanvasSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings — Background, style, import, and more'**
+  String get tooltipCanvasSettings;
+
+  /// No description provided for @ttAlignLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Align left edges of selected cards'**
+  String get ttAlignLeft;
+
+  /// No description provided for @ttAlignCenterH.
+  ///
+  /// In en, this message translates to:
+  /// **'Center selected cards horizontally'**
+  String get ttAlignCenterH;
+
+  /// No description provided for @ttAlignRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Align right edges of selected cards'**
+  String get ttAlignRight;
+
+  /// No description provided for @ttAlignTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Align top edges of selected cards'**
+  String get ttAlignTop;
+
+  /// No description provided for @ttAlignCenterV.
+  ///
+  /// In en, this message translates to:
+  /// **'Center selected cards vertically'**
+  String get ttAlignCenterV;
+
+  /// No description provided for @ttAlignBottom.
+  ///
+  /// In en, this message translates to:
+  /// **'Align bottom edges of selected cards'**
+  String get ttAlignBottom;
+
+  /// No description provided for @ttDistributeH.
+  ///
+  /// In en, this message translates to:
+  /// **'Evenly space selected cards horizontally'**
+  String get ttDistributeH;
+
+  /// No description provided for @ttDistributeV.
+  ///
+  /// In en, this message translates to:
+  /// **'Evenly space selected cards vertically'**
+  String get ttDistributeV;
+
+  /// No description provided for @ttGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle background grid visibility'**
+  String get ttGrid;
+
+  /// No description provided for @ttSnap.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle snap-to-grid alignment'**
+  String get ttSnap;
+
+  /// No description provided for @ttRulers.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle canvas rulers'**
+  String get ttRulers;
+
+  /// No description provided for @ttFit.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom to fit all content in view'**
+  String get ttFit;
+
+  /// No description provided for @ttContainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a collapsible container card'**
+  String get ttContainer;
+
+  /// No description provided for @ttFreehand.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw freehand strokes on canvas'**
+  String get ttFreehand;
+
+  /// No description provided for @ttForceDirected.
+  ///
+  /// In en, this message translates to:
+  /// **'Force-directed graph layout'**
+  String get ttForceDirected;
+
+  /// No description provided for @ttHierarchical.
+  ///
+  /// In en, this message translates to:
+  /// **'Hierarchical tree layout'**
+  String get ttHierarchical;
+
+  /// No description provided for @ttGridLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid layout arrangement'**
+  String get ttGridLayout;
+
+  /// No description provided for @ttExportPng.
+  ///
+  /// In en, this message translates to:
+  /// **'Export canvas as PNG image'**
+  String get ttExportPng;
+
+  /// No description provided for @ttExportSvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Export canvas as SVG vector'**
+  String get ttExportSvg;
+
+  /// No description provided for @ttExportMarkdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Export canvas as Markdown text'**
+  String get ttExportMarkdown;
+
+  /// No description provided for @ttExportHtml.
+  ///
+  /// In en, this message translates to:
+  /// **'Export canvas as HTML page'**
+  String get ttExportHtml;
+
+  /// No description provided for @ttExportSvgMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'Export SVG with embedded metadata'**
+  String get ttExportSvgMeta;
+
+  /// No description provided for @ttLayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage card visibility layers'**
+  String get ttLayers;
+
+  /// No description provided for @ttScratchpad.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved card templates'**
+  String get ttScratchpad;
+
+  /// No description provided for @ttBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Set canvas background color'**
+  String get ttBackground;
+
+  /// No description provided for @ttClearBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove canvas background color'**
+  String get ttClearBackground;
+
+  /// No description provided for @ttDefaultCardStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set default style for new cards'**
+  String get ttDefaultCardStyle;
+
+  /// No description provided for @ttEnumerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign numbers to all shapes'**
+  String get ttEnumerate;
+
+  /// No description provided for @ttImportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Import data from CSV file'**
+  String get ttImportCsv;
+
+  /// No description provided for @ttImportMermaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Import diagram from Mermaid text'**
+  String get ttImportMermaid;
+
+  /// No description provided for @ttImportSvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from SVG file'**
+  String get ttImportSvg;
+
+  /// No description provided for @ttShareUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Share canvas via URL link'**
+  String get ttShareUrl;
+
+  /// No description provided for @ttClearCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all cards and connections'**
+  String get ttClearCanvas;
+
   /// No description provided for @clearBackground.
   ///
   /// In en, this message translates to:
@@ -3050,11 +3458,17 @@ abstract class AppLocalizations {
   /// **'Add Waypoint'**
   String get addWaypoint;
 
-  /// No description provided for @clearWaypoints.
+  /// No description provided for @clearWaypoint.
   ///
   /// In en, this message translates to:
-  /// **'Clear Waypoints'**
-  String get clearWaypoints;
+  /// **'Clear Waypoint'**
+  String get clearWaypoint;
+
+  /// No description provided for @clearAllWaypoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All Waypoints'**
+  String get clearAllWaypoints;
 
   /// No description provided for @copyStyle.
   ///

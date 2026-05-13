@@ -51,27 +51,33 @@ class AppTheme {
     final tintAlpha = s.themeTintOpacity;
     final onSurface = highContrast
         ? const Color(0xFFFFFFFF)
-        : (surfaceIsLight ? const Color(0xFF1E293B) : DesignColors.textPrimary);
+        : (surfaceIsLight
+            ? DesignColors.lightSurfaceText
+            : DesignColors.darkSurfaceText);
     final onSurfaceVariant = highContrast
         ? const Color(0xFFE0E0E0)
-        : cs.primary.withValues(alpha: tintAlpha);
+        : (surfaceIsLight
+            ? DesignColors.lightSurfaceTextSecondary
+            : DesignColors.darkSurfaceTextSecondary);
     final muted = highContrast
         ? const Color(0xFFBDBDBD)
-        : cs.primary.withValues(alpha: tintAlpha * 0.7);
+        : (surfaceIsLight
+            ? DesignColors.lightSurfaceTextSecondary
+            : DesignColors.textMuted);
     final divider = highContrast
         ? const Color(0xFF444444)
         : (surfaceIsLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B));
     final inputBg = highContrast ? const Color(0xFF1A1A1A) : surfaceC;
     final br = s.effectiveBorderRadius;
     final iconSz = s.iconSize.toDouble();
-    final fontSize = s.editorFontSize;
+    final fs = s.editorFontSize;
 
     return ThemeData(
       brightness: s.isDarkMode ? Brightness.dark : Brightness.light,
       colorScheme: cs.copyWith(onSurfaceVariant: onSurfaceVariant),
       scaffoldBackgroundColor: surface,
       visualDensity: s.effectiveVisualDensity,
-      hintColor: cs.primary.withValues(alpha: tintAlpha),
+      hintColor: muted,
       appBarTheme: AppBarTheme(
         backgroundColor: surfaceC,
         foregroundColor: onSurface,
@@ -92,45 +98,78 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(br),
-          borderSide: BorderSide(color: cs.primary, width: 1),
+          borderSide: BorderSide(color: cs.primary, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        hintStyle: TextStyle(color: muted, fontSize: fontSize - 2),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: DesignSpacing.md,
+          vertical: DesignSpacing.sm,
+        ),
+        hintStyle: TextStyle(color: muted, fontSize: fs * 0.875),
       ),
       textTheme: TextTheme(
         headlineLarge: TextStyle(
           color: onSurface,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
-          fontSize: fontSize * 2,
+          fontSize: fs * 2.25,
         ),
         headlineMedium: TextStyle(
           color: onSurface,
           fontWeight: FontWeight.w600,
           letterSpacing: -0.3,
-          fontSize: fontSize * 1.5,
+          fontSize: fs * 1.75,
+        ),
+        headlineSmall: TextStyle(
+          color: onSurface,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.2,
+          fontSize: fs * 1.375,
+        ),
+        titleLarge: TextStyle(
+          color: onSurface,
+          fontWeight: FontWeight.w600,
+          fontSize: fs * 1.25,
         ),
         titleMedium: TextStyle(
           color: onSurface,
           fontWeight: FontWeight.w500,
-          fontSize: fontSize + 2,
+          fontSize: fs * 1.125,
+        ),
+        titleSmall: TextStyle(
+          color: onSurface,
+          fontWeight: FontWeight.w500,
+          fontSize: fs,
         ),
         bodyLarge: TextStyle(
           color: onSurface,
           height: 1.6,
-          fontSize: fontSize + 1,
+          fontSize: fs * 1.0625,
         ),
         bodyMedium: TextStyle(
           color: onSurfaceVariant,
           height: 1.5,
-          fontSize: fontSize,
+          fontSize: fs,
         ),
-        bodySmall: TextStyle(color: muted, height: 1.4, fontSize: fontSize - 2),
+        bodySmall: TextStyle(
+          color: muted,
+          height: 1.4,
+          fontSize: fs * 0.875,
+        ),
+        labelLarge: TextStyle(
+          color: onSurface,
+          fontWeight: FontWeight.w500,
+          fontSize: fs * 0.9375,
+        ),
+        labelMedium: TextStyle(
+          color: onSurfaceVariant,
+          fontWeight: FontWeight.w500,
+          fontSize: fs * 0.8125,
+        ),
         labelSmall: TextStyle(
           color: muted,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.3,
-          fontSize: fontSize - 3,
+          fontSize: fs * 0.75,
         ),
       ),
       iconTheme: IconThemeData(
@@ -155,11 +194,15 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(br),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          minimumSize: const Size(0, DesignTouchTarget.minSize),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DesignSpacing.lg,
+            vertical: 10,
+          ),
           textStyle: TextStyle(
             inherit: false,
             fontWeight: FontWeight.w600,
-            fontSize: fontSize - 1,
+            fontSize: fs * 0.9375,
           ),
         ),
       ),
@@ -170,18 +213,22 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(br),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          minimumSize: const Size(0, DesignTouchTarget.minSize),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DesignSpacing.lg,
+            vertical: 10,
+          ),
           textStyle: TextStyle(
             inherit: false,
             fontWeight: FontWeight.w500,
-            fontSize: fontSize - 1,
+            fontSize: fs * 0.9375,
           ),
         ),
       ),
       listTileTheme: ListTileThemeData(
         iconColor: cs.primary,
         selectedColor: cs.primary,
-        selectedTileColor: cs.primary.withValues(alpha: 0.08),
+        selectedTileColor: DesignColors.primarySubtle,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
         visualDensity: s.effectiveVisualDensity,
       ),
@@ -230,11 +277,15 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(br),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          minimumSize: const Size(0, DesignTouchTarget.minSize),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DesignSpacing.md,
+            vertical: DesignSpacing.sm,
+          ),
           textStyle: TextStyle(
             inherit: false,
             fontWeight: FontWeight.w500,
-            fontSize: fontSize - 1,
+            fontSize: fs * 0.9375,
           ),
         ),
       ),
@@ -245,11 +296,15 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(br),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          minimumSize: const Size(0, DesignTouchTarget.minSize),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DesignSpacing.lg,
+            vertical: 10,
+          ),
           textStyle: TextStyle(
             inherit: false,
             fontWeight: FontWeight.w600,
-            fontSize: fontSize - 1,
+            fontSize: fs * 0.9375,
           ),
         ),
       ),
@@ -285,11 +340,11 @@ class AppTheme {
         selectedLabelTextStyle: TextStyle(
           color: cs.primary,
           fontWeight: FontWeight.w600,
-          fontSize: fontSize - 2,
+          fontSize: fs * 0.875,
         ),
         unselectedLabelTextStyle: TextStyle(
           color: muted,
-          fontSize: fontSize - 2,
+          fontSize: fs * 0.875,
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(
@@ -301,7 +356,8 @@ class AppTheme {
           color: onSurface,
           borderRadius: BorderRadius.circular(br * 0.5),
         ),
-        textStyle: TextStyle(color: surface, fontSize: fontSize - 2),
+        textStyle: TextStyle(color: surface, fontSize: fs * 0.875),
+        waitDuration: const Duration(milliseconds: 500),
       ),
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(
@@ -311,6 +367,11 @@ class AppTheme {
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(br)),
       ),
+      focusColor: cs.primary.withValues(alpha: 0.12),
+      hoverColor: cs.primary.withValues(alpha: 0.08),
+      highlightColor: cs.primary.withValues(alpha: 0.12),
+      splashColor: cs.primary.withValues(alpha: 0.12),
+      splashFactory: InkRipple.splashFactory,
     );
   }
 }

@@ -1,6 +1,6 @@
-version: 8
+version: 9
 status: solid
-updated_at: "2026-05-11T12:00:00"
+updated_at: "2026-05-12T12:00:00"
 task: "RFBrowser — AI-Powered Knowledge Browser"
 current_iteration: 5
 next_phase: "v1.0 Release: 项目完成度~99%，所有核心Epic已验证通过。可进入打包发布阶段"
@@ -77,6 +77,12 @@ progress:
     - "Canvas l10n complete: 100+ new l10n keys, all hardcoded strings replaced"
     - "Canvas connection line selection bug fixed: _hitTestConnectionLine in _onScaleStart"
     - "Canvas overlapping connection cycle-select: click same spot to switch between lines"
+    - "Canvas toolbar hover-to-show dropdown menus with auto-close on mouse leave"
+    - "Ctrl+Z/Ctrl+Y undo/redo shortcuts + Ctrl+Shift+Z redo alternative"
+    - "Canvas shortcuts configurable in Settings via ShortcutService"
+    - "PopupMenuItem Row overflow fixed with Flexible + TextOverflow.ellipsis"
+    - "Menu item tooltips with functional descriptions (33 new l10n keys)"
+    - "browser_page.dart use_build_context_synchronously fixed"
   failed_criteria: []
   in_progress: []
   pending:
@@ -117,9 +123,14 @@ checkpoints:
     created_at: "2026-05-11T12:00:00"
     description: "Canvas page deep refactor: FocusNode memory leak fix (hasFocus check), performance optimization (_CameraNotifier + ListenableBuilder isolating camera rebuilds), l10n completion (100+ new keys, all hardcoded strings replaced), connection line selection bug fix (_hitTestConnectionLine added to _onScaleStart, _isClickingConnection flag prevents canvas pan), overlapping connection cycle-select (click same spot to switch between overlapping lines). 3 new meta-mistakes, 3 new genome constraints."
     completed_criteria_count: 5
+  - id: "ckpt-014"
+    name: "canvas-toolbar-hover-shortcuts-session"
+    created_at: "2026-05-12T12:00:00"
+    description: "Canvas toolbar UX overhaul: hover-to-show dropdown menus using OverlayEntry (no modal barrier), auto-close on mouse leave with 250ms delay. Ctrl+Z/Ctrl+Y undo/redo shortcuts added. Canvas shortcuts integrated into ShortcutService and configurable in Settings. PopupMenuItem Row overflow fixed with _popupRow helper (Flexible + TextOverflow.ellipsis). Menu item tooltips with 33 new l10n keys. browser_page.dart use_build_context_synchronously lint fixed."
+    completed_criteria_count: 7
 metrics:
-  total_criteria: 88
-  completed: 88
+  total_criteria: 95
+  completed: 95
   satisfaction_rate: 1.0
   lint_issues: 0
   constraint_violations: 0

@@ -9,6 +9,7 @@ import '../../services/settings_service.dart';
 import '../../data/models/note.dart';
 import '../../data/models/browser_tab.dart';
 import '../../data/stores/vault_store.dart';
+import '../theme/design_tokens.dart';
 import 'create_note_dialog.dart';
 
 enum _SidebarTab { notes, bookmarks }
@@ -112,6 +113,8 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
           _buildNotesToolbar(theme, l)
         else
           _buildBookmarksToolbar(theme, l),
+        if (_activeTab == _SidebarTab.notes && knowledgeState.activeNote != null)
+          _buildBreadcrumb(theme, knowledgeState.activeNote!, l),
         Expanded(
           child: _activeTab == _SidebarTab.notes
               ? _buildNotesTree(theme, notes, knowledgeState, l)
@@ -227,7 +230,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
 
   Widget _buildNotesToolbar(ThemeData theme, AppLocalizations l) {
     return Padding(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(DesignSpacing.sm),
       child: Row(
         children: [
           Expanded(
@@ -239,7 +242,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                 hintStyle: theme.textTheme.bodySmall,
                 prefixIcon: const Icon(Icons.search, size: 14),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 6),
+                contentPadding: const EdgeInsets.symmetric(vertical: DesignSpacing.xs + 2),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.close, size: 12),
@@ -247,10 +250,9 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
                         },
-                        padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(
-                          minWidth: 20,
-                          minHeight: 20,
+                          minWidth: DesignTouchTarget.minSize * 0.5,
+                          minHeight: DesignTouchTarget.minSize * 0.5,
                         ),
                       )
                     : null,
@@ -258,19 +260,23 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
               onChanged: (q) => setState(() => _searchQuery = q),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: DesignSpacing.xs),
           IconButton(
-            icon: const Icon(Icons.create_new_folder_outlined, size: 14),
+            icon: const Icon(Icons.create_new_folder, size: 14),
             onPressed: () => _createNoteFolder(''),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            constraints: const BoxConstraints(
+              minWidth: DesignTouchTarget.iconButtonSize,
+              minHeight: DesignTouchTarget.iconButtonSize,
+            ),
             tooltip: l.newFolder,
           ),
           IconButton(
             icon: const Icon(Icons.add, size: 16),
             onPressed: () => _createNewNote(''),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            constraints: const BoxConstraints(
+              minWidth: DesignTouchTarget.iconButtonSize,
+              minHeight: DesignTouchTarget.iconButtonSize,
+            ),
             tooltip: l.newNote,
           ),
         ],
@@ -278,9 +284,96 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     );
   }
 
+  Widget _buildBreadcrumb(ThemeData theme, dynamic note, AppLocalizations l) {
+    final normalizedPath = (note.filePath as String).replaceAll('\\', '/');
+    final parts = normalizedPath.split('/');
+    if (parts.length <= 1) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignSpacing.sm,
+        vertical: DesignSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: () {
+                setState(() {
+                  _expandedNoteFolders.add('');
+                });
+              },
+              borderRadius: BorderRadius.circular(DesignRadius.sm),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DesignSpacing.xs,
+                  vertical: 2,
+                ),
+                child: Icon(
+                  Icons.folder_open,
+                  size: 12,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ),
+            for (var i = 0; i < parts.length - 1; i++) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DesignSpacing.xs,
+                ),
+                child: Icon(Icons.chevron_right, size: 10, color: theme.hintColor),
+              ),
+              InkWell(
+                onTap: () {
+                  final folderPath = parts.sublist(0, i + 1).join('/');
+                  setState(() {
+                    _expandedNoteFolders.add(folderPath);
+                  });
+                },
+                borderRadius: BorderRadius.circular(DesignRadius.sm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DesignSpacing.xs,
+                    vertical: 2,
+                  ),
+                  child: Text(
+                    parts[i],
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.xs),
+              child: Icon(Icons.chevron_right, size: 10, color: theme.hintColor),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.xs),
+              child: Text(
+                note.title ?? parts.last,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBookmarksToolbar(ThemeData theme, AppLocalizations l) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs + 2),
       child: Row(
         children: [
           Icon(Icons.bookmark, size: 14, color: theme.hintColor),
@@ -294,7 +387,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.create_new_folder_outlined, size: 14),
+            icon: const Icon(Icons.create_new_folder, size: 14),
             onPressed: () => _createBookmarkFolder('bookmarks-bar'),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
@@ -543,7 +636,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                       if (isHovered) ...[
                         _ib(Icons.add, onNewNote, l.newNote),
                         _ib(
-                          Icons.create_new_folder_outlined,
+                          Icons.create_new_folder,
                           onNewFolder,
                           l.newSubfolder,
                         ),
@@ -585,7 +678,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         elevation: 4,
         borderRadius: BorderRadius.circular(4),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(4),
@@ -632,7 +725,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
               }
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+              padding: const EdgeInsets.symmetric(vertical: DesignSpacing.xs, horizontal: DesignSpacing.xs),
               child: Row(
                 children: [
                   Icon(
@@ -716,7 +809,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         child: Row(
           children: [
             Icon(
-              Icons.create_new_folder_outlined,
+              Icons.create_new_folder,
               size: 14,
               color: Theme.of(context).hintColor,
             ),
@@ -941,12 +1034,12 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                         ),
                         if (isHovered && folder.id != 'bookmarks-bar') ...[
                           _ib(
-                            Icons.create_new_folder_outlined,
+                            Icons.create_new_folder,
                             () => _createBookmarkFolder(folder.id),
                             l.newSubBookmarkFolder,
                           ),
                           _ib(
-                            Icons.edit_outlined,
+                            Icons.edit,
                             () => _renameBookmarkFolder(folder),
                             l.rename,
                           ),
@@ -961,7 +1054,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                         ],
                         if (isHovered && folder.id == 'bookmarks-bar')
                           _ib(
-                            Icons.create_new_folder_outlined,
+                            Icons.create_new_folder,
                             () => _createBookmarkFolder(folder.id),
                             l.newSubBookmarkFolder,
                           ),
@@ -1037,7 +1130,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         elevation: 4,
         borderRadius: BorderRadius.circular(4),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(4),
@@ -1072,9 +1165,9 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         child: InkWell(
           onTap: () => widget.onBookmarkOpened?.call(bookmark.url),
           child: Container(
-            padding: EdgeInsets.only(left: depth * 14.0 + 18.0, right: 4),
+            padding: EdgeInsets.only(left: depth * 14.0 + 18.0, right: DesignSpacing.xs),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+              padding: const EdgeInsets.symmetric(vertical: DesignSpacing.xs, horizontal: DesignSpacing.xs),
               child: Row(
                 children: [
                   _favicon(bookmark),
@@ -1528,7 +1621,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(DesignSpacing.sm),
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: theme.dividerColor)),
           ),
@@ -1554,7 +1647,7 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         Expanded(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(DesignSpacing.xl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

@@ -598,6 +598,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutsReset => 'Shortcuts reset to defaults';
 
   @override
+  String get globalShortcuts => 'Global Shortcuts';
+
+  @override
+  String get canvasShortcuts => 'Canvas Shortcuts';
+
+  @override
   String get shortcutConflict => 'Shortcut conflict';
 
   @override
@@ -1449,6 +1455,207 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportSvgWithData => 'Export SVG (with data)';
 
   @override
+  String get promoteToNote => 'Promote to Note';
+
+  @override
+  String get promoteToNoteSuccess => 'Promoted to note';
+
+  @override
+  String get exportGraphPng => 'Export Graph as PNG';
+
+  @override
+  String get exportGraphSvg => 'Export Graph as SVG';
+
+  @override
+  String get exportGraphJson => 'Export Graph as JSON';
+
+  @override
+  String get tooltipAddCard => 'Add Card — Create a new note card at center';
+
+  @override
+  String get tooltipAutoConnect =>
+      'Auto Connect — Derive links from note wikilinks';
+
+  @override
+  String get tooltipUndo => 'Undo — Revert last action';
+
+  @override
+  String get tooltipRedo => 'Redo — Restore undone action';
+
+  @override
+  String get tooltipGroup => 'Group — Combine selected cards into a group';
+
+  @override
+  String get tooltipGrid => 'Grid — Toggle background grid visibility';
+
+  @override
+  String get tooltipSnap => 'Snap — Toggle snap-to-grid alignment';
+
+  @override
+  String get tooltipContainer => 'Container — Add a collapsible container card';
+
+  @override
+  String get tooltipStyleBrush =>
+      'Style Brush — Copy style from one card, apply to others';
+
+  @override
+  String get tooltipFit => 'Fit — Zoom to fit all content in view';
+
+  @override
+  String get tooltipLayers => 'Layers — Manage card visibility layers';
+
+  @override
+  String get tooltipScratchpad => 'Scratchpad — Saved card templates';
+
+  @override
+  String get tooltipRulers => 'Rulers — Toggle canvas rulers';
+
+  @override
+  String get tooltipFreehand => 'Freehand — Draw freehand strokes on canvas';
+
+  @override
+  String get tooltipClear => 'Clear — Remove all cards and connections';
+
+  @override
+  String get tooltipSearch => 'Search — Find cards by title or content';
+
+  @override
+  String get toolbarView => 'View';
+
+  @override
+  String get toolbarViewDesc => 'Grid, snap, rulers, fit';
+
+  @override
+  String get toolbarCreate => 'Create';
+
+  @override
+  String get toolbarCreateDesc => 'Container, freehand drawing';
+
+  @override
+  String get toolbarOrganize => 'Organize';
+
+  @override
+  String get toolbarOrganizeDesc => 'Group, layers, scratchpad';
+
+  @override
+  String get tooltipAlign => 'Align — Align and distribute selected cards';
+
+  @override
+  String get tooltipShapes => 'Shapes — Add geometric shapes to canvas';
+
+  @override
+  String get tooltipTemplates => 'Templates — Load pre-built diagram templates';
+
+  @override
+  String get tooltipAutoLayout => 'Auto Layout — Automatically arrange cards';
+
+  @override
+  String get tooltipExport => 'Export — Save canvas as image or document';
+
+  @override
+  String get tooltipCanvasSettings =>
+      'Settings — Background, style, import, and more';
+
+  @override
+  String get ttAlignLeft => 'Align left edges of selected cards';
+
+  @override
+  String get ttAlignCenterH => 'Center selected cards horizontally';
+
+  @override
+  String get ttAlignRight => 'Align right edges of selected cards';
+
+  @override
+  String get ttAlignTop => 'Align top edges of selected cards';
+
+  @override
+  String get ttAlignCenterV => 'Center selected cards vertically';
+
+  @override
+  String get ttAlignBottom => 'Align bottom edges of selected cards';
+
+  @override
+  String get ttDistributeH => 'Evenly space selected cards horizontally';
+
+  @override
+  String get ttDistributeV => 'Evenly space selected cards vertically';
+
+  @override
+  String get ttGrid => 'Toggle background grid visibility';
+
+  @override
+  String get ttSnap => 'Toggle snap-to-grid alignment';
+
+  @override
+  String get ttRulers => 'Toggle canvas rulers';
+
+  @override
+  String get ttFit => 'Zoom to fit all content in view';
+
+  @override
+  String get ttContainer => 'Add a collapsible container card';
+
+  @override
+  String get ttFreehand => 'Draw freehand strokes on canvas';
+
+  @override
+  String get ttForceDirected => 'Force-directed graph layout';
+
+  @override
+  String get ttHierarchical => 'Hierarchical tree layout';
+
+  @override
+  String get ttGridLayout => 'Grid layout arrangement';
+
+  @override
+  String get ttExportPng => 'Export canvas as PNG image';
+
+  @override
+  String get ttExportSvg => 'Export canvas as SVG vector';
+
+  @override
+  String get ttExportMarkdown => 'Export canvas as Markdown text';
+
+  @override
+  String get ttExportHtml => 'Export canvas as HTML page';
+
+  @override
+  String get ttExportSvgMeta => 'Export SVG with embedded metadata';
+
+  @override
+  String get ttLayers => 'Manage card visibility layers';
+
+  @override
+  String get ttScratchpad => 'Saved card templates';
+
+  @override
+  String get ttBackground => 'Set canvas background color';
+
+  @override
+  String get ttClearBackground => 'Remove canvas background color';
+
+  @override
+  String get ttDefaultCardStyle => 'Set default style for new cards';
+
+  @override
+  String get ttEnumerate => 'Assign numbers to all shapes';
+
+  @override
+  String get ttImportCsv => 'Import data from CSV file';
+
+  @override
+  String get ttImportMermaid => 'Import diagram from Mermaid text';
+
+  @override
+  String get ttImportSvg => 'Import from SVG file';
+
+  @override
+  String get ttShareUrl => 'Share canvas via URL link';
+
+  @override
+  String get ttClearCanvas => 'Remove all cards and connections';
+
+  @override
   String get clearBackground => 'Clear Background';
 
   @override
@@ -1556,7 +1763,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addWaypoint => 'Add Waypoint';
 
   @override
-  String get clearWaypoints => 'Clear Waypoints';
+  String get clearWaypoint => 'Clear Waypoint';
+
+  @override
+  String get clearAllWaypoints => 'Clear All Waypoints';
 
   @override
   String get copyStyle => 'Copy Style';

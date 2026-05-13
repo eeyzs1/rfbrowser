@@ -1,13 +1,20 @@
+import 'dart:io';
 import 'dart:math';
+import 'dart:ui' as ui;
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/knowledge_service.dart';
+import '../../services/settings_service.dart';
 import '../../data/models/note.dart';
 import '../../data/models/link.dart';
+import '../../data/stores/vault_store.dart';
 import '../../core/graph/layout_engine.dart';
 import '../../core/graph/filter_engine.dart';
 import '../../core/graph/graph_algorithm.dart';
 import '../../l10n/app_localizations.dart';
+import '../theme/design_tokens.dart';
 import '../widgets/graph_stats_card.dart';
 
 enum GraphLayoutMode { circular, forceDirected }
@@ -27,6 +34,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
   String? _hoveredNode;
   String? _selectedNode;
   final _graphKey = GlobalKey();
+  final _graphPaintKey = GlobalKey();
   GraphLayoutMode _layoutMode = GraphLayoutMode.forceDirected;
   GraphViewMode _viewMode = GraphViewMode.full;
   String? _localGraphCenter;
@@ -34,6 +42,9 @@ class _GraphViewState extends ConsumerState<GraphView> {
   Map<String, Offset>? _cachedLayout;
   String? _cachedLayoutKey;
   bool _showStats = false;
+  bool _showLegend = false;
+
+  static const double _nodeHitRadius = 22.0;
 
   @override
   Widget build(BuildContext context) {
@@ -60,10 +71,20 @@ class _GraphViewState extends ConsumerState<GraphView> {
                 color: theme.colorScheme.primary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignSpacing.lg),
             Text(l.knowledgeGraph, style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignSpacing.sm),
             Text(l.createLinkedNotesHint, style: theme.textTheme.bodySmall),
+            const SizedBox(height: DesignSpacing.xl),
+            FilledButton.icon(
+              onPressed: () {
+                ref.read(knowledgeProvider.notifier).createNote(
+                  title: l.newNote,
+                );
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: Text(l.newNote),
+            ),
           ],
         ),
       );
@@ -150,7 +171,6 @@ class _GraphViewState extends ConsumerState<GraphView> {
                   (_graphKey.currentContext?.findRenderObject() as RenderBox?)
                       ?.size ??
                   Size.zero;
-              final nodeRadius = 6.0 * _scale;
               final layout = _cachedLayout;
 
               String? hovered;
@@ -161,7 +181,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
                     entry.value.dy * _scale + size.height / 2 + _offset.dy,
                   );
                   final dist = (pos - details.localPosition).distance;
-                  if (dist < nodeRadius * 3) {
+                  if (dist < _nodeHitRadius * _scale) {
                     hovered = entry.key;
                     break;
                   }
@@ -183,7 +203,6 @@ class _GraphViewState extends ConsumerState<GraphView> {
                     (_graphKey.currentContext?.findRenderObject() as RenderBox?)
                         ?.size ??
                     Size.zero;
-                final nodeRadius = 6.0 * _scale;
                 final layout = _cachedLayout;
 
                 String? tappedNoteId;
@@ -194,7 +213,7 @@ class _GraphViewState extends ConsumerState<GraphView> {
                       entry.value.dy * _scale + size.height / 2 + _offset.dy,
                     );
                     final dist = (pos - details.localPosition).distance;
-                    if (dist < nodeRadius * 3) {
+                    if (dist < _nodeHitRadius * _scale) {
                       tappedNoteId = entry.key;
                       break;
                     }
@@ -211,9 +230,11 @@ class _GraphViewState extends ConsumerState<GraphView> {
                 }
               },
               child: ClipRect(
-                child: CustomPaint(
-                  key: _graphKey,
-                  painter: GraphPainter(
+                child: RepaintBoundary(
+                  key: _graphPaintKey,
+                  child: CustomPaint(
+                    key: _graphKey,
+                    painter: GraphPainter(
                     notes: displayNotes,
                     links: displayLinks,
                     scale: _scale,
@@ -229,37 +250,37 @@ class _GraphViewState extends ConsumerState<GraphView> {
                     hintColor: theme.hintColor,
                     cardColor: theme.cardColor,
                     errorColor: theme.colorScheme.error,
+                    baseFontSize: ref.watch(settingsProvider).editorFontSize * 0.75,
                   ),
                   size: Size.infinite,
                 ),
               ),
             ),
           ),
+          ),
           Positioned(
-            top: 12,
-            left: 12,
+            top: DesignSpacing.md,
+            left: DesignSpacing.md,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: DesignSpacing.md,
+                vertical: DesignSpacing.sm,
+              ),
               decoration: BoxDecoration(
                 color: theme.cardColor,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(DesignRadius.md),
+                boxShadow: [DesignShadow.sm],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.hub, size: 16, color: theme.colorScheme.primary),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: DesignSpacing.sm),
                   Text(
                     l.noteCount(displayNotes.length),
                     style: theme.textTheme.bodySmall,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: DesignSpacing.sm),
                   IconButton(
                     icon: Icon(
                       _layoutMode == GraphLayoutMode.forceDirected
@@ -273,10 +294,9 @@ class _GraphViewState extends ConsumerState<GraphView> {
                           : GraphLayoutMode.forceDirected;
                       _cachedLayoutKey = null;
                     }),
-                    padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
                     ),
                     tooltip: _layoutMode == GraphLayoutMode.forceDirected
                         ? 'Switch to circular'
@@ -300,48 +320,56 @@ class _GraphViewState extends ConsumerState<GraphView> {
                       }
                       _cachedLayoutKey = null;
                     }),
-                    padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
                     ),
                     tooltip: _viewMode == GraphViewMode.full
                         ? l.localGraph
                         : 'Full graph',
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: DesignSpacing.xs),
                   IconButton(
                     icon: Icon(
                       _showStats ? Icons.analytics : Icons.analytics_outlined,
                       size: 16,
                     ),
                     onPressed: () => setState(() => _showStats = !_showStats),
-                    padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
                     ),
                     tooltip: 'Toggle statistics',
                   ),
-                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(
+                      _showLegend ? Icons.legend_toggle : Icons.legend_toggle_outlined,
+                      size: 16,
+                    ),
+                    onPressed: () => setState(() => _showLegend = !_showLegend),
+                    constraints: const BoxConstraints(
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
+                    ),
+                    tooltip: 'Toggle legend',
+                  ),
+                  const SizedBox(width: DesignSpacing.xs),
                   IconButton(
                     icon: const Icon(Icons.zoom_in, size: 16),
                     onPressed: () =>
                         setState(() => _scale = (_scale * 1.2).clamp(0.3, 3.0)),
-                    padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.zoom_out, size: 16),
                     onPressed: () =>
                         setState(() => _scale = (_scale / 1.2).clamp(0.3, 3.0)),
-                    padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
                     ),
                   ),
                   IconButton(
@@ -350,40 +378,92 @@ class _GraphViewState extends ConsumerState<GraphView> {
                       _offset = Offset.zero;
                       _scale = 1.0;
                     }),
-                    padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
                     ),
+                  ),
+                  const SizedBox(width: DesignSpacing.xs),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.file_download, size: 16),
+                    tooltip: l.export,
+                    constraints: const BoxConstraints(
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
+                    ),
+                    onSelected: (value) => _handleGraphExport(value, displayNotes, displayLinks),
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'png',
+                        child: Row(
+                          children: [
+                            Icon(Icons.image, size: 14, color: theme.hintColor),
+                            const SizedBox(width: 8),
+                            Text(l.exportGraphPng),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'svg',
+                        child: Row(
+                          children: [
+                            Icon(Icons.code, size: 14, color: theme.hintColor),
+                            const SizedBox(width: 8),
+                            Text(l.exportGraphSvg),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'json',
+                        child: Row(
+                          children: [
+                            Icon(Icons.data_object, size: 14, color: theme.hintColor),
+                            const SizedBox(width: 8),
+                            Text(l.exportGraphJson),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
+          if (_hoveredNode != null)
+            Positioned(
+              top: DesignSpacing.xl + DesignSpacing.md,
+              left: DesignSpacing.md,
+              child: _NodeTooltip(
+                noteId: _hoveredNode!,
+                notes: displayNotes,
+                linkCount: _countLinks(displayLinks, _hoveredNode!),
+              ),
+            ),
+          if (_showLegend)
+            Positioned(
+              top: DesignSpacing.xl + DesignSpacing.md,
+              right: DesignSpacing.md,
+              child: _GraphLegend(theme: theme),
+            ),
           if (_showStats)
             Positioned(
               top: 60,
-              right: 12,
+              right: DesignSpacing.md,
               child: GraphStatsCard(stats: graphStats),
             ),
           if (_viewMode == GraphViewMode.local)
             Positioned(
-              bottom: 12,
-              left: 12,
+              bottom: DesignSpacing.md,
+              left: DesignSpacing.md,
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+                  horizontal: DesignSpacing.md,
+                  vertical: DesignSpacing.sm,
                 ),
                 decoration: BoxDecoration(
                   color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 8,
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(DesignRadius.md),
+                  boxShadow: [DesignShadow.sm],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -406,22 +486,22 @@ class _GraphViewState extends ConsumerState<GraphView> {
             ),
           if (bridgeNodes.isNotEmpty)
             Positioned(
-              bottom: 12,
-              right: 12,
+              bottom: DesignSpacing.md,
+              right: DesignSpacing.md,
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
+                  horizontal: DesignSpacing.md,
+                  vertical: DesignSpacing.sm,
                 ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.error.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(DesignRadius.md),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.star, size: 14, color: theme.colorScheme.error),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: DesignSpacing.xs),
                     Text(
                       '${bridgeNodes.length} bridge nodes',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -435,6 +515,12 @@ class _GraphViewState extends ConsumerState<GraphView> {
         ],
       ),
     );
+  }
+
+  int _countLinks(List<GraphLink> links, String noteId) {
+    return links
+        .where((l) => l.sourceId == noteId || l.targetId == noteId)
+        .length;
   }
 
   LocalGraphResult? _computeLocalGraph(KnowledgeState knowledgeState) {
@@ -480,6 +566,334 @@ class _GraphViewState extends ConsumerState<GraphView> {
     final result = layout.compute(layoutNodes, layoutEdges);
     return result.positions;
   }
+
+  void _handleGraphExport(
+    String format,
+    List<Note> displayNotes,
+    List<GraphLink> displayLinks,
+  ) {
+    switch (format) {
+      case 'png':
+        _exportGraphToPng();
+      case 'svg':
+        _exportGraphToSvg(displayNotes, displayLinks);
+      case 'json':
+        _exportGraphToJson(displayNotes, displayLinks);
+    }
+  }
+
+  Future<void> _exportGraphToPng() async {
+    final l = AppLocalizations.of(context)!;
+    try {
+      final boundary = _graphPaintKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l.exportFailedNotRendered)),
+          );
+        }
+        return;
+      }
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l.exportFailedPng)),
+          );
+        }
+        return;
+      }
+      final vaultPath = ref.read(vaultProvider).currentVault?.path;
+      if (vaultPath == null) return;
+      final dir = Directory('$vaultPath/attachments');
+      if (!await dir.exists()) await dir.create(recursive: true);
+      final file = File('${dir.path}/graph_${DateTime.now().millisecondsSinceEpoch}.png');
+      await file.writeAsBytes(byteData.buffer.asUint8List());
+      image.dispose();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.exportedTo(file.path)),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.pngExportFailed('$e'))),
+        );
+      }
+    }
+  }
+
+  void _exportGraphToSvg(List<Note> displayNotes, List<GraphLink> displayLinks) {
+    final l = AppLocalizations.of(context)!;
+    final layout = _cachedLayout;
+    if (layout == null || displayNotes.isEmpty) return;
+
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final hintColor = theme.hintColor;
+    final surfaceColor = theme.colorScheme.surface;
+
+    double minX = double.infinity, minY = double.infinity;
+    double maxX = double.negativeInfinity, maxY = double.negativeInfinity;
+    for (final pos in layout.values) {
+      if (pos.dx - 30 < minX) minX = pos.dx - 30;
+      if (pos.dy - 30 < minY) minY = pos.dy - 30;
+      if (pos.dx + 30 > maxX) maxX = pos.dx + 30;
+      if (pos.dy + 30 > maxY) maxY = pos.dy + 30;
+    }
+    if (minX == double.infinity) { minX = 0; minY = 0; maxX = 400; maxY = 400; }
+    final padding = 20.0;
+    final width = maxX - minX + padding * 2;
+    final height = maxY - minY + padding * 2;
+
+    final svgBuffer = StringBuffer();
+    svgBuffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
+    svgBuffer.writeln('<svg xmlns="http://www.w3.org/2000/svg" width="$width" height="$height" viewBox="${minX - padding} ${minY - padding} $width $height">');
+    svgBuffer.writeln('  <rect x="${minX - padding}" y="${minY - padding}" width="$width" height="$height" fill="${_colorToHex(surfaceColor)}" />');
+
+    for (final link in displayLinks) {
+      final fromPos = layout[link.sourceId];
+      final toPos = layout[link.targetId];
+      if (fromPos == null || toPos == null) continue;
+      svgBuffer.writeln('  <line x1="${fromPos.dx}" y1="${fromPos.dy}" x2="${toPos.dx}" y2="${toPos.dy}" stroke="${_colorToHex(hintColor)}" stroke-width="1" opacity="0.4" />');
+    }
+
+    for (final note in displayNotes) {
+      final pos = layout[note.id];
+      if (pos == null) continue;
+      final r = 8.0;
+      svgBuffer.writeln('  <circle cx="${pos.dx}" cy="${pos.dy}" r="$r" fill="${_colorToHex(primaryColor)}" />');
+      final escapedTitle = note.title.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+      svgBuffer.writeln('  <text x="${pos.dx}" y="${pos.dy + r + 12}" text-anchor="middle" font-size="10" fill="${_colorToHex(hintColor)}">$escapedTitle</text>');
+    }
+
+    svgBuffer.writeln('</svg>');
+
+    _saveGraphExportFile('graph_${DateTime.now().millisecondsSinceEpoch}.svg', svgBuffer.toString(), l);
+  }
+
+  void _exportGraphToJson(List<Note> displayNotes, List<GraphLink> displayLinks) {
+    final l = AppLocalizations.of(context)!;
+    final layout = _cachedLayout;
+
+    final nodes = displayNotes.map((n) => {
+      'id': n.id,
+      'title': n.title,
+      'tags': n.tags,
+      if (layout != null && layout.containsKey(n.id)) 'position': {
+        'x': layout[n.id]!.dx,
+        'y': layout[n.id]!.dy,
+      },
+    }).toList();
+
+    final edges = displayLinks.map((e) => {
+      'source': e.sourceId,
+      'target': e.targetId,
+    }).toList();
+
+    final data = JsonEncoder.withIndent('  ').convert({
+      'nodes': nodes,
+      'edges': edges,
+      'exportedAt': DateTime.now().toIso8601String(),
+    });
+
+    _saveGraphExportFile('graph_${DateTime.now().millisecondsSinceEpoch}.json', data, l);
+  }
+
+  void _saveGraphExportFile(String filename, String content, AppLocalizations l) async {
+    try {
+      final vaultPath = ref.read(vaultProvider).currentVault?.path;
+      if (vaultPath == null) return;
+      final dir = Directory('$vaultPath/attachments');
+      if (!await dir.exists()) await dir.create(recursive: true);
+      final file = File('${dir.path}/$filename');
+      await file.writeAsString(content);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.exportedTo(file.path)),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
+    }
+  }
+
+  String _colorToHex(Color color) {
+    return '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
+  }
+}
+
+class _NodeTooltip extends StatelessWidget {
+  final String noteId;
+  final List<Note> notes;
+  final int linkCount;
+
+  const _NodeTooltip({
+    required this.noteId,
+    required this.notes,
+    required this.linkCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final note = notes.where((n) => n.id == noteId).firstOrNull;
+    if (note == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignSpacing.md,
+        vertical: DesignSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(DesignRadius.md),
+        boxShadow: [DesignShadow.md],
+      ),
+      constraints: const BoxConstraints(maxWidth: 240),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            note.title,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: DesignSpacing.xs),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.link, size: 12, color: theme.hintColor),
+              const SizedBox(width: DesignSpacing.xs),
+              Text(
+                '$linkCount connections',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.hintColor,
+                ),
+              ),
+            ],
+          ),
+          if (note.tags.isNotEmpty) ...[
+            const SizedBox(height: DesignSpacing.xs),
+            Wrap(
+              spacing: DesignSpacing.xs,
+              children: note.tags
+                  .take(3)
+                  .map(
+                    (tag) => Text(
+                      '#$tag',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _GraphLegend extends StatelessWidget {
+  final ThemeData theme;
+
+  const _GraphLegend({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(DesignSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(DesignRadius.md),
+        boxShadow: [DesignShadow.sm],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Legend',
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: DesignSpacing.sm),
+          _legendItem(theme.colorScheme.primary, 'Normal node'),
+          _legendItem(theme.colorScheme.secondary, 'Hovered node'),
+          _legendItem(theme.colorScheme.error, 'Bridge node (critical path)'),
+          const SizedBox(height: DesignSpacing.xs),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: DesignSpacing.sm),
+              Text('Small = few links', style: theme.textTheme.labelSmall),
+            ],
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 16,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: DesignSpacing.sm),
+              Text('Large = many links', style: theme.textTheme.labelSmall),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _legendItem(Color color, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DesignSpacing.xs),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: DesignSpacing.sm),
+          Text(label, style: theme.textTheme.labelSmall),
+        ],
+      ),
+    );
+  }
 }
 
 class GraphLink {
@@ -504,6 +918,7 @@ class GraphPainter extends CustomPainter {
   final Color hintColor;
   final Color cardColor;
   final Color errorColor;
+  final double baseFontSize;
 
   GraphPainter({
     required this.notes,
@@ -521,6 +936,7 @@ class GraphPainter extends CustomPainter {
     required this.hintColor,
     required this.cardColor,
     required this.errorColor,
+    this.baseFontSize = 10.0,
   });
 
   @override
@@ -602,6 +1018,13 @@ class GraphPainter extends CustomPainter {
         ..color = primaryColor.withValues(alpha: 0.15)
         ..style = PaintingStyle.fill;
 
+      if (isHovered) {
+        final hoverPaint = Paint()
+          ..color = secondaryColor.withValues(alpha: 0.1)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(pos, _GraphViewState._nodeHitRadius * scale, hoverPaint);
+      }
+
       if (isBridge) {
         canvas.drawCircle(pos, r * 1.8, bridgePaint);
       } else if (connections > 2) {
@@ -614,7 +1037,7 @@ class GraphPainter extends CustomPainter {
           text: '\u2605',
           style: TextStyle(
             color: redColor,
-            fontSize: (12 * scale).clamp(8, 16),
+            fontSize: (baseFontSize * 1.2 * scale).clamp(8, 16),
           ),
         );
         final starPainter = TextPainter(
@@ -640,7 +1063,7 @@ class GraphPainter extends CustomPainter {
                 : isBridge
                 ? redColor
                 : onSurfaceColor.withValues(alpha: 0.8),
-            fontSize: (10 * scale).clamp(8, 14),
+            fontSize: (baseFontSize * scale).clamp(8, 14),
           ),
         );
         final textPainter = TextPainter(

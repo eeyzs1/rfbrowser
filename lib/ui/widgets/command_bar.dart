@@ -6,6 +6,7 @@ import '../../services/knowledge_service.dart';
 import '../../services/quick_move_service.dart';
 import '../../data/models/quick_move.dart';
 import '../../l10n/app_localizations.dart';
+import '../theme/design_tokens.dart';
 import 'create_quick_move_dialog.dart';
 
 class CommandBar extends ConsumerStatefulWidget {
@@ -21,6 +22,7 @@ class CommandBar extends ConsumerStatefulWidget {
 class _CommandBarState extends ConsumerState<CommandBar> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
+  final _scrollController = ScrollController();
   List<_SearchResult> _results = [];
   List<QuickMove> _quickMoves = [];
   bool _isSearching = false;
@@ -51,6 +53,7 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     _controller.removeListener(_onQueryChanged);
     _controller.dispose();
     _focusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -285,37 +288,39 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     final showCommands =
         !_isQuickMoveMode &&
         (_controller.text.trim().isEmpty || commands.isNotEmpty);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final barWidth = screenWidth < 600 ? screenWidth * 0.9 : 560.0;
 
     return Center(
       child: Container(
-        width: 560,
-        constraints: const BoxConstraints(maxHeight: 480),
+        width: barWidth,
+        constraints: const BoxConstraints(
+          minWidth: 360,
+          maxWidth: 560,
+          maxHeight: 480,
+        ),
         decoration: BoxDecoration(
           color: theme.cardColor,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(DesignRadius.lg),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
+            DesignShadow.lg,
           ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(DesignSpacing.lg),
               child: Row(
                 children: [
                   Icon(
                     _isQuickMoveMode ? Icons.bolt : Icons.search,
                     color: _isQuickMoveMode
-                        ? const Color(0xFFF59E0B)
+                        ? DesignColors.semanticWarning
                         : theme.colorScheme.primary,
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: DesignSpacing.md),
                   Expanded(
                     child: TextField(
                       controller: _controller,
@@ -341,14 +346,15 @@ class _CommandBarState extends ConsumerState<CommandBar> {
                         color: theme.colorScheme.primary,
                       ),
                     ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: DesignSpacing.sm),
                   IconButton(
                     icon: const Icon(Icons.close, size: 18),
                     onPressed: widget.onClose,
+                    tooltip: MaterialLocalizations.of(context).closeButtonLabel,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: 28,
-                      minHeight: 28,
+                      minWidth: DesignTouchTarget.iconButtonSize,
+                      minHeight: DesignTouchTarget.iconButtonSize,
                     ),
                   ),
                 ],
@@ -357,48 +363,36 @@ class _CommandBarState extends ConsumerState<CommandBar> {
             Divider(height: 1, color: theme.dividerColor),
             Flexible(
               child: ListView.builder(
+                controller: _scrollController,
                 shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.symmetric(vertical: DesignSpacing.xs),
                 itemCount: _isQuickMoveMode
                     ? _quickMoves.length
                     : (showCommands ? commands.length : 0) + _results.length,
                 itemBuilder: (context, index) {
-                  if (_isQuickMoveMode) {
-                    final move = _quickMoves[index];
-                    return _buildQuickMoveTile(
-                      theme,
-                      move,
-                      index == _selectedIndex,
-                      () {
-                        setState(() => _selectedIndex = index);
-                        _selectQuickMove(move);
-                      },
-                    );
-                  }
-                  if (showCommands && index < commands.length) {
-                    final cmd = commands[index];
-                    final globalIndex = index;
-                    return _buildCommandTile(
-                      theme,
-                      cmd,
-                      globalIndex == _selectedIndex,
-                      () => _selectItem(globalIndex),
-                    );
-                  }
-                  final resultIndex = showCommands
-                      ? index - commands.length
-                      : index;
-                  final globalIndex = index;
-                  if (resultIndex < _results.length) {
-                    final result = _results[resultIndex];
-                    return _buildNoteTile(
-                      theme,
-                      result,
-                      globalIndex == _selectedIndex,
-                      () => _selectItem(globalIndex),
-                    );
-                  }
-                  return const SizedBox.shrink();
+                  final child = _isQuickMoveMode
+                      ? _buildQuickMoveTile(
+                          theme,
+                          _quickMoves[index],
+                          index == _selectedIndex,
+                          () {
+                            setState(() => _selectedIndex = index);
+                            _selectQuickMove(_quickMoves[index]);
+                          },
+                        )
+                      : _buildListItem(
+                          context,
+                          theme,
+                          commands,
+                          showCommands,
+                          index,
+                        );
+
+                  return _StaggeredListItem(
+                    key: ValueKey('item_$index'),
+                    index: index,
+                    child: child,
+                  );
                 },
               ),
             ),
@@ -408,6 +402,37 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     );
   }
 
+  Widget _buildListItem(
+    BuildContext context,
+    ThemeData theme,
+    List<_CommandDef> commands,
+    bool showCommands,
+    int index,
+  ) {
+    if (showCommands && index < commands.length) {
+      final cmd = commands[index];
+      final globalIndex = index;
+      return _buildCommandTile(
+        theme,
+        cmd,
+        globalIndex == _selectedIndex,
+        () => _selectItem(globalIndex),
+      );
+    }
+    final resultIndex = showCommands ? index - commands.length : index;
+    final globalIndex = index;
+    if (resultIndex < _results.length) {
+      final result = _results[resultIndex];
+      return _buildNoteTile(
+        theme,
+        result,
+        globalIndex == _selectedIndex,
+        () => _selectItem(globalIndex),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
   Widget _buildQuickMoveTile(
     ThemeData theme,
     QuickMove move,
@@ -415,10 +440,9 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     VoidCallback onTap,
   ) {
     return ListTile(
-      dense: true,
       selected: isSelected,
-      selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-      leading: Icon(move.icon, size: 16, color: move.color),
+      selectedTileColor: DesignColors.primarySubtle,
+      leading: Icon(move.icon, size: 18, color: move.color),
       onTap: onTap,
       title: Row(
         children: [
@@ -458,10 +482,9 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     VoidCallback onTap,
   ) {
     return ListTile(
-      dense: true,
       selected: isSelected,
-      selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-      leading: Icon(cmd.icon, size: 16, color: theme.hintColor),
+      selectedTileColor: DesignColors.primarySubtle,
+      leading: Icon(cmd.icon, size: 18, color: theme.hintColor),
       title: Text(cmd.label, style: theme.textTheme.bodyMedium),
       trailing: Text(
         'Command',
@@ -478,12 +501,11 @@ class _CommandBarState extends ConsumerState<CommandBar> {
     VoidCallback onTap,
   ) {
     return ListTile(
-      dense: true,
       selected: isSelected,
-      selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+      selectedTileColor: DesignColors.primarySubtle,
       leading: Icon(
         Icons.description,
-        size: 16,
+        size: 18,
         color: theme.colorScheme.primary,
       ),
       title: Row(
@@ -502,9 +524,9 @@ class _CommandBarState extends ConsumerState<CommandBar> {
       ),
       subtitle: result.tags.isNotEmpty
           ? Padding(
-              padding: const EdgeInsets.only(top: 2),
+              padding: const EdgeInsets.only(top: DesignSpacing.xs),
               child: Wrap(
-                spacing: 4,
+                spacing: DesignSpacing.xs,
                 children: result.tags
                     .take(3)
                     .map(
@@ -524,10 +546,13 @@ class _CommandBarState extends ConsumerState<CommandBar> {
         children: [
           if (result.source.isNotEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              padding: const EdgeInsets.symmetric(
+                horizontal: DesignSpacing.xs,
+                vertical: DesignSpacing.xs,
+              ),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(4),
+                color: DesignColors.primarySubtle,
+                borderRadius: BorderRadius.circular(DesignRadius.sm),
               ),
               child: Text(
                 result.source == 'semantic' ? 'semantic' : 'keyword',
@@ -537,12 +562,73 @@ class _CommandBarState extends ConsumerState<CommandBar> {
               ),
             ),
           if (result.sourceUrl != null) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: DesignSpacing.xs),
             Icon(Icons.language, size: 12, color: theme.hintColor),
           ],
         ],
       ),
       onTap: onTap,
+    );
+  }
+}
+
+class _StaggeredListItem extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const _StaggeredListItem({super.key, required this.index, required this.child});
+
+  @override
+  State<_StaggeredListItem> createState() => _StaggeredListItemState();
+}
+
+class _StaggeredListItemState extends State<_StaggeredListItem>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    ));
+
+    final delay = Duration(
+      milliseconds: widget.index * DesignDuration.staggerItem.inMilliseconds,
+    );
+    Future.delayed(delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: widget.child,
+      ),
     );
   }
 }

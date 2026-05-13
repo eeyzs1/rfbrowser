@@ -180,7 +180,6 @@ class CardPropertiesPanel extends ConsumerWidget {
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: theme.colorScheme.primary,
-            fontSize: 11,
           ),
         ),
         const SizedBox(height: 8),
@@ -264,7 +263,7 @@ class CardPropertiesPanel extends ConsumerWidget {
                       child: ChoiceChip(
                         label: Text(
                           bs.name,
-                          style: const TextStyle(fontSize: 10),
+                          style: theme.textTheme.labelSmall,
                         ),
                         selected: s.borderStyle == bs,
                         onSelected: (_) => ref
@@ -362,8 +361,7 @@ class CardPropertiesPanel extends ConsumerWidget {
             children: [
               Text(
                 'Off',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
+                style: theme.textTheme.labelSmall?.copyWith(
                   color: s.gradientColor != null
                       ? theme.hintColor
                       : theme.colorScheme.primary,
@@ -384,8 +382,7 @@ class CardPropertiesPanel extends ConsumerWidget {
               ),
               Text(
                 'On',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
+                style: theme.textTheme.labelSmall?.copyWith(
                   color: s.gradientColor != null
                       ? theme.colorScheme.primary
                       : theme.hintColor,
@@ -474,7 +471,7 @@ class CardPropertiesPanel extends ConsumerWidget {
                   .read(canvasProvider.notifier)
                   .updateCard(card.copyWith(clearStyle: true)),
               icon: Icon(Icons.refresh, size: 12),
-              label: Text('Reset to Default', style: TextStyle(fontSize: 10)),
+              label: Text('Reset to Default', style: theme.textTheme.labelSmall),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 minimumSize: Size.zero,
@@ -523,7 +520,7 @@ class CardPropertiesPanel extends ConsumerWidget {
                     .read(canvasProvider.notifier)
                     .startInlineEditing(card.id),
                 icon: Icon(Icons.edit, size: 14),
-                label: Text(l.editCard, style: TextStyle(fontSize: 12)),
+                label: Text(l.editCard, style: theme.textTheme.labelMedium),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -554,7 +551,7 @@ class CardPropertiesPanel extends ConsumerWidget {
                   ref.read(canvasProvider.notifier).selectCard(newCard.id);
                 },
                 icon: Icon(Icons.content_copy, size: 14),
-                label: Text(l.duplicateCard, style: TextStyle(fontSize: 12)),
+                label: Text(l.duplicateCard, style: theme.textTheme.labelMedium),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -581,7 +578,7 @@ class CardPropertiesPanel extends ConsumerWidget {
             ),
             label: Text(
               l.deleteCard,
-              style: TextStyle(fontSize: 12, color: theme.colorScheme.error),
+              style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.error),
             ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -631,9 +628,8 @@ class CardPropertiesPanel extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: theme.textTheme.bodySmall?.copyWith(
+          style: theme.textTheme.labelSmall?.copyWith(
             color: theme.hintColor,
-            fontSize: 10,
           ),
         ),
         const SizedBox(height: 2),

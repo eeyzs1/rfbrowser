@@ -8,6 +8,7 @@ import '../../services/browser_service.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/quick_move_service.dart';
 import '../../data/models/browser_tab.dart';
+import '../theme/design_tokens.dart';
 import '../../data/models/quick_move.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -150,7 +151,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
       children: [
         _buildTabBar(theme, browserState),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs + 2),
           decoration: BoxDecoration(
             color: theme.appBarTheme.backgroundColor,
             border: Border(bottom: BorderSide(color: theme.dividerColor)),
@@ -198,6 +199,8 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
               ),
               const SizedBox(width: 8),
               _buildBookmarkButton(theme, browserState, activeTab),
+              const SizedBox(width: 4),
+              _buildClipButtons(theme, browserState, activeTab),
             ],
           ),
         ),
@@ -330,7 +333,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
               onPressed: () => ref
                   .read(browserProvider.notifier)
                   .createTab(url: 'https://www.bing.com'),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm),
               constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
               tooltip: l.newTab,
             );
@@ -342,7 +345,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                 ref.read(browserProvider.notifier).setActiveTab(tab.id),
             child: Container(
               constraints: const BoxConstraints(maxWidth: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm),
               decoration: BoxDecoration(
                 color: isActive
                     ? theme.colorScheme.primary.withValues(alpha: 0.08)
@@ -492,6 +495,103 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
         ),
       ),
     );
+  }
+
+  Widget _buildClipButtons(
+    ThemeData theme,
+    BrowserState browserState,
+    BrowserTab activeTab,
+  ) {
+    final l = AppLocalizations.of(context);
+    if (l == null) return const SizedBox.shrink();
+    final hasPage =
+        activeTab.url.isNotEmpty && activeTab.url != 'about:blank';
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Tooltip(
+          message: l.clipFullPage,
+          child: IconButton(
+            icon: Icon(
+              Icons.content_copy,
+              size: 16,
+              color: hasPage ? theme.hintColor : theme.disabledColor,
+            ),
+            onPressed: hasPage ? () => _clipPage(activeTab) : null,
+            padding: const EdgeInsets.all(4),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          ),
+        ),
+        Tooltip(
+          message: l.clipSelection,
+          child: IconButton(
+            icon: Icon(
+              Icons.text_fields,
+              size: 16,
+              color: hasPage ? theme.hintColor : theme.disabledColor,
+            ),
+            onPressed: hasPage ? () => _clipSelection(activeTab) : null,
+            padding: const EdgeInsets.all(4),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _clipSelection(BrowserTab tab) async {
+    final controller = _controllers[tab.id];
+    if (controller == null) return;
+    try {
+      final selectedText = await controller.evaluateJavascript(
+        source: 'window.getSelection().toString()',
+      );
+      if (selectedText is String && selectedText.isNotEmpty) {
+        final note = await ref.read(knowledgeProvider.notifier).clipSelection(
+          url: tab.url,
+          title: tab.title,
+          selectedText: selectedText,
+        );
+        if (!mounted) return;
+        final l = AppLocalizations.of(context);
+        if (l == null) return;
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            duration: const Duration(seconds: 3),
+            backgroundColor: DesignColors.semanticSuccess,
+            content: Text(l.savedToKnowledgeBase),
+            action: SnackBarAction(
+              label: l.view,
+              onPressed: () => ref.read(knowledgeProvider.notifier).openNote(note.id),
+            ),
+          ),
+        );
+      } else {
+        if (!mounted) return;
+        final l = AppLocalizations.of(context);
+        if (l != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l.selectTextFirst),
+              backgroundColor: DesignColors.semanticWarning,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final l = AppLocalizations.of(context);
+      if (l != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.clipFailed(e.toString())),
+            backgroundColor: DesignColors.semanticError,
+          ),
+        );
+      }
+    }
   }
 
   void _clipPage(BrowserTab tab) async {

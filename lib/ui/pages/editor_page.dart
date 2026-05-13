@@ -17,6 +17,7 @@ import '../../data/stores/vault_store.dart';
 import '../../data/models/quick_move.dart';
 import '../widgets/create_note_dialog.dart';
 import '../../l10n/app_localizations.dart';
+import '../theme/design_tokens.dart';
 
 enum _EditorViewMode { edit, preview, split, original }
 
@@ -261,7 +262,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
 
   Widget _buildHeader(ThemeData theme, dynamic note, AppLocalizations l) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.md, vertical: DesignSpacing.xs + 2),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
@@ -315,9 +316,9 @@ class _EditorViewState extends ConsumerState<EditorView> {
           ),
           if (_isDirty)
             Padding(
-              padding: const EdgeInsets.only(right: 6),
+              padding: const EdgeInsets.only(right: DesignSpacing.sm),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
@@ -347,36 +348,43 @@ class _EditorViewState extends ConsumerState<EditorView> {
             ),
           if (_showSavedIndicator)
             Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      size: 10,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      l.saved,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w500,
+              padding: const EdgeInsets.only(right: DesignSpacing.sm),
+              child: AnimatedOpacity(
+                opacity: _showSavedIndicator ? 1.0 : 0.0,
+                duration: DesignDuration.toastHide,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DesignSpacing.sm,
+                    vertical: DesignSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: DesignColors.semanticSuccess.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(DesignRadius.sm),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        size: 12,
+                        color: DesignColors.semanticSuccess,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: DesignSpacing.xs),
+                      Text(
+                        l.saved,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: DesignColors.semanticSuccess,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           if (note.rawHtmlPath != null || note.sourceUrl != null)
             Padding(
-              padding: const EdgeInsets.only(right: 4),
+              padding: const EdgeInsets.only(right: DesignSpacing.xs),
               child: Tooltip(
                 message: l.viewOriginalPage,
                 child: IconButton(
@@ -386,10 +394,9 @@ class _EditorViewState extends ConsumerState<EditorView> {
                         ? _EditorViewMode.edit
                         : _EditorViewMode.original,
                   ),
-                  padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
-                    minWidth: 28,
-                    minHeight: 28,
+                    minWidth: DesignTouchTarget.iconButtonSize,
+                    minHeight: DesignTouchTarget.iconButtonSize,
                   ),
                   style: IconButton.styleFrom(
                     backgroundColor: _viewMode == _EditorViewMode.original
@@ -404,16 +411,15 @@ class _EditorViewState extends ConsumerState<EditorView> {
             ),
           if (note.screenshotPath != null)
             Padding(
-              padding: const EdgeInsets.only(right: 4),
+              padding: const EdgeInsets.only(right: DesignSpacing.xs),
               child: Tooltip(
                 message: l.viewScreenshot,
                 child: IconButton(
                   icon: const Icon(Icons.screenshot, size: 16),
                   onPressed: () => _showScreenshot(note),
-                  padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
-                    minWidth: 28,
-                    minHeight: 28,
+                    minWidth: DesignTouchTarget.iconButtonSize,
+                    minHeight: DesignTouchTarget.iconButtonSize,
                   ),
                 ),
               ),
@@ -442,17 +448,19 @@ class _EditorViewState extends ConsumerState<EditorView> {
               visualDensity: VisualDensity.compact,
               textStyle: WidgetStatePropertyAll(theme.textTheme.labelSmall),
               padding: WidgetStatePropertyAll(
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs),
               ),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: DesignSpacing.xs),
           IconButton(
             icon: const Icon(Icons.save, size: 16),
             onPressed: _isDirty ? _saveNote : null,
             tooltip: l.save,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            constraints: const BoxConstraints(
+              minWidth: DesignTouchTarget.iconButtonSize,
+              minHeight: DesignTouchTarget.iconButtonSize,
+            ),
           ),
         ],
       ),
@@ -554,7 +562,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
       return Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.md, vertical: DesignSpacing.xs + 2),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               border: Border(bottom: BorderSide(color: theme.dividerColor)),
@@ -625,7 +633,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(DesignSpacing.md),
               child: Row(
                 children: [
                   Icon(
@@ -653,7 +661,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
                 builder: (ctx, snapshot) {
                   if (snapshot.data != true) {
                     return Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(DesignSpacing.xl),
                       child: Text(
                         l.screenshotNotFound,
                         style: Theme.of(ctx).textTheme.bodyMedium,
@@ -674,7 +682,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
 
   Widget _buildFormatToolbar(ThemeData theme, AppLocalizations l) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
@@ -791,22 +799,24 @@ class _EditorViewState extends ConsumerState<EditorView> {
       icon: Icon(icon, size: 16, color: theme.hintColor),
       onPressed: onPressed,
       tooltip: tooltip,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-      splashRadius: 14,
+      padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.xs),
+      constraints: const BoxConstraints(
+        minWidth: DesignTouchTarget.iconButtonSize,
+        minHeight: DesignTouchTarget.iconButtonSize,
+      ),
     );
   }
 
   Widget _toolbarDivider(ThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.xs),
       child: Container(width: 1, height: 16, color: theme.dividerColor),
     );
   }
 
   Widget _buildStatusBar(ThemeData theme, dynamic note, AppLocalizations l) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.md, vertical: DesignSpacing.xs - 1),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(top: BorderSide(color: theme.dividerColor)),
@@ -879,9 +889,16 @@ class _EditorViewState extends ConsumerState<EditorView> {
         return Stack(
           fit: StackFit.expand,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: _buildHighlightedEditor(theme, settings, bgColor, l),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: DesignTypography.maxContentWidth,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(DesignSpacing.lg),
+                  child: _buildHighlightedEditor(theme, settings, bgColor, l),
+                ),
+              ),
             ),
             if (_isDragOver)
               Positioned.fill(
@@ -951,7 +968,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
           child: Container(
             color: bgColor,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(DesignSpacing.lg),
               child: TextField(
                 controller: _controller,
                 scrollController: _editorScrollController,
@@ -993,7 +1010,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
   ) {
     return Markdown(
       data: note.content,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(DesignSpacing.xl),
       selectable: true,
       builders: {
         'wikilink': _WikiLinkBuilder(ref, theme),
@@ -1046,7 +1063,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
       _showSavedIndicator = true;
     });
     _savedIndicatorTimer?.cancel();
-    _savedIndicatorTimer = Timer(const Duration(seconds: 2), () {
+    _savedIndicatorTimer = Timer(DesignDuration.saveIndicator, () {
       if (mounted) {
         setState(() => _showSavedIndicator = false);
       }
@@ -1139,7 +1156,7 @@ class _WikiLinkBuilder extends MarkdownElementBuilder {
           }
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+          padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.xs, vertical: 1),
           decoration: BoxDecoration(
             color: theme.colorScheme.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(3),
@@ -1185,8 +1202,8 @@ class _EmbedBuilder extends MarkdownElementBuilder {
     final target = element.attributes['target'] ?? '';
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(vertical: DesignSpacing.sm),
+      padding: const EdgeInsets.all(DesignSpacing.md),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),

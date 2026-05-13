@@ -31,6 +31,12 @@ class ShortcutService {
       'toggle_preview': 'Ctrl+P',
       'settings': 'Ctrl+W',
       'find': 'Ctrl+F',
+      'canvas_undo': 'Ctrl+Z',
+      'canvas_redo': 'Ctrl+Y',
+      'canvas_delete': 'Delete',
+      'canvas_select_all': 'Ctrl+A',
+      'canvas_group': 'Ctrl+G',
+      'canvas_ungroup': 'Ctrl+Shift+G',
     };
     _bindings = Map.from(_defaults);
   }

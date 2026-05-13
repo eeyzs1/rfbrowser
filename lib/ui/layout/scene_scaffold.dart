@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/design_tokens.dart';
 import 'scene_switcher.dart';
 
 enum SceneType { capture, think, connect }
@@ -48,11 +49,42 @@ class _SceneScaffoldState extends State<SceneScaffold> {
     };
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
+      duration: DesignDuration.sceneTransition,
       switchInCurve: Curves.easeOut,
       switchOutCurve: Curves.easeIn,
       transitionBuilder: (child, animation) {
-        return FadeTransition(opacity: animation, child: child);
+        final isNew = child.key is ValueKey<SceneType> &&
+            (child.key as ValueKey<SceneType>).value == _currentScene;
+
+        if (isNew) {
+          final slideOffset = _currentScene == SceneType.connect
+              ? const Offset(0, 0.15)
+              : const Offset(0.15, 0);
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: slideOffset,
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            )),
+            child: FadeTransition(opacity: animation, child: child),
+          );
+        } else {
+          final slideOffset = _currentScene == SceneType.connect
+              ? const Offset(0, -0.1)
+              : const Offset(-0.1, 0);
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset.zero,
+              end: slideOffset,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeIn,
+            )),
+            child: FadeTransition(opacity: animation, child: child),
+          );
+        }
       },
       child: KeyedSubtree(key: ValueKey(_currentScene), child: child),
     );

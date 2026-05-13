@@ -14,6 +14,7 @@ class AIFloat extends StatefulWidget {
 
 class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
+  bool _isPressed = false;
   late final AnimationController _animationController;
   late final Animation<double> _scaleAnimation;
   late final Animation<double> _fadeAnimation;
@@ -28,10 +29,12 @@ class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
     _scaleAnimation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeOutBack,
+      reverseCurve: Curves.easeIn,
     );
     _fadeAnimation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeOut,
+      reverseCurve: Curves.easeIn,
     );
   }
 
@@ -50,8 +53,10 @@ class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
     setState(() {
       _isExpanded = !_isExpanded;
       if (_isExpanded) {
+        _animationController.duration = DesignDuration.aiFloatExpand;
         _animationController.forward();
       } else {
+        _animationController.duration = DesignDuration.aiFloatCollapse;
         _animationController.reverse();
       }
     });
@@ -60,6 +65,7 @@ class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
   void _collapse() {
     if (_isExpanded) {
       setState(() => _isExpanded = false);
+      _animationController.duration = DesignDuration.aiFloatCollapse;
       _animationController.reverse();
     }
   }
@@ -87,6 +93,7 @@ class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
                 child: Material(
                   elevation: 8,
                   borderRadius: BorderRadius.circular(DesignRadius.lg),
+                  shadowColor: DesignShadow.lg.color,
                   child: Container(
                     width: 360,
                     height: 480,
@@ -101,18 +108,22 @@ class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
                         children: [
                           const AIChatPanel(),
                           Positioned(
-                            top: 4,
-                            right: 4,
-                            child: IconButton(
-                              icon: const Icon(Icons.close, size: 16),
-                              onPressed: _collapse,
-                              padding: const EdgeInsets.all(4),
-                              constraints: const BoxConstraints(
-                                minWidth: 24,
-                                minHeight: 24,
-                              ),
-                              style: IconButton.styleFrom(
-                                backgroundColor: Colors.black26,
+                            top: DesignSpacing.xs,
+                            right: DesignSpacing.xs,
+                            child: Semantics(
+                              button: true,
+                              label: MaterialLocalizations.of(context).closeButtonLabel,
+                              child: IconButton(
+                                icon: const Icon(Icons.close, size: 16),
+                                onPressed: _collapse,
+                                tooltip: MaterialLocalizations.of(context).closeButtonLabel,
+                                constraints: const BoxConstraints(
+                                  minWidth: DesignTouchTarget.iconButtonSize,
+                                  minHeight: DesignTouchTarget.iconButtonSize,
+                                ),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.black26,
+                                ),
                               ),
                             ),
                           ),
@@ -127,15 +138,32 @@ class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
         Positioned(
           right: DesignSpacing.lg,
           bottom: DesignSpacing.lg,
-          child: FloatingActionButton(
-            heroTag: 'ai_float',
-            onPressed: _toggle,
-            mini: true,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            child: Icon(
-              _isExpanded ? Icons.close : Icons.psychology,
-              size: 20,
-              color: Theme.of(context).colorScheme.onPrimary,
+          child: Semantics(
+            button: true,
+            label: _isExpanded ? 'Close AI Chat' : 'Open AI Chat',
+            child: GestureDetector(
+              onTapDown: (_) => setState(() => _isPressed = true),
+              onTapUp: (_) {
+                setState(() => _isPressed = false);
+                _toggle();
+              },
+              onTapCancel: () => setState(() => _isPressed = false),
+              child: AnimatedScale(
+                scale: _isPressed ? 0.95 : 1.0,
+                duration: const Duration(milliseconds: 100),
+                curve: Curves.easeInOut,
+                child: FloatingActionButton(
+                  heroTag: 'ai_float',
+                  onPressed: null,
+                  mini: true,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  child: Icon(
+                    _isExpanded ? Icons.close : Icons.psychology,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
+              ),
             ),
           ),
         ),

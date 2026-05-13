@@ -217,7 +217,6 @@ class ThemeSettingsSection extends ConsumerWidget {
                                   fontWeight: isSelected
                                       ? FontWeight.w700
                                       : FontWeight.w500,
-                                  fontSize: 10,
                                   color: isAccent
                                       ? preset.color
                                       : _contrastText(preset.color),

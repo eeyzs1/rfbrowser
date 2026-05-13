@@ -11,12 +11,14 @@ import '../../services/canvas_service.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/browser_service.dart';
 import '../../services/settings_service.dart';
+import '../../services/shortcut_service.dart';
 import '../../data/models/canvas_model.dart';
 import '../../data/models/note.dart';
 import '../../data/stores/vault_store.dart';
 import '../../core/link/link_resolver.dart';
 import '../../l10n/app_localizations.dart';
 import '../widgets/canvas_painter.dart';
+import '../layout/keyboard_util.dart';
 
 enum _ResizeEdge { none, right, bottom, corner }
 
@@ -296,7 +298,13 @@ class _CanvasViewState extends ConsumerState<CanvasView>
       if (from == null || to == null) continue;
       final fromPoint = conn.fromSide.point(from.rect, conn.fromSideOffset);
       final toPoint = conn.toSide.point(to.rect, conn.toSideOffset);
-      final points = [fromPoint, ...conn.waypoints, toPoint];
+      final style = conn.style ?? CanvasConnectionStyle.defaults;
+      final points = _connectionPathPoints(
+        fromPoint,
+        toPoint,
+        conn.waypoints,
+        style.pathType,
+      );
       for (int i = 0; i < points.length - 1; i++) {
         final dist = _pointToSegmentDist(worldPos, points[i], points[i + 1]);
         if (dist <= hitRadius) {
@@ -313,6 +321,70 @@ class _CanvasViewState extends ConsumerState<CanvasView>
       if (idx >= 0 && idx < hits.length - 1) return hits[idx + 1];
     }
     return hits.first;
+  }
+
+  List<Offset> _connectionPathPoints(
+    Offset fromPoint,
+    Offset toPoint,
+    List<Offset> waypoints,
+    ConnectionPath pathType,
+  ) {
+    if (waypoints.isEmpty || pathType != ConnectionPath.curved) {
+      return [fromPoint, ...waypoints, toPoint];
+    }
+    final points = <Offset>[fromPoint];
+    final allPts = [fromPoint, ...waypoints];
+    for (int i = 0; i < allPts.length - 1; i++) {
+      final prev = allPts[i];
+      final curr = allPts[i + 1];
+      final next = i + 2 < allPts.length ? allPts[i + 2] : toPoint;
+      final cp1 = Offset(
+        prev.dx + (curr.dx - prev.dx) * 0.5,
+        prev.dy + (curr.dy - prev.dy) * 0.1,
+      );
+      final cp2 = Offset(
+        curr.dx - (next.dx - curr.dx) * 0.1,
+        curr.dy - (next.dy - curr.dy) * 0.5,
+      );
+      const samples = 8;
+      for (int t = 1; t <= samples; t++) {
+        points.add(_cubicBezierPoint(prev, cp1, cp2, curr, t / samples));
+      }
+    }
+    final lastWp = waypoints.last;
+    final cp1 = Offset(
+      lastWp.dx + (toPoint.dx - lastWp.dx) * 0.5,
+      lastWp.dy + (toPoint.dy - lastWp.dy) * 0.1,
+    );
+    final cp2 = Offset(
+      toPoint.dx - (toPoint.dx - lastWp.dx) * 0.1,
+      toPoint.dy - (toPoint.dy - lastWp.dy) * 0.5,
+    );
+    const samples = 8;
+    for (int t = 1; t <= samples; t++) {
+      points.add(_cubicBezierPoint(lastWp, cp1, cp2, toPoint, t / samples));
+    }
+    return points;
+  }
+
+  Offset _cubicBezierPoint(
+    Offset p0,
+    Offset p1,
+    Offset p2,
+    Offset p3,
+    double t,
+  ) {
+    final u = 1 - t;
+    return Offset(
+      u * u * u * p0.dx +
+          3 * u * u * t * p1.dx +
+          3 * u * t * t * p2.dx +
+          t * t * t * p3.dx,
+      u * u * u * p0.dy +
+          3 * u * u * t * p1.dy +
+          3 * u * t * t * p2.dy +
+          t * t * t * p3.dy,
+    );
   }
 
   (String, ConnectionSide, double)? _hitTestConnectionPoint(Offset worldPos) {
@@ -387,16 +459,38 @@ class _CanvasViewState extends ConsumerState<CanvasView>
     if (from == null || to == null) return (worldPos, 0);
     final fromPoint = conn.fromSide.point(from.rect, conn.fromSideOffset);
     final toPoint = conn.toSide.point(to.rect, conn.toSideOffset);
-    final points = [fromPoint, ...conn.waypoints, toPoint];
+    final style = conn.style ?? CanvasConnectionStyle.defaults;
+    final sampledPoints = _connectionPathPoints(
+      fromPoint,
+      toPoint,
+      conn.waypoints,
+      style.pathType,
+    );
     Offset? closest;
     double closestDist = double.infinity;
-    int insertIndex = 0;
-    for (int i = 0; i < points.length - 1; i++) {
-      final proj = _projectPointOnSegment(worldPos, points[i], points[i + 1]);
+    for (int i = 0; i < sampledPoints.length - 1; i++) {
+      final proj = _projectPointOnSegment(
+        worldPos,
+        sampledPoints[i],
+        sampledPoints[i + 1],
+      );
       final dist = (worldPos - proj).distance;
       if (dist < closestDist) {
         closestDist = dist;
         closest = proj;
+      }
+    }
+    final originalPoints = [fromPoint, ...conn.waypoints, toPoint];
+    int insertIndex = 0;
+    double bestSegDist = double.infinity;
+    for (int i = 0; i < originalPoints.length - 1; i++) {
+      final dist = _pointToSegmentDist(
+        worldPos,
+        originalPoints[i],
+        originalPoints[i + 1],
+      );
+      if (dist < bestSegDist) {
+        bestSegDist = dist;
         insertIndex = i;
       }
     }
@@ -657,6 +751,7 @@ class _CanvasViewState extends ConsumerState<CanvasView>
     if (wpHit != null) {
       _draggingWaypointConnId = wpHit.$1;
       _draggingWaypointIndex = wpHit.$2;
+      ref.read(canvasProvider.notifier).selectConnection(wpHit.$1);
     } else {
       final connLineHit = _hitTestConnectionLine(worldPos);
       if (connLineHit != null) {
@@ -1276,51 +1371,51 @@ class _CanvasViewState extends ConsumerState<CanvasView>
     }
     final autoConns = _cachedAutoConnections;
 
+    final shortcutSvc = ref.read(shortcutServiceProvider);
+    final undoActivator = parseShortcut(shortcutSvc.getShortcut('canvas_undo') ?? 'Ctrl+Z');
+    final redoActivator = parseShortcut(shortcutSvc.getShortcut('canvas_redo') ?? 'Ctrl+Y');
+    final deleteActivator = parseShortcut(shortcutSvc.getShortcut('canvas_delete') ?? 'Delete');
+    final selectAllActivator = parseShortcut(shortcutSvc.getShortcut('canvas_select_all') ?? 'Ctrl+A');
+    final groupActivator = parseShortcut(shortcutSvc.getShortcut('canvas_group') ?? 'Ctrl+G');
+    final ungroupActivator = parseShortcut(shortcutSvc.getShortcut('canvas_ungroup') ?? 'Ctrl+Shift+G');
+
+    final Map<ShortcutActivator, VoidCallback> canvasBindings = {};
+    canvasBindings[const SingleActivator(LogicalKeyboardKey.f3)] = _searchNext;
+    canvasBindings[const SingleActivator(LogicalKeyboardKey.f3, shift: true)] = _searchPrev;
+    if (undoActivator != null) canvasBindings[undoActivator] = _undo;
+    if (redoActivator != null) canvasBindings[redoActivator] = _redo;
+    canvasBindings[const SingleActivator(LogicalKeyboardKey.keyZ, control: true, shift: true)] = _redo;
+    canvasBindings[const SingleActivator(LogicalKeyboardKey.escape)] = () {
+      if (_styleBrushMode) {
+        setState(() {
+          _styleBrushMode = false;
+          _copiedStyle = null;
+        });
+        return;
+      }
+      if (_connectingFromCardId != null) {
+        setState(() {
+          _connectingFromCardId = null;
+          _connectingFromSide = null;
+          _isDraggingFromPort = false;
+          _connectingPreviewEnd = null;
+          _hoveredConnectionSide = null;
+        });
+        return;
+      }
+      if (ref.read(canvasProvider).selectedConnectionId != null) {
+        ref.read(canvasProvider.notifier).selectConnection(null);
+        return;
+      }
+      _finishInlineEditing();
+    };
+    if (deleteActivator != null) canvasBindings[deleteActivator] = _deleteSelectedCards;
+    if (selectAllActivator != null) canvasBindings[selectAllActivator] = _selectAll;
+    if (groupActivator != null) canvasBindings[groupActivator] = _groupSelected;
+    if (ungroupActivator != null) canvasBindings[ungroupActivator] = _ungroupSelected;
+
     return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.f3): _searchNext,
-        const SingleActivator(LogicalKeyboardKey.f3, shift: true): _searchPrev,
-        const SingleActivator(LogicalKeyboardKey.delete): _deleteSelectedCards,
-        const SingleActivator(LogicalKeyboardKey.keyZ, control: true): _undo,
-        const SingleActivator(
-          LogicalKeyboardKey.keyZ,
-          control: true,
-          shift: true,
-        ): _redo,
-        const SingleActivator(LogicalKeyboardKey.escape): () {
-          if (_styleBrushMode) {
-            setState(() {
-              _styleBrushMode = false;
-              _copiedStyle = null;
-            });
-            return;
-          }
-          if (_connectingFromCardId != null) {
-            setState(() {
-              _connectingFromCardId = null;
-              _connectingFromSide = null;
-              _isDraggingFromPort = false;
-              _connectingPreviewEnd = null;
-              _hoveredConnectionSide = null;
-            });
-            return;
-          }
-          if (ref.read(canvasProvider).selectedConnectionId != null) {
-            ref.read(canvasProvider.notifier).selectConnection(null);
-            return;
-          }
-          _finishInlineEditing();
-        },
-        const SingleActivator(LogicalKeyboardKey.keyA, control: true):
-            _selectAll,
-        const SingleActivator(LogicalKeyboardKey.keyG, control: true):
-            _groupSelected,
-        const SingleActivator(
-          LogicalKeyboardKey.keyG,
-          control: true,
-          shift: true,
-        ): _ungroupSelected,
-      },
+      bindings: canvasBindings,
       child: Focus(
         autofocus: true,
         onKeyEvent: (node, event) {
@@ -1463,7 +1558,6 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                                 builder: (context, _) =>
                                     _buildZoomControls(theme),
                               ),
-                              _buildStatusBar(theme, canvasData, l),
                               if (_inlineEditingCardId != null)
                                 _buildInlineEditor(theme, canvasData, settings),
                             ],
@@ -1513,14 +1607,14 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                   const SizedBox(width: 6),
                   _toolbarDivider(theme),
                   const SizedBox(width: 4),
-                  _toolbarButton(theme, Icons.add, l.addCard, () {
+                  _toolbarButton(theme, Icons.add, l.tooltipAddCard, () {
                     final worldPos = Offset(_cameraX, _cameraY);
                     _addCardAt(worldPos);
                   }),
                   _toolbarButton(
                     theme,
                     autoEnabled ? Icons.auto_fix_high : Icons.auto_fix_off,
-                    autoEnabled ? l.autoConnectOn : l.autoConnectOff,
+                    l.tooltipAutoConnect,
                     () => ref
                         .read(canvasProvider.notifier)
                         .toggleAutoConnections(),
@@ -1531,23 +1625,22 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                   _toolbarButton(
                     theme,
                     Icons.undo,
-                    l.undo,
+                    l.tooltipUndo,
                     () => _undo(),
                     enabled: notifier.canUndo,
                   ),
                   _toolbarButton(
                     theme,
                     Icons.redo,
-                    l.redo,
+                    l.tooltipRedo,
                     () => _redo(),
                     enabled: notifier.canRedo,
                   ),
-                  const SizedBox(width: 4),
                   _toolbarDivider(theme),
                   const SizedBox(width: 4),
                   if (hasMultiSelection) ...[
-                    PopupMenuButton<String>(
-                      tooltip: l.align,
+                    _HoverPopupMenuButton<String>(
+                      tooltip: l.tooltipAlign,
                       icon: Icon(
                         Icons.align_horizontal_left,
                         size: 14,
@@ -1587,125 +1680,148 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                         }
                       },
                       itemBuilder: (ctx) => [
-                        PopupMenuItem(
-                          value: 'left',
-                          child: Row(
-                            children: [
-                              Icon(Icons.align_horizontal_left, size: 14),
-                              SizedBox(width: 8),
-                              Text(l.alignLeft),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'centerH',
-                          child: Row(
-                            children: [
-                              Icon(Icons.align_horizontal_center, size: 14),
-                              SizedBox(width: 8),
-                              Text(l.alignCenterH),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'right',
-                          child: Row(
-                            children: [
-                              Icon(Icons.align_horizontal_right, size: 14),
-                              SizedBox(width: 8),
-                              Text(l.alignRight),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'top',
-                          child: Row(
-                            children: [
-                              Icon(Icons.align_vertical_top, size: 14),
-                              SizedBox(width: 8),
-                              Text(l.alignTop),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'centerV',
-                          child: Row(
-                            children: [
-                              Icon(Icons.align_vertical_center, size: 14),
-                              SizedBox(width: 8),
-                              Text(l.alignCenterV),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'bottom',
-                          child: Row(
-                            children: [
-                              Icon(Icons.align_vertical_bottom, size: 14),
-                              SizedBox(width: 8),
-                              Text(l.alignBottom),
-                            ],
-                          ),
-                        ),
+                        PopupMenuItem(value: 'left', child: _popupRow(Icons.align_horizontal_left, l.alignLeft, tooltip: l.ttAlignLeft)),
+                        PopupMenuItem(value: 'centerH', child: _popupRow(Icons.align_horizontal_center, l.alignCenterH, tooltip: l.ttAlignCenterH)),
+                        PopupMenuItem(value: 'right', child: _popupRow(Icons.align_horizontal_right, l.alignRight, tooltip: l.ttAlignRight)),
+                        PopupMenuItem(value: 'top', child: _popupRow(Icons.align_vertical_top, l.alignTop, tooltip: l.ttAlignTop)),
+                        PopupMenuItem(value: 'centerV', child: _popupRow(Icons.align_vertical_center, l.alignCenterV, tooltip: l.ttAlignCenterV)),
+                        PopupMenuItem(value: 'bottom', child: _popupRow(Icons.align_vertical_bottom, l.alignBottom, tooltip: l.ttAlignBottom)),
                         if (canvasData.selectedCardIds.length >= 3) ...[
                           const PopupMenuDivider(),
-                          PopupMenuItem(
-                            value: 'distH',
-                            child: Row(
-                              children: [
-                                Icon(Icons.space_bar, size: 14),
-                                SizedBox(width: 8),
-                                Text(l.distributeH),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'distV',
-                            child: Row(
-                              children: [
-                                Icon(Icons.view_headline, size: 14),
-                                SizedBox(width: 8),
-                                Text(l.distributeV),
-                              ],
-                            ),
-                          ),
+                          PopupMenuItem(value: 'distH', child: _popupRow(Icons.space_bar, l.distributeH, tooltip: l.ttDistributeH)),
+                          PopupMenuItem(value: 'distV', child: _popupRow(Icons.view_headline, l.distributeV, tooltip: l.ttDistributeV)),
                         ],
                       ],
                     ),
                     _toolbarButton(
                       theme,
                       Icons.group_work,
-                      l.group,
+                      l.tooltipGroup,
                       _groupSelected,
                     ),
                     _toolbarDivider(theme),
                     const SizedBox(width: 4),
                   ],
-                  _toolbarButton(
-                    theme,
-                    canvasData.settings.gridVisible
-                        ? Icons.grid_on
-                        : Icons.grid_off,
-                    canvasData.settings.gridVisible ? l.gridOn : l.gridOff,
-                    () => ref.read(canvasProvider.notifier).toggleGridVisible(),
+                  _HoverPopupMenuButton<String>(
+                    tooltip: l.toolbarViewDesc,
+                    icon: Icon(
+                      Icons.visibility_outlined,
+                      size: 14,
+                      color: theme.hintColor,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'grid':
+                          ref.read(canvasProvider.notifier).toggleGridVisible();
+                        case 'snap':
+                          ref.read(canvasProvider.notifier).toggleSnapToGrid();
+                        case 'rulers':
+                          ref.read(canvasProvider.notifier).toggleRulers();
+                        case 'fit':
+                          _fitToContent();
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'grid',
+                        child: _popupRow(
+                          canvasData.settings.gridVisible ? Icons.grid_on : Icons.grid_off,
+                          l.tooltipGrid,
+                          trailing: canvasData.settings.gridVisible
+                              ? Icon(Icons.check, size: 14, color: theme.colorScheme.primary)
+                              : null,
+                          tooltip: l.ttGrid,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'snap',
+                        child: _popupRow(
+                          canvasData.settings.snapToGrid ? Icons.grid_on_outlined : Icons.grid_4x4,
+                          l.tooltipSnap,
+                          trailing: canvasData.settings.snapToGrid
+                              ? Icon(Icons.check, size: 14, color: theme.colorScheme.primary)
+                              : null,
+                          tooltip: l.ttSnap,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'rulers',
+                        child: _popupRow(
+                          Icons.straighten,
+                          l.tooltipRulers,
+                          trailing: canvasData.settings.rulersVisible
+                              ? Icon(Icons.check, size: 14, color: theme.colorScheme.primary)
+                              : null,
+                          tooltip: l.ttRulers,
+                        ),
+                      ),
+                      const PopupMenuDivider(),
+                      PopupMenuItem(
+                        value: 'fit',
+                        child: _popupRow(Icons.fit_screen, l.tooltipFit, tooltip: l.ttFit),
+                      ),
+                    ],
                   ),
-                  _toolbarButton(
-                    theme,
-                    canvasData.settings.snapToGrid
-                        ? Icons.grid_on_outlined
-                        : Icons.grid_4x4,
-                    canvasData.settings.snapToGrid ? l.snapOn : l.snapOff,
-                    () => ref.read(canvasProvider.notifier).toggleSnapToGrid(),
+                  _HoverPopupMenuButton<String>(
+                    tooltip: l.toolbarCreateDesc,
+                    icon: Icon(
+                      Icons.add_box_outlined,
+                      size: 14,
+                      color: theme.hintColor,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'container':
+                          final worldPos = Offset(_cameraX, _cameraY);
+                          _addContainerAt(worldPos);
+                        case 'freehand':
+                          setState(() {
+                            _isFreehandDrawing = !_isFreehandDrawing;
+                          });
+                          if (_isFreehandDrawing) {
+                            final card = CanvasCard(
+                              id: 'fh_${DateTime.now().millisecondsSinceEpoch}',
+                              type: CanvasCardType.freehand,
+                              x: _cameraX,
+                              y: _cameraY,
+                              freehandPoints: [],
+                            );
+                            ref.read(canvasProvider.notifier).addCard(card);
+                            _freehandCardId = card.id;
+                            _freehandPoints = [];
+                          } else {
+                            _freehandCardId = null;
+                            _freehandPoints = [];
+                          }
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(value: 'container', child: _popupRow(Icons.crop_square, l.tooltipContainer, tooltip: l.ttContainer)),
+                      PopupMenuItem(
+                        value: 'freehand',
+                        child: _popupRow(
+                          Icons.draw,
+                          l.tooltipFreehand,
+                          trailing: _isFreehandDrawing
+                              ? Icon(Icons.check, size: 14, color: theme.colorScheme.primary)
+                              : null,
+                          tooltip: l.ttFreehand,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  _toolbarDivider(theme),
-                  const SizedBox(width: 4),
-                  _toolbarButton(theme, Icons.crop_square, l.container, () {
-                    final worldPos = Offset(_cameraX, _cameraY);
-                    _addContainerAt(worldPos);
-                  }),
-                  PopupMenuButton<CanvasCardType>(
-                    tooltip: l.shapes,
+                  _HoverPopupMenuButton<CanvasCardType>(
+                    tooltip: l.tooltipShapes,
                     icon: Icon(
                       Icons.category,
                       size: 14,
@@ -1725,140 +1841,23 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                       ref.read(canvasProvider.notifier).selectCard(card.id);
                     },
                     itemBuilder: (ctx) => [
-                      PopupMenuItem(
-                        value: CanvasCardType.rectangle,
-                        child: Row(
-                          children: [
-                            Icon(Icons.rectangle, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.rectangle),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.roundedRect,
-                        child: Row(
-                          children: [
-                            Icon(Icons.rounded_corner, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.roundedRect),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.ellipse,
-                        child: Row(
-                          children: [
-                            Icon(Icons.circle, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.ellipse),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.diamond,
-                        child: Row(
-                          children: [
-                            Icon(Icons.diamond, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.diamond),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.hexagon,
-                        child: Row(
-                          children: [
-                            Icon(Icons.hexagon, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.hexagon),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.parallelogram,
-                        child: Row(
-                          children: [
-                            Icon(Icons.change_history, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.parallelogram),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.triangle,
-                        child: Row(
-                          children: [
-                            Icon(Icons.details, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.triangle),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.cylinder,
-                        child: Row(
-                          children: [
-                            Icon(Icons.view_column, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.cylinder),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.star,
-                        child: Row(
-                          children: [
-                            Icon(Icons.star_outline, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.star),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.swimlaneH,
-                        child: Row(
-                          children: [
-                            Icon(Icons.view_stream, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.swimlaneH),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.swimlaneV,
-                        child: Row(
-                          children: [
-                            Icon(Icons.view_week, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.swimlaneV),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.table,
-                        child: Row(
-                          children: [
-                            Icon(Icons.table_chart, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.table),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: CanvasCardType.freehand,
-                        child: Row(
-                          children: [
-                            Icon(Icons.draw, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.freehand),
-                          ],
-                        ),
-                      ),
+                      PopupMenuItem(value: CanvasCardType.rectangle, child: _popupRow(Icons.rectangle, l.rectangle)),
+                      PopupMenuItem(value: CanvasCardType.roundedRect, child: _popupRow(Icons.rounded_corner, l.roundedRect)),
+                      PopupMenuItem(value: CanvasCardType.ellipse, child: _popupRow(Icons.circle, l.ellipse)),
+                      PopupMenuItem(value: CanvasCardType.diamond, child: _popupRow(Icons.diamond, l.diamond)),
+                      PopupMenuItem(value: CanvasCardType.hexagon, child: _popupRow(Icons.hexagon, l.hexagon)),
+                      PopupMenuItem(value: CanvasCardType.parallelogram, child: _popupRow(Icons.change_history, l.parallelogram)),
+                      PopupMenuItem(value: CanvasCardType.triangle, child: _popupRow(Icons.details, l.triangle)),
+                      PopupMenuItem(value: CanvasCardType.cylinder, child: _popupRow(Icons.view_column, l.cylinder)),
+                      PopupMenuItem(value: CanvasCardType.star, child: _popupRow(Icons.star_outline, l.star)),
+                      PopupMenuItem(value: CanvasCardType.swimlaneH, child: _popupRow(Icons.view_stream, l.swimlaneH)),
+                      PopupMenuItem(value: CanvasCardType.swimlaneV, child: _popupRow(Icons.view_week, l.swimlaneV)),
+                      PopupMenuItem(value: CanvasCardType.table, child: _popupRow(Icons.table_chart, l.table)),
+                      PopupMenuItem(value: CanvasCardType.freehand, child: _popupRow(Icons.draw, l.freehand)),
                     ],
                   ),
-                  PopupMenuButton<String>(
-                    tooltip: l.templates,
+                  _HoverPopupMenuButton<String>(
+                    tooltip: l.tooltipTemplates,
                     icon: Icon(
                       Icons.dashboard_customize,
                       size: 14,
@@ -1894,142 +1893,25 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                       );
                     },
                     itemBuilder: (ctx) => [
-                      PopupMenuItem(
-                        value: 'flowchart',
-                        child: Row(
-                          children: [
-                            Icon(Icons.account_tree, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.flowchart),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'uml_class',
-                        child: Row(
-                          children: [
-                            Icon(Icons.class_, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.umlClass),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'swimlane',
-                        child: Row(
-                          children: [
-                            Icon(Icons.view_stream, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.swimlane),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'mindmap',
-                        child: Row(
-                          children: [
-                            Icon(Icons.psychology, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.mindMap),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'network',
-                        child: Row(
-                          children: [
-                            Icon(Icons.cloud, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.network),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'er_diagram',
-                        child: Row(
-                          children: [
-                            Icon(Icons.schema, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.erDiagram),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'kanban',
-                        child: Row(
-                          children: [
-                            Icon(Icons.view_kanban, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.kanban),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'org_chart',
-                        child: Row(
-                          children: [
-                            Icon(Icons.corporate_fare, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.orgChart),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'state_machine',
-                        child: Row(
-                          children: [
-                            Icon(Icons.sync, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.stateMachine),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'venn',
-                        child: Row(
-                          children: [
-                            Icon(Icons.circle, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.vennDiagram),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'timeline',
-                        child: Row(
-                          children: [
-                            Icon(Icons.timeline, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.timeline),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'gantt',
-                        child: Row(
-                          children: [
-                            Icon(Icons.view_timeline, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.gantt),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'decision_tree',
-                        child: Row(
-                          children: [
-                            Icon(Icons.device_hub, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.decisionTree),
-                          ],
-                        ),
-                      ),
+                      PopupMenuItem(value: 'flowchart', child: _popupRow(Icons.account_tree, l.flowchart)),
+                      PopupMenuItem(value: 'uml_class', child: _popupRow(Icons.class_, l.umlClass)),
+                      PopupMenuItem(value: 'swimlane', child: _popupRow(Icons.view_stream, l.swimlane)),
+                      PopupMenuItem(value: 'mindmap', child: _popupRow(Icons.psychology, l.mindMap)),
+                      PopupMenuItem(value: 'network', child: _popupRow(Icons.cloud, l.network)),
+                      PopupMenuItem(value: 'er_diagram', child: _popupRow(Icons.schema, l.erDiagram)),
+                      PopupMenuItem(value: 'kanban', child: _popupRow(Icons.view_kanban, l.kanban)),
+                      PopupMenuItem(value: 'org_chart', child: _popupRow(Icons.corporate_fare, l.orgChart)),
+                      PopupMenuItem(value: 'state_machine', child: _popupRow(Icons.sync, l.stateMachine)),
+                      PopupMenuItem(value: 'venn', child: _popupRow(Icons.circle, l.vennDiagram)),
+                      PopupMenuItem(value: 'timeline', child: _popupRow(Icons.timeline, l.timeline)),
+                      PopupMenuItem(value: 'gantt', child: _popupRow(Icons.view_timeline, l.gantt)),
+                      PopupMenuItem(value: 'decision_tree', child: _popupRow(Icons.device_hub, l.decisionTree)),
                     ],
                   ),
                   _toolbarButton(
                     theme,
                     Icons.format_paint,
-                    l.styleBrush,
+                    l.tooltipStyleBrush,
                     () {
                       final ids = _selectedCardIds;
                       if (ids.length == 1) {
@@ -2046,10 +1928,10 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                       }
                     },
                     enabled: _selectedCardIds.length == 1,
+                    highlight: _styleBrushMode,
                   ),
-                  _toolbarButton(theme, Icons.fit_screen, l.fit, _fitToContent),
-                  PopupMenuButton<AutoLayoutType>(
-                    tooltip: l.autoLayout,
+                  _HoverPopupMenuButton<AutoLayoutType>(
+                    tooltip: l.tooltipAutoLayout,
                     icon: Icon(
                       Icons.auto_awesome,
                       size: 14,
@@ -2063,40 +1945,13 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                     onSelected: (type) =>
                         ref.read(canvasProvider.notifier).autoLayout(type),
                     itemBuilder: (ctx) => [
-                      PopupMenuItem(
-                        value: AutoLayoutType.forceDirected,
-                        child: Row(
-                          children: [
-                            Icon(Icons.bubble_chart, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.forceDirected),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: AutoLayoutType.hierarchical,
-                        child: Row(
-                          children: [
-                            Icon(Icons.account_tree, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.hierarchical),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: AutoLayoutType.grid,
-                        child: Row(
-                          children: [
-                            Icon(Icons.grid_view, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.grid),
-                          ],
-                        ),
-                      ),
+                      PopupMenuItem(value: AutoLayoutType.forceDirected, child: _popupRow(Icons.bubble_chart, l.forceDirected, tooltip: l.ttForceDirected)),
+                      PopupMenuItem(value: AutoLayoutType.hierarchical, child: _popupRow(Icons.account_tree, l.hierarchical, tooltip: l.ttHierarchical)),
+                      PopupMenuItem(value: AutoLayoutType.grid, child: _popupRow(Icons.grid_view, l.grid, tooltip: l.ttGridLayout)),
                     ],
                   ),
-                  PopupMenuButton<String>(
-                    tooltip: l.export,
+                  _HoverPopupMenuButton<String>(
+                    tooltip: l.tooltipExport,
                     icon: Icon(
                       Icons.file_download,
                       size: 14,
@@ -2109,118 +1964,40 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                     ),
                     onSelected: (value) => _handleExport(value),
                     itemBuilder: (ctx) => [
-                      PopupMenuItem(
-                        value: 'png',
-                        child: Row(
-                          children: [
-                            Icon(Icons.image, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.exportPng),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'svg',
-                        child: Row(
-                          children: [
-                            Icon(Icons.code, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.exportSvg),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'pdf',
-                        child: Row(
-                          children: [
-                            Icon(Icons.picture_as_pdf, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.exportPdf),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'markdown',
-                        child: Row(
-                          children: [
-                            Icon(Icons.description, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.exportMarkdown),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'html',
-                        child: Row(
-                          children: [
-                            Icon(Icons.web, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.exportHtml),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'jpeg',
-                        child: Row(
-                          children: [
-                            Icon(Icons.photo, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.exportJpeg),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'svgWithMeta',
-                        child: Row(
-                          children: [
-                            Icon(Icons.data_object, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.exportSvgWithData),
-                          ],
-                        ),
-                      ),
+                      PopupMenuItem(value: 'png', child: _popupRow(Icons.image, l.exportPng, tooltip: l.ttExportPng)),
+                      PopupMenuItem(value: 'svg', child: _popupRow(Icons.code, l.exportSvg, tooltip: l.ttExportSvg)),
+                      PopupMenuItem(value: 'markdown', child: _popupRow(Icons.description, l.exportMarkdown, tooltip: l.ttExportMarkdown)),
+                      PopupMenuItem(value: 'html', child: _popupRow(Icons.web, l.exportHtml, tooltip: l.ttExportHtml)),
+                      PopupMenuItem(value: 'svgWithMeta', child: _popupRow(Icons.data_object, l.exportSvgWithData, tooltip: l.ttExportSvgMeta)),
                     ],
                   ),
-                  _toolbarButton(
-                    theme,
-                    Icons.layers,
-                    l.layers,
-                    () => _showLayerPanel(),
+                  _HoverPopupMenuButton<String>(
+                    tooltip: l.toolbarOrganizeDesc,
+                    icon: Icon(
+                      Icons.folder_outlined,
+                      size: 14,
+                      color: theme.hintColor,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'layers':
+                          _showLayerPanel();
+                        case 'scratchpad':
+                          _showScratchpad();
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(value: 'layers', child: _popupRow(Icons.layers, l.tooltipLayers, tooltip: l.ttLayers)),
+                      PopupMenuItem(value: 'scratchpad', child: _popupRow(Icons.bookmark_border, l.tooltipScratchpad, tooltip: l.ttScratchpad)),
+                    ],
                   ),
-                  _toolbarButton(
-                    theme,
-                    Icons.bookmark_border,
-                    l.scratchpad,
-                    () => _showScratchpad(),
-                  ),
-                  _toolbarButton(
-                    theme,
-                    Icons.straighten,
-                    l.rulers,
-                    () => ref.read(canvasProvider.notifier).toggleRulers(),
-                  ),
-                  _toolbarButton(theme, Icons.draw, l.freehand, () {
-                    setState(() {
-                      _isFreehandDrawing = !_isFreehandDrawing;
-                    });
-                    if (_isFreehandDrawing) {
-                      final card = CanvasCard(
-                        id: 'fh_${DateTime.now().millisecondsSinceEpoch}',
-                        type: CanvasCardType.freehand,
-                        x: _cameraX,
-                        y: _cameraY,
-                        freehandPoints: [],
-                      );
-                      ref.read(canvasProvider.notifier).addCard(card);
-                      _freehandCardId = card.id;
-                      _freehandPoints = [];
-                    } else {
-                      _freehandCardId = null;
-                      _freehandPoints = [];
-                    }
-                  }, highlight: _isFreehandDrawing),
-                  PopupMenuButton<String>(
-                    tooltip: l.canvasSettings,
+                  _HoverPopupMenuButton<String>(
+                    tooltip: l.tooltipCanvasSettings,
                     icon: Icon(
                       Icons.settings,
                       size: 14,
@@ -2250,120 +2027,119 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                         _showImportDialog('svg');
                       } else if (value == 'shareUrl') {
                         _shareViaUrl();
+                      } else if (value == 'clear') {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(AppLocalizations.of(context)!.clearCanvas),
+                            content: Text(AppLocalizations.of(context)!.clearCanvasConfirm),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: Text(AppLocalizations.of(context)!.cancel),
+                              ),
+                              FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.error,
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(ctx);
+                                  ref.read(canvasProvider.notifier).clearCanvas();
+                                  ref
+                                      .read(canvasProvider.notifier)
+                                      .selectCard(null);
+                                  _connectingFromCardId = null;
+                                },
+                                child: Text(AppLocalizations.of(context)!.clear),
+                              ),
+                            ],
+                          ),
+                        );
                       }
                     },
                     itemBuilder: (ctx) => [
+                      PopupMenuItem(value: 'background', child: _popupRow(Icons.palette, l.backgroundColor, tooltip: l.ttBackground)),
+                      PopupMenuItem(value: 'clearBackground', child: _popupRow(Icons.clear, l.clearBackground, tooltip: l.ttClearBackground)),
+                      PopupMenuItem(value: 'defaultCardStyle', child: _popupRow(Icons.style, l.defaultCardStyle, tooltip: l.ttDefaultCardStyle)),
+                      PopupMenuItem(value: 'enumerate', child: _popupRow(Icons.format_list_numbered, l.enumerateShapes, tooltip: l.ttEnumerate)),
+                      PopupMenuItem(value: 'importCsv', child: _popupRow(Icons.table_chart, l.importCsv, tooltip: l.ttImportCsv)),
+                      PopupMenuItem(value: 'importMermaid', child: _popupRow(Icons.code, l.importMermaid, tooltip: l.ttImportMermaid)),
+                      PopupMenuItem(value: 'importSvg', child: _popupRow(Icons.draw, l.importSvg, tooltip: l.ttImportSvg)),
+                      PopupMenuItem(value: 'shareUrl', child: _popupRow(Icons.share, l.shareViaUrl, tooltip: l.ttShareUrl)),
+                      const PopupMenuDivider(),
                       PopupMenuItem(
-                        value: 'background',
-                        child: Row(
-                          children: [
-                            Icon(Icons.palette, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.backgroundColor),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'clearBackground',
-                        child: Row(
-                          children: [
-                            Icon(Icons.clear, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.clearBackground),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'defaultCardStyle',
-                        child: Row(
-                          children: [
-                            Icon(Icons.style, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.defaultCardStyle),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'enumerate',
-                        child: Row(
-                          children: [
-                            Icon(Icons.format_list_numbered, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.enumerateShapes),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'importCsv',
-                        child: Row(
-                          children: [
-                            Icon(Icons.table_chart, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.importCsv),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'importMermaid',
-                        child: Row(
-                          children: [
-                            Icon(Icons.code, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.importMermaid),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'importSvg',
-                        child: Row(
-                          children: [
-                            Icon(Icons.draw, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.importSvg),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'shareUrl',
-                        child: Row(
-                          children: [
-                            Icon(Icons.share, size: 14),
-                            SizedBox(width: 8),
-                            Text(l.shareViaUrl),
-                          ],
+                        value: 'clear',
+                        child: Tooltip(
+                          message: l.ttClearCanvas,
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline, size: 14, color: theme.colorScheme.error),
+                              const SizedBox(width: 8),
+                              Flexible(child: Text(l.clearCanvas, style: TextStyle(color: theme.colorScheme.error), overflow: TextOverflow.ellipsis)),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  _toolbarButton(theme, Icons.delete_outline, l.clear, () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: Text(l.clearCanvas),
-                        content: Text(l.clearCanvasConfirm),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            child: Text(l.cancel),
-                          ),
-                          FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: theme.colorScheme.error,
-                            ),
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              ref.read(canvasProvider.notifier).clearCanvas();
-                              ref
-                                  .read(canvasProvider.notifier)
-                                  .selectCard(null);
-                              _connectingFromCardId = null;
-                            },
-                            child: Text(l.clear),
-                          ),
-                        ],
+                  _toolbarDivider(theme),
+                  const SizedBox(width: 6),
+                  Text(
+                    l.canvasStatusCardsConnectionsGroups(
+                      canvasData.cards.length,
+                      canvasData.connections.length,
+                      canvasData.groups.length,
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                  if (canvasData.selectedCardIds.length > 1) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      l.selectedGroupHint(canvasData.selectedCardIds.length),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
                       ),
-                    );
-                  }),
+                    ),
+                  ],
+                  if (canvasData.selectedCardIds.length == 1 &&
+                      _inlineEditingCardId == null) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      l.selectedSingleHint,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.hintColor,
+                      ),
+                    ),
+                  ],
+                  if (_inlineEditingCardId != null) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      l.editingHint,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                  if (_connectingFromCardId != null) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      l.connectCardHint,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                  if (_styleBrushMode) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      l.styleBrushHint,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.purple,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -2378,7 +2154,7 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                 _toolbarButton(
                   theme,
                   Icons.search,
-                  l.searchCards,
+                  l.tooltipSearch,
                   _toggleSearch,
                 ),
                 if (_searchVisible)
@@ -2452,6 +2228,24 @@ class _CanvasViewState extends ConsumerState<CanvasView>
     return Container(width: 1, height: 16, color: theme.dividerColor);
   }
 
+  Widget _popupRow(IconData icon, String text, {Widget? trailing, String? tooltip}) {
+    final row = Row(
+      children: [
+        Icon(icon, size: 14),
+        const SizedBox(width: 8),
+        Flexible(child: Text(text, overflow: TextOverflow.ellipsis)),
+        if (trailing != null) ...[
+          const Spacer(),
+          trailing,
+        ],
+      ],
+    );
+    if (tooltip != null && tooltip.isNotEmpty) {
+      return Tooltip(message: tooltip, child: row);
+    }
+    return row;
+  }
+
   Widget _buildZoomControls(ThemeData theme) {
     final l = AppLocalizations.of(context)!;
     return Positioned(
@@ -2487,8 +2281,7 @@ class _CanvasViewState extends ConsumerState<CanvasView>
               alignment: Alignment.center,
               child: Text(
                 '${(_scale * 100).round()}%',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 9,
+                style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.primary,
                 ),
@@ -2596,85 +2389,6 @@ class _CanvasViewState extends ConsumerState<CanvasView>
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBar(
-    ThemeData theme,
-    CanvasData canvasData,
-    AppLocalizations l,
-  ) {
-    final selectedCount = canvasData.selectedCardIds.length;
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: Container(
-        height: 22,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface.withValues(alpha: 0.85),
-          border: Border(
-            top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.5)),
-          ),
-        ),
-        child: Row(
-          children: [
-            Text(
-              l.canvasStatusCardsConnectionsGroups(
-                canvasData.cards.length,
-                canvasData.connections.length,
-                canvasData.groups.length,
-              ),
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 10,
-                color: theme.hintColor,
-              ),
-            ),
-            const Spacer(),
-            if (selectedCount > 1)
-              Text(
-                l.selectedGroupHint(selectedCount),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-            if (selectedCount == 1 && _inlineEditingCardId == null)
-              Text(
-                l.selectedSingleHint,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
-                  color: theme.hintColor,
-                ),
-              ),
-            if (_inlineEditingCardId != null)
-              Text(
-                l.editingHint,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-            if (_connectingFromCardId != null)
-              Text(
-                l.connectCardHint,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-            if (_styleBrushMode)
-              Text(
-                l.styleBrushHint,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
-                  color: Colors.purple,
-                ),
-              ),
-          ],
         ),
       ),
     );
@@ -3387,17 +3101,29 @@ class _CanvasViewState extends ConsumerState<CanvasView>
             ],
           ),
         ),
-        if (conn.waypoints.isNotEmpty)
+        if (conn.waypoints.isNotEmpty) ...[
+          if (_hitTestWaypoint(worldPos) != null)
+            PopupMenuItem(
+              value: 'clearWaypoint',
+              child: Row(
+                children: [
+                  Icon(Icons.clear, size: 16, color: theme.hintColor),
+                  const SizedBox(width: 8),
+                  Text(l.clearWaypoint),
+                ],
+              ),
+            ),
           PopupMenuItem(
-            value: 'clearWaypoints',
+            value: 'clearAllWaypoints',
             child: Row(
               children: [
                 Icon(Icons.clear_all, size: 16, color: theme.hintColor),
                 const SizedBox(width: 8),
-                Text(l.clearWaypoints),
+                Text(l.clearAllWaypoints),
               ],
             ),
           ),
+        ],
         const PopupMenuDivider(),
         PopupMenuItem(
           value: 'delete',
@@ -3459,7 +3185,14 @@ class _CanvasViewState extends ConsumerState<CanvasView>
           ref
               .read(canvasProvider.notifier)
               .addWaypoint(connId, snappedPos, insertIndex: insertIdx);
-        case 'clearWaypoints':
+        case 'clearWaypoint':
+          final wpHit = _hitTestWaypoint(worldPos);
+          if (wpHit != null) {
+            ref
+                .read(canvasProvider.notifier)
+                .removeWaypoint(wpHit.$1, wpHit.$2);
+          }
+        case 'clearAllWaypoints':
           ref
               .read(canvasProvider.notifier)
               .updateConnection(latestConn.copyWith(waypoints: []));
@@ -3594,6 +3327,21 @@ class _CanvasViewState extends ConsumerState<CanvasView>
             ],
           ),
         ),
+        if (card.noteId == null)
+          PopupMenuItem(
+            value: 'promoteToNote',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.upload,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(l.promoteToNote),
+              ],
+            ),
+          ),
         PopupMenuItem(
           value: 'addTag',
           child: Row(
@@ -3810,6 +3558,8 @@ class _CanvasViewState extends ConsumerState<CanvasView>
           _toggleContainerCollapse(card.id);
         case 'saveToScratchpad':
           _saveCardToScratchpad(card);
+        case 'promoteToNote':
+          _promoteCardToNote(card);
         case 'moveToLayer':
           _showMoveToLayerDialog(card);
         case 'addTag':
@@ -4318,6 +4068,41 @@ class _CanvasViewState extends ConsumerState<CanvasView>
         ],
       ),
     );
+  }
+
+  void _promoteCardToNote(CanvasCard card) async {
+    final l = AppLocalizations.of(context)!;
+    final knowledgeNotifier = ref.read(knowledgeProvider.notifier);
+    final baseTitle = card.title.isNotEmpty ? card.title : 'Untitled';
+    final uniqueTitle = await knowledgeNotifier.getUniqueTitle(baseTitle);
+    final content = StringBuffer();
+    if (card.content.isNotEmpty) {
+      content.writeln(card.content);
+    }
+    if (card.tags.isNotEmpty) {
+      content.writeln();
+      for (final tag in card.tags) {
+        content.writeln('- #$tag');
+      }
+    }
+    final note = await knowledgeNotifier.createNote(
+      title: uniqueTitle,
+      content: content.toString(),
+    );
+    final notifier = ref.read(canvasProvider.notifier);
+    notifier.updateCard(card.copyWith(noteId: note.id));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l.promoteToNoteSuccess),
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: l.view,
+            onPressed: () => knowledgeNotifier.openNote(note.id),
+          ),
+        ),
+      );
+    }
   }
 
   void _showMoveToLayerDialog(CanvasCard card) {
@@ -4965,7 +4750,7 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                             child: Chip(
                               label: Text(
                                 seg.text,
-                                style: style.copyWith(fontSize: 11),
+                                style: style.copyWith(fontSize: cardFontSize * 0.8),
                               ),
                               deleteIcon: const Icon(Icons.close, size: 12),
                               onDeleted: () {
@@ -5313,14 +5098,9 @@ class _CanvasViewState extends ConsumerState<CanvasView>
         _saveExportFile('canvas_${notifier.activeCanvasName}.md', md);
       case 'png':
         _exportToPng();
-      case 'pdf':
-        final pdf = notifier.exportToPdf();
-        _saveExportFile('canvas_${notifier.activeCanvasName}.svg', pdf);
       case 'html':
         final html = notifier.exportToHtml();
         _saveExportFile('canvas_${notifier.activeCanvasName}.html', html);
-      case 'jpeg':
-        _exportToPng();
       case 'svgWithMeta':
         final (svg, _) = notifier.exportWithEmbeddedData();
         _saveExportFile('canvas_${notifier.activeCanvasName}.svg', svg);
@@ -5451,9 +5231,8 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                           const SizedBox(height: 4),
                           Text(
                             l.addLayersToOrganize,
-                            style: TextStyle(
+                            style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.hintColor,
-                              fontSize: 11,
                             ),
                           ),
                         ],
@@ -5549,8 +5328,7 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                               ),
                               child: Text(
                                 '$cardCount',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 9,
+                                style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.hintColor,
                                 ),
                               ),
@@ -5710,9 +5488,7 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                                 child: FilterChip(
                                   label: Text(
                                     cat == kAllCategory ? l.all : cat,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      fontSize: 10,
-                                    ),
+                                    style: theme.textTheme.bodySmall,
                                   ),
                                   selected: cat == filterCategory,
                                   onSelected: (_) => setDialogState(
@@ -5755,8 +5531,7 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                       ),
                       subtitle: Text(
                         '${item.category} · ${item.width.round()}×${item.height.round()}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 9,
+                        style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.hintColor,
                         ),
                       ),
@@ -5824,9 +5599,8 @@ class _CanvasViewState extends ConsumerState<CanvasView>
                           const SizedBox(height: 4),
                           Text(
                             l.scratchpadEmptyHint,
-                            style: TextStyle(
+                            style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.hintColor,
-                              fontSize: 11,
                             ),
                           ),
                         ],
@@ -5843,6 +5617,257 @@ class _CanvasViewState extends ConsumerState<CanvasView>
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _HoverPopupMenuButton<T> extends StatefulWidget {
+  final String tooltip;
+  final Widget icon;
+  final EdgeInsetsGeometry padding;
+  final BoxConstraints constraints;
+  final void Function(T) onSelected;
+  final List<PopupMenuEntry<T>> Function(BuildContext) itemBuilder;
+
+  const _HoverPopupMenuButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onSelected,
+    required this.itemBuilder,
+    this.padding = EdgeInsets.zero,
+    this.constraints = const BoxConstraints(minWidth: 28, minHeight: 28),
+  });
+
+  @override
+  State<_HoverPopupMenuButton<T>> createState() =>
+      _HoverPopupMenuButtonState<T>();
+}
+
+class _HoverPopupMenuButtonState<T> extends State<_HoverPopupMenuButton<T>> {
+  OverlayEntry? _overlayEntry;
+  bool _isHoveringButton = false;
+  bool _isHoveringMenu = false;
+  Timer? _closeTimer;
+
+  static const _closeDelay = Duration(milliseconds: 250);
+
+  void _showMenu() {
+    if (_overlayEntry != null) return;
+    _closeTimer?.cancel();
+
+    final box = context.findRenderObject() as RenderBox;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final offset = box.localToGlobal(Offset.zero, ancestor: overlay);
+    final overlaySize = overlay.size;
+
+    final items = widget.itemBuilder(context);
+
+    _overlayEntry = OverlayEntry(
+      builder: (overlayContext) {
+        return _HoverMenuOverlay<T>(
+          offset: offset,
+          buttonWidth: box.size.width,
+          overlaySize: overlaySize,
+          items: items,
+          onSelected: (value) {
+            _removeMenu();
+            widget.onSelected(value);
+          },
+          onDismiss: _removeMenu,
+          onMenuHoverChanged: (hovering) {
+            _isHoveringMenu = hovering;
+            if (hovering) {
+              _closeTimer?.cancel();
+            } else {
+              _scheduleClose();
+            }
+          },
+        );
+      },
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _scheduleClose() {
+    if (!_isHoveringButton && !_isHoveringMenu) {
+      _closeTimer?.cancel();
+      _closeTimer = Timer(_closeDelay, () {
+        if (!_isHoveringButton && !_isHoveringMenu && mounted) {
+          _removeMenu();
+        }
+      });
+    }
+  }
+
+  void _removeMenu() {
+    _closeTimer?.cancel();
+    final entry = _overlayEntry;
+    _overlayEntry = null;
+    _isHoveringMenu = false;
+    if (entry != null && mounted) {
+      entry.remove();
+    }
+  }
+
+  @override
+  void dispose() {
+    _closeTimer?.cancel();
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) {
+        _isHoveringButton = true;
+        _closeTimer?.cancel();
+        _showMenu();
+      },
+      onExit: (_) {
+        _isHoveringButton = false;
+        _scheduleClose();
+      },
+      child: IconButton(
+        icon: widget.icon,
+        onPressed: _showMenu,
+        tooltip: widget.tooltip,
+        padding: widget.padding,
+        constraints: widget.constraints,
+      ),
+    );
+  }
+}
+
+class _HoverMenuOverlay<T> extends StatelessWidget {
+  final Offset offset;
+  final double buttonWidth;
+  final Size overlaySize;
+  final List<PopupMenuEntry<T>> items;
+  final void Function(T) onSelected;
+  final VoidCallback onDismiss;
+  final void Function(bool) onMenuHoverChanged;
+
+  const _HoverMenuOverlay({
+    required this.offset,
+    required this.buttonWidth,
+    required this.overlaySize,
+    required this.items,
+    required this.onSelected,
+    required this.onDismiss,
+    required this.onMenuHoverChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Listener(
+            onPointerDown: (_) => onDismiss(),
+            behavior: HitTestBehavior.translucent,
+          ),
+        ),
+        Positioned(
+          left: offset.dx,
+          top: offset.dy + 28,
+          child: MouseRegion(
+            onEnter: (_) => onMenuHoverChanged(true),
+            onExit: (_) => onMenuHoverChanged(false),
+            child: Listener(
+              onPointerDown: (_) {},
+              behavior: HitTestBehavior.opaque,
+              child: Material(
+                elevation: 8,
+                borderRadius: BorderRadius.circular(4),
+                color: theme.popupMenuTheme.color ?? theme.cardColor,
+                child: IntrinsicWidth(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: buttonWidth,
+                      maxWidth: overlaySize.width - offset.dx - 8,
+                      maxHeight: overlaySize.height - offset.dy - 40,
+                    ),
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.zero,
+                      child: ListBody(
+                        children: items.map((entry) {
+                          if (entry is PopupMenuDivider) {
+                            return const Divider(height: 1);
+                          }
+                          if (entry is PopupMenuItem<T>) {
+                            return _HoverMenuItem<T>(
+                              value: entry.value,
+                              enabled: entry.enabled,
+                              onSelected: onSelected,
+                              textStyle: theme.popupMenuTheme.textStyle,
+                              child: entry.child!,
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HoverMenuItem<T> extends StatefulWidget {
+  final T? value;
+  final bool enabled;
+  final void Function(T) onSelected;
+  final TextStyle? textStyle;
+  final Widget child;
+
+  const _HoverMenuItem({
+    required this.value,
+    required this.enabled,
+    required this.onSelected,
+    this.textStyle,
+    required this.child,
+  });
+
+  @override
+  State<_HoverMenuItem<T>> createState() => _HoverMenuItemState<T>();
+}
+
+class _HoverMenuItemState<T> extends State<_HoverMenuItem<T>> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.enabled && widget.value != null
+            ? () => widget.onSelected(widget.value as T)
+            : null,
+        child: Container(
+          color: _isHovered
+              ? theme.hoverColor
+              : null,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: DefaultTextStyle(
+            style: (widget.textStyle ?? theme.textTheme.bodyMedium!).copyWith(
+              color: widget.enabled ? null : theme.disabledColor,
+            ),
+            child: widget.child,
+          ),
+        ),
       ),
     );
   }

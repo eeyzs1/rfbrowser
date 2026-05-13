@@ -83,6 +83,28 @@ class CanvasPainter extends CustomPainter {
     (wy - cameraY) * scale + viewH / 2,
   );
 
+  Offset _pathMidpoint(Path path) {
+    final metrics = path.computeMetrics().toList();
+    if (metrics.isEmpty) return Offset.zero;
+    double totalLength = 0;
+    for (final m in metrics) {
+      totalLength += m.length;
+    }
+    if (totalLength <= 0) return Offset.zero;
+    final target = totalLength / 2;
+    double accumulated = 0;
+    for (final m in metrics) {
+      if (accumulated + m.length >= target) {
+        final t = m.getTangentForOffset(target - accumulated);
+        return t?.position ?? Offset.zero;
+      }
+      accumulated += m.length;
+    }
+    final last = metrics.last;
+    final t = last.getTangentForOffset(last.length);
+    return t?.position ?? Offset.zero;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     if (backgroundColorValue != null) {
@@ -375,8 +397,7 @@ class CanvasPainter extends CustomPainter {
       }
 
       if (conn.label.isNotEmpty) {
-        final midX = (fp.dx + tp.dx) / 2;
-        final midY = (fp.dy + tp.dy) / 2;
+        final labelPos = _pathMidpoint(path);
         final effectiveFontSize = connStyle.labelFontSize > 0
             ? connStyle.labelFontSize * scale
             : (baseFontSize * 0.7).clamp(8.0, 14.0);
@@ -392,7 +413,7 @@ class CanvasPainter extends CustomPainter {
         tp2.layout();
         final bgRect = RRect.fromRectAndRadius(
           Rect.fromCenter(
-            center: Offset(midX, midY - 8),
+            center: Offset(labelPos.dx, labelPos.dy - 8),
             width: tp2.width + 8,
             height: tp2.height + 4,
           ),
@@ -414,7 +435,7 @@ class CanvasPainter extends CustomPainter {
         );
         tp2.paint(
           canvas,
-          Offset(midX - tp2.width / 2, midY - 8 - tp2.height / 2),
+          Offset(labelPos.dx - tp2.width / 2, labelPos.dy - 8 - tp2.height / 2),
         );
       }
 

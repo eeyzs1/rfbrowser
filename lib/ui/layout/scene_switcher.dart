@@ -40,7 +40,7 @@ class _SceneSwitcherState extends ConsumerState<SceneSwitcher> {
       child: Row(
         children: [
           Icon(Icons.explore, size: 18, color: theme.colorScheme.primary),
-          const SizedBox(width: 6),
+          const SizedBox(width: DesignSpacing.sm),
           Text(
             'RFBrowser',
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -48,7 +48,7 @@ class _SceneSwitcherState extends ConsumerState<SceneSwitcher> {
               color: theme.colorScheme.primary,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: DesignSpacing.sm),
           _VaultSwitcher(vaultName: vaultName),
           const Spacer(),
           _SceneButton(
@@ -78,7 +78,7 @@ class _SceneSwitcherState extends ConsumerState<SceneSwitcher> {
             onTap: () => widget.onSceneChanged(SceneType.connect),
           ),
           const SizedBox(width: DesignSpacing.xs),
-          _SettingsButton(),
+          const _SettingsButton(),
         ],
       ),
     );
@@ -99,40 +99,45 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: () => _showVaultMenu(context),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-          decoration: BoxDecoration(
-            color: _isHovered
-                ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                : theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.3,
-                  ),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.folder_open,
-                size: 12,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                widget.vaultName,
-                style: theme.textTheme.labelSmall?.copyWith(
+    final l = AppLocalizations.of(context);
+    return Semantics(
+      button: true,
+      label: l != null ? '${l.openVault}: ${widget.vaultName}' : 'Vault: ${widget.vaultName}',
+      child: Material(
+        color: _isHovered
+            ? DesignColors.primaryHover
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(DesignRadius.sm),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(DesignRadius.sm),
+          onTap: () => _showVaultMenu(context),
+          onHover: (hovered) => setState(() => _isHovered = hovered),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignSpacing.sm,
+              vertical: DesignSpacing.sm,
+            ),
+            constraints: const BoxConstraints(minHeight: DesignTouchTarget.minSize),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.folder_open,
+                  size: 14,
                   color: theme.colorScheme.primary,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Icon(Icons.arrow_drop_down, size: 12, color: theme.hintColor),
-            ],
+                const SizedBox(width: DesignSpacing.xs),
+                Text(
+                  widget.vaultName,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Icon(Icons.arrow_drop_down, size: 14, color: theme.hintColor),
+              ],
+            ),
           ),
         ),
       ),
@@ -149,7 +154,7 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
         child: Row(
           children: [
             Icon(Icons.folder_open, size: 14, color: theme.hintColor),
-            const SizedBox(width: 8),
+            const SizedBox(width: DesignSpacing.sm),
             Text(l.openOtherVault),
           ],
         ),
@@ -159,7 +164,7 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
         child: Row(
           children: [
             Icon(Icons.create_new_folder, size: 14, color: theme.hintColor),
-            const SizedBox(width: 8),
+            const SizedBox(width: DesignSpacing.sm),
             Text(l.createNewVault),
           ],
         ),
@@ -194,7 +199,7 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
                       ? theme.colorScheme.primary
                       : theme.hintColor,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: DesignSpacing.sm),
                 Expanded(
                   child: Text(
                     vault.name,
@@ -249,34 +254,55 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
 }
 
 class _SettingsButton extends StatefulWidget {
+  const _SettingsButton();
+
   @override
   State<_SettingsButton> createState() => _SettingsButtonState();
 }
 
 class _SettingsButtonState extends State<_SettingsButton> {
   bool _isHovered = false;
+  bool _isFocused = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Material(
-      color: _isHovered
-          ? theme.colorScheme.primary.withValues(alpha: 0.05)
-          : Colors.transparent,
-      borderRadius: BorderRadius.circular(DesignRadius.sm),
-      child: InkWell(
+    return Semantics(
+      button: true,
+      label: 'Settings',
+      child: Material(
+        color: _isHovered
+            ? DesignColors.primaryHover
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(DesignRadius.sm),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const SettingsPage()),
-          );
-        },
-        onHover: (hovered) => setState(() => _isHovered = hovered),
-        child: const Padding(
-          padding: EdgeInsets.all(8),
-          child: Icon(Icons.settings, size: 18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(DesignRadius.sm),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+            );
+          },
+          onHover: (hovered) => setState(() => _isHovered = hovered),
+          onFocusChange: (focused) => setState(() => _isFocused = focused),
+          child: Container(
+            padding: const EdgeInsets.all(DesignSpacing.sm),
+            constraints: const BoxConstraints(
+              minWidth: DesignTouchTarget.minSize,
+              minHeight: DesignTouchTarget.minSize,
+            ),
+            decoration: _isFocused
+                ? BoxDecoration(
+                    border: Border.all(
+                      color: theme.colorScheme.primary,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(DesignRadius.sm),
+                  )
+                : null,
+            child: const Icon(Icons.settings, size: 18),
+          ),
         ),
       ),
     );
@@ -306,6 +332,7 @@ class _SceneButton extends StatefulWidget {
 
 class _SceneButtonState extends State<_SceneButton> {
   bool _isHovered = false;
+  bool _isFocused = false;
 
   @override
   Widget build(BuildContext context) {
@@ -313,60 +340,67 @@ class _SceneButtonState extends State<_SceneButton> {
     final active = widget.isActive;
     final primary = theme.colorScheme.primary;
 
-    return Material(
-      color: active
-          ? primary.withValues(alpha: 0.15)
-          : (_isHovered ? primary.withValues(alpha: 0.05) : Colors.transparent),
-      borderRadius: BorderRadius.circular(DesignRadius.sm),
-      child: InkWell(
+    return Semantics(
+      button: true,
+      selected: active,
+      label: widget.label,
+      child: Material(
+        color: active
+            ? DesignColors.primaryMuted
+            : (_isHovered ? DesignColors.primaryHover : Colors.transparent),
         borderRadius: BorderRadius.circular(DesignRadius.sm),
-        onTap: active ? null : widget.onTap,
-        onHover: (hovered) => setState(() => _isHovered = hovered),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: DesignSpacing.md,
-            vertical: 4,
-          ),
-          decoration: active
-              ? BoxDecoration(
-                  border: Border(bottom: BorderSide(color: primary, width: 2)),
-                )
-              : null,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                widget.icon,
-                size: 16,
-                color: active ? primary : theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  widget.label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                    color: active
-                        ? primary
-                        : theme.colorScheme.onSurfaceVariant,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(DesignRadius.sm),
+          onTap: active ? null : widget.onTap,
+          onHover: (hovered) => setState(() => _isHovered = hovered),
+          onFocusChange: (focused) => setState(() => _isFocused = focused),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignSpacing.md,
+              vertical: DesignSpacing.sm,
+            ),
+            constraints: const BoxConstraints(minHeight: DesignTouchTarget.minSize),
+            decoration: BoxDecoration(
+              border: _isFocused && !active
+                  ? Border.all(color: primary, width: 2)
+                  : null,
+              borderRadius: BorderRadius.circular(DesignRadius.sm),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  widget.icon,
+                  size: 18,
+                  color: active ? primary : theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: DesignSpacing.xs),
+                Flexible(
+                  child: Text(
+                    widget.label,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                      color: active
+                          ? primary
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 2),
-              Text(
-                widget.shortcut,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontSize: 9,
-                  color: active
-                      ? primary.withValues(alpha: 0.6)
-                      : theme.colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.5,
-                        ),
+                const SizedBox(width: DesignSpacing.xs),
+                Text(
+                  widget.shortcut,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: active
+                        ? primary.withValues(alpha: 0.6)
+                        : theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

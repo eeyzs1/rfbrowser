@@ -20,6 +20,10 @@ void main() {
       expect(DesignColors.textSecondary, isA<Color>());
       expect(DesignColors.textMuted, isA<Color>());
       expect(DesignColors.textInverse, isA<Color>());
+
+      expect(DesignColors.primarySubtle, isA<Color>());
+      expect(DesignColors.primaryMuted, isA<Color>());
+      expect(DesignColors.primaryHover, isA<Color>());
     });
 
     test('E0-AC2: brand colors match design spec', () {
@@ -61,11 +65,13 @@ void main() {
 
   group('DesignTypography', () {
     test('E0-AC1d: typography tokens are defined', () {
-      expect(DesignTypography.displaySize, 28.0);
-      expect(DesignTypography.headingSize, 20.0);
-      expect(DesignTypography.bodySize, 14.0);
+      expect(DesignTypography.displaySize, 36.0);
+      expect(DesignTypography.headlineSize, 30.0);
+      expect(DesignTypography.titleSize, 24.0);
+      expect(DesignTypography.bodySize, 16.0);
       expect(DesignTypography.codeSize, 13.0);
       expect(DesignTypography.bodyLineHeight, 1.6);
+      expect(DesignTypography.maxContentWidth, 720.0);
     });
   });
 
@@ -74,17 +80,39 @@ void main() {
       expect(DesignDuration.sceneTransition, const Duration(milliseconds: 300));
       expect(DesignDuration.panelSlide, const Duration(milliseconds: 200));
       expect(DesignDuration.aiFloatExpand, const Duration(milliseconds: 250));
+      expect(DesignDuration.aiFloatCollapse, const Duration(milliseconds: 150));
       expect(DesignDuration.clipSuccess, const Duration(milliseconds: 200));
       expect(DesignDuration.toastShow, const Duration(milliseconds: 300));
       expect(DesignDuration.toastHide, const Duration(milliseconds: 200));
+      expect(DesignDuration.saveIndicator, const Duration(milliseconds: 1500));
     });
   });
 
   group('DesignShadow', () {
-    test('shadow tokens are defined as non-empty strings', () {
-      expect(DesignShadow.float, isNotEmpty);
-      expect(DesignShadow.dialog, isNotEmpty);
-      expect(DesignShadow.card, isNotEmpty);
+    test('shadow tokens are defined as BoxShadow', () {
+      expect(DesignShadow.sm, isA<BoxShadow>());
+      expect(DesignShadow.md, isA<BoxShadow>());
+      expect(DesignShadow.lg, isA<BoxShadow>());
+      expect(DesignShadow.dialog, isA<BoxShadow>());
+    });
+  });
+
+  group('DesignZIndex', () {
+    test('z-index tokens are defined as const ints', () {
+      expect(DesignZIndex.base, 0);
+      expect(DesignZIndex.panel, 10);
+      expect(DesignZIndex.overlay, 20);
+      expect(DesignZIndex.commandBar, 40);
+      expect(DesignZIndex.dialog, 100);
+      expect(DesignZIndex.toast, 1000);
+    });
+  });
+
+  group('DesignTouchTarget', () {
+    test('touch target tokens are defined', () {
+      expect(DesignTouchTarget.minSize, 44.0);
+      expect(DesignTouchTarget.iconButtonSize, 44.0);
+      expect(DesignTouchTarget.panelCollapseWidth, 32.0);
     });
   });
 }
