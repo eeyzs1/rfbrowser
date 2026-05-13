@@ -1,0 +1,1126 @@
+part of '../canvas_service.dart';
+
+mixin CanvasTemplatesMixin on _CanvasNotifierBase {
+    @override
+    void loadTemplate(String templateName) {
+      final template = _builtInTemplates[templateName];
+      if (template == null) return;
+      _pushUndo();
+      state = template;
+      _debouncedSave();
+    }
+
+    void setFontFamily(String cardId, String family) {
+      final card = cardById(cardId);
+      if (card == null) return;
+      updateCardInMemory(card.copyWith(fontFamily: family));
+      _debouncedSave();
+    }
+
+    void setTextColor(String cardId, int colorValue) {
+      final card = cardById(cardId);
+      if (card == null) return;
+      updateCardInMemory(card.copyWith(textColorValue: colorValue));
+      _debouncedSave();
+    }
+
+    void setLatexFormula(String cardId, String? formula) {
+      final card = cardById(cardId);
+      if (card == null) return;
+      updateCardInMemory(
+        card.copyWith(latexFormula: formula, clearLatex: formula == null),
+      );
+      _debouncedSave();
+    }
+
+    void setHtmlContent(String cardId, String? html) {
+      final card = cardById(cardId);
+      if (card == null) return;
+      updateCardInMemory(
+        card.copyWith(htmlContent: html, clearHtml: html == null),
+      );
+      _debouncedSave();
+    }
+
+    void setCustomSvg(String cardId, String? svgData) {
+      final card = cardById(cardId);
+      if (card == null) return;
+      updateCardInMemory(
+        card.copyWith(customSvgData: svgData, clearSvg: svgData == null),
+      );
+      _debouncedSave();
+    }
+
+    void setConnectionPointOffset(String cardId, double offsetX, double offsetY) {
+      final card = cardById(cardId);
+      if (card == null) return;
+      updateCardInMemory(
+        card.copyWith(
+          connectionPointOffsetX: offsetX.clamp(0.0, 1.0),
+          connectionPointOffsetY: offsetY.clamp(0.0, 1.0),
+        ),
+      );
+      _debouncedSave();
+    }
+
+    String exportToHtml() {
+      final sb = StringBuffer();
+      sb.writeln('<!DOCTYPE html><html><head><meta charset="utf-8">');
+      sb.writeln('<title>Canvas Export</title>');
+      sb.writeln(
+        '<style>body{margin:0;background:#f5f5f5;display:flex;justify-content:center;align-items:center;min-height:100vh}',
+      );
+      sb.writeln(
+        '.card{position:absolute;border:1px solid #ddd;border-radius:8px;padding:8px;background:white;font-family:sans-serif;font-size:13px}',
+      );
+      sb.writeln(
+        '.conn{stroke:#333;stroke-width:2;fill:none}</style></head><body>',
+      );
+      sb.writeln(
+        '<svg width="1200" height="800" style="position:absolute;top:0;left:0">',
+      );
+      for (final conn in state.connections) {
+        final from = cardById(conn.fromCardId);
+        final to = cardById(conn.toCardId);
+        if (from == null || to == null) continue;
+        final fx = from.x + from.width * from.connectionPointOffsetX;
+        final fy = from.y + from.height * from.connectionPointOffsetY;
+        final tx = to.x + to.width * to.connectionPointOffsetX;
+        final ty = to.y + to.height * to.connectionPointOffsetY;
+        sb.writeln('<line x1="$fx" y1="$fy" x2="$tx" y2="$ty" class="conn"/>');
+      }
+      sb.writeln('</svg>');
+      for (final card in state.cards) {
+        final bg =
+            '#${(card.colorValue & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
+        sb.writeln(
+          '<div class="card" style="left:${card.x}px;top:${card.y}px;width:${card.width}px;height:${card.height}px;background:$bg">',
+        );
+        if (card.title.isNotEmpty) sb.writeln('<b>${card.title}</b><br>');
+        if (card.content.isNotEmpty) sb.writeln(card.content);
+        sb.writeln('</div>');
+      }
+      sb.writeln('</body></html>');
+      return sb.toString();
+    }
+
+    String exportToJpeg() => exportToSvg();
+
+    String exportToWebp() => exportToSvg();
+
+    (String, String) exportWithEmbeddedData() {
+      final json = state.toJsonString();
+      final svg = exportToSvg();
+      final svgWithMeta = svg.replaceFirst(
+        '</svg>',
+        '<metadata>rfbrowser:${base64Encode(utf8.encode(json))}</metadata></svg>',
+      );
+      return (svgWithMeta, json);
+    }
+
+
+
+
+    @override
+    void addSvgAsCustomShape(String cardId, String svgData) {
+      final card = cardById(cardId);
+      if (card == null) return;
+      updateCardInMemory(card.copyWith(customSvgData: svgData));
+      _debouncedSave();
+    }
+
+    static final Map<String, Map<String, List<CanvasCardType>>>
+    shapeLibraryCategories = {
+      'General': {
+        'Basic': [
+          CanvasCardType.rectangle,
+          CanvasCardType.roundedRect,
+          CanvasCardType.ellipse,
+          CanvasCardType.diamond,
+          CanvasCardType.triangle,
+        ],
+      },
+      'Flowchart': {
+        'Flow': [
+          CanvasCardType.roundedRect,
+          CanvasCardType.diamond,
+          CanvasCardType.parallelogram,
+          CanvasCardType.rectangle,
+        ],
+      },
+      'UML': {
+        'Class': [
+          CanvasCardType.rectangle,
+          CanvasCardType.diamond,
+          CanvasCardType.ellipse,
+          CanvasCardType.roundedRect,
+        ],
+      },
+      'Network': {
+        'Infrastructure': [
+          CanvasCardType.cylinder,
+          CanvasCardType.hexagon,
+          CanvasCardType.ellipse,
+          CanvasCardType.rectangle,
+        ],
+      },
+      'Tables': {
+        'Data': [CanvasCardType.table],
+      },
+      'Containers': {
+        'Layout': [
+          CanvasCardType.container,
+          CanvasCardType.swimlaneH,
+          CanvasCardType.swimlaneV,
+        ],
+      },
+      'Decorative': {
+        'Shapes': [
+          CanvasCardType.star,
+          CanvasCardType.hexagon,
+          CanvasCardType.freehand,
+        ],
+      },
+    };
+
+    @override
+    void loadFromData(CanvasData data) {
+      _pushUndo();
+      state = data;
+      _debouncedSave();
+    }
+
+    static final Map<String, CanvasData> _builtInTemplates = {
+      'flowchart': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 't_start',
+            type: CanvasCardType.roundedRect,
+            x: 300,
+            y: 0,
+            width: 120,
+            height: 50,
+            title: 'Start',
+          ),
+          CanvasCard(
+            id: 't_process',
+            type: CanvasCardType.rectangle,
+            x: 280,
+            y: 100,
+            width: 160,
+            height: 60,
+            title: 'Process',
+          ),
+          CanvasCard(
+            id: 't_decision',
+            type: CanvasCardType.diamond,
+            x: 270,
+            y: 220,
+            width: 180,
+            height: 120,
+            title: 'Decision?',
+          ),
+          CanvasCard(
+            id: 't_action_a',
+            type: CanvasCardType.rectangle,
+            x: 100,
+            y: 400,
+            width: 160,
+            height: 60,
+            title: 'Action A',
+          ),
+          CanvasCard(
+            id: 't_action_b',
+            type: CanvasCardType.rectangle,
+            x: 460,
+            y: 400,
+            width: 160,
+            height: 60,
+            title: 'Action B',
+          ),
+          CanvasCard(
+            id: 't_end',
+            type: CanvasCardType.roundedRect,
+            x: 300,
+            y: 540,
+            width: 120,
+            height: 50,
+            title: 'End',
+          ),
+        ],
+        connections: [
+          CanvasConnection(
+            id: 'tc1',
+            fromCardId: 't_start',
+            toCardId: 't_process',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+          ),
+          CanvasConnection(
+            id: 'tc2',
+            fromCardId: 't_process',
+            toCardId: 't_decision',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+          ),
+          CanvasConnection(
+            id: 'tc3',
+            fromCardId: 't_decision',
+            toCardId: 't_action_a',
+            fromSide: ConnectionSide.left,
+            toSide: ConnectionSide.top,
+            label: 'Yes',
+          ),
+          CanvasConnection(
+            id: 'tc4',
+            fromCardId: 't_decision',
+            toCardId: 't_action_b',
+            fromSide: ConnectionSide.right,
+            toSide: ConnectionSide.top,
+            label: 'No',
+          ),
+          CanvasConnection(
+            id: 'tc5',
+            fromCardId: 't_action_a',
+            toCardId: 't_end',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.left,
+          ),
+          CanvasConnection(
+            id: 'tc6',
+            fromCardId: 't_action_b',
+            toCardId: 't_end',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.right,
+          ),
+        ],
+      ),
+      'uml_class': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'u_base',
+            type: CanvasCardType.rectangle,
+            x: 200,
+            y: 0,
+            width: 200,
+            height: 60,
+            title: 'BaseClass',
+            content: '+ method(): void',
+          ),
+          CanvasCard(
+            id: 'u_child1',
+            type: CanvasCardType.rectangle,
+            x: 50,
+            y: 200,
+            width: 200,
+            height: 60,
+            title: 'ChildClass1',
+            content: '+ override(): void',
+          ),
+          CanvasCard(
+            id: 'u_child2',
+            type: CanvasCardType.rectangle,
+            x: 350,
+            y: 200,
+            width: 200,
+            height: 60,
+            title: 'ChildClass2',
+            content: '+ newMethod(): int',
+          ),
+          CanvasCard(
+            id: 'u_iface',
+            type: CanvasCardType.roundedRect,
+            x: 200,
+            y: -160,
+            width: 200,
+            height: 60,
+            title: '<<interface>>',
+            content: '+ contract(): bool',
+          ),
+        ],
+        connections: [
+          CanvasConnection(
+            id: 'uc1',
+            fromCardId: 'u_child1',
+            toCardId: 'u_base',
+            fromSide: ConnectionSide.top,
+            toSide: ConnectionSide.bottom,
+            style: CanvasConnectionStyle(
+              pathType: ConnectionPath.orthogonal,
+              arrowStyle: ArrowStyle.triangle,
+            ),
+          ),
+          CanvasConnection(
+            id: 'uc2',
+            fromCardId: 'u_child2',
+            toCardId: 'u_base',
+            fromSide: ConnectionSide.top,
+            toSide: ConnectionSide.bottom,
+            style: CanvasConnectionStyle(
+              pathType: ConnectionPath.orthogonal,
+              arrowStyle: ArrowStyle.triangle,
+            ),
+          ),
+          CanvasConnection(
+            id: 'uc3',
+            fromCardId: 'u_base',
+            toCardId: 'u_iface',
+            fromSide: ConnectionSide.top,
+            toSide: ConnectionSide.bottom,
+            style: CanvasConnectionStyle(
+              pathType: ConnectionPath.orthogonal,
+              arrowStyle: ArrowStyle.triangle,
+              startArrowStyle: ArrowStyle.triangle,
+            ),
+          ),
+        ],
+      ),
+      'swimlane': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 's_lane',
+            type: CanvasCardType.swimlaneH,
+            x: 0,
+            y: 0,
+            width: 800,
+            height: 400,
+            title: 'Process Flow',
+          ),
+        ],
+      ),
+      'mindmap': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'm_center',
+            type: CanvasCardType.ellipse,
+            x: 340,
+            y: 200,
+            width: 180,
+            height: 100,
+            title: 'Central Topic',
+          ),
+          CanvasCard(
+            id: 'm_b1',
+            type: CanvasCardType.roundedRect,
+            x: 50,
+            y: 50,
+            width: 160,
+            height: 60,
+            title: 'Branch 1',
+          ),
+          CanvasCard(
+            id: 'm_b2',
+            type: CanvasCardType.roundedRect,
+            x: 650,
+            y: 50,
+            width: 160,
+            height: 60,
+            title: 'Branch 2',
+          ),
+          CanvasCard(
+            id: 'm_b3',
+            type: CanvasCardType.roundedRect,
+            x: 50,
+            y: 350,
+            width: 160,
+            height: 60,
+            title: 'Branch 3',
+          ),
+          CanvasCard(
+            id: 'm_b4',
+            type: CanvasCardType.roundedRect,
+            x: 650,
+            y: 350,
+            width: 160,
+            height: 60,
+            title: 'Branch 4',
+          ),
+        ],
+        connections: [
+          CanvasConnection(
+            id: 'mc1',
+            fromCardId: 'm_center',
+            toCardId: 'm_b1',
+            style: CanvasConnectionStyle(pathType: ConnectionPath.curved),
+          ),
+          CanvasConnection(
+            id: 'mc2',
+            fromCardId: 'm_center',
+            toCardId: 'm_b2',
+            style: CanvasConnectionStyle(pathType: ConnectionPath.curved),
+          ),
+          CanvasConnection(
+            id: 'mc3',
+            fromCardId: 'm_center',
+            toCardId: 'm_b3',
+            style: CanvasConnectionStyle(pathType: ConnectionPath.curved),
+          ),
+          CanvasConnection(
+            id: 'mc4',
+            fromCardId: 'm_center',
+            toCardId: 'm_b4',
+            style: CanvasConnectionStyle(pathType: ConnectionPath.curved),
+          ),
+        ],
+      ),
+      'network': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'n_cloud',
+            type: CanvasCardType.ellipse,
+            x: 300,
+            y: 0,
+            width: 200,
+            height: 80,
+            title: 'Cloud / Internet',
+          ),
+          CanvasCard(
+            id: 'n_fw',
+            type: CanvasCardType.hexagon,
+            x: 320,
+            y: 150,
+            width: 160,
+            height: 80,
+            title: 'Firewall',
+          ),
+          CanvasCard(
+            id: 'n_lb',
+            type: CanvasCardType.diamond,
+            x: 320,
+            y: 300,
+            width: 160,
+            height: 100,
+            title: 'Load Balancer',
+          ),
+          CanvasCard(
+            id: 'n_srv1',
+            type: CanvasCardType.cylinder,
+            x: 150,
+            y: 480,
+            width: 140,
+            height: 100,
+            title: 'Server 1',
+          ),
+          CanvasCard(
+            id: 'n_srv2',
+            type: CanvasCardType.cylinder,
+            x: 510,
+            y: 480,
+            width: 140,
+            height: 100,
+            title: 'Server 2',
+          ),
+          CanvasCard(
+            id: 'n_db',
+            type: CanvasCardType.cylinder,
+            x: 330,
+            y: 650,
+            width: 140,
+            height: 100,
+            title: 'Database',
+          ),
+        ],
+        connections: [
+          CanvasConnection(
+            id: 'nc1',
+            fromCardId: 'n_cloud',
+            toCardId: 'n_fw',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+          ),
+          CanvasConnection(
+            id: 'nc2',
+            fromCardId: 'n_fw',
+            toCardId: 'n_lb',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+          ),
+          CanvasConnection(
+            id: 'nc3',
+            fromCardId: 'n_lb',
+            toCardId: 'n_srv1',
+            fromSide: ConnectionSide.left,
+            toSide: ConnectionSide.top,
+            label: '',
+          ),
+          CanvasConnection(
+            id: 'nc4',
+            fromCardId: 'n_lb',
+            toCardId: 'n_srv2',
+            fromSide: ConnectionSide.right,
+            toSide: ConnectionSide.top,
+            label: '',
+          ),
+          CanvasConnection(
+            id: 'nc5',
+            fromCardId: 'n_srv1',
+            toCardId: 'n_db',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.left,
+          ),
+          CanvasConnection(
+            id: 'nc6',
+            fromCardId: 'n_srv2',
+            toCardId: 'n_db',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.right,
+          ),
+        ],
+      ),
+      'er_diagram': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'er_user',
+            type: CanvasCardType.rectangle,
+            x: 100,
+            y: 50,
+            width: 180,
+            height: 120,
+            title: 'User',
+            content: 'id: PK\nname: VARCHAR\nemail: VARCHAR',
+          ),
+          CanvasCard(
+            id: 'er_order',
+            type: CanvasCardType.rectangle,
+            x: 450,
+            y: 50,
+            width: 180,
+            height: 120,
+            title: 'Order',
+            content: 'id: PK\nuser_id: FK\ntotal: DECIMAL',
+          ),
+          CanvasCard(
+            id: 'er_product',
+            type: CanvasCardType.rectangle,
+            x: 450,
+            y: 300,
+            width: 180,
+            height: 120,
+            title: 'Product',
+            content: 'id: PK\nname: VARCHAR\nprice: DECIMAL',
+          ),
+          CanvasCard(
+            id: 'er_item',
+            type: CanvasCardType.diamond,
+            x: 250,
+            y: 300,
+            width: 160,
+            height: 100,
+            title: 'OrderItem',
+          ),
+        ],
+        connections: [
+          CanvasConnection(
+            id: 'erc1',
+            fromCardId: 'er_user',
+            toCardId: 'er_order',
+            fromSide: ConnectionSide.right,
+            toSide: ConnectionSide.left,
+            label: '1:N',
+          ),
+          CanvasConnection(
+            id: 'erc2',
+            fromCardId: 'er_order',
+            toCardId: 'er_item',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+            label: '1:N',
+          ),
+          CanvasConnection(
+            id: 'erc3',
+            fromCardId: 'er_product',
+            toCardId: 'er_item',
+            fromSide: ConnectionSide.left,
+            toSide: ConnectionSide.right,
+            label: '1:N',
+          ),
+        ],
+      ),
+      'kanban': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'kb_col1',
+            type: CanvasCardType.swimlaneV,
+            x: 0,
+            y: 0,
+            width: 240,
+            height: 600,
+            title: 'To Do',
+          ),
+          CanvasCard(
+            id: 'kb_col2',
+            type: CanvasCardType.swimlaneV,
+            x: 260,
+            y: 0,
+            width: 240,
+            height: 600,
+            title: 'In Progress',
+          ),
+          CanvasCard(
+            id: 'kb_col3',
+            type: CanvasCardType.swimlaneV,
+            x: 520,
+            y: 0,
+            width: 240,
+            height: 600,
+            title: 'Done',
+          ),
+        ],
+      ),
+      'org_chart': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'oc_ceo',
+            type: CanvasCardType.roundedRect,
+            x: 300,
+            y: 0,
+            width: 160,
+            height: 60,
+            title: 'CEO',
+          ),
+          CanvasCard(
+            id: 'oc_cto',
+            type: CanvasCardType.roundedRect,
+            x: 120,
+            y: 120,
+            width: 160,
+            height: 60,
+            title: 'CTO',
+          ),
+          CanvasCard(
+            id: 'oc_cfo',
+            type: CanvasCardType.roundedRect,
+            x: 480,
+            y: 120,
+            width: 160,
+            height: 60,
+            title: 'CFO',
+          ),
+          CanvasCard(
+            id: 'oc_dev1',
+            type: CanvasCardType.roundedRect,
+            x: 30,
+            y: 240,
+            width: 140,
+            height: 50,
+            title: 'Dev Lead',
+          ),
+          CanvasCard(
+            id: 'oc_dev2',
+            type: CanvasCardType.roundedRect,
+            x: 200,
+            y: 240,
+            width: 140,
+            height: 50,
+            title: 'QA Lead',
+          ),
+          CanvasCard(
+            id: 'oc_acc',
+            type: CanvasCardType.roundedRect,
+            x: 420,
+            y: 240,
+            width: 140,
+            height: 50,
+            title: 'Accounting',
+          ),
+          CanvasCard(
+            id: 'oc_hr',
+            type: CanvasCardType.roundedRect,
+            x: 590,
+            y: 240,
+            width: 140,
+            height: 50,
+            title: 'HR',
+          ),
+        ],
+        connections: [
+          CanvasConnection(
+            id: 'occ1',
+            fromCardId: 'oc_ceo',
+            toCardId: 'oc_cto',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+          ),
+          CanvasConnection(
+            id: 'occ2',
+            fromCardId: 'oc_ceo',
+            toCardId: 'oc_cfo',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+          ),
+          CanvasConnection(
+            id: 'occ3',
+            fromCardId: 'oc_cto',
+            toCardId: 'oc_dev1',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+          ),
+          CanvasConnection(
+            id: 'occ4',
+            fromCardId: 'oc_cto',
+            toCardId: 'oc_dev2',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+          ),
+          CanvasConnection(
+            id: 'occ5',
+            fromCardId: 'oc_cfo',
+            toCardId: 'oc_acc',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+          ),
+          CanvasConnection(
+            id: 'occ6',
+            fromCardId: 'oc_cfo',
+            toCardId: 'oc_hr',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+          ),
+        ],
+      ),
+      'state_machine': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'sm_init',
+            type: CanvasCardType.ellipse,
+            x: 300,
+            y: 0,
+            width: 100,
+            height: 50,
+            title: 'Init',
+          ),
+          CanvasCard(
+            id: 'sm_idle',
+            type: CanvasCardType.roundedRect,
+            x: 280,
+            y: 120,
+            width: 140,
+            height: 60,
+            title: 'Idle',
+          ),
+          CanvasCard(
+            id: 'sm_active',
+            type: CanvasCardType.roundedRect,
+            x: 280,
+            y: 260,
+            width: 140,
+            height: 60,
+            title: 'Active',
+          ),
+          CanvasCard(
+            id: 'sm_paused',
+            type: CanvasCardType.roundedRect,
+            x: 80,
+            y: 260,
+            width: 140,
+            height: 60,
+            title: 'Paused',
+          ),
+          CanvasCard(
+            id: 'sm_done',
+            type: CanvasCardType.ellipse,
+            x: 280,
+            y: 400,
+            width: 140,
+            height: 60,
+            title: 'Done',
+          ),
+          CanvasCard(
+            id: 'sm_error',
+            type: CanvasCardType.diamond,
+            x: 500,
+            y: 260,
+            width: 140,
+            height: 100,
+            title: 'Error',
+          ),
+        ],
+        connections: [
+          CanvasConnection(
+            id: 'smc1',
+            fromCardId: 'sm_init',
+            toCardId: 'sm_idle',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+          ),
+          CanvasConnection(
+            id: 'smc2',
+            fromCardId: 'sm_idle',
+            toCardId: 'sm_active',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+            label: 'start',
+          ),
+          CanvasConnection(
+            id: 'smc3',
+            fromCardId: 'sm_active',
+            toCardId: 'sm_paused',
+            fromSide: ConnectionSide.left,
+            toSide: ConnectionSide.right,
+            label: 'pause',
+          ),
+          CanvasConnection(
+            id: 'smc4',
+            fromCardId: 'sm_paused',
+            toCardId: 'sm_active',
+            fromSide: ConnectionSide.right,
+            toSide: ConnectionSide.left,
+            label: 'resume',
+          ),
+          CanvasConnection(
+            id: 'smc5',
+            fromCardId: 'sm_active',
+            toCardId: 'sm_done',
+            fromSide: ConnectionSide.bottom,
+            toSide: ConnectionSide.top,
+            label: 'finish',
+          ),
+          CanvasConnection(
+            id: 'smc6',
+            fromCardId: 'sm_active',
+            toCardId: 'sm_error',
+            fromSide: ConnectionSide.right,
+            toSide: ConnectionSide.left,
+            label: 'error',
+          ),
+          CanvasConnection(
+            id: 'smc7',
+            fromCardId: 'sm_error',
+            toCardId: 'sm_idle',
+            fromSide: ConnectionSide.top,
+            toSide: ConnectionSide.right,
+            label: 'reset',
+          ),
+        ],
+      ),
+      'venn': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'vn_a',
+            type: CanvasCardType.ellipse,
+            x: 100,
+            y: 100,
+            width: 250,
+            height: 250,
+            title: 'Set A',
+            colorValue: 0xFFE3F2FD,
+          ),
+          CanvasCard(
+            id: 'vn_b',
+            type: CanvasCardType.ellipse,
+            x: 300,
+            y: 100,
+            width: 250,
+            height: 250,
+            title: 'Set B',
+            colorValue: 0xFFFCE4EC,
+          ),
+          CanvasCard(
+            id: 'vn_c',
+            type: CanvasCardType.ellipse,
+            x: 200,
+            y: 280,
+            width: 250,
+            height: 250,
+            title: 'Set C',
+            colorValue: 0xFFE8F5E9,
+          ),
+        ],
+      ),
+      'timeline': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'tl_1',
+            type: CanvasCardType.roundedRect,
+            x: 0,
+            y: 80,
+            width: 140,
+            height: 60,
+            title: 'Phase 1',
+          ),
+          CanvasCard(
+            id: 'tl_2',
+            type: CanvasCardType.roundedRect,
+            x: 180,
+            y: 80,
+            width: 140,
+            height: 60,
+            title: 'Phase 2',
+          ),
+          CanvasCard(
+            id: 'tl_3',
+            type: CanvasCardType.roundedRect,
+            x: 360,
+            y: 80,
+            width: 140,
+            height: 60,
+            title: 'Phase 3',
+          ),
+          CanvasCard(
+            id: 'tl_4',
+            type: CanvasCardType.roundedRect,
+            x: 540,
+            y: 80,
+            width: 140,
+            height: 60,
+            title: 'Phase 4',
+          ),
+        ],
+        connections: [
+          CanvasConnection(
+            id: 'tlc1',
+            fromCardId: 'tl_1',
+            toCardId: 'tl_2',
+            fromSide: ConnectionSide.right,
+            toSide: ConnectionSide.left,
+          ),
+          CanvasConnection(
+            id: 'tlc2',
+            fromCardId: 'tl_2',
+            toCardId: 'tl_3',
+            fromSide: ConnectionSide.right,
+            toSide: ConnectionSide.left,
+          ),
+          CanvasConnection(
+            id: 'tlc3',
+            fromCardId: 'tl_3',
+            toCardId: 'tl_4',
+            fromSide: ConnectionSide.right,
+            toSide: ConnectionSide.left,
+          ),
+        ],
+      ),
+      'gantt': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'gt_header',
+            type: CanvasCardType.swimlaneH,
+            x: 0,
+            y: 0,
+            width: 800,
+            height: 400,
+            title: 'Gantt Chart',
+          ),
+        ],
+      ),
+      'decision_tree': CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'dt_root',
+            type: CanvasCardType.diamond,
+            x: 270,
+            y: 0,
+            width: 180,
+            height: 120,
+            title: 'Condition?',
+          ),
+          CanvasCard(
+            id: 'dt_y1',
+            type: CanvasCardType.diamond,
+            x: 50,
+            y: 200,
+            width: 180,
+            height: 120,
+            title: 'Check A?',
+          ),
+          CanvasCard(
+            id: 'dt_n1',
+            type: CanvasCardType.diamond,
+            x: 490,
+            y: 200,
+            width: 180,
+            height: 120,
+            title: 'Check B?',
+          ),
+          CanvasCard(
+            id: 'dt_yy',
+            type: CanvasCardType.roundedRect,
+            x: 0,
+            y: 400,
+            width: 120,
+            height: 50,
+            title: 'Result 1',
+          ),
+          CanvasCard(
+            id: 'dt_yn',
+            type: CanvasCardType.roundedRect,
+            x: 160,
+            y: 400,
+            width: 120,
+            height: 50,
+            title: 'Result 2',
+          ),
+          CanvasCard(
+            id: 'dt_ny',
+            type: CanvasCardType.roundedRect,
+            x: 440,
+            y: 400,
+            width: 120,
+            height: 50,
+            title: 'Result 3',
+          ),
+          CanvasCard(
+            id: 'dt_nn',
+            type: CanvasCardType.roundedRect,
+            x: 600,
+            y: 400,
+            width: 120,
+            height: 50,
+            title: 'Result 4',
+          ),
+        ],
+        connections: [
+          CanvasConnection(
+            id: 'dtc1',
+            fromCardId: 'dt_root',
+            toCardId: 'dt_y1',
+            fromSide: ConnectionSide.left,
+            toSide: ConnectionSide.top,
+            label: 'Yes',
+          ),
+          CanvasConnection(
+            id: 'dtc2',
+            fromCardId: 'dt_root',
+            toCardId: 'dt_n1',
+            fromSide: ConnectionSide.right,
+            toSide: ConnectionSide.top,
+            label: 'No',
+          ),
+          CanvasConnection(
+            id: 'dtc3',
+            fromCardId: 'dt_y1',
+            toCardId: 'dt_yy',
+            fromSide: ConnectionSide.left,
+            toSide: ConnectionSide.top,
+            label: 'Yes',
+          ),
+          CanvasConnection(
+            id: 'dtc4',
+            fromCardId: 'dt_y1',
+            toCardId: 'dt_yn',
+            fromSide: ConnectionSide.right,
+            toSide: ConnectionSide.top,
+            label: 'No',
+          ),
+          CanvasConnection(
+            id: 'dtc5',
+            fromCardId: 'dt_n1',
+            toCardId: 'dt_ny',
+            fromSide: ConnectionSide.left,
+            toSide: ConnectionSide.top,
+            label: 'Yes',
+          ),
+          CanvasConnection(
+            id: 'dtc6',
+            fromCardId: 'dt_n1',
+            toCardId: 'dt_nn',
+            fromSide: ConnectionSide.right,
+            toSide: ConnectionSide.top,
+            label: 'No',
+          ),
+        ],
+      ),
+    };
+
+
+}
