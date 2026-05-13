@@ -838,5 +838,81 @@
     "placeholders": {
       "number": {"type": "int"}
     }
-  }
+  },
+  "navBack": "Back",
+  "navForward": "Forward",
+  "pageNotLoadedYet": "Page not loaded yet",
+  "clippedTitle": "Clipped: {title}",
+  "@clippedTitle": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "secureConnection": "Secure Connection",
+  "insecureConnection": "Insecure Connection",
+  "tabClosed": "Tab closed: {title}",
+  "@tabClosed": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "undoCloseTab": "Undo Close Tab",
+  "closeOtherTabs": "Close Other Tabs",
+  "closeRightTabs": "Close Tabs to the Right",
+  "copyUrl": "Copy URL",
+  "pinTab": "Pin Tab",
+  "unpinTab": "Unpin Tab",
+  "tabContextMenu": "Tab Actions",
+  "newTabShortcut": "New Tab (Ctrl+T)",
+  "closeTabShortcut": "Close Tab (Ctrl+W)",
+  "focusUrlBar": "Focus URL Bar (Ctrl+L)",
+  "searchEngine": "Search Engine",
+  "searchEngineBing": "Bing",
+  "searchEngineGoogle": "Google",
+  "searchEngineDuckDuckGo": "DuckDuckGo",
+  "searchEngineCustom": "Custom",
+  "customSearchUrl": "Search URL Template",
+  "customSearchUrlHint": "Use {q} as search query placeholder",
+  "emptyStateSubtitle": "Open a webpage to start exploring, or choose from bookmarks on the left",
+  "recentlyVisited": "Recently Visited",
+  "editBookmarkTitle": "Edit Bookmark Title",
+  "bookmarkTitle": "Bookmark Title",
+  "newFolder": "New Folder",
+  "folderName": "Folder Name",
+  "clipFormat": "Clip Format",
+  "formatMarkdown": "Markdown",
+  "formatHtml": "HTML",
+  "formatPlainText": "Plain Text",
+  "clipTargetFolder": "Save to Folder",
+  "urlCopied": "URL Copied",
+  "noOtherTabs": "No other tabs",
+  "tabReopened": "Tab Reopened",
+  "readingMode": "Reading Mode",
+  "exitReadingMode": "Exit Reading Mode",
+  "tabOverflow": "{count} more tabs",
+  "@tabOverflow": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "maxTabsReached": "Maximum number of tabs reached",
+  "invalidUrl": "Invalid URL",
+  "tabLabel": "Tab: {title}",
+  "@tabLabel": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "closeTabLabel": "Close tab: {title}",
+  "@closeTabLabel": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "newTabLabel": "New Tab",
+  "urlFieldLabel": "Search or enter URL",
+  "clipButtonLabel": "Clip Page",
+  "clipSelectionLabel": "Clip Selection",
+  "readingModeFontIncrease": "Increase Font",
+  "readingModeFontDecrease": "Decrease Font"
 }

@@ -2013,4 +2013,163 @@ class AppLocalizationsZh extends AppLocalizations {
   String layerNameWithNumber(int number) {
     return '图层 $number';
   }
+
+  @override
+  String get navBack => '后退';
+
+  @override
+  String get navForward => '前进';
+
+  @override
+  String get pageNotLoadedYet => '页面尚未加载';
+
+  @override
+  String clippedTitle(String title) {
+    return '已剪藏: $title';
+  }
+
+  @override
+  String get secureConnection => '安全连接';
+
+  @override
+  String get insecureConnection => '不安全连接';
+
+  @override
+  String tabClosed(String title) {
+    return '已关闭标签: $title';
+  }
+
+  @override
+  String get undoCloseTab => '撤销关闭';
+
+  @override
+  String get closeOtherTabs => '关闭其他标签';
+
+  @override
+  String get closeRightTabs => '关闭右侧标签';
+
+  @override
+  String get copyUrl => '复制链接';
+
+  @override
+  String get pinTab => '固定标签';
+
+  @override
+  String get unpinTab => '取消固定';
+
+  @override
+  String get tabContextMenu => '标签操作';
+
+  @override
+  String get newTabShortcut => '新建标签 (Ctrl+T)';
+
+  @override
+  String get closeTabShortcut => '关闭标签 (Ctrl+W)';
+
+  @override
+  String get focusUrlBar => '聚焦地址栏 (Ctrl+L)';
+
+  @override
+  String get searchEngine => '搜索引擎';
+
+  @override
+  String get searchEngineBing => 'Bing';
+
+  @override
+  String get searchEngineGoogle => 'Google';
+
+  @override
+  String get searchEngineDuckDuckGo => 'DuckDuckGo';
+
+  @override
+  String get searchEngineCustom => '自定义';
+
+  @override
+  String get customSearchUrl => '搜索 URL 模板';
+
+  @override
+  String customSearchUrlHint(Object q) {
+    return '使用 $q 作为搜索词占位符';
+  }
+
+  @override
+  String get emptyStateSubtitle => '打开一个网页开始探索，或从左侧书签中选择';
+
+  @override
+  String get recentlyVisited => '最近访问';
+
+  @override
+  String get editBookmarkTitle => '编辑书签标题';
+
+  @override
+  String get bookmarkTitle => '书签标题';
+
+  @override
+  String get clipFormat => '剪藏格式';
+
+  @override
+  String get formatMarkdown => 'Markdown';
+
+  @override
+  String get formatHtml => 'HTML';
+
+  @override
+  String get formatPlainText => '纯文本';
+
+  @override
+  String get clipTargetFolder => '保存到文件夹';
+
+  @override
+  String get urlCopied => '链接已复制';
+
+  @override
+  String get noOtherTabs => '没有其他标签';
+
+  @override
+  String get tabReopened => '标签已恢复';
+
+  @override
+  String get readingMode => '阅读模式';
+
+  @override
+  String get exitReadingMode => '退出阅读模式';
+
+  @override
+  String tabOverflow(int count) {
+    return '还有 $count 个标签';
+  }
+
+  @override
+  String get maxTabsReached => '已达到最大标签数';
+
+  @override
+  String get invalidUrl => '无效的网址';
+
+  @override
+  String tabLabel(String title) {
+    return '标签: $title';
+  }
+
+  @override
+  String closeTabLabel(String title) {
+    return '关闭标签: $title';
+  }
+
+  @override
+  String get newTabLabel => '新建标签';
+
+  @override
+  String get urlFieldLabel => '搜索或输入网址';
+
+  @override
+  String get clipButtonLabel => '剪藏页面';
+
+  @override
+  String get clipSelectionLabel => '剪藏选区';
+
+  @override
+  String get readingModeFontIncrease => '增大字体';
+
+  @override
+  String get readingModeFontDecrease => '减小字体';
 }

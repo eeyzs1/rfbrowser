@@ -41,6 +41,7 @@ class AppSettings {
   final double themeTintOpacity;
   final double surfaceOpacity;
   final double backgroundOpacity;
+  final String searchEngine;
 
   AppSettings({
     this.locale = 'system',
@@ -59,6 +60,7 @@ class AppSettings {
     this.themeTintOpacity = 0.8,
     this.surfaceOpacity = 1.0,
     this.backgroundOpacity = 1.0,
+    this.searchEngine = 'bing',
   });
 
   Color get accentColor => Color(accentColorValue);
@@ -114,6 +116,7 @@ class AppSettings {
     double? themeTintOpacity,
     double? surfaceOpacity,
     double? backgroundOpacity,
+    String? searchEngine,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
@@ -133,6 +136,7 @@ class AppSettings {
       themeTintOpacity: themeTintOpacity ?? this.themeTintOpacity,
       surfaceOpacity: surfaceOpacity ?? this.surfaceOpacity,
       backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
+      searchEngine: searchEngine ?? this.searchEngine,
     );
   }
 }
@@ -170,6 +174,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
       themeTintOpacity: prefs.getDouble('themeTintOpacity') ?? 0.8,
       surfaceOpacity: prefs.getDouble('surfaceOpacity') ?? 1.0,
       backgroundOpacity: prefs.getDouble('backgroundOpacity') ?? 1.0,
+      searchEngine: prefs.getString('searchEngine') ?? 'bing',
     );
   }
 
@@ -270,6 +275,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
     final prefs = await _ensurePrefs;
     await prefs.setDouble('backgroundOpacity', value);
     state = state.copyWith(backgroundOpacity: value);
+  }
+
+  Future<void> setSearchEngine(String engine) async {
+    final prefs = await _ensurePrefs;
+    await prefs.setString('searchEngine', engine);
+    state = state.copyWith(searchEngine: engine);
   }
 }
 

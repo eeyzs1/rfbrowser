@@ -909,6 +909,12 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     }
 
     final items = <Widget>[];
+    final barBookmarks = bookmarks
+        .where((b) => b.folderId == 'bookmarks-bar')
+        .toList();
+    for (final bm in barBookmarks) {
+      items.add(_bookmarkRow(bm, 0, l));
+    }
     _buildBookmarkFolderWidgets(
       folders,
       bookmarks,

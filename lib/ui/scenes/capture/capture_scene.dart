@@ -52,29 +52,35 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
       children: [
         Row(
           children: [
-            if (widget.leftPanelExpanded)
-              ResizablePanel(
-                initialWidth: 240,
-                minWidth: 180,
-                maxWidth: 400,
-                child: NoteSidebar(
-                  onNoteOpened: widget.onNoteOpened,
-                  onNotePreview: _onNotePreview,
-                  onBookmarkOpened: (url) {
-                    final bs = ref.read(browserProvider);
-                    final existingTab = bs.tabs
-                        .where((t) => t.url == url)
-                        .firstOrNull;
-                    if (existingTab != null) {
-                      ref
-                          .read(browserProvider.notifier)
-                          .setActiveTab(existingTab.id);
-                    } else {
-                      ref.read(browserProvider.notifier).createTab(url: url);
-                    }
-                  },
-                ),
-              ),
+            AnimatedSize(
+              duration: DesignDuration.panelSlide,
+              curve: Curves.easeInOut,
+              alignment: Alignment.centerLeft,
+              child: widget.leftPanelExpanded
+                  ? ResizablePanel(
+                      initialWidth: 240,
+                      minWidth: 180,
+                      maxWidth: 400,
+                      child: NoteSidebar(
+                        onNoteOpened: widget.onNoteOpened,
+                        onNotePreview: _onNotePreview,
+                        onBookmarkOpened: (url) {
+                          final bs = ref.read(browserProvider);
+                          final existingTab = bs.tabs
+                              .where((t) => t.url == url)
+                              .firstOrNull;
+                          if (existingTab != null) {
+                            ref
+                                .read(browserProvider.notifier)
+                                .setActiveTab(existingTab.id);
+                          } else {
+                            ref.read(browserProvider.notifier).createTab(url: url);
+                          }
+                        },
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
             if (!widget.leftPanelExpanded)
               _PanelCollapseButton(
                 alignment: Alignment.centerLeft,
@@ -88,34 +94,40 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
                 icon: Icons.chevron_left,
                 onTap: widget.onToggleRightPanel,
               ),
-            if (widget.rightPanelExpanded)
-              ResizablePanel(
-                initialWidth: 280,
-                minWidth: 200,
-                maxWidth: 450,
-                isLeft: false,
-                child: _rightPanelMode == _RightPanelMode.notePreview
-                    ? _NotePreviewPanel(
-                        note: knowledgeState.activeNote,
-                        onClose: widget.onToggleRightPanel,
-                        onEdit: widget.onNoteOpened,
-                        onBack: () => setState(
-                          () => _rightPanelMode = _RightPanelMode.summary,
-                        ),
-                      )
-                    : _AiSummaryPanel(
-                        url: browserState.activeTab?.url,
-                        pageTitle: browserState.activeTab?.title,
-                        activeNote: knowledgeState.activeNote,
-                        onClose: widget.onToggleRightPanel,
-                        onBack: knowledgeState.activeNote != null
-                            ? () => setState(
-                                () => _rightPanelMode =
-                                    _RightPanelMode.notePreview,
-                              )
-                            : null,
-                      ),
-              ),
+            AnimatedSize(
+              duration: DesignDuration.panelSlide,
+              curve: Curves.easeInOut,
+              alignment: Alignment.centerRight,
+              child: widget.rightPanelExpanded
+                  ? ResizablePanel(
+                      initialWidth: 320,
+                      minWidth: 200,
+                      maxWidth: 450,
+                      isLeft: false,
+                      child: _rightPanelMode == _RightPanelMode.notePreview
+                          ? _NotePreviewPanel(
+                              note: knowledgeState.activeNote,
+                              onClose: widget.onToggleRightPanel,
+                              onEdit: widget.onNoteOpened,
+                              onBack: () => setState(
+                                () => _rightPanelMode = _RightPanelMode.summary,
+                              ),
+                            )
+                          : _AiSummaryPanel(
+                              url: browserState.activeTab?.url,
+                              pageTitle: browserState.activeTab?.title,
+                              activeNote: knowledgeState.activeNote,
+                              onClose: widget.onToggleRightPanel,
+                              onBack: knowledgeState.activeNote != null
+                                  ? () => setState(
+                                      () => _rightPanelMode =
+                                          _RightPanelMode.notePreview,
+                                    )
+                                  : null,
+                            ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         ),
         const Positioned.fill(child: AIFloat()),
@@ -655,7 +667,7 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
             ),
           SelectableText(
             _summary ?? '',
-            style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+            style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
           ),
           if (_mode == _SummaryMode.loading)
             Padding(

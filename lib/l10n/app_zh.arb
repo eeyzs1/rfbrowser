@@ -838,5 +838,81 @@
     "placeholders": {
       "number": {"type": "int"}
     }
-  }
+  },
+  "navBack": "后退",
+  "navForward": "前进",
+  "pageNotLoadedYet": "页面尚未加载",
+  "clippedTitle": "已剪藏: {title}",
+  "@clippedTitle": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "secureConnection": "安全连接",
+  "insecureConnection": "不安全连接",
+  "tabClosed": "已关闭标签: {title}",
+  "@tabClosed": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "undoCloseTab": "撤销关闭",
+  "closeOtherTabs": "关闭其他标签",
+  "closeRightTabs": "关闭右侧标签",
+  "copyUrl": "复制链接",
+  "pinTab": "固定标签",
+  "unpinTab": "取消固定",
+  "tabContextMenu": "标签操作",
+  "newTabShortcut": "新建标签 (Ctrl+T)",
+  "closeTabShortcut": "关闭标签 (Ctrl+W)",
+  "focusUrlBar": "聚焦地址栏 (Ctrl+L)",
+  "searchEngine": "搜索引擎",
+  "searchEngineBing": "Bing",
+  "searchEngineGoogle": "Google",
+  "searchEngineDuckDuckGo": "DuckDuckGo",
+  "searchEngineCustom": "自定义",
+  "customSearchUrl": "搜索 URL 模板",
+  "customSearchUrlHint": "使用 {q} 作为搜索词占位符",
+  "emptyStateSubtitle": "打开一个网页开始探索，或从左侧书签中选择",
+  "recentlyVisited": "最近访问",
+  "editBookmarkTitle": "编辑书签标题",
+  "bookmarkTitle": "书签标题",
+  "newFolder": "新建文件夹",
+  "folderName": "文件夹名称",
+  "clipFormat": "剪藏格式",
+  "formatMarkdown": "Markdown",
+  "formatHtml": "HTML",
+  "formatPlainText": "纯文本",
+  "clipTargetFolder": "保存到文件夹",
+  "urlCopied": "链接已复制",
+  "noOtherTabs": "没有其他标签",
+  "tabReopened": "标签已恢复",
+  "readingMode": "阅读模式",
+  "exitReadingMode": "退出阅读模式",
+  "tabOverflow": "还有 {count} 个标签",
+  "@tabOverflow": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "maxTabsReached": "已达到最大标签数",
+  "invalidUrl": "无效的网址",
+  "tabLabel": "标签: {title}",
+  "@tabLabel": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "closeTabLabel": "关闭标签: {title}",
+  "@closeTabLabel": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "newTabLabel": "新建标签",
+  "urlFieldLabel": "搜索或输入网址",
+  "clipButtonLabel": "剪藏页面",
+  "clipSelectionLabel": "剪藏选区",
+  "readingModeFontIncrease": "增大字体",
+  "readingModeFontDecrease": "减小字体"
 }

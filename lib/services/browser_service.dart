@@ -215,6 +215,29 @@ class BrowserNotifier extends Notifier<BrowserState> {
     state = state.copyWith(tabs: tabs);
   }
 
+  void reorderTab(int oldIndex, int newIndex) {
+    final tabs = List<BrowserTab>.from(state.tabs);
+    if (oldIndex < 0 || oldIndex >= tabs.length) return;
+    if (newIndex < 0 || newIndex >= tabs.length) return;
+    final tab = tabs.removeAt(oldIndex);
+    tabs.insert(newIndex, tab);
+    state = state.copyWith(tabs: tabs);
+  }
+
+  void togglePinTab(String tabId) {
+    final tabs = state.tabs
+        .map((t) => t.id == tabId ? t.copyWith(isPinned: !t.isPinned) : t)
+        .toList();
+    state = state.copyWith(tabs: tabs);
+  }
+
+  String createBookmarkFolder(String name, {String parentId = 'bookmarks-bar'}) {
+    final folder = BookmarkFolder(name: name, parentId: parentId);
+    state = state.copyWith(bookmarkFolders: [...state.bookmarkFolders, folder]);
+    _persistBookmarks();
+    return folder.id;
+  }
+
   String createGroup(String name, {int color = 0xFF2196F3}) {
     final id = const Uuid().v4();
     final group = TabGroup(id: id, name: name, color: color);
@@ -320,12 +343,6 @@ class BrowserNotifier extends Notifier<BrowserState> {
       return b;
     }).toList();
     state = state.copyWith(bookmarks: updated);
-    _persistBookmarks();
-  }
-
-  void createBookmarkFolder(String name, {String parentId = 'bookmarks-bar'}) {
-    final folder = BookmarkFolder(name: name, parentId: parentId);
-    state = state.copyWith(bookmarkFolders: [...state.bookmarkFolders, folder]);
     _persistBookmarks();
   }
 

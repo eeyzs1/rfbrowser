@@ -786,7 +786,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterMessage => 'Type a message... (use @ to reference)';
 
   @override
-  String get folderName => 'Folder name';
+  String get folderName => 'Folder Name';
 
   @override
   String get bookmarkFolderName => 'Bookmark folder name';
@@ -2035,4 +2035,164 @@ class AppLocalizationsEn extends AppLocalizations {
   String layerNameWithNumber(int number) {
     return 'Layer $number';
   }
+
+  @override
+  String get navBack => 'Back';
+
+  @override
+  String get navForward => 'Forward';
+
+  @override
+  String get pageNotLoadedYet => 'Page not loaded yet';
+
+  @override
+  String clippedTitle(String title) {
+    return 'Clipped: $title';
+  }
+
+  @override
+  String get secureConnection => 'Secure Connection';
+
+  @override
+  String get insecureConnection => 'Insecure Connection';
+
+  @override
+  String tabClosed(String title) {
+    return 'Tab closed: $title';
+  }
+
+  @override
+  String get undoCloseTab => 'Undo Close Tab';
+
+  @override
+  String get closeOtherTabs => 'Close Other Tabs';
+
+  @override
+  String get closeRightTabs => 'Close Tabs to the Right';
+
+  @override
+  String get copyUrl => 'Copy URL';
+
+  @override
+  String get pinTab => 'Pin Tab';
+
+  @override
+  String get unpinTab => 'Unpin Tab';
+
+  @override
+  String get tabContextMenu => 'Tab Actions';
+
+  @override
+  String get newTabShortcut => 'New Tab (Ctrl+T)';
+
+  @override
+  String get closeTabShortcut => 'Close Tab (Ctrl+W)';
+
+  @override
+  String get focusUrlBar => 'Focus URL Bar (Ctrl+L)';
+
+  @override
+  String get searchEngine => 'Search Engine';
+
+  @override
+  String get searchEngineBing => 'Bing';
+
+  @override
+  String get searchEngineGoogle => 'Google';
+
+  @override
+  String get searchEngineDuckDuckGo => 'DuckDuckGo';
+
+  @override
+  String get searchEngineCustom => 'Custom';
+
+  @override
+  String get customSearchUrl => 'Search URL Template';
+
+  @override
+  String customSearchUrlHint(Object q) {
+    return 'Use $q as search query placeholder';
+  }
+
+  @override
+  String get emptyStateSubtitle =>
+      'Open a webpage to start exploring, or choose from bookmarks on the left';
+
+  @override
+  String get recentlyVisited => 'Recently Visited';
+
+  @override
+  String get editBookmarkTitle => 'Edit Bookmark Title';
+
+  @override
+  String get bookmarkTitle => 'Bookmark Title';
+
+  @override
+  String get clipFormat => 'Clip Format';
+
+  @override
+  String get formatMarkdown => 'Markdown';
+
+  @override
+  String get formatHtml => 'HTML';
+
+  @override
+  String get formatPlainText => 'Plain Text';
+
+  @override
+  String get clipTargetFolder => 'Save to Folder';
+
+  @override
+  String get urlCopied => 'URL Copied';
+
+  @override
+  String get noOtherTabs => 'No other tabs';
+
+  @override
+  String get tabReopened => 'Tab Reopened';
+
+  @override
+  String get readingMode => 'Reading Mode';
+
+  @override
+  String get exitReadingMode => 'Exit Reading Mode';
+
+  @override
+  String tabOverflow(int count) {
+    return '$count more tabs';
+  }
+
+  @override
+  String get maxTabsReached => 'Maximum number of tabs reached';
+
+  @override
+  String get invalidUrl => 'Invalid URL';
+
+  @override
+  String tabLabel(String title) {
+    return 'Tab: $title';
+  }
+
+  @override
+  String closeTabLabel(String title) {
+    return 'Close tab: $title';
+  }
+
+  @override
+  String get newTabLabel => 'New Tab';
+
+  @override
+  String get urlFieldLabel => 'Search or enter URL';
+
+  @override
+  String get clipButtonLabel => 'Clip Page';
+
+  @override
+  String get clipSelectionLabel => 'Clip Selection';
+
+  @override
+  String get readingModeFontIncrease => 'Increase Font';
+
+  @override
+  String get readingModeFontDecrease => 'Decrease Font';
 }

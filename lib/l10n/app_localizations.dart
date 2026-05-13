@@ -1607,7 +1607,7 @@ abstract class AppLocalizations {
   /// No description provided for @folderName.
   ///
   /// In en, this message translates to:
-  /// **'Folder name'**
+  /// **'Folder Name'**
   String get folderName;
 
   /// No description provided for @bookmarkFolderName.
@@ -3953,6 +3953,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Layer {number}'**
   String layerNameWithNumber(int number);
+
+  /// No description provided for @navBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get navBack;
+
+  /// No description provided for @navForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward'**
+  String get navForward;
+
+  /// No description provided for @pageNotLoadedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Page not loaded yet'**
+  String get pageNotLoadedYet;
+
+  /// No description provided for @clippedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipped: {title}'**
+  String clippedTitle(String title);
+
+  /// No description provided for @secureConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure Connection'**
+  String get secureConnection;
+
+  /// No description provided for @insecureConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Insecure Connection'**
+  String get insecureConnection;
+
+  /// No description provided for @tabClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab closed: {title}'**
+  String tabClosed(String title);
+
+  /// No description provided for @undoCloseTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo Close Tab'**
+  String get undoCloseTab;
+
+  /// No description provided for @closeOtherTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Other Tabs'**
+  String get closeOtherTabs;
+
+  /// No description provided for @closeRightTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Tabs to the Right'**
+  String get closeRightTabs;
+
+  /// No description provided for @copyUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy URL'**
+  String get copyUrl;
+
+  /// No description provided for @pinTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin Tab'**
+  String get pinTab;
+
+  /// No description provided for @unpinTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin Tab'**
+  String get unpinTab;
+
+  /// No description provided for @tabContextMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab Actions'**
+  String get tabContextMenu;
+
+  /// No description provided for @newTabShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'New Tab (Ctrl+T)'**
+  String get newTabShortcut;
+
+  /// No description provided for @closeTabShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Tab (Ctrl+W)'**
+  String get closeTabShortcut;
+
+  /// No description provided for @focusUrlBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus URL Bar (Ctrl+L)'**
+  String get focusUrlBar;
+
+  /// No description provided for @searchEngine.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Engine'**
+  String get searchEngine;
+
+  /// No description provided for @searchEngineBing.
+  ///
+  /// In en, this message translates to:
+  /// **'Bing'**
+  String get searchEngineBing;
+
+  /// No description provided for @searchEngineGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google'**
+  String get searchEngineGoogle;
+
+  /// No description provided for @searchEngineDuckDuckGo.
+  ///
+  /// In en, this message translates to:
+  /// **'DuckDuckGo'**
+  String get searchEngineDuckDuckGo;
+
+  /// No description provided for @searchEngineCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get searchEngineCustom;
+
+  /// No description provided for @customSearchUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Search URL Template'**
+  String get customSearchUrl;
+
+  /// No description provided for @customSearchUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {q} as search query placeholder'**
+  String customSearchUrlHint(Object q);
+
+  /// No description provided for @emptyStateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a webpage to start exploring, or choose from bookmarks on the left'**
+  String get emptyStateSubtitle;
+
+  /// No description provided for @recentlyVisited.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently Visited'**
+  String get recentlyVisited;
+
+  /// No description provided for @editBookmarkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Bookmark Title'**
+  String get editBookmarkTitle;
+
+  /// No description provided for @bookmarkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmark Title'**
+  String get bookmarkTitle;
+
+  /// No description provided for @clipFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Clip Format'**
+  String get clipFormat;
+
+  /// No description provided for @formatMarkdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown'**
+  String get formatMarkdown;
+
+  /// No description provided for @formatHtml.
+  ///
+  /// In en, this message translates to:
+  /// **'HTML'**
+  String get formatHtml;
+
+  /// No description provided for @formatPlainText.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain Text'**
+  String get formatPlainText;
+
+  /// No description provided for @clipTargetFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to Folder'**
+  String get clipTargetFolder;
+
+  /// No description provided for @urlCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'URL Copied'**
+  String get urlCopied;
+
+  /// No description provided for @noOtherTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'No other tabs'**
+  String get noOtherTabs;
+
+  /// No description provided for @tabReopened.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab Reopened'**
+  String get tabReopened;
+
+  /// No description provided for @readingMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Mode'**
+  String get readingMode;
+
+  /// No description provided for @exitReadingMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit Reading Mode'**
+  String get exitReadingMode;
+
+  /// No description provided for @tabOverflow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more tabs'**
+  String tabOverflow(int count);
+
+  /// No description provided for @maxTabsReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum number of tabs reached'**
+  String get maxTabsReached;
+
+  /// No description provided for @invalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid URL'**
+  String get invalidUrl;
+
+  /// No description provided for @tabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab: {title}'**
+  String tabLabel(String title);
+
+  /// No description provided for @closeTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Close tab: {title}'**
+  String closeTabLabel(String title);
+
+  /// No description provided for @newTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New Tab'**
+  String get newTabLabel;
+
+  /// No description provided for @urlFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search or enter URL'**
+  String get urlFieldLabel;
+
+  /// No description provided for @clipButtonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Clip Page'**
+  String get clipButtonLabel;
+
+  /// No description provided for @clipSelectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Clip Selection'**
+  String get clipSelectionLabel;
+
+  /// No description provided for @readingModeFontIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase Font'**
+  String get readingModeFontIncrease;
+
+  /// No description provided for @readingModeFontDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease Font'**
+  String get readingModeFontDecrease;
 }
 
 class _AppLocalizationsDelegate

@@ -124,6 +124,7 @@ class BrowserTab {
   final String? groupId;
   final bool isLoading;
   final bool isActive;
+  final bool isPinned;
 
   BrowserTab({
     required this.id,
@@ -132,6 +133,7 @@ class BrowserTab {
     this.groupId,
     this.isLoading = false,
     this.isActive = false,
+    this.isPinned = false,
   });
 
   BrowserTab copyWith({
@@ -139,6 +141,7 @@ class BrowserTab {
     String? title,
     bool? isLoading,
     bool? isActive,
+    bool? isPinned,
   }) {
     return BrowserTab(
       id: id,
@@ -147,6 +150,7 @@ class BrowserTab {
       groupId: groupId,
       isLoading: isLoading ?? this.isLoading,
       isActive: isActive ?? this.isActive,
+      isPinned: isPinned ?? this.isPinned,
     );
   }
 
@@ -158,6 +162,7 @@ class BrowserTab {
       groupId: groupId,
       isLoading: isLoading,
       isActive: isActive,
+      isPinned: isPinned,
     );
   }
 }
