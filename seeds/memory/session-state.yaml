@@ -1,133 +1,69 @@
-version: 9
+version: 10
 status: solid
-updated_at: "2026-05-12T12:00:00"
+updated_at: "2026-05-13"
 task: "RFBrowser — AI-Powered Knowledge Browser"
 current_iteration: 5
-next_phase: "v1.0 Release: 项目完成度~99%，所有核心Epic已验证通过。可进入打包发布阶段"
+next_phase: "v1.0 Release: macOS build + E2E tests + docs + version bump"
 progress:
-  completed_criteria:
-    - "flutter analyze passes with 0 issues"
-    - "All AGENTS.md rules verified (P-1 through UX-10)"
-    - "SharedPreferences cached in all notifiers"
-    - "CustomPainter.shouldRepaint compares actual data (P-2)"
-    - "40+ UI components all have real data binding (no placeholders)"
-    - "WebView URL filtering blocks 10+ dangerous schemes (S-1)"
-    - "API keys use flutter_secure_storage (S-2)"
-    - "Canvas persistence uses .json in vault/.rf/ (A-7)"
-    - "Canvas cards render live note data via noteId (A-5)"
-    - "Auto vs manual connections visually distinct (A-6)"
-    - "Clip before draw pattern in CanvasPainter (U-2)"
-    - "Error dismiss buttons clear error state (U-1)"
-    - "Empty states have CTA guidance (UX-2)"
-    - "CommandBar searches actual data (UX-5)"
-    - "AI streaming output real-time tokens (UX-4)"
-    - "Top 5 actions have keyboard shortcuts (UX-7)"
-    - "LinkExtractor + LinkResolver wired to Backlinks + Graph (UX-6)"
-    - "Every component has at least one data flow path (A-1)"
-    - "Scene 3-scene architecture fully functional"
-    - "48/48 genome constraints verified, 0 violations"
-    - "EmbeddingService: Ollama + OpenAI + local fallback + HNSW + RRF fusion"
-    - "ShortcutService: all bindings + conflict detection + persistence"
-    - "QuickMove: 5 presets + prompt templates + store with export/import"
-    - "HybridSearch: semantic + FTS + RRF rank fusion"
-    - "GraphPage: force-directed + circular layouts + bridge nodes + stats"
-    - "CanvasPage: multi-canvas + drag/zoom/pan + search + auto-connections"
-    - "CI/CD: analyze + constraints + audit + tests + 4-platform build + release"
-    - "Design spec + dev plan complete"
-    - "HNSW benchmark: 4/4 pass"
-    - "WebView security: 13/13 pass"
-    - "Graph+Canvas compliance: 15/15 pass"
-    - "CaptureScene: AI summary supports web pages AND notes with toggle"
-    - "Evolution cycles × 4 completed"
-    - "Total test count: 97 pass, 1 pre-existing failure"
-    - "All empty catch blocks replaced with proper error logging"
-    - "Manual JSON parser replaced with dart:convert"
-    - "Duplicate connection-side computation extracted to CanvasConnection.computeSides()"
-    - "execution/ layer exists and functional"
-    - "Harness paths adapted from generic template to RFBrowser"
-    - "genome.yaml reflects AGENTS.md evidence-driven rules"
-    - "_CanvasPainter.shouldRepaint compares actual data"
-    - "Chrome-style bookmark folders with parentId and multi-level nesting"
-    - "Note folder tree with Trie data structure + disk scanning"
-    - "Bookmark persistence to vault/.rfbrowser/bookmarks.json"
-    - "Vault config migrated from SharedPreferences to JSON files"
-    - "AI summary save-as-note button implemented"
-    - "Vault switcher dropdown in title bar"
-    - "Windows path separator fix (backslash → forward slash)"
-    - "Cycle detection in bookmark folder tree traversal"
-    - "Font sizes in sidebar follow user settings"
-    - "WebView tabs use Stack+Visibility instead of ValueKey swap"
-    - "Editor formatting toolbar with Markdown quick-insert buttons"
-    - "Editor status bar with char/word count and save status"
-    - "SegmentedButton for edit/preview/split view mode switching"
-    - "Explicit save feedback indicator (appears and fades)"
-    - "Theme colors independently configurable: scaffold bg + surface + accent"
-    - "isDarkMode computed from surface luminance (not stored toggle)"
-    - "Dark/light theme switch removed — background color controls theme"
-    - "All hardcoded strings replaced with l10n keys (33 new keys)"
-    - "Color presets redesigned with distinct hues and luminance ranges"
-    - "AI summary panel back button to return to note preview"
-    - "TextField textAlignVertical.top for editor (VS Code style)"
-    - "InputDecoration explicit override for full-bleed editors"
-    - "LayoutBuilder for color preset grid alignment"
-    - "9 new AGENTS.md rules: U-7~U-10, A-10~A-11, F-9~F-10, UX-11~UX-15"
-    - "5 new meta-mistakes documented: MM-013~MM-017"
-    - "Canvas FocusNode memory leak fixed: hasFocus checks before dispose"
-    - "Canvas performance optimized: _CameraNotifier + ListenableBuilder for camera state"
-    - "Canvas l10n complete: 100+ new l10n keys, all hardcoded strings replaced"
-    - "Canvas connection line selection bug fixed: _hitTestConnectionLine in _onScaleStart"
-    - "Canvas overlapping connection cycle-select: click same spot to switch between lines"
-    - "Canvas toolbar hover-to-show dropdown menus with auto-close on mouse leave"
-    - "Ctrl+Z/Ctrl+Y undo/redo shortcuts + Ctrl+Shift+Z redo alternative"
-    - "Canvas shortcuts configurable in Settings via ShortcutService"
-    - "PopupMenuItem Row overflow fixed with Flexible + TextOverflow.ellipsis"
-    - "Menu item tooltips with functional descriptions (33 new l10n keys)"
-    - "browser_page.dart use_build_context_synchronously fixed"
+  completed_criteria_summary:
+    lint_and_analyze: "flutter analyze 0 issues, 17 lint fixes applied"
+    agents_md_rules: "All P/C/S/A/U/F/UX rules verified (P-1 through UX-15)"
+    performance: "SharedPreferences cached, shouldRepaint data comparison, Stack+Visibility for WebView tabs, debounced save, _CameraNotifier+ListenableBuilder"
+    security: "WebView URL filtering (13/13 pass), API keys in flutter_secure_storage, path normalization"
+    canvas: "Persistence .json in vault/.rf/, live note data via noteId, auto vs manual connections distinct, clip-before-draw, FocusNode hasFocus check, connection hit test in onScaleStart, cycle-select overlapping lines, hover dropdown menus, undo/redo shortcuts, configurable shortcuts"
+    ux: "Error dismiss clears state, empty states with CTA, CommandBar searches actual data, AI streaming real-time, top 5 keyboard shortcuts, LinkExtractor+LinkResolver wired, editor formatting toolbar, status bar with counts, SegmentedButton view switcher, explicit save feedback, l10n compliance (100+ keys)"
+    storage: "Chrome-style bookmark folders, note Trie tree, bookmark persistence to vault/.rfbrowser/, vault config JSON migration"
+    theme: "Independent scaffold/surface/accent colors, isDarkMode computed from luminance, color presets with distinct hues"
+    ai: "AI summary for web+notes with toggle, save-as-note button, back button on AI panel"
+    search: "HybridSearch (semantic+FTS+RRF), EmbeddingService (Ollama+OpenAI+local+HNSW)"
+    graph: "Force-directed+circular layouts, bridge nodes, stats"
+    services: "NoteNotifier/LinkNotifier/SearchNotifier split from KnowledgeNotifier, 14 core services after pruning"
+    architecture: "3-scene architecture (capture/think/connect), every component has data flow path"
+    ci_cd: "Analyze + constraints + audit + tests + 4-platform build + release"
+    testing: "97 tests pass, HNSW benchmark 4/4, WebView security 13/13, Graph+Canvas 15/15"
+    harness: "Evolution cycles x4, 48/48 genome constraints verified, execution layer functional, paths adapted to RFBrowser"
+  total_completed: 95
   failed_criteria: []
   in_progress: []
   pending:
     - "v1.0 Release: macOS build job + E2E user journey tests + auto-generated docs + version bump"
 checkpoints:
-  - id: "ckpt-001"
+  - id: ckpt-001
     name: "initial-app-fixes"
-  - id: "ckpt-002"
+  - id: ckpt-002
     name: "harness-evolution"
-  - id: "ckpt-003"
+  - id: ckpt-003
     name: "ux-redesign-planning"
-  - id: "ckpt-004"
+  - id: ckpt-004
     name: "ux-redesign-implementation"
-  - id: "ckpt-005"
+  - id: ckpt-005
     name: "six-epics-architecture-refactor"
-  - id: "ckpt-006"
+  - id: ckpt-006
     name: "cicd-pipeline-update"
-  - id: "ckpt-007"
+  - id: ckpt-007
     name: "next-phase-planning"
-  - id: "ckpt-008"
+  - id: ckpt-008
     name: "phase1-completion-and-reassessment"
-  - id: "ckpt-009"
+  - id: ckpt-009
     name: "remaining-epics-completion"
-  - id: "ckpt-010"
+  - id: ckpt-010
     name: "final-epics-completion"
-  - id: "ckpt-011"
+  - id: ckpt-011
     name: "ux-storage-refactor-session"
-    created_at: "2026-05-08T12:00:00"
-    description: "Major UX and storage refactor: Chrome-style bookmark folders, note Trie tree, bookmark persistence, vault config JSON migration, AI summary for notes, save-as-note, vault switcher, Windows path fix, cycle detection, font settings, WebView Stack optimization. 12 new constraints (C037-C048)."
-    completed_criteria_count: 12
-  - id: "ckpt-012"
+    date: "2026-05-08"
+    criteria: 12
+  - id: ckpt-012
     name: "editor-ux-and-theme-overhaul"
-    created_at: "2026-05-08T18:00:00"
-    description: "Editor UX overhaul: formatting toolbar, status bar, SegmentedButton view switcher, save feedback. Theme system overhaul: independent scaffold/surface/accent colors, computed isDarkMode, removed dark/light toggle. l10n compliance: 33 new keys, all hardcoded strings replaced. Color preset redesign with distinct hues. 9 new AGENTS.md rules, 5 new meta-mistakes."
-    completed_criteria_count: 16
-  - id: "ckpt-013"
+    date: "2026-05-08"
+    criteria: 16
+  - id: ckpt-013
     name: "canvas-refactor-and-bugfix-session"
-    created_at: "2026-05-11T12:00:00"
-    description: "Canvas page deep refactor: FocusNode memory leak fix (hasFocus check), performance optimization (_CameraNotifier + ListenableBuilder isolating camera rebuilds), l10n completion (100+ new keys, all hardcoded strings replaced), connection line selection bug fix (_hitTestConnectionLine added to _onScaleStart, _isClickingConnection flag prevents canvas pan), overlapping connection cycle-select (click same spot to switch between overlapping lines). 3 new meta-mistakes, 3 new genome constraints."
-    completed_criteria_count: 5
-  - id: "ckpt-014"
+    date: "2026-05-11"
+    criteria: 5
+  - id: ckpt-014
     name: "canvas-toolbar-hover-shortcuts-session"
-    created_at: "2026-05-12T12:00:00"
-    description: "Canvas toolbar UX overhaul: hover-to-show dropdown menus using OverlayEntry (no modal barrier), auto-close on mouse leave with 250ms delay. Ctrl+Z/Ctrl+Y undo/redo shortcuts added. Canvas shortcuts integrated into ShortcutService and configurable in Settings. PopupMenuItem Row overflow fixed with _popupRow helper (Flexible + TextOverflow.ellipsis). Menu item tooltips with 33 new l10n keys. browser_page.dart use_build_context_synchronously lint fixed."
-    completed_criteria_count: 7
+    date: "2026-05-12"
+    criteria: 7
 metrics:
   total_criteria: 95
   completed: 95

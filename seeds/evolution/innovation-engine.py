@@ -20,7 +20,6 @@ import yaml
 
 DOMAIN_ADVANCEMENT_MAP = {
     "web-app": "domain-advancements.yaml",
-    "api-service": "domain-advancements-api.yaml",
     "automation": "domain-advancements.yaml",
     "data-pipeline": "domain-advancements.yaml",
     "content-system": "domain-advancements.yaml",

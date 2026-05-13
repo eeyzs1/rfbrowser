@@ -48,7 +48,14 @@ def load_session_state() -> dict:
     if not state_file.exists():
         return {"status": "not_started", "progress": {"completed_criteria": [], "failed_criteria": []}}
     with open(state_file, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
+        state = yaml.safe_load(f) or {}
+    progress = state.get("progress", {})
+    if "completed_criteria" not in progress and "completed_criteria_summary" in progress:
+        summary = progress["completed_criteria_summary"]
+        total = progress.get("total_completed", 0)
+        progress["completed_criteria"] = [f"[{k}] {v}" for k, v in summary.items()] if isinstance(summary, dict) else []
+        state["progress"] = progress
+    return state
 
 
 def save_session_state(state: dict) -> None:
@@ -257,9 +264,18 @@ def load_genome() -> dict:
         return yaml.safe_load(f) or {}
 
 
+def _load_all_constraints(genome: dict) -> list:
+    hg = genome.get("harness_genome", {})
+    active = hg.get("active_constraints", [])
+    agents_md = hg.get("agents_md_rules", {}).get("rules", [])
+    dormant_list = hg.get("dormant_constraints", {}).get("constraints", [])
+    dormant_tagged = [{**c, "status": "dormant"} for c in dormant_list]
+    return active + agents_md + dormant_tagged
+
+
 def check_constraints_against_codebase() -> dict:
     genome = load_genome()
-    constraints = genome.get("harness_genome", {}).get("constraints", [])
+    constraints = _load_all_constraints(genome)
     active_constraints = [c for c in constraints if c.get("status") != "dormant"]
     dormant_count = len([c for c in constraints if c.get("status") == "dormant"])
     violations = []
@@ -566,7 +582,7 @@ def show_status() -> None:
     criteria = task.get("acceptance_criteria", [])
     completed = state.get("progress", {}).get("completed_criteria", [])
     genome = load_genome()
-    constraints = genome.get("harness_genome", {}).get("constraints", [])
+    constraints = _load_all_constraints(genome)
     active_count = len([c for c in constraints if c.get("status") == "active"])
     dormant_count = len([c for c in constraints if c.get("status") == "dormant"])
     verified_needed_count = len([c for c in constraints if c.get("status") == "verified-needed"])
