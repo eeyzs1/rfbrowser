@@ -1,7 +1,8 @@
 part of '../canvas_painter.dart';
 
-mixin CanvasSpecialPainterMixin on _CanvasPainterBase {
-    void _drawLineJumps(
+mixin _CanvasSpecialPainterMixin on _CanvasPainterBase {
+    @override
+  void _drawLineJumps(
       Canvas canvas,
       Path path,
       CanvasConnectionStyle style,
@@ -153,7 +154,8 @@ mixin CanvasSpecialPainterMixin on _CanvasPainterBase {
       }
     }
 
-    void _drawTableCard(Canvas canvas, CanvasCard card, Rect clipRect) {
+    @override
+  void _drawTableCard(Canvas canvas, CanvasCard card, Rect clipRect) {
       final pos = _w2s(card.x, card.y);
       final cardRect = Rect.fromLTWH(
         pos.dx,
@@ -271,7 +273,8 @@ mixin CanvasSpecialPainterMixin on _CanvasPainterBase {
       );
     }
 
-    void _drawFreehandCard(Canvas canvas, CanvasCard card, Rect clipRect) {
+    @override
+  void _drawFreehandCard(Canvas canvas, CanvasCard card, Rect clipRect) {
       if (card.freehandPoints.isEmpty) return;
       final isSelected = selectedCardIds.contains(card.id);
       final cardColor = Color(card.colorValue);

@@ -1,6 +1,6 @@
 part of '../canvas_page.dart';
 
-mixin CanvasContextMenusMixin on _CanvasViewStateBase {
+mixin _CanvasContextMenusMixin on _CanvasViewStateBase {
     @override
     void _showWaypointContextMenu(
       Offset position,

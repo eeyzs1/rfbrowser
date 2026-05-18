@@ -1,7 +1,7 @@
-version: 2
-description: "Innovation log — compressed. Applied proposals archived to summaries."
-current_stage: "Basic"
-target_stage: "Solid"
+version: 3
+description: "Innovation log — tracks proposed and applied innovations"
+current_stage: "Solid"
+target_stage: "Advanced"
 applied_proposals:
   - id: INN-HARNESS-001
     name: "Execution Layer Creation"

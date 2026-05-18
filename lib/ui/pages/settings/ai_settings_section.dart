@@ -14,7 +14,7 @@ class AISettingsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
-    final aiConfig = ref.read(aiConfigProvider);
+    final aiConfig = ref.watch(aiConfigProvider);
     final providers = aiConfig.providers;
     final activeProvider = aiConfig.activeProvider;
     final activeModel = aiConfig.activeModel;
@@ -97,43 +97,46 @@ class AISettingsSection extends ConsumerWidget {
     AIModel? activeModel,
   ) {
     final isActive = activeProvider?.id == provider.id;
-    final models = ref.read(aiConfigProvider).modelsForProvider(provider.id);
+    final models = ref.watch(aiConfigProvider).modelsForProvider(provider.id);
+    final enabled = provider.isEnabled;
+    final dimColor = theme.disabledColor;
+    final iconColor = !enabled
+        ? dimColor
+        : (isActive ? theme.colorScheme.primary : theme.hintColor);
+    final nameColor = !enabled
+        ? dimColor
+        : (isActive ? theme.colorScheme.primary : null);
+    final nameWeight = isActive ? FontWeight.w600 : FontWeight.w400;
+    final disabledBg = theme.colorScheme.onSurface.withValues(alpha: 0.04);
 
     return ExpansionTile(
       initiallyExpanded: isActive,
       tilePadding: const EdgeInsets.symmetric(horizontal: 16),
       childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+      collapsedBackgroundColor: enabled ? null : disabledBg,
+      backgroundColor: enabled ? null : disabledBg,
       title: Row(
         children: [
-          Icon(
-            provider.protocol.icon,
-            size: 16,
-            color: isActive ? theme.colorScheme.primary : theme.hintColor,
-          ),
+          Icon(provider.protocol.icon, size: 16, color: iconColor),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               provider.name,
               style: TextStyle(
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive ? theme.colorScheme.primary : null,
+                fontWeight: nameWeight,
+                color: nameColor,
+                decoration: enabled ? null : TextDecoration.lineThrough,
+                decorationColor: dimColor,
               ),
             ),
           ),
-          if (!provider.isEnabled)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                l.disabled,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
-              ),
-            ),
+          Switch(
+            value: enabled,
+            onChanged: (val) => ref
+                .read(aiConfigProvider.notifier)
+                .setProviderEnabled(provider.id, val),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
         ],
       ),
       trailing: Row(
@@ -152,7 +155,7 @@ class AISettingsSection extends ConsumerWidget {
               PopupMenuItem(value: 'edit', child: Text(l.edit)),
               PopupMenuItem(
                 value: 'toggle',
-                child: Text(provider.isEnabled ? l.disabled : l.enable),
+                child: Text(enabled ? l.disabled : l.enable),
               ),
               PopupMenuItem(value: 'addModel', child: Text(l.addCustomModel)),
               PopupMenuItem(value: 'delete', child: Text(l.delete)),
@@ -161,53 +164,63 @@ class AISettingsSection extends ConsumerWidget {
         ],
       ),
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 4),
-          child: Row(
+        AnimatedOpacity(
+          opacity: enabled ? 1.0 : 0.45,
+          duration: const Duration(milliseconds: 200),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Flexible(
-                child: Text(
-                  '${provider.protocol.label} · ${provider.baseUrl}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '${provider.protocol.label} · ${provider.baseUrl}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              if (models.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        l.noModelsFound,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: () =>
+                            _refreshModels(context, ref, provider, l),
+                        child: Text(l.refresh),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ...models.map(
+                  (model) => _buildModelTile(
+                    context,
+                    ref,
+                    theme,
+                    l,
+                    model,
+                    provider,
+                    isActive && activeModel?.id == model.id,
+                  ),
+                ),
             ],
           ),
         ),
-        if (models.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                Text(
-                  l.noModelsFound,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: () => _refreshModels(context, ref, provider, l),
-                  child: Text(l.refresh),
-                ),
-              ],
-            ),
-          )
-        else
-          ...models.map(
-            (model) => _buildModelTile(
-              context,
-              ref,
-              theme,
-              l,
-              model,
-              provider,
-              isActive && activeModel?.id == model.id,
-            ),
-          ),
       ],
     );
   }

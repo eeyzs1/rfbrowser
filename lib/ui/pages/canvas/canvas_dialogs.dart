@@ -1,6 +1,6 @@
 part of '../canvas_page.dart';
 
-mixin CanvasDialogsMixin on _CanvasViewStateBase {
+mixin _CanvasDialogsMixin on _CanvasViewStateBase {
     @override
     void _showColorPicker(CanvasCard card) {
       final theme = Theme.of(context);
@@ -368,15 +368,15 @@ mixin CanvasDialogsMixin on _CanvasViewStateBase {
 
     @override
     void _addCardAt(Offset pos, {CanvasCardType type = CanvasCardType.note}) {
-      final snappedX = _snapToGrid(pos.dx - 120);
-      final snappedY = _snapToGrid(pos.dy - 80);
+      final snappedX = _snapToGrid(pos.dx - type.defaultWidth / 2);
+      final snappedY = _snapToGrid(pos.dy - type.defaultHeight / 2);
       final card = CanvasCard(
         id: 'card_${DateTime.now().millisecondsSinceEpoch}',
         type: type,
         x: snappedX,
         y: snappedY,
-        width: 240,
-        height: 160,
+        width: type.defaultWidth,
+        height: type.defaultHeight,
         title: '',
         content: '',
       );
@@ -913,15 +913,16 @@ mixin CanvasDialogsMixin on _CanvasViewStateBase {
                 title: Text(notes[i].title, overflow: TextOverflow.ellipsis),
                 onTap: () {
                   final note = notes[i];
-                  final snappedX = _snapToGrid(pos.dx - 120);
-                  final snappedY = _snapToGrid(pos.dy - 80);
+                  final cardType = CanvasCardType.note;
+                  final snappedX = _snapToGrid(pos.dx - cardType.defaultWidth / 2);
+                  final snappedY = _snapToGrid(pos.dy - cardType.defaultHeight / 2);
                   final card = CanvasCard(
                     id: 'card_${DateTime.now().millisecondsSinceEpoch}',
-                    type: CanvasCardType.note,
+                    type: cardType,
                     x: snappedX,
                     y: snappedY,
-                    width: 280,
-                    height: 200,
+                    width: cardType.defaultWidth,
+                    height: cardType.defaultHeight,
                     title: note.title,
                     content: note.content.length > 500
                         ? '${note.content.substring(0, 500)}...'

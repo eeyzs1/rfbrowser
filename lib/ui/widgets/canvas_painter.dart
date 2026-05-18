@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../data/models/canvas_model.dart';
@@ -111,14 +112,13 @@ abstract class _CanvasPainterBase extends CustomPainter {
     return t?.position ?? Offset.zero;
   }
 
-  @override
   void _drawGrid(Canvas canvas);
   void _drawGroups(Canvas canvas);
   void _drawDashedRRect(Canvas canvas, RRect rrect, Paint paint, double dashWidth, double dashGap);
   void _drawConnections(Canvas canvas);
   Path _buildOrthogonalPath(Offset fp, Offset tp, ConnectionSide fromSide, ConnectionSide toSide, [List<Offset> waypoints]);
   void _drawDashedPath(Canvas canvas, Path path, Paint paint, double dash, double gap, [double offset]);
-  void _drawArrowHead(Canvas canvas, Offset from, Offset to, Color color, ArrowStyle style, [double arrowSize]);
+  void _drawArrowHead(Canvas canvas, Offset from, Offset to, Color color, ArrowStyle style);
   void _drawCards(Canvas canvas);
   void _drawContainerCard(Canvas canvas, CanvasCard card, Rect clipRect, Map<String, Note> noteMap);
   void _drawAlignmentGuides(Canvas canvas);
@@ -136,7 +136,7 @@ abstract class _CanvasPainterBase extends CustomPainter {
 }
 
 class CanvasPainter extends _CanvasPainterBase
-    with CanvasConnectionPainterMixin, CanvasCardPainterMixin, CanvasOverlayPainterMixin, CanvasShapePainterMixin, CanvasSpecialPainterMixin, CanvasEffectsPainterMixin {
+    with _CanvasConnectionPainterMixin, _CanvasCardPainterMixin, _CanvasOverlayPainterMixin, _CanvasShapePainterMixin, _CanvasSpecialPainterMixin, _CanvasEffectsPainterMixin {
   CanvasPainter({
     required super.cards,
     required super.connections,
@@ -176,6 +176,7 @@ class CanvasPainter extends _CanvasPainterBase
     super.animationValue,
   });
 
+  @override
   void paint(Canvas canvas, Size size) {
     if (backgroundColorValue != null) {
       canvas.drawRect(

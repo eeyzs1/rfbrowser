@@ -29,7 +29,7 @@ Key technical facts:
 
 ## Automated Harness Execution (AI Agent MUST Follow)
 
-The project has a self-evolving harness system at `seeds/`. As the AI agent, you MUST execute
+The project has a lightweight harness system at `seeds/`. As the AI agent, you MUST execute
 these steps **automatically** — the user should never need to type these commands.
 
 ### Task Start Protocol (AUTOMATIC — before any code change)
@@ -37,15 +37,13 @@ these steps **automatically** — the user should never need to type these comma
 1. Run `python seeds/orchestrator.py --status` to load current project state.
 2. Run `python seeds/orchestrator.py --check-constraints` to scan for genome constraint violations.
 3. If violations exist with severity=high, they MUST be the first thing fixed.
-4. Read `seeds/evolution/genome.yaml` constraints relevant to the files you're about to touch.
-5. Check `seeds/memory/session-state.yaml` for any in-progress criteria.
+4. Check `seeds/memory/session-state.yaml` for any in-progress criteria.
 
 ### During Task (AUTOMATIC — after each batch of file edits)
 
 1. Run `flutter analyze` after every logical batch of changes.
 2. If a change introduces a mistake, immediately add it to `seeds/memory/meta-mistakes.md`.
-3. Cross-reference AGENTS.md rules (P-1 through UX-7) for every method you write.
-4. Check `seeds/evolution/genome.yaml` constraint trigger_count — if you see a violation, increment it.
+3. Cross-reference AGENTS.md rules (P-1 through UX-15) for every method you write.
 
 ### Task Completion Protocol (AUTOMATIC — before declaring done)
 
@@ -55,7 +53,7 @@ these steps **automatically** — the user should never need to type these comma
    - Mark completed criteria as complete
    - Update `completed` count
    - Set status to "solid" if all criteria met
-4. Run `python seeds/orchestrator.py --status` to confirm 10/10 or explain why not.
+4. Run `python seeds/orchestrator.py --status` to confirm completion or explain why not.
 
 ### Key Files the Agent Must Reference
 
@@ -66,6 +64,38 @@ these steps **automatically** — the user should never need to type these comma
 | `seeds/memory/meta-mistakes.md` | When you cause or discover an error |
 | `seeds/evolution/domain-advancements.yaml` | When proposing new features |
 | `task.yaml` | At task start — defines acceptance criteria |
+
+### Harness Structure (Simplified)
+
+```
+seeds/
+├── orchestrator.py              ← Main entry point (status, verify, check-constraints, evolve)
+├── evolution/
+│   ├── genome.yaml              ← Active constraints (project-specific, not duplicating AGENTS.md)
+│   ├── domain-advancements.yaml ← Innovation roadmap (Basic → Solid → Advanced → Production)
+│   ├── innovation-engine.py     ← Proposes innovations based on advancement stages
+│   ├── innovation-log.yaml      ← Tracks proposed and applied innovations
+│   ├── product-analyzer.py      ← Scans project state for innovation engine
+│   ├── alexander-six-epics.yaml ← Architecture epic tracking
+│   ├── framework.md             ← Evolution framework documentation
+│   └── log.yaml                 ← Mutation history log
+├── execution/
+│   └── task-runner.py           ← Runs flutter analyze/test
+├── feedback/
+│   ├── error-capture.py         ← Structured error parser
+│   ├── mistake-to-constraint.py ← Converts mistakes to new constraints
+│   ├── human-interface.yaml     ← Human intervention config
+│   └── retry-config.yaml        ← Retry strategies per error type
+├── memory/
+│   ├── session-state.yaml       ← Progress tracking (criteria, checkpoints, metrics)
+│   ├── meta-mistakes.md         ← Mistake log with constraint cross-references
+│   └── snapshot.py              ← Git-based checkpoint/rollback
+├── tools/
+│   └── audit_services.py        ← Service layer audit (dead service detection)
+└── verification/
+    ├── self-check.py            ← Self-check loop (verify → reflect → fix)
+    └── verify_criteria.py       ← Specific criteria verification
+```
 
 ## Architecture (Quick Reference)
 

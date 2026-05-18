@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -10,14 +9,18 @@ import '../data/models/canvas_model.dart';
 import '../data/models/note.dart';
 import '../data/stores/vault_store.dart';
 import '../core/link/link_resolver.dart';
+import 'canvas/canvas_layout_service.dart';
+import 'canvas/canvas_export_service.dart';
+import 'canvas/canvas_layers_service.dart';
+import 'canvas/canvas_scratchpad_service.dart';
+import 'canvas/canvas_templates_service.dart';
 
-part 'canvas/canvas_templates.dart';
-part 'canvas/canvas_export.dart';
-part 'canvas/canvas_layout.dart';
-part 'canvas/canvas_layers.dart';
-part 'canvas/canvas_scratchpad.dart';
+class CanvasNotifier extends Notifier<CanvasData> {
+  final CanvasLayoutService _layoutService;
+  final CanvasExportService _exportService;
+  final CanvasLayersService _layersService;
+  final CanvasScratchpadService _scratchpadService;
 
-abstract class _CanvasNotifierBase extends Notifier<CanvasData> {
   Timer? _debounceTimer;
   SharedPreferences? _prefs;
   List<String> _canvasNames = ['default'];
@@ -26,55 +29,17 @@ abstract class _CanvasNotifierBase extends Notifier<CanvasData> {
   final List<CanvasData> _redoStack = [];
   static const int _maxHistory = 50;
 
+  CanvasNotifier({
+    CanvasLayoutService? layoutService,
+    CanvasExportService? exportService,
+    CanvasLayersService? layersService,
+    CanvasScratchpadService? scratchpadService,
+  })  : _layoutService = layoutService ?? const CanvasLayoutService(),
+        _exportService = exportService ?? const CanvasExportService(),
+        _layersService = layersService ?? const CanvasLayersService(),
+        _scratchpadService = scratchpadService ?? const CanvasScratchpadService();
+
   String get activeCanvasName => _activeCanvasName;
-  List<String> get canvasNames => List.unmodifiable(_canvasNames);
-  bool get canUndo => _undoStack.isNotEmpty;
-  bool get canRedo => _redoStack.isNotEmpty;
-
-  Future<SharedPreferences> get _ensurePrefs async {
-    _prefs ??= await SharedPreferences.getInstance();
-    return _prefs!;
-  }
-
-  void _pushUndo();
-  Future<void> _save();
-  void _debouncedSave();
-  CanvasCard? cardById(String id);
-  List<String> groupCardIds(String groupId);
-  String exportToSvg();
-  void updateCardInMemory(CanvasCard card);
-  void loadTemplate(String templateName);
-  void loadFromData(CanvasData data);
-  String exportToPdf();
-  String encodeToUrl();
-  void addSvgAsCustomShape(String cardId, String svgData);
-  void autoLayout(AutoLayoutType type);
-  void _forceDirectedLayout(List<CanvasCard> cards);
-  void _hierarchicalLayout(List<CanvasCard> cards);
-  void _gridLayout(List<CanvasCard> cards);
-  double _snapToGrid(double value);
-  Future<void> addLayer(String name);
-  Future<void> removeLayer(String layerId);
-  void renameLayer(String layerId, String name);
-  void toggleLayerVisibility(String layerId);
-  void toggleLayerLock(String layerId);
-  void moveCardToLayer(String cardId, String? layerId);
-  bool isLayerLocked(String cardId);
-  bool isLayerVisible(String cardId);
-  void reorderLayer(String layerId, int newOrder);
-  void moveLayerUp(String layerId);
-  void moveLayerDown(String layerId);
-  int cardCountForLayer(String layerId);
-  Future<List<ScratchpadItem>> loadScratchpad();
-  Future<void> saveScratchpadItem(ScratchpadItem item);
-  Future<void> removeScratchpadItem(String itemId);
-  Future<void> _saveScratchpad(List<ScratchpadItem> items);
-  CanvasCard createCardFromScratchpad(ScratchpadItem item, Offset pos);
-}
-
-
-class CanvasNotifier extends _CanvasNotifierBase
-    with CanvasTemplatesMixin, CanvasExportMixin, CanvasLayoutMixin, CanvasLayersMixin, CanvasScratchpadMixin {
   List<String> get canvasNames => List.unmodifiable(_canvasNames);
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
@@ -87,10 +52,9 @@ class CanvasNotifier extends _CanvasNotifierBase
   @override
   CanvasData build() => CanvasData();
 
-  @override
   void _pushUndo() {
     _undoStack.add(state);
-    if (_undoStack.length > _CanvasNotifierBase._maxHistory) _undoStack.removeAt(0);
+    if (_undoStack.length > _maxHistory) _undoStack.removeAt(0);
     _redoStack.clear();
   }
 
@@ -576,7 +540,6 @@ class CanvasNotifier extends _CanvasNotifierBase
     await prefs.setString('canvas_data', state.toJsonString());
   }
 
-  @override
   void _debouncedSave() {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
@@ -612,7 +575,6 @@ class CanvasNotifier extends _CanvasNotifierBase
     }
   }
 
-  @override
   void updateCardInMemory(CanvasCard card) {
     final cards = state.cards.map((c) => c.id == card.id ? card : c).toList();
     state = state.copyWith(cards: cards);
@@ -923,7 +885,6 @@ class CanvasNotifier extends _CanvasNotifierBase
     _debouncedSave();
   }
 
-  @override
   CanvasCard? cardById(String id) {
     try {
       return state.cards.firstWhere((c) => c.id == id);
@@ -939,7 +900,6 @@ class CanvasNotifier extends _CanvasNotifierBase
     return null;
   }
 
-  @override
   List<String> groupCardIds(String groupId) {
     final group = state.groups.where((g) => g.id == groupId).firstOrNull;
     return group?.cardIds.toList() ?? [];
@@ -1013,280 +973,238 @@ class CanvasNotifier extends _CanvasNotifierBase
     return true;
   }
 
-  String _xmlEscape(String input) => input
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;');
+  // === Layout delegation ===
 
-  @override
-  String exportToSvg() {
-    final buffer = StringBuffer();
-    buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
-    double minX = double.infinity,
-        minY = double.infinity,
-        maxX = double.negativeInfinity,
-        maxY = double.negativeInfinity;
-    for (final card in state.cards) {
-      minX = minX < card.x ? minX : card.x;
-      minY = minY < card.y ? minY : card.y;
-      final rx = card.x + card.width;
-      final ry = card.y + card.height;
-      maxX = maxX > rx ? maxX : rx;
-      maxY = maxY > ry ? maxY : ry;
-    }
-    if (minX == double.infinity) {
-      minX = 0;
-      minY = 0;
-      maxX = 800;
-      maxY = 600;
-    }
-    final pad = 40.0;
-    final w = maxX - minX + pad * 2;
-    final h = maxY - minY + pad * 2;
-    buffer.writeln(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="$w" height="$h" viewBox="${minX - pad} ${minY - pad} $w $h">',
+  void autoLayout(AutoLayoutType type) {
+    if (state.cards.isEmpty) return;
+    _pushUndo();
+    final positions = _layoutService.computeLayout(
+      state.cards,
+      state.connections,
+      type,
+      snapToGrid: state.settings.snapToGrid,
     );
-    for (final conn in state.connections) {
-      final from = cardById(conn.fromCardId);
-      final to = cardById(conn.toCardId);
-      if (from == null || to == null) continue;
-      final (fs, ts) = CanvasConnection.computeSides(from, to);
-      final fp = fs.point(from.rect, conn.fromSideOffset);
-      final tp = ts.point(to.rect, conn.toSideOffset);
-      buffer.writeln(
-        '<line x1="${fp.dx}" y1="${fp.dy}" x2="${tp.dx}" y2="${tp.dy}" stroke="#666" stroke-width="2"/>',
-      );
-      if (conn.label.isNotEmpty) {
-        final mx = (fp.dx + tp.dx) / 2;
-        final my = (fp.dy + tp.dy) / 2;
-        buffer.writeln(
-          '<text x="$mx" y="$my" text-anchor="middle" font-size="12" fill="#666">${_xmlEscape(conn.label)}</text>',
-        );
+    final newCards = state.cards.map((card) {
+      final pos = positions[card.id];
+      if (pos != null) {
+        return card.copyWith(x: pos.dx, y: pos.dy);
       }
-    }
-    for (final card in state.cards) {
-      final hex =
-          '#${(card.colorValue & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
-      final strokeHex =
-          '#${(card.style?.borderColor ?? 0xFFE0E0E0 & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
-      final r = card.style?.borderRadius ?? 8.0;
-      buffer.writeln(
-        '<rect x="${card.x}" y="${card.y}" width="${card.width}" height="${card.height}" rx="$r" fill="$hex" stroke="$strokeHex" stroke-width="1"/>',
-      );
-      if (card.title.isNotEmpty) {
-        buffer.writeln(
-          '<text x="${card.x + 12}" y="${card.y + 20}" font-size="14" font-weight="bold" fill="#333">${_xmlEscape(card.title)}</text>',
-        );
-      }
-      if (card.content.isNotEmpty) {
-        final lines = card.content.split('\n').take(5);
-        var cy = card.y + 40;
-        for (final line in lines) {
-          buffer.writeln(
-            '<text x="${card.x + 12}" y="$cy" font-size="12" fill="#666">${_xmlEscape(line)}</text>',
-          );
-          cy += 16;
-        }
-      }
-    }
-    buffer.writeln('</svg>');
-    return buffer.toString();
+      return card;
+    }).toList();
+    state = state.copyWith(cards: newCards);
+    _debouncedSave();
   }
 
-  @override
-  String exportToMarkdown() {
-    final buffer = StringBuffer();
-    buffer.writeln('# Canvas: $activeCanvasName');
-    buffer.writeln();
-    buffer.writeln('## Cards');
-    buffer.writeln();
-    buffer.writeln('| # | Type | Title | Position | Layer |');
-    buffer.writeln('|---|------|-------|----------|-------|');
-    for (int i = 0; i < state.cards.length; i++) {
-      final c = state.cards[i];
-      final layerName = c.layerId != null
-          ? (state.layers.where((l) => l.id == c.layerId).firstOrNull?.name ??
-                '-')
-          : '-';
-      buffer.writeln(
-        '| ${i + 1} | ${c.type.label} | ${c.title} | (${c.x.round()}, ${c.y.round()}) | $layerName |',
-      );
-    }
-    buffer.writeln();
-    buffer.writeln('## Connections');
-    buffer.writeln();
-    for (final conn in state.connections) {
-      final from = cardById(conn.fromCardId)?.title ?? conn.fromCardId;
-      final to = cardById(conn.toCardId)?.title ?? conn.toCardId;
-      final label = conn.label.isNotEmpty ? ' "${conn.label}"' : '';
-      buffer.writeln('- $from →$label $to ${conn.isAuto ? "(auto)" : ""}');
-    }
-    return buffer.toString();
-  }
-  static CanvasData? decodeFromUrl(String url) {
-  final uri = Uri.tryParse(url);
-  if (uri == null) return null;
-  final data = uri.queryParameters['data'];
-  if (data == null) return null;
-  try {
-  final json = utf8.decode(base64Decode(data));
-  return CanvasData.fromJsonString(json);
-  } catch (_) {
-  return null;
-  }
-  }
-  static CanvasData? importFromCsv(String csv) {
-  final lines = csv.split('\n').where((l) => l.trim().isNotEmpty).toList();
-  if (lines.isEmpty) return null;
-  final cards = <CanvasCard>[];
-  final connections = <CanvasConnection>[];
-  for (int i = 0; i < lines.length; i++) {
-  final parts = lines[i].split(',').map((p) => p.trim()).toList();
-  if (parts.length < 2) continue;
-  final id = 'csv_$i';
-  cards.add(
-  CanvasCard(
-  id: id,
-  type: CanvasCardType.rectangle,
-  x: (i % 5) * 200.0,
-  y: (i ~/ 5) * 120.0,
-  width: 160,
-  height: 60,
-  title: parts[0],
-  content: parts.length > 1 ? parts.sublist(1).join(', ') : '',
-  ),
-  );
-  if (i > 0 && parts.length > 1) {
-  for (int j = 0; j < i; j++) {
-  final prevParts = lines[j].split(',').map((p) => p.trim()).toList();
-  if (prevParts.isNotEmpty && parts.contains(prevParts[0])) {
-  connections.add(
-  CanvasConnection(
-  id: 'csv_c_${j}_$i',
-  fromCardId: 'csv_$j',
-  toCardId: id,
-  ),
-  );
-  }
-  }
-  }
-  }
-  if (cards.isEmpty) return null;
-  return CanvasData(cards: cards, connections: connections);
-  }
-  static CanvasData? importFromMermaid(String mermaid) {
-  final lines = mermaid
-  .split('\n')
-  .map((l) => l.trim())
-  .where(
-  (l) =>
-  l.isNotEmpty &&
-  !l.startsWith('graph') &&
-  !l.startsWith('flowchart'),
-  )
-  .toList();
-  if (lines.isEmpty) return null;
-  final nodeMap = <String, String>{};
-  final cards = <CanvasCard>[];
-  final connections = <CanvasConnection>[];
-  int col = 0, row = 0;
-  for (final line in lines) {
-  final arrowMatch = RegExp(r'(\w+)\s*-->?\s*(\w+)');
-  final match = arrowMatch.firstMatch(line);
-  if (match != null) {
-  final fromId = match.group(1)!;
-  final toId = match.group(2)!;
-  if (!nodeMap.containsKey(fromId)) {
-  final cardId = 'mr_${nodeMap.length}';
-  nodeMap[fromId] = cardId;
-  cards.add(
-  CanvasCard(
-  id: cardId,
-  type: CanvasCardType.rectangle,
-  x: col * 200.0,
-  y: row * 100.0,
-  width: 160,
-  height: 60,
-  title: fromId,
-  ),
-  );
-  col++;
-  if (col >= 5) {
-  col = 0;
-  row++;
-  }
-  }
-  if (!nodeMap.containsKey(toId)) {
-  final cardId = 'mr_${nodeMap.length}';
-  nodeMap[toId] = cardId;
-  cards.add(
-  CanvasCard(
-  id: cardId,
-  type: CanvasCardType.rectangle,
-  x: col * 200.0,
-  y: row * 100.0,
-  width: 160,
-  height: 60,
-  title: toId,
-  ),
-  );
-  col++;
-  if (col >= 5) {
-  col = 0;
-  row++;
-  }
-  }
-  connections.add(
-  CanvasConnection(
-  id: 'mr_c_${connections.length}',
-  fromCardId: nodeMap[fromId]!,
-  toCardId: nodeMap[toId]!,
-  ),
-  );
-  }
-  }
-  if (cards.isEmpty) return null;
-  return CanvasData(cards: cards, connections: connections);
-  }
-  static CanvasData? importFromEmbeddedSvg(String svgContent) {
-  final metaMatch = RegExp(
-  r'<metadata>rfbrowser:([A-Za-z0-9+/=]+)</metadata>',
-  ).firstMatch(svgContent);
-  if (metaMatch == null) return null;
-  try {
-  final json = utf8.decode(base64Decode(metaMatch.group(1)!));
-  return CanvasData.fromJsonString(json);
-  } catch (_) {
-  return null;
-  }
-  }
-  static CanvasData? importFromSvg(String svgContent) {
-  final embedded = importFromEmbeddedSvg(svgContent);
-  if (embedded != null) return embedded;
-  final rects = <CanvasCard>[];
-  final rectRegex = RegExp(
-  r'<rect[^>]*x="([^"]*)"[^>]*y="([^"]*)"[^>]*width="([^"]*)"[^>]*height="([^"]*)"',
-  );
-  for (final m in rectRegex.allMatches(svgContent)) {
-  rects.add(
-  CanvasCard(
-  id: 'svg_${rects.length}',
-  type: CanvasCardType.rectangle,
-  x: double.tryParse(m.group(1) ?? '0') ?? 0,
-  y: double.tryParse(m.group(2) ?? '0') ?? 0,
-  width: double.tryParse(m.group(3) ?? '100') ?? 100,
-  height: double.tryParse(m.group(4) ?? '60') ?? 60,
-  ),
-  );
-  }
-  if (rects.isEmpty) return null;
-  return CanvasData(cards: rects);
-  }
-  static CanvasData? importFromVsdx(String vsdxPath) {
-  return null;
+  // === Export delegation ===
+
+  String exportToSvg() => _exportService.exportToSvg(state, _activeCanvasName);
+
+  String exportToPdf() => _exportService.exportToPdf(state, _activeCanvasName);
+
+  String exportToMarkdown() => _exportService.exportToMarkdown(state, _activeCanvasName);
+
+  String exportToHtml() => _exportService.exportToHtml(state);
+
+  String exportToJpeg() => _exportService.exportToJpeg(state, _activeCanvasName);
+
+  String exportToWebp() => _exportService.exportToWebp(state, _activeCanvasName);
+
+  String encodeToUrl() => _exportService.encodeToUrl(state);
+
+  (String, String) exportWithEmbeddedData() =>
+      _exportService.exportWithEmbeddedData(state, _activeCanvasName);
+
+  static CanvasData? decodeFromUrl(String url) =>
+      CanvasExportService.decodeFromUrl(url);
+
+  static CanvasData? importFromCsv(String csv) =>
+      CanvasExportService.importFromCsv(csv);
+
+  static CanvasData? importFromMermaid(String mermaid) =>
+      CanvasExportService.importFromMermaid(mermaid);
+
+  static CanvasData? importFromEmbeddedSvg(String svgContent) =>
+      CanvasExportService.importFromEmbeddedSvg(svgContent);
+
+  static CanvasData? importFromSvg(String svgContent) =>
+      CanvasExportService.importFromSvg(svgContent);
+
+  static CanvasData? importFromVsdx(String vsdxPath) =>
+      CanvasExportService.importFromVsdx(vsdxPath);
+
+  // === Layers delegation ===
+
+  Future<void> addLayer(String name) async {
+    _pushUndo();
+    final layer = _layersService.createLayer(name, state.layers.length);
+    state = state.copyWith(layers: [...state.layers, layer]);
+    await _save();
   }
 
+  Future<void> removeLayer(String layerId) async {
+    _pushUndo();
+    final newLayers = _layersService.removeLayer(state.layers, layerId);
+    final cleanedCards = state.cards.map((c) {
+      if (c.layerId == layerId) return c.copyWith(clearLayerId: true);
+      return c;
+    }).toList();
+    state = state.copyWith(layers: newLayers, cards: cleanedCards);
+    await _save();
+  }
+
+  void renameLayer(String layerId, String name) {
+    final layers = _layersService.renameLayer(state.layers, layerId, name);
+    state = state.copyWith(layers: layers);
+    _debouncedSave();
+  }
+
+  void toggleLayerVisibility(String layerId) {
+    final layers = _layersService.toggleLayerVisibility(state.layers, layerId);
+    state = state.copyWith(layers: layers);
+    _debouncedSave();
+  }
+
+  void toggleLayerLock(String layerId) {
+    final layers = _layersService.toggleLayerLock(state.layers, layerId);
+    state = state.copyWith(layers: layers);
+    _debouncedSave();
+  }
+
+  void moveCardToLayer(String cardId, String? layerId) {
+    final cards = _layersService.moveCardToLayer(state.cards, cardId, layerId);
+    state = state.copyWith(cards: cards);
+    _debouncedSave();
+  }
+
+  bool isLayerLocked(String cardId) {
+    return _layersService.isLayerLocked(state.layers, cardById(cardId));
+  }
+
+  bool isLayerVisible(String cardId) {
+    return _layersService.isLayerVisible(state.layers, cardById(cardId));
+  }
+
+  void reorderLayer(String layerId, int newOrder) {
+    final layers = _layersService.reorderLayer(state.layers, layerId, newOrder);
+    state = state.copyWith(layers: layers);
+    _debouncedSave();
+  }
+
+  void moveLayerUp(String layerId) {
+    final layers = _layersService.moveLayerUp(state.layers, layerId);
+    state = state.copyWith(layers: layers);
+    _debouncedSave();
+  }
+
+  void moveLayerDown(String layerId) {
+    final layers = _layersService.moveLayerDown(state.layers, layerId);
+    state = state.copyWith(layers: layers);
+    _debouncedSave();
+  }
+
+  int cardCountForLayer(String layerId) {
+    return _layersService.cardCountForLayer(state.cards, layerId);
+  }
+
+  // === Scratchpad delegation ===
+
+  Future<List<ScratchpadItem>> loadScratchpad() async {
+    final vaultPath = ref.read(vaultProvider).currentVault?.path;
+    if (vaultPath == null) return [];
+    return _scratchpadService.loadScratchpad(vaultPath);
+  }
+
+  Future<void> saveScratchpadItem(ScratchpadItem item) async {
+    final vaultPath = ref.read(vaultProvider).currentVault?.path;
+    if (vaultPath == null) return;
+    await _scratchpadService.saveScratchpadItem(vaultPath, item);
+  }
+
+  Future<void> removeScratchpadItem(String itemId) async {
+    final vaultPath = ref.read(vaultProvider).currentVault?.path;
+    if (vaultPath == null) return;
+    await _scratchpadService.removeScratchpadItem(vaultPath, itemId);
+  }
+
+  CanvasCard createCardFromScratchpad(ScratchpadItem item, Offset pos) {
+    return _scratchpadService.createCardFromScratchpad(item, pos);
+  }
+
+  // === Templates delegation ===
+
+  void loadTemplate(String templateName) {
+    final template = CanvasTemplatesService.builtInTemplates[templateName];
+    if (template == null) return;
+    _pushUndo();
+    state = template;
+    _debouncedSave();
+  }
+
+  void loadFromData(CanvasData data) {
+    _pushUndo();
+    state = data;
+    _debouncedSave();
+  }
+
+  void setFontFamily(String cardId, String family) {
+    final card = cardById(cardId);
+    if (card == null) return;
+    updateCardInMemory(card.copyWith(fontFamily: family));
+    _debouncedSave();
+  }
+
+  void setTextColor(String cardId, int colorValue) {
+    final card = cardById(cardId);
+    if (card == null) return;
+    updateCardInMemory(card.copyWith(textColorValue: colorValue));
+    _debouncedSave();
+  }
+
+  void setLatexFormula(String cardId, String? formula) {
+    final card = cardById(cardId);
+    if (card == null) return;
+    updateCardInMemory(
+      card.copyWith(latexFormula: formula, clearLatex: formula == null),
+    );
+    _debouncedSave();
+  }
+
+  void setHtmlContent(String cardId, String? html) {
+    final card = cardById(cardId);
+    if (card == null) return;
+    updateCardInMemory(
+      card.copyWith(htmlContent: html, clearHtml: html == null),
+    );
+    _debouncedSave();
+  }
+
+  void setCustomSvg(String cardId, String? svgData) {
+    final card = cardById(cardId);
+    if (card == null) return;
+    updateCardInMemory(
+      card.copyWith(customSvgData: svgData, clearSvg: svgData == null),
+    );
+    _debouncedSave();
+  }
+
+  void addSvgAsCustomShape(String cardId, String svgData) {
+    final card = cardById(cardId);
+    if (card == null) return;
+    updateCardInMemory(card.copyWith(customSvgData: svgData));
+    _debouncedSave();
+  }
+
+  void setConnectionPointOffset(String cardId, double offsetX, double offsetY) {
+    final card = cardById(cardId);
+    if (card == null) return;
+    updateCardInMemory(
+      card.copyWith(
+        connectionPointOffsetX: offsetX.clamp(0.0, 1.0),
+        connectionPointOffsetY: offsetY.clamp(0.0, 1.0),
+      ),
+    );
+    _debouncedSave();
+  }
 }
 
 final canvasProvider = NotifierProvider<CanvasNotifier, CanvasData>(

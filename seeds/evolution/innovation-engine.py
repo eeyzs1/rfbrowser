@@ -26,8 +26,10 @@ DOMAIN_ADVANCEMENT_MAP = {
 }
 
 
+SEEDS_DIR = "seeds"
+
 def load_product_state(project_root: Path) -> dict:
-    analyzer = project_root / "evolution" / "product-analyzer.py"
+    analyzer = project_root / SEEDS_DIR / "evolution" / "product-analyzer.py"
     if analyzer.exists():
         import subprocess
         proc = subprocess.run(
@@ -40,7 +42,7 @@ def load_product_state(project_root: Path) -> dict:
 
 
 def load_domain_advancements(project_root: Path, template_name: str) -> dict:
-    adv_file = project_root / "evolution" / DOMAIN_ADVANCEMENT_MAP.get(template_name, "domain-advancements.yaml")
+    adv_file = project_root / SEEDS_DIR / "evolution" / DOMAIN_ADVANCEMENT_MAP.get(template_name, "domain-advancements.yaml")
     if not adv_file.exists():
         return {"stages": []}
     with open(adv_file, "r", encoding="utf-8") as f:
@@ -171,23 +173,28 @@ def run_innovation_cycle(project_root: Path, dry_run: bool = False) -> dict:
         print(f"     Trigger: {p['trigger_condition']}")
 
     if not dry_run:
-        innovation_log = project_root / "evolution" / "innovation-log.yaml"
+        innovation_log = project_root / SEEDS_DIR / "evolution" / "innovation-log.yaml"
         existing = []
         if innovation_log.exists():
             with open(innovation_log, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
-                existing = data.get("proposals", [])
+                existing = data.get("applied_proposals", [])
 
         for p in proposals:
             p["status"] = "proposed"
-            existing.append(p)
+            existing.append({"id": p["id"], "name": p["name"], "applied_at": p["proposed_at"]})
 
         with open(innovation_log, "w", encoding="utf-8") as f:
-            yaml.dump({"version": 1, "proposals": existing}, f, default_flow_style=False, allow_unicode=True)
+            yaml.dump({
+                "version": 3,
+                "description": "Innovation log — tracks proposed and applied innovations",
+                "current_stage": current_stage,
+                "applied_proposals": existing,
+            }, f, default_flow_style=False, allow_unicode=True)
 
-        print(f"\n📝 Proposals saved to evolution/innovation-log.yaml")
+        print(f"\n📝 Proposals saved to seeds/evolution/innovation-log.yaml")
 
-        genome_file = project_root / "evolution" / "genome.yaml"
+        genome_file = project_root / SEEDS_DIR / "evolution" / "genome.yaml"
         if genome_file.exists():
             with open(genome_file, "r", encoding="utf-8") as f:
                 genome = yaml.safe_load(f) or {}

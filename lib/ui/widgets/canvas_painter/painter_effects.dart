@@ -1,7 +1,8 @@
 part of '../canvas_painter.dart';
 
-mixin CanvasEffectsPainterMixin on _CanvasPainterBase {
-    void _drawConnectionPoints(Canvas canvas) {
+mixin _CanvasEffectsPainterMixin on _CanvasPainterBase {
+    @override
+  void _drawConnectionPoints(Canvas canvas) {
       final dotRadius = 3.0 * scale;
       final hoverDotRadius = 5.0 * scale;
       final gap = 8.0 * scale;
@@ -74,7 +75,8 @@ mixin CanvasEffectsPainterMixin on _CanvasPainterBase {
       }
     }
 
-    void _drawFlowAnimation(
+    @override
+  void _drawFlowAnimation(
       Canvas canvas,
       Path path,
       CanvasConnectionStyle style,
@@ -173,7 +175,8 @@ mixin CanvasEffectsPainterMixin on _CanvasPainterBase {
       }
     }
 
-    void _drawRulers(Canvas canvas) {
+    @override
+  void _drawRulers(Canvas canvas) {
       const rulerWidth = 24.0;
       final rulerColor = isDark
           ? Colors.white.withValues(alpha: 0.06)

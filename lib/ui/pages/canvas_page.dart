@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_element_parameter
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -189,7 +190,7 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
   void _ungroupSelected();
   Widget _buildToolbar(ThemeData theme, CanvasData canvasData, bool autoEnabled, CanvasNotifier notifier, AppLocalizations l);
   Widget _toolbarDivider(ThemeData theme);
-  Widget _popupRow(IconData icon, String text, {Widget? trailing, String? tooltip});
+  Widget _popupRow(IconData icon, String text, {String? tooltip});
   Widget _toolbarButton(ThemeData theme, IconData icon, String tooltip, VoidCallback onTap, {bool enabled = true, bool highlight = false});
   Widget _buildZoomControls(ThemeData theme);
   Widget _buildMinimap(ThemeData theme, CanvasData canvasData);
@@ -235,7 +236,7 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
 
 
 class _CanvasViewState extends _CanvasViewStateBase
-    with CanvasInputHandlersMixin, CanvasToolbarMixin, CanvasPanelsMixin, CanvasCanvasMgmtMixin, CanvasContextMenusMixin, CanvasDialogsMixin, CanvasExportPanelsMixin {
+    with _CanvasInputHandlersMixin, _CanvasToolbarMixin, _CanvasPanelsMixin, _CanvasCanvasMgmtMixin, _CanvasContextMenusMixin, _CanvasDialogsMixin, _CanvasExportPanelsMixin {
   @override
   void initState() {
     super.initState();
@@ -247,6 +248,7 @@ class _CanvasViewState extends _CanvasViewStateBase
     )..repeat();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initCanvas());
   }
+  @override
   Future<void> _initCanvas() async {
     final notifier = ref.read(canvasProvider.notifier);
     await notifier.initialize();

@@ -1,6 +1,6 @@
 part of '../canvas_page.dart';
 
-mixin CanvasExportPanelsMixin on _CanvasViewStateBase {
+mixin _CanvasExportPanelsMixin on _CanvasViewStateBase {
     @override
     void _fitToContent() {
       final cards = ref.read(canvasProvider).cards;
@@ -53,7 +53,8 @@ mixin CanvasExportPanelsMixin on _CanvasViewStateBase {
       }
     }
 
-    Future<void> _exportToPng() async {
+    @override
+  Future<void> _exportToPng() async {
       final l = AppLocalizations.of(context)!;
       try {
         final boundary =

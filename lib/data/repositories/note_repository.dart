@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import '../models/note.dart';
@@ -173,12 +174,23 @@ class NoteRepository {
   }
 
   String _sanitizeFileName(String name) {
-    return name
+    var sanitized = name
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-        .replaceAll(RegExp(r'\s+'), '-')
-        .replaceAll('..', '')
-        .substring(0, name.length > 100 ? 100 : name.length);
+        .replaceAll(RegExp(r'\s+'), '-');
+    sanitized = p.basename(p.normalize(sanitized));
+    if (sanitized.isEmpty || sanitized == '.') sanitized = 'untitled';
+    if (sanitized.length > 100) sanitized = sanitized.substring(0, 100);
+    return sanitized;
   }
+
+  @visibleForTesting
+  String sanitizeFileName(String name) => _sanitizeFileName(name);
+
+  @visibleForTesting
+  String normalizeRelativePath(String relativePath) => _normalizeRelativePath(relativePath);
+
+  @visibleForTesting
+  void validatePath(String relativePath) => _validatePath(relativePath);
 }
 
 final noteRepositoryProvider = Provider<NoteRepository?>((ref) {

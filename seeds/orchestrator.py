@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
-Orchestrator: The execution engine of the generated harness.
+Orchestrator: The execution engine of the RFBrowser harness.
 
 Implements the core loop: EXECUTE → PROVE → JUDGE → LOOP
-Coordinates all 7 layers + 2 cross-cutting systems.
-
-This is the ENTRY POINT for the generated harness project.
-AI agents should start here.
+Coordinates evolution, verification, and constraint checking.
 
 Usage:
-    python orchestrator.py --task task.yaml
     python orchestrator.py --status
+    python orchestrator.py --verify
+    python orchestrator.py --check-constraints
     python orchestrator.py --evolve
+    python orchestrator.py --innovate
 """
 
 import argparse
@@ -24,6 +23,7 @@ from pathlib import Path
 import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SEEDS_DIR = PROJECT_ROOT / "seeds"
 
 
 def run_script(script_path: Path, args: list = None) -> subprocess.CompletedProcess:
@@ -37,14 +37,13 @@ def load_task() -> dict:
     task_file = PROJECT_ROOT / "task.yaml"
     if not task_file.exists():
         print("ERROR: No task.yaml found. Create one first.")
-        print("  See the Acceptance Criteria in AGENTS.md for guidance.")
         sys.exit(1)
     with open(task_file, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
 
 def load_session_state() -> dict:
-    state_file = PROJECT_ROOT / "seeds" / "memory" / "session-state.yaml"
+    state_file = SEEDS_DIR / "memory" / "session-state.yaml"
     if not state_file.exists():
         return {"status": "not_started", "progress": {"completed_criteria": [], "failed_criteria": []}}
     with open(state_file, "r", encoding="utf-8") as f:
@@ -52,14 +51,13 @@ def load_session_state() -> dict:
     progress = state.get("progress", {})
     if "completed_criteria" not in progress and "completed_criteria_summary" in progress:
         summary = progress["completed_criteria_summary"]
-        total = progress.get("total_completed", 0)
         progress["completed_criteria"] = [f"[{k}] {v}" for k, v in summary.items()] if isinstance(summary, dict) else []
         state["progress"] = progress
     return state
 
 
 def save_session_state(state: dict) -> None:
-    state_file = PROJECT_ROOT / "seeds" / "memory" / "session-state.yaml"
+    state_file = SEEDS_DIR / "memory" / "session-state.yaml"
     state["updated_at"] = datetime.now().isoformat()
     with open(state_file, "w", encoding="utf-8") as f:
         yaml.dump(state, f, default_flow_style=False, allow_unicode=True)
@@ -89,13 +87,10 @@ def step_execute(task: dict) -> dict:
 
     print(f"\nNext criterion to implement:")
     print(f"  → {pending[0]}")
-    print(f"\nAction required: Implement this criterion in lib/")
-    print(f"Follow the workflow in seeds/planning/flow-control.yaml")
-    print(f"Respect constraints in seeds/constraints/architecture-rules.yaml")
 
-    task_runner = PROJECT_ROOT / "seeds" / "execution" / "task-runner.py"
+    task_runner = SEEDS_DIR / "execution" / "task-runner.py"
     if task_runner.exists():
-        print(f"\n  Running: python {task_runner.relative_to(PROJECT_ROOT)} --analyze-only")
+        print(f"\n  Running: python seeds/execution/task-runner.py --analyze-only")
         proc = run_script(task_runner, ["--analyze-only"])
         if proc.returncode == 0:
             print("  ✅ flutter analyze passed")
@@ -154,11 +149,8 @@ def step_judge(prove_result: dict) -> dict:
         print(f"\nUnsatisfied criteria:")
         for e in unsatisfied:
             print(f"  ❌ {e['criterion']}")
-        print(f"\nRoot cause analysis needed. Check:")
-        print(f"  - Are the constraints in seeds/constraints/ being followed?")
-        print(f"  - Is the workflow in seeds/planning/flow-control.yaml being followed?")
-        print(f"  - Run: python seeds/feedback/error-capture.py to analyze errors")
-        print(f"  - Run: python seeds/feedback/mistake-to-constraint.py to propose new constraints")
+        print(f"\nRun: python seeds/feedback/error-capture.py to analyze errors")
+        print(f"Run: python seeds/feedback/mistake-to-constraint.py to propose new constraints")
 
     return {"verdict": verdict, "satisfied": satisfied, "total": total}
 
@@ -179,7 +171,6 @@ def step_evolve() -> dict:
             return {"status": "evolution_failed"}
     else:
         print("Evolution script not found in this project.")
-        print("Run: python scripts/evolve.py --project-root .")
         return {"status": "no_evolve_script"}
 
 
@@ -188,7 +179,7 @@ def step_innovate() -> dict:
     print("STEP: INNOVATE — 推陈出新")
     print("=" * 60)
 
-    innovation_engine = PROJECT_ROOT / "seeds" / "evolution" / "innovation-engine.py"
+    innovation_engine = SEEDS_DIR / "evolution" / "innovation-engine.py"
     if innovation_engine.exists():
         proc = run_script(innovation_engine, ["--project-root", str(PROJECT_ROOT)])
         if proc.returncode == 0:
@@ -204,7 +195,7 @@ def step_innovate() -> dict:
 
 def run_verification() -> dict:
     print("\n--- Running Verification ---")
-    self_check = PROJECT_ROOT / "seeds" / "verification" / "self-check.py"
+    self_check = SEEDS_DIR / "verification" / "self-check.py"
     if self_check.exists():
         proc = run_script(self_check, ["--project-root", str(PROJECT_ROOT)])
         if proc.returncode == 0:
@@ -257,7 +248,7 @@ def run_loop(task: dict, max_iterations: int = 10) -> dict:
 
 
 def load_genome() -> dict:
-    genome_file = PROJECT_ROOT / "seeds" / "evolution" / "genome.yaml"
+    genome_file = SEEDS_DIR / "evolution" / "genome.yaml"
     if not genome_file.exists():
         return {}
     with open(genome_file, "r", encoding="utf-8") as f:
@@ -267,20 +258,15 @@ def load_genome() -> dict:
 def _load_all_constraints(genome: dict) -> list:
     hg = genome.get("harness_genome", {})
     active = hg.get("active_constraints", [])
-    agents_md = hg.get("agents_md_rules", {}).get("rules", [])
-    dormant_list = hg.get("dormant_constraints", {}).get("constraints", [])
-    dormant_tagged = [{**c, "status": "dormant"} for c in dormant_list]
-    return active + agents_md + dormant_tagged
+    return active
 
 
 def check_constraints_against_codebase() -> dict:
     genome = load_genome()
     constraints = _load_all_constraints(genome)
-    active_constraints = [c for c in constraints if c.get("status") != "dormant"]
-    dormant_count = len([c for c in constraints if c.get("status") == "dormant"])
     violations = []
 
-    for c in active_constraints:
+    for c in constraints:
         rule = c.get("rule", "")
         cid = c.get("id", "")
         if c.get("trigger_count", 0) > 0:
@@ -290,14 +276,12 @@ def check_constraints_against_codebase() -> dict:
         if check.get("violated"):
             violations.append({"constraint_id": cid, "rule": rule, "evidence": check.get("evidence", ""), "severity": "high"})
 
-    unmet = [c for c in active_constraints if c.get("trigger_count", 0) == 0 and not any(v["constraint_id"] == c["id"] for v in violations)]
+    unmet = [c for c in constraints if c.get("trigger_count", 0) == 0 and not any(v["constraint_id"] == c["id"] for v in violations)]
     for c in unmet[:5]:
         violations.append({"constraint_id": c["id"], "rule": c["rule"], "evidence": "not yet verified in this codebase", "severity": "medium"})
 
     return {
         "total_constraints": len(constraints),
-        "active_constraints": len(active_constraints),
-        "dormant_constraints": dormant_count,
         "violations": violations,
         "violation_count": len(violations)
     }
@@ -371,12 +355,6 @@ def _check_single_constraint(cid: str, rule: str) -> dict:
                         return {"violated": True, "evidence": evidence}
             except Exception:
                 pass
-
-    if cid == "C020":
-        dialog_widgets = list((PROJECT_ROOT / "lib" / "ui" / "widgets").rglob("*.dart")) if (PROJECT_ROOT / "lib" / "ui" / "widgets").exists() else []
-        shared_dialog_count = sum(1 for f in dialog_widgets if "dialog" in f.name.lower())
-        if shared_dialog_count == 0 and dialog_widgets:
-            return {"violated": True, "evidence": "No shared dialog widgets found (A-3)"}
 
     if cid == "C010":
         canvas_service = lib_dir / "services" / "canvas_service.dart"
@@ -452,7 +430,7 @@ def _check_c002_no_self_certify() -> dict:
             except Exception:
                 pass
 
-    verif_dir = PROJECT_ROOT / "seeds" / "verification"
+    verif_dir = SEEDS_DIR / "verification"
     if verif_dir.exists():
         for vf in verif_dir.rglob("*.py"):
             try:
@@ -465,7 +443,7 @@ def _check_c002_no_self_certify() -> dict:
             except Exception:
                 pass
 
-    exec_layer = PROJECT_ROOT / "seeds" / "execution"
+    exec_layer = SEEDS_DIR / "execution"
     if exec_layer.exists():
         test_files.append({
             "path": "seeds/execution/",
@@ -532,14 +510,14 @@ def generate_next_task() -> dict:
 
     genome = load_genome()
     innovations = []
-    innovation_log = PROJECT_ROOT / "seeds" / "evolution" / "innovation-log.yaml"
+    innovation_log = SEEDS_DIR / "evolution" / "innovation-log.yaml"
     if innovation_log.exists():
         with open(innovation_log, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
-        innovations = [p for p in data.get("proposals", []) if p.get("status") == "applied"]
+        innovations = [p for p in data.get("applied_proposals", []) if p.get("status") == "applied"]
 
     advancements = {}
-    adv_file = PROJECT_ROOT / "seeds" / "evolution" / "domain-advancements.yaml"
+    adv_file = SEEDS_DIR / "evolution" / "domain-advancements.yaml"
     if adv_file.exists():
         with open(adv_file, "r", encoding="utf-8") as f:
             advancements = yaml.safe_load(f) or {}
@@ -583,9 +561,6 @@ def show_status() -> None:
     completed = state.get("progress", {}).get("completed_criteria", [])
     genome = load_genome()
     constraints = _load_all_constraints(genome)
-    active_count = len([c for c in constraints if c.get("status") == "active"])
-    dormant_count = len([c for c in constraints if c.get("status") == "dormant"])
-    verified_needed_count = len([c for c in constraints if c.get("status") == "verified-needed"])
 
     print(f"\n{'='*60}")
     print(f"PROJECT STATUS")
@@ -598,17 +573,16 @@ def show_status() -> None:
         status = "✅" if c in completed else "❌"
         print(f"  {status} {c}")
 
-    print(f"\nGenome Constraints: {len(constraints)} total")
-    print(f"  active: {active_count} | dormant: {dormant_count} | verified-needed: {verified_needed_count}")
+    print(f"\nGenome Constraints: {len(constraints)} active")
 
     print(f"\nNext steps:")
     pending = [c for c in criteria if c not in completed]
     if pending:
         print(f"  1. Implement: {pending[0]}")
-        print(f"  2. Run: python orchestrator.py --verify")
-        print(f"  3. Mark complete in memory/session-state.yaml")
+        print(f"  2. Run: python seeds/orchestrator.py --verify")
+        print(f"  3. Mark complete: python seeds/orchestrator.py --mark-complete \"<criterion>\"")
     else:
-        print(f"  All criteria satisfied! Run: python orchestrator.py --evolve")
+        print(f"  All criteria satisfied! Run: python seeds/orchestrator.py --evolve")
 
 
 def main():

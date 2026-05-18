@@ -1,8 +1,7 @@
-version: 3
-description: Evolved genome for RFBrowser — deduplicated with AGENTS.md. Rules referenced,
-  not duplicated.
-dedup_note: Constraints C010-C048 previously duplicated AGENTS.md rules. Now they
-  reference AGENTS.md instead of repeating full text.
+version: 4
+description: RFBrowser harness genome — project-specific constraints only.
+  AGENTS.md rules (P-1 through UX-15) are the authoritative source;
+  this file tracks only constraints NOT already covered by AGENTS.md.
 harness_genome:
   active_constraints:
   - id: C001
@@ -10,7 +9,6 @@ harness_genome:
     source: initial design
     last_triggered: '2026-05-06'
     trigger_count: 1
-    status: active
   - id: C002
     rule: no agent self-certifies — every completed criterion needs external evidence
     source: initial design
@@ -22,43 +20,39 @@ harness_genome:
     source: initial design
     last_triggered: '2026-05-06'
     trigger_count: 1
-    status: active
   - id: C004
     rule: CustomPainter.shouldRepaint must compare actual data, not just return true
     source: 'meta-mistake: P-2 evidence'
+    ref: AGENTS.md P-2
     last_triggered: '2026-05-06'
     trigger_count: 1
-    status: active
   - id: C005
     rule: every class using SharedPreferences must cache the instance (lazy singleton)
     source: 'meta-mistake: P-3 evidence'
+    ref: AGENTS.md P-3
     last_triggered: '2026-05-06'
     trigger_count: 1
-    status: active
   - id: C006
     rule: no empty catch blocks — every catch must log or rethrow
     source: 'meta-mistake: silent error swallowing'
     last_triggered: '2026-05-06'
     trigger_count: 17
-    status: active
   - id: C007
     rule: use dart:convert for JSON — never write manual parsers
     source: 'meta-mistake: manual JSON parser'
     last_triggered: '2026-05-06'
     trigger_count: 1
-    status: active
   - id: C008
     rule: no duplicate business logic between UI and service layers — extract to model
     source: 'meta-mistake: A-2 evidence'
+    ref: AGENTS.md A-2
     last_triggered: '2026-05-06'
     trigger_count: 1
-    status: active
   - id: C009
     rule: after harness generation, run domain-adaptation pass
     source: 'meta-mistake: generic paths in Flutter project'
     last_triggered: '2026-05-06'
     trigger_count: 1
-    status: active
   - id: C037
     rule: Windows path.relative() returns backslash — always replaceAll('\\', '/')
       before splitting by '/'
@@ -66,7 +60,6 @@ harness_genome:
     source: 'meta-mistake: Windows path separators'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C038
     rule: Tree structures with parentId must prevent self-referencing — add cycle
       detection
@@ -74,42 +67,36 @@ harness_genome:
     source: 'meta-mistake: BookmarkFolder self-reference'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C039
     rule: After moveNote or file-system mutation, call loadAllNotes() to refresh state
     ref: AGENTS.md P-5
     source: 'meta-mistake: moveNote UI did not refresh'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C040
     rule: Bookmark and vault data must be persisted to disk (JSON in vault/.rfbrowser/)
     ref: AGENTS.md S-4
     source: 'meta-mistake: bookmarks lost on restart'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C041
     rule: Vault-specific data in <vault>/.rfbrowser/, app config in <ApplicationSupport>/
     ref: AGENTS.md A-8
     source: 'meta-mistake: vault data in wrong location'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C042
     rule: Disk folder scanning must filter hidden and system directories
     ref: AGENTS.md A-9
     source: 'meta-mistake: hidden dirs in note tree'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C043
     rule: Font sizes in sidebars must follow user settings, not hardcoded values
     ref: AGENTS.md U-4
     source: 'meta-mistake: hardcoded font sizes'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C044
     rule: AI panels must always have a back/reset button visible after generating
       content
@@ -117,7 +104,6 @@ harness_genome:
     source: 'meta-mistake: no way back from AI panel'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C045
     rule: Bookmark clicks must actually navigate WebView — use createTab(url:) or
       loadUrl()
@@ -125,297 +111,40 @@ harness_genome:
     source: 'meta-mistake: bookmark clicks did not navigate'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C046
     rule: Vault switching must be accessible from main layout, not just welcome page
     ref: AGENTS.md UX-8
     source: 'meta-mistake: vault switcher hidden'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C047
     rule: AI summary should support both web pages and notes with a toggle
     ref: AGENTS.md UX-9
     source: 'meta-mistake: AI summary only for web'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C048
     rule: AI-generated content must have a save-as-note action button
     ref: AGENTS.md UX-10
     source: 'meta-mistake: no save-as-note action'
     last_triggered: '2026-05-08'
     trigger_count: 1
-    status: active
   - id: C049
     rule: FocusNode must not be disposed while hasFocus is true
     source: 'meta-mistake: FocusNode disposed while focused'
     last_triggered: '2026-05-11'
     trigger_count: 1
-    status: active
   - id: C050
     rule: Never call setState on every frame for camera/scroll state — use ChangeNotifier
       + ListenableBuilder
     source: 'meta-mistake: canvas setState on every pan/zoom frame'
     last_triggered: '2026-05-11'
     trigger_count: 1
-    status: active
   - id: C051
     rule: Every clickable element must be hit-tested in onScaleStart
     source: 'meta-mistake: connection line unselectable'
     last_triggered: '2026-05-11'
     trigger_count: 1
-    status: active
-  agents_md_rules:
-    description: These rules are enforced by AGENTS.md. Listed here for orchestrator
-      constraint checking only.
-    rules:
-    - id: C010
-      ref: AGENTS.md P-1
-      rule: never persist to disk on every frame — use debounced save
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C011
-      ref: AGENTS.md C-1
-      rule: API response parsing must be defensive — null-check every level
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C012
-      ref: AGENTS.md C-2
-      rule: concurrent state mutations must be guarded — check isLoading
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C013
-      ref: AGENTS.md C-3
-      rule: calculate new active index BEFORE removing item from list
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C014
-      ref: AGENTS.md C-4
-      rule: copyWith cannot set nullable fields to null — use sentinel values
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C015
-      ref: AGENTS.md S-1
-      rule: WebView must filter dangerous URL schemes in shouldOverrideUrlLoading
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C016
-      ref: AGENTS.md S-2
-      rule: API keys must not be stored in observable state — use flutter_secure_storage
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C017
-      ref: AGENTS.md S-3
-      rule: path sanitization with replaceAll('..') is insufficient — use normalization
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C018
-      ref: AGENTS.md A-1
-      rule: every component must have at least one data flow path to another
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C019
-      ref: AGENTS.md A-2
-      rule: shared utility functions belong on model/enum as getters
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-06'
-    - id: C020
-      ref: AGENTS.md A-3
-      rule: identical dialog code across pages must be extracted
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C021
-      ref: AGENTS.md A-4
-      rule: separate concerns — UI theme and AI config change for different reasons
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C022
-      ref: AGENTS.md A-5
-      rule: canvas cards with noteId must render live note data
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C023
-      ref: AGENTS.md A-6
-      rule: auto-discovered connections must be visually distinct from manual ones
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C024
-      ref: AGENTS.md A-7
-      rule: canvas persistence should use .json in vault/.rf/
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C025
-      ref: AGENTS.md U-1
-      rule: error dismiss buttons must actually clear the error state
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C026
-      ref: AGENTS.md U-2
-      rule: canvas clipping must happen BEFORE drawing
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C027
-      ref: AGENTS.md U-3
-      rule: row overflow must use Flexible + TextOverflow.ellipsis
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C028
-      ref: AGENTS.md F-1
-      rule: DropdownButtonFormField.value deprecated — use ValueKey
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C029
-      ref: AGENTS.md F-2
-      rule: Matrix4.translate()/scale() deprecated — set entries directly
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C030
-      ref: AGENTS.md F-7
-      rule: never assign TextEditingController.text inside build() unconditionally
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C031
-      ref: AGENTS.md UX-1
-      rule: every backend service must have at least one user-accessible trigger
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C032
-      ref: AGENTS.md UX-2
-      rule: empty states must guide the user with a call-to-action
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C033
-      ref: AGENTS.md UX-3
-      rule: destructive actions require confirmation
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C034
-      ref: AGENTS.md UX-4
-      rule: AI streaming output is core UX — users should see tokens in real-time
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C035
-      ref: AGENTS.md UX-5
-      rule: command bar must search actual data, not hardcoded suggestions
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-    - id: C036
-      ref: AGENTS.md UX-7
-      rule: keyboard shortcuts must cover top 5 actions
-      status: active
-      trigger_count: 1
-      last_triggered: '2026-05-07'
-  dormant_constraints:
-    description: Archived from dormant-constraints.yaml. Never triggered, preserved
-      for reference.
-    archived_date: '2026-05-13'
-    review_schedule: monthly
-    constraints:
-    - id: C010-dormant
-      ref: AGENTS.md P-1
-      reason: Current drag/resize patterns already follow best practices
-    - id: C011-dormant
-      ref: AGENTS.md C-1
-      reason: Existing API parsing code already defensive
-    - id: C012-dormant
-      ref: AGENTS.md C-2
-      reason: Current state management patterns already guard against this
-    - id: C013-dormant
-      ref: AGENTS.md C-3
-      reason: Current tab closing logic already follows this pattern
-    - id: C014-dormant
-      ref: AGENTS.md C-4
-      reason: Existing copyWith implementations already handle this correctly
-    - id: C015-dormant
-      ref: AGENTS.md S-1
-      reason: URL filtering already implemented
-    - id: C016-dormant
-      ref: AGENTS.md S-2
-      reason: flutter_secure_storage already used for API keys
-    - id: C017-dormant
-      ref: AGENTS.md S-3
-      reason: Path library already used for normalization
-    - id: C018-dormant
-      ref: AGENTS.md A-1
-      reason: Current architecture already has inter-component data flows
-    - id: C020-dormant
-      ref: AGENTS.md A-3
-      reason: Dialogs are currently unique per page
-    - id: C021-dormant
-      ref: AGENTS.md A-4
-      reason: settings_service already separates concerns
-    - id: C022-dormant
-      ref: AGENTS.md A-5
-      reason: Canvas card rendering already handles this
-    - id: C023-dormant
-      ref: AGENTS.md A-6
-      reason: CanvasConnection.isAuto field already exists
-    - id: C024-dormant
-      ref: AGENTS.md A-7
-      reason: canvas_service already persists to file system
-    - id: C025-dormant
-      ref: AGENTS.md U-1
-      reason: Error dismissing already works correctly
-    - id: C026-dormant
-      ref: AGENTS.md U-2
-      reason: Canvas painter already uses correct clipping order
-    - id: C027-dormant
-      ref: AGENTS.md U-3
-      reason: Row layouts already handle overflow correctly
-    - id: C028-dormant
-      ref: AGENTS.md F-1
-      reason: Dropdowns already handled correctly
-    - id: C029-dormant
-      ref: AGENTS.md F-2
-      reason: Matrix operations already use direct entry setting
-    - id: C030-dormant
-      ref: AGENTS.md F-7
-      reason: TextEditingController usage already follows proper patterns
-    - id: C031-dormant
-      ref: AGENTS.md UX-1
-      reason: Will be addressed in service audit
-    - id: C032-dormant
-      ref: AGENTS.md UX-2
-      reason: Empty states already have CTAs
-    - id: C033-dormant
-      ref: AGENTS.md UX-3
-      reason: Delete actions already require confirmation
-    - id: C034-dormant
-      ref: AGENTS.md UX-4
-      reason: Streaming UX will be addressed in Epic A
-    - id: C035-dormant
-      ref: AGENTS.md UX-5
-      reason: Command bar already searches actual data
-    - id: C036-dormant
-      ref: AGENTS.md UX-7
-      reason: Keyboard shortcuts already cover the top 5 actions
   workflows:
   - id: W001
     name: base flow
@@ -453,31 +182,6 @@ harness_genome:
     name: genome-evolution
     source: 'harness-evolution: integrate AGENTS.md rules as constraints'
     status: applied
-agent_genome:
-  topology_rules:
-  - always add verifier
-  - merge tightly coupled roles
-  - split when context exceeds budget
-  default_scope:
-    max_context_lines: 60
-    handoff_format: structured YAML
-  domain_specific_roles:
-    planner:
-      responsibilities:
-      - design Flutter widget contracts
-      - define component structure
-      - create task decomposition
-    executor:
-      responsibilities:
-      - implement Flutter widgets
-      - write Dart code
-      - fix bugs
-      - run flutter analyze
-    verifier:
-      responsibilities:
-      - run flutter test
-      - check consistency
-      - validate AGENTS.md rule compliance
 evolution_genome:
   fitness_weights:
     evidence_satisfaction_rate: 0.35
@@ -516,3 +220,8 @@ evolution_genome:
     details: Deduplicated genome.yaml with AGENTS.md. Merged dormant-constraints.yaml
       into genome. Compressed from 15.5 KB.
     fitness_delta: 0.1
+  - date: '2026-05-18'
+    type: harness_cleanup
+    details: Removed 30+ generic template files, deduplicated genome, fixed script
+      paths, simplified harness to essentials only.
+    fitness_delta: 0.15

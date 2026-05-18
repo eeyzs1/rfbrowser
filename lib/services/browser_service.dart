@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -40,13 +40,14 @@ class BrowserState {
     List<BrowserTab>? tabs,
     List<TabGroup>? groups,
     String? activeTabId,
+    bool clearActiveTabId = false,
     List<Bookmark>? bookmarks,
     List<BookmarkFolder>? bookmarkFolders,
   }) {
     return BrowserState(
       tabs: tabs ?? this.tabs,
       groups: groups ?? this.groups,
-      activeTabId: activeTabId ?? this.activeTabId,
+      activeTabId: clearActiveTabId ? null : (activeTabId ?? this.activeTabId),
       bookmarks: bookmarks ?? this.bookmarks,
       bookmarkFolders: bookmarkFolders ?? this.bookmarkFolders,
     );
@@ -79,7 +80,8 @@ class BrowserNotifier extends Notifier<BrowserState> {
     if (_contentFetcher == null) return null;
     try {
       return await _contentFetcher!(tabId);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('fetchPageContent error: $e');
       return null;
     }
   }
@@ -88,7 +90,8 @@ class BrowserNotifier extends Notifier<BrowserState> {
     if (_selectedTextFetcher == null) return '';
     try {
       return await _selectedTextFetcher!(tabId);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('fetchSelectedText error: $e');
       return '';
     }
   }
@@ -97,7 +100,8 @@ class BrowserNotifier extends Notifier<BrowserState> {
     if (_screenshotFetcher == null) return null;
     try {
       return await _screenshotFetcher!(tabId);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('takeScreenshot error: $e');
       return null;
     }
   }
@@ -127,7 +131,9 @@ class BrowserNotifier extends Notifier<BrowserState> {
               .toList() ??
           [];
       state = state.copyWith(bookmarkFolders: folders, bookmarks: bookmarks);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('loadBookmarks error: $e');
+    }
   }
 
   Future<void> _saveBookmarks() async {
@@ -142,7 +148,9 @@ class BrowserNotifier extends Notifier<BrowserState> {
         'bookmarks': state.bookmarks.map((b) => b.toJson()).toList(),
       });
       await file.writeAsString(json);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('_saveBookmarks error: $e');
+    }
   }
 
   void _persistBookmarks() {
@@ -165,6 +173,7 @@ class BrowserNotifier extends Notifier<BrowserState> {
   void closeTab(String tabId) {
     final tabs = state.tabs.where((t) => t.id != tabId).toList();
     String? newActiveId = state.activeTabId;
+    bool shouldClearActive = false;
     if (state.activeTabId == tabId) {
       final idx = state.tabs.indexWhere((t) => t.id == tabId);
       if (tabs.isNotEmpty) {
@@ -174,7 +183,7 @@ class BrowserNotifier extends Notifier<BrowserState> {
           newActiveId = tabs.first.id;
         }
       } else {
-        newActiveId = null;
+        shouldClearActive = true;
       }
     }
     final groups = state.groups.map((g) {
@@ -184,6 +193,7 @@ class BrowserNotifier extends Notifier<BrowserState> {
       tabs: tabs,
       groups: groups,
       activeTabId: newActiveId,
+      clearActiveTabId: shouldClearActive,
     );
   }
 
@@ -231,8 +241,27 @@ class BrowserNotifier extends Notifier<BrowserState> {
     state = state.copyWith(tabs: tabs);
   }
 
+  bool _wouldCreateCycle(String folderId, String parentId) {
+    if (folderId == parentId) return true;
+    var current = parentId;
+    final visited = <String>{};
+    while (current.isNotEmpty) {
+      if (current == folderId) return true;
+      if (!visited.add(current)) return true;
+      final parent = state.bookmarkFolders
+          .where((f) => f.id == current)
+          .firstOrNull;
+      current = parent?.parentId ?? '';
+    }
+    return false;
+  }
+
   String createBookmarkFolder(String name, {String parentId = 'bookmarks-bar'}) {
     final folder = BookmarkFolder(name: name, parentId: parentId);
+    if (_wouldCreateCycle(folder.id, parentId)) {
+      debugPrint('createBookmarkFolder: cycle detected, using root');
+      return createBookmarkFolder(name);
+    }
     state = state.copyWith(bookmarkFolders: [...state.bookmarkFolders, folder]);
     _persistBookmarks();
     return folder.id;
@@ -348,12 +377,14 @@ class BrowserNotifier extends Notifier<BrowserState> {
 
   void deleteBookmarkFolder(String folderId) {
     final toDelete = <String>[folderId];
+    final visited = <String>{folderId};
     var i = 0;
     while (i < toDelete.length) {
       final current = toDelete[i];
       final children = state.bookmarkFolders
           .where((f) => f.parentId == current)
           .map((f) => f.id)
+          .where((id) => visited.add(id))
           .toList();
       toDelete.addAll(children);
       i++;

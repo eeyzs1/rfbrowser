@@ -455,16 +455,10 @@ class _GraphViewState extends ConsumerState<GraphView> {
             Positioned(
               bottom: DesignSpacing.md,
               left: DesignSpacing.md,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DesignSpacing.md,
-                  vertical: DesignSpacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(DesignRadius.md),
-                  boxShadow: [DesignShadow.sm],
-                ),
+              child: Material(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(DesignRadius.md),
+                elevation: 0,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

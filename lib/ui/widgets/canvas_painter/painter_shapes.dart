@@ -1,7 +1,8 @@
 part of '../canvas_painter.dart';
 
-mixin CanvasShapePainterMixin on _CanvasPainterBase {
-    Path _buildGeometricPath(CanvasCard card, Rect cardRect) {
+mixin _CanvasShapePainterMixin on _CanvasPainterBase {
+    @override
+  Path _buildGeometricPath(CanvasCard card, Rect cardRect) {
       final w = cardRect.width;
       final h = cardRect.height;
       final l = cardRect.left;
@@ -81,7 +82,8 @@ mixin CanvasShapePainterMixin on _CanvasPainterBase {
       };
     }
 
-    void _drawGeometricCard(Canvas canvas, CanvasCard card, Rect clipRect) {
+    @override
+  void _drawGeometricCard(Canvas canvas, CanvasCard card, Rect clipRect) {
       final pos = _w2s(card.x, card.y);
       final cardRect = Rect.fromLTWH(
         pos.dx,
@@ -369,7 +371,8 @@ mixin CanvasShapePainterMixin on _CanvasPainterBase {
       }
     }
 
-    void _drawSwimlaneCard(
+    @override
+  void _drawSwimlaneCard(
       Canvas canvas,
       CanvasCard card,
       Rect clipRect,

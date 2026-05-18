@@ -2,12 +2,12 @@
 """
 Self-Check Loop: Execute → Check → Reflect → Fix.
 
-Runs verification, uses error-capture for structured analysis,
-applies retry strategy from retry-config, and re-runs.
+Runs flutter analyze and verify_criteria, uses error-capture for
+structured analysis, applies retry strategy, and re-runs.
 Maximum 3 iterations to prevent infinite loops.
 
 Usage:
-    python verification/self-check.py [--project-root <dir>] [--max-iterations 3]
+    python seeds/verification/self-check.py [--project-root <dir>] [--max-iterations 3]
 """
 
 import argparse
@@ -17,9 +17,11 @@ from pathlib import Path
 
 import yaml
 
+SEEDS_DIR_NAME = "seeds"
+
 
 def load_retry_config(project_root: Path) -> dict:
-    retry_file = project_root / "feedback" / "retry-config.yaml"
+    retry_file = project_root / SEEDS_DIR_NAME / "feedback" / "retry-config.yaml"
     if not retry_file.exists():
         return {}
     with open(retry_file, "r", encoding="utf-8") as f:
@@ -27,7 +29,7 @@ def load_retry_config(project_root: Path) -> dict:
 
 
 def run_error_capture(project_root: Path, error_output: str, source: str) -> list:
-    error_capture = project_root / "feedback" / "error-capture.py"
+    error_capture = project_root / SEEDS_DIR_NAME / "feedback" / "error-capture.py"
     if not error_capture.exists():
         return []
     import tempfile
@@ -52,19 +54,16 @@ def run_error_capture(project_root: Path, error_output: str, source: str) -> lis
 def run_verification(project_root: Path) -> dict:
     result = {"passed": True, "errors": []}
 
-    consistency_script = project_root / "verification" / "consistency-check.py"
-    if consistency_script.exists():
+    verify_script = project_root / SEEDS_DIR_NAME / "verification" / "verify_criteria.py"
+    if verify_script.exists():
         proc = subprocess.run(
-            [sys.executable, str(consistency_script), "--project-root", str(project_root)],
+            [sys.executable, str(verify_script), "--project-root", str(project_root)],
             capture_output=True, text=True,
         )
         if proc.returncode != 0:
             result["passed"] = False
             combined = proc.stdout + proc.stderr
-            result["errors"].append({"source": "consistency-check", "output": combined})
-            captured = run_error_capture(project_root, combined, "consistency-check")
-            if captured:
-                result["errors"][-1]["parsed_errors"] = captured
+            result["errors"].append({"source": "verify_criteria", "output": combined})
 
     flutter_cmd = "flutter.bat" if sys.platform == "win32" else "flutter"
     lint_result = subprocess.run(

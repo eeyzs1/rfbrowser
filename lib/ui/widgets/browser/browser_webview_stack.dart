@@ -107,9 +107,10 @@ class _BrowserWebViewStackState extends ConsumerState<BrowserWebViewStack> {
               shouldOverrideUrlLoading:
                   (controller, navigationAction) async {
                 final url = navigationAction.request.url?.toString() ?? '';
-                if (url.startsWith('file://') ||
-                    url.startsWith('javascript:') ||
-                    url.startsWith('data:')) {
+                final uri = Uri.tryParse(url);
+                if (uri == null) return NavigationActionPolicy.CANCEL;
+                const allowed = {'http', 'https', 'about'};
+                if (!allowed.contains(uri.scheme)) {
                   return NavigationActionPolicy.CANCEL;
                 }
                 return NavigationActionPolicy.ALLOW;

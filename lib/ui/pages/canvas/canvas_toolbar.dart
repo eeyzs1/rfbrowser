@@ -1,6 +1,6 @@
 part of '../canvas_page.dart';
 
-mixin CanvasToolbarMixin on _CanvasViewStateBase {
+mixin _CanvasToolbarMixin on _CanvasViewStateBase {
     @override
     Widget _buildToolbar(
       ThemeData theme,
@@ -216,11 +216,14 @@ mixin CanvasToolbarMixin on _CanvasViewStateBase {
                               _isFreehandDrawing = !_isFreehandDrawing;
                             });
                             if (_isFreehandDrawing) {
+                              final fhType = CanvasCardType.freehand;
                               final card = CanvasCard(
                                 id: 'fh_${DateTime.now().millisecondsSinceEpoch}',
-                                type: CanvasCardType.freehand,
+                                type: fhType,
                                 x: _cameraX,
                                 y: _cameraY,
+                                width: fhType.defaultWidth,
+                                height: fhType.defaultHeight,
                                 freehandPoints: [],
                               );
                               ref.read(canvasProvider.notifier).addCard(card);

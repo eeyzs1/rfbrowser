@@ -1,7 +1,8 @@
 part of '../canvas_painter.dart';
 
-mixin CanvasOverlayPainterMixin on _CanvasPainterBase {
-    void _drawAlignmentGuides(Canvas canvas) {
+mixin _CanvasOverlayPainterMixin on _CanvasPainterBase {
+    @override
+  void _drawAlignmentGuides(Canvas canvas) {
       if (alignmentGuides.isEmpty) return;
       final guidePaint = Paint()
         ..color = const Color(0xFF3B82F6).withValues(alpha: 0.6)
@@ -17,7 +18,8 @@ mixin CanvasOverlayPainterMixin on _CanvasPainterBase {
       }
     }
 
-    void _drawSelectionRect(Canvas canvas) {
+    @override
+  void _drawSelectionRect(Canvas canvas) {
       if (selectionRect == null) return;
       final screenRect = Rect.fromLTRB(
         _w2s(selectionRect!.left, 0).dx,
@@ -40,7 +42,8 @@ mixin CanvasOverlayPainterMixin on _CanvasPainterBase {
       );
     }
 
-    void _drawCardTypeIcon(
+    @override
+  void _drawCardTypeIcon(
       Canvas canvas,
       CanvasCardType type,
       Offset pos,

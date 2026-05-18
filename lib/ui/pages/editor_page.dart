@@ -886,7 +886,9 @@ class _EditorViewState extends ConsumerState<EditorView> {
         );
       },
       builder: (context, candidateData, rejectedData) {
-        return Stack(
+        return Material(
+          color: Colors.transparent,
+          child: Stack(
           fit: StackFit.expand,
           children: [
             Center(
@@ -916,6 +918,7 @@ class _EditorViewState extends ConsumerState<EditorView> {
                 ),
               ),
           ],
+        ),
         );
       },
     );

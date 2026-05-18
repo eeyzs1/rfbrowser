@@ -1,6 +1,6 @@
 part of '../canvas_page.dart';
 
-mixin CanvasPanelsMixin on _CanvasViewStateBase {
+mixin _CanvasPanelsMixin on _CanvasViewStateBase {
     @override
     Widget _buildZoomControls(ThemeData theme) {
       final l = AppLocalizations.of(context)!;

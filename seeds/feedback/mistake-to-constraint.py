@@ -75,8 +75,8 @@ def propose_constraints(mistakes: list, existing_constraints: list) -> list:
 
 def main():
     parser = argparse.ArgumentParser(description="Mistake-to-Constraint Converter")
-    parser.add_argument("--mistakes-file", default="memory/meta-mistakes.md", help="Path to meta-mistakes file")
-    parser.add_argument("--constraints-file", default="constraints/architecture-rules.yaml", help="Path to existing constraints")
+    parser.add_argument("--mistakes-file", default="seeds/memory/meta-mistakes.md", help="Path to meta-mistakes file")
+    parser.add_argument("--constraints-file", default="seeds/evolution/genome.yaml", help="Path to existing constraints (genome.yaml)")
     parser.add_argument("--output", default=None, help="Output file for proposed constraints")
     args = parser.parse_args()
 
@@ -88,7 +88,7 @@ def main():
     if constraints_path.exists():
         with open(constraints_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
-            existing = data.get("rules", [])
+            existing = data.get("harness_genome", {}).get("active_constraints", [])
 
     proposals = propose_constraints(mistakes, existing)
 

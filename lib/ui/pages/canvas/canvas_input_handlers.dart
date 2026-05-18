@@ -1,6 +1,6 @@
 part of '../canvas_page.dart';
 
-mixin CanvasInputHandlersMixin on _CanvasViewStateBase {
+mixin _CanvasInputHandlersMixin on _CanvasViewStateBase {
     @override
     Offset _screenToWorld(Offset screenPos) {
       return Offset(
@@ -47,7 +47,8 @@ mixin CanvasInputHandlersMixin on _CanvasViewStateBase {
       return _ResizeEdge.none;
     }
 
-    CanvasCard? _hitTestCardWithResize(Offset worldPos) {
+    @override
+  CanvasCard? _hitTestCardWithResize(Offset worldPos) {
       final cards = ref.read(canvasProvider).cards;
       final edgeW = _CanvasViewStateBase._edgeHitWidth / _scale;
       final cornerSize = _CanvasViewStateBase._resizeHandleSize / _scale;
@@ -64,7 +65,8 @@ mixin CanvasInputHandlersMixin on _CanvasViewStateBase {
       return null;
     }
 
-    CanvasCard? _hitTestCard(Offset worldPos) {
+    @override
+  CanvasCard? _hitTestCard(Offset worldPos) {
       final cards = ref.read(canvasProvider).cards;
       for (final card in cards.reversed) {
         if (card.rect.contains(worldPos)) return card;
@@ -72,7 +74,8 @@ mixin CanvasInputHandlersMixin on _CanvasViewStateBase {
       return null;
     }
 
-    (String, int)? _hitTestWaypoint(Offset worldPos) {
+    @override
+  (String, int)? _hitTestWaypoint(Offset worldPos) {
       final canvasData = ref.read(canvasProvider);
       for (final conn in canvasData.connections) {
         if (conn.waypoints.isEmpty) continue;
@@ -89,7 +92,8 @@ mixin CanvasInputHandlersMixin on _CanvasViewStateBase {
       return null;
     }
 
-    (String, double)? _hitTestConnectionLine(Offset worldPos) {
+    @override
+  (String, double)? _hitTestConnectionLine(Offset worldPos) {
       final canvasData = ref.read(canvasProvider);
       final hitRadius = 12.0 / _scale;
       final hits = <(String, double)>[];
@@ -124,7 +128,8 @@ mixin CanvasInputHandlersMixin on _CanvasViewStateBase {
       return hits.first;
     }
 
-    List<Offset> _connectionPathPoints(
+    @override
+  List<Offset> _connectionPathPoints(
       Offset fromPoint,
       Offset toPoint,
       List<Offset> waypoints,
@@ -189,7 +194,8 @@ mixin CanvasInputHandlersMixin on _CanvasViewStateBase {
       );
     }
 
-    (String, ConnectionSide, double)? _hitTestConnectionPoint(Offset worldPos) {
+    @override
+  (String, ConnectionSide, double)? _hitTestConnectionPoint(Offset worldPos) {
       final hitRadius = 10.0 / _scale;
       final gap = 8.0 / _scale;
       final spacing = 16.0 / _scale;
@@ -250,7 +256,8 @@ mixin CanvasInputHandlersMixin on _CanvasViewStateBase {
       return null;
     }
 
-    (Offset, int) _snapWaypointToConnection(String connId, Offset worldPos) {
+    @override
+  (Offset, int) _snapWaypointToConnection(String connId, Offset worldPos) {
       final canvasData = ref.read(canvasProvider);
       final conn = canvasData.connections
           .where((c) => c.id == connId)
@@ -316,7 +323,8 @@ mixin CanvasInputHandlersMixin on _CanvasViewStateBase {
       return (p - proj).distance;
     }
 
-    List<AlignmentGuide> _computeAlignmentGuides(
+    @override
+  List<AlignmentGuide> _computeAlignmentGuides(
       CanvasCard draggedCard,
       List<CanvasCard> allCards,
     ) {
@@ -412,7 +420,8 @@ mixin CanvasInputHandlersMixin on _CanvasViewStateBase {
       return guides;
     }
 
-    double? _getSnapOffset(CanvasCard draggedCard, List<CanvasCard> allCards) {
+    @override
+  double? _getSnapOffset(CanvasCard draggedCard, List<CanvasCard> allCards) {
       if (_altKeyPressed) return null;
       final threshold = _CanvasViewStateBase._alignmentThreshold;
       for (final other in allCards) {
@@ -432,7 +441,8 @@ mixin CanvasInputHandlersMixin on _CanvasViewStateBase {
       return null;
     }
 
-    double? _getSnapOffsetY(CanvasCard draggedCard, List<CanvasCard> allCards) {
+    @override
+  double? _getSnapOffsetY(CanvasCard draggedCard, List<CanvasCard> allCards) {
       if (_altKeyPressed) return null;
       final threshold = _CanvasViewStateBase._alignmentThreshold;
       for (final other in allCards) {

@@ -1,7 +1,8 @@
 part of '../canvas_painter.dart';
 
-mixin CanvasConnectionPainterMixin on _CanvasPainterBase {
-    void _drawGrid(Canvas canvas) {
+mixin _CanvasConnectionPainterMixin on _CanvasPainterBase {
+    @override
+  void _drawGrid(Canvas canvas) {
       final paint = Paint()
         ..color = dividerColor.withValues(alpha: 0.3)
         ..strokeWidth = 0.5;
@@ -22,7 +23,8 @@ mixin CanvasConnectionPainterMixin on _CanvasPainterBase {
       canvas.restore();
     }
 
-    void _drawGroups(Canvas canvas) {
+    @override
+  void _drawGroups(Canvas canvas) {
       for (final group in groups) {
         if (group.cardIds.isEmpty) continue;
         final groupCards = cards
@@ -87,18 +89,20 @@ mixin CanvasConnectionPainterMixin on _CanvasPainterBase {
       }
     }
 
-    void _drawDashedRRect(
+    @override
+  void _drawDashedRRect(
       Canvas canvas,
       RRect rrect,
       Paint paint,
-      double dash,
-      double gap,
+      double dashWidth,
+      double dashGap,
     ) {
       final path = Path()..addRRect(rrect);
-      _drawDashedPath(canvas, path, paint, dash, gap);
+      _drawDashedPath(canvas, path, paint, dashWidth, dashGap);
     }
 
-    void _drawConnections(Canvas canvas) {
+    @override
+  void _drawConnections(Canvas canvas) {
       final cardById = <String, CanvasCard>{};
       for (final c in cards) {
         cardById[c.id] = c;
@@ -376,7 +380,8 @@ mixin CanvasConnectionPainterMixin on _CanvasPainterBase {
       }
     }
 
-    Path _buildOrthogonalPath(
+    @override
+  Path _buildOrthogonalPath(
       Offset fp,
       Offset tp,
       ConnectionSide fromSide,
@@ -431,7 +436,8 @@ mixin CanvasConnectionPainterMixin on _CanvasPainterBase {
       return path;
     }
 
-    void _drawDashedPath(
+    @override
+  void _drawDashedPath(
       Canvas canvas,
       Path path,
       Paint paint,
@@ -458,7 +464,8 @@ mixin CanvasConnectionPainterMixin on _CanvasPainterBase {
       }
     }
 
-    void _drawArrowHead(
+    @override
+  void _drawArrowHead(
       Canvas canvas,
       Offset from,
       Offset to,

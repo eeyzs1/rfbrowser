@@ -1,7 +1,8 @@
 part of '../canvas_painter.dart';
 
-mixin CanvasCardPainterMixin on _CanvasPainterBase {
-    void _drawCards(Canvas canvas) {
+mixin _CanvasCardPainterMixin on _CanvasPainterBase {
+    @override
+  void _drawCards(Canvas canvas) {
       final clipRect = Rect.fromLTRB(-200, -200, viewW + 200, viewH + 200);
       final noteMap = <String, Note>{};
       for (final n in knowledgeState.notes) {
@@ -415,7 +416,8 @@ mixin CanvasCardPainterMixin on _CanvasPainterBase {
       }
     }
 
-    void _drawContainerCard(
+    @override
+  void _drawContainerCard(
       Canvas canvas,
       CanvasCard card,
       Rect clipRect,

@@ -1,6 +1,6 @@
 part of '../canvas_page.dart';
 
-mixin CanvasCanvasMgmtMixin on _CanvasViewStateBase {
+mixin _CanvasCanvasMgmtMixin on _CanvasViewStateBase {
     @override
     Widget _buildCanvasSwitcher(ThemeData theme) {
       final notifier = ref.read(canvasProvider.notifier);

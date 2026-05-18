@@ -1,11 +1,14 @@
-part of '../canvas_service.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+import '../../data/models/canvas_model.dart';
 
-mixin CanvasScratchpadMixin on _CanvasNotifierBase {
-  @override
-  Future<List<ScratchpadItem>> loadScratchpad() async {
+class CanvasScratchpadService {
+  const CanvasScratchpadService();
+
+  Future<List<ScratchpadItem>> loadScratchpad(String vaultPath) async {
     try {
-      final vaultPath = ref.read(vaultProvider).currentVault?.path;
-      if (vaultPath == null) return [];
       final file = File(p.join(vaultPath, '.rf', 'scratchpad.json'));
       if (!await file.exists()) return [];
       final json = jsonDecode(await file.readAsString()) as List;
@@ -17,25 +20,20 @@ mixin CanvasScratchpadMixin on _CanvasNotifierBase {
     }
   }
 
-  @override
-  Future<void> saveScratchpadItem(ScratchpadItem item) async {
-    final items = await loadScratchpad();
+  Future<void> saveScratchpadItem(String vaultPath, ScratchpadItem item) async {
+    final items = await loadScratchpad(vaultPath);
     items.add(item);
-    await _saveScratchpad(items);
+    await _saveScratchpad(vaultPath, items);
   }
 
-  @override
-  Future<void> removeScratchpadItem(String itemId) async {
-    final items = await loadScratchpad();
+  Future<void> removeScratchpadItem(String vaultPath, String itemId) async {
+    final items = await loadScratchpad(vaultPath);
     items.removeWhere((i) => i.id == itemId);
-    await _saveScratchpad(items);
+    await _saveScratchpad(vaultPath, items);
   }
 
-  @override
-  Future<void> _saveScratchpad(List<ScratchpadItem> items) async {
+  Future<void> _saveScratchpad(String vaultPath, List<ScratchpadItem> items) async {
     try {
-      final vaultPath = ref.read(vaultProvider).currentVault?.path;
-      if (vaultPath == null) return;
       final dir = Directory(p.join(vaultPath, '.rf'));
       if (!await dir.exists()) await dir.create(recursive: true);
       final file = File(p.join(dir.path, 'scratchpad.json'));
@@ -47,7 +45,6 @@ mixin CanvasScratchpadMixin on _CanvasNotifierBase {
     }
   }
 
-  @override
   CanvasCard createCardFromScratchpad(ScratchpadItem item, Offset pos) {
     return CanvasCard(
       id: 'card_${DateTime.now().millisecondsSinceEpoch}',
