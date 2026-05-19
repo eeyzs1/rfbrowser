@@ -10,6 +10,7 @@ import '../data/stores/hnsw_index.dart';
 import '../data/stores/index_store.dart';
 import '../data/models/note.dart';
 import 'tantivy_bridge_stub.dart' if (dart.library.ffi) 'tantivy_bridge.dart';
+import 'onnx_embedding_service.dart';
 
 typedef FtsSearchFn =
     Future<List<Map<String, dynamic>>> Function(String query, {int limit});
@@ -18,6 +19,7 @@ class EmbeddingService {
   final Dio _dio = DioFactory.instance;
   HnswIndex? _hnswIndex;
   VectorStore? _vectorStore;
+  OnnxEmbeddingService? _onnxService;
 
   HnswIndex get hnswIndex =>
       _hnswIndex ??= HnswIndex(M: 16, efConstruction: 200);
@@ -29,6 +31,13 @@ class EmbeddingService {
     _ollamaBaseUrl = url;
   }
 
+  Future<void> initOnnx() async {
+    _onnxService ??= OnnxEmbeddingService();
+    await _onnxService!.initialize();
+  }
+
+  OnnxEmbeddingService? get onnxService => _onnxService;
+
   Future<List<double>> embed(
     String text, {
     AIProvider? provider,
@@ -37,6 +46,13 @@ class EmbeddingService {
   }) async {
     if (provider != null && apiKey != null && modelId != null) {
       return _embedViaApi(text, provider, apiKey, modelId);
+    }
+    if (_onnxService != null && _onnxService!.isAvailable) {
+      try {
+        return await _onnxService!.embed(text);
+      } catch (e) {
+        debugPrint('ONNX embedding failed, falling back: $e');
+      }
     }
     return _embedViaOllama(text);
   }
