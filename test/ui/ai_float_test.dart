@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rfbrowser/l10n/app_localizations.dart';
+import 'package:rfbrowser/services/ai_service.dart';
 import 'package:rfbrowser/ui/widgets/ai_float.dart';
+
+class _TestAINotifier extends AINotifier {
+  @override
+  AIState build() => AIState();
+}
 
 void main() {
   group('AIFloat', () {
     testWidgets('E2-AC1: AI Float collapsed button is visible', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            aiProvider.overrideWith(() => _TestAINotifier()),
+          ],
           child: MaterialApp(
-            home: Scaffold(body: const Stack(children: [AIFloat()])),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: Stack(children: [AIFloat()])),
           ),
         ),
       );
@@ -23,8 +35,13 @@ void main() {
     ) async {
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            aiProvider.overrideWith(() => _TestAINotifier()),
+          ],
           child: MaterialApp(
-            home: Scaffold(body: const Stack(children: [AIFloat()])),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: Stack(children: [AIFloat()])),
           ),
         ),
       );
@@ -39,8 +56,13 @@ void main() {
     testWidgets('E2-AC4b: clicking close collapses AI Float', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            aiProvider.overrideWith(() => _TestAINotifier()),
+          ],
           child: MaterialApp(
-            home: Scaffold(body: const Stack(children: [AIFloat()])),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: Stack(children: [AIFloat()])),
           ),
         ),
       );
@@ -55,14 +77,19 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('AI Assistant'), findsNothing);
+      expect(find.byIcon(Icons.psychology), findsOneWidget);
     });
 
     testWidgets('E2-AC2b: expanded panel has close button', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            aiProvider.overrideWith(() => _TestAINotifier()),
+          ],
           child: MaterialApp(
-            home: Scaffold(body: const Stack(children: [AIFloat()])),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: Stack(children: [AIFloat()])),
           ),
         ),
       );

@@ -4,6 +4,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
+// ignore_for_file: avoid_print
+
 class AppConfigStore {
   static AppConfigStore? _instance;
   static AppConfigStore get instance => _instance ??= AppConfigStore._();
@@ -38,7 +40,9 @@ class AppConfigStore {
         return Map<String, dynamic>.from(
           jsonDecode(await file.readAsString()) as Map,
         );
-      } catch (_) {}
+      } catch (_) {
+        print('AppConfigStore: failed to read config file');
+      }
     }
     return {};
   }

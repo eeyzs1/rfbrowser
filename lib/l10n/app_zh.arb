@@ -914,5 +914,52 @@
   "clipButtonLabel": "剪藏页面",
   "clipSelectionLabel": "剪藏选区",
   "readingModeFontIncrease": "增大字体",
-  "readingModeFontDecrease": "减小字体"
+  "readingModeFontDecrease": "减小字体",
+  "extrazerodoBuiltin": "内置",
+  "extrazerodoInstall": "从目录安装...",
+  "extrazerodoDesc": "将插件文件夹放入 <vault>/.rfbrowser/plugins/ 可安装外部插件。",
+  "extrazerodoPermissions": "权限",
+  "extrazerodoCommandsN": "{count} 个命令",
+  "extrazerodoSkillsN": "{count} 个技能",
+  "extrazerodoAuthor": "作者",
+  "extrazerodoErrorOccurred": "此插件发生错误",
+  "extrazerodoInstallDialogTitle": "安装插件",
+  "extrazerodoInstallDialogDesc": "输入 Git 仓库地址来安装插件。",
+  "extrazerodoInstallUrlHint": "https://github.com/user/plugin-repo.git",
+  "extrazerodoInstallBtn": "安装",
+  "extrazerodoInstalling": "安装中...",
+  "extrazerodoInstalled": "插件 {name} 已安装。在插件列表中启用它。",
+  "@extrazerodoInstalled": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "extrazerodoNoVault": "请先打开知识库",
+  "extrazerodoSkillBuiltin": "内置",
+  "extrazerodoSkillPlugin": "插件: {name}",
+  "@extrazerodoSkillPlugin": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "extrazerodoSkillCustom": "自定义",
+  "extrazerodoReloadPlugins": "重新加载",
+  "extrazerodoMarketplace": "插件市场",
+  "extrazerodoMarketplaceTitle": "插件市场",
+  "extrazerodoMarketplaceDesc": "浏览和安装社区插件",
+  "extrazerodoHookNoteOpened": "note.opened",
+  "extrazerodoHookNoteSaved": "note.saved",
+  "extrazerodoAgentDefault": "执行默认智能体任务",
+  "vaultExplanation": "知识库是存储所有笔记和知识数据的文件夹。打开已有文件夹或创建新文件夹即可开始使用。",
+  "captureTooltip": "浏览网页、剪藏页面，用 AI 摘要采集灵感",
+  "thinkTooltip": "用 Markdown 编写和编辑笔记，查看反向链接与引用",
+  "connectTooltip": "可视化知识图谱，在无限画布上组织灵感",
+  "errorNetworkHint": "请检查网络连接后重试",
+  "errorRateLimitHint": "API 调用频率超限，请稍后重试",
+  "errorNoContentHint": "当前内容为空，请先打开网页或选择笔记",
+  "errorUnknownHint": "发生未知错误，请重试或更换内容",
+  "settingsCategoryGeneral": "通用",
+  "settingsCategoryAI": "AI 与自动化",
+  "settingsCategoryAdvanced": "高级",
+  "switchScene": "切换场景"
 }

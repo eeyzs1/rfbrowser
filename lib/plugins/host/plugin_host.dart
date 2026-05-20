@@ -1,10 +1,15 @@
 // ignore_for_file: avoid_print
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:isolate';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/note_repository.dart';
 import '../../data/stores/index_store.dart';
 import '../../services/browser_service.dart';
+import '../../services/agent_service.dart';
+import '../../data/models/agent_task.dart';
 
 enum Permission {
   knowledgeRead,
@@ -73,14 +78,30 @@ class PluginCommand {
   });
 }
 
+class PluginHook {
+  final String event;
+  final String handler;
+
+  PluginHook({required this.event, required this.handler});
+
+  factory PluginHook.fromMap(Map<String, dynamic> map) => PluginHook(
+    event: map['event'] as String? ?? '',
+    handler: map['handler'] as String? ?? '',
+  );
+
+  Map<String, dynamic> toMap() => {'event': event, 'handler': handler};
+}
+
 class PluginState {
   final Map<String, PluginManifest> manifests;
+  final Map<String, bool> enabled;
   final Map<String, bool> running;
   final Map<String, List<PluginCommand>> commands;
   final String? error;
 
   PluginState({
     this.manifests = const {},
+    this.enabled = const {},
     this.running = const {},
     this.commands = const {},
     this.error,
@@ -88,6 +109,7 @@ class PluginState {
 
   PluginState copyWith({
     Map<String, PluginManifest>? manifests,
+    Map<String, bool>? enabled,
     Map<String, bool>? running,
     Map<String, List<PluginCommand>>? commands,
     String? error,
@@ -95,6 +117,7 @@ class PluginState {
   }) {
     return PluginState(
       manifests: manifests ?? this.manifests,
+      enabled: enabled ?? this.enabled,
       running: running ?? this.running,
       commands: commands ?? this.commands,
       error: clearError ? null : (error ?? this.error),
@@ -462,11 +485,164 @@ class PermissionDeniedError implements Exception {
 
 class PluginHostNotifier extends Notifier<PluginState> {
   final Map<String, Sandbox> _sandboxes = {};
+  final Map<String, void Function(String event, Map<String, dynamic> data)>
+      _hookHandlers = {};
+  String? _vaultPath;
 
   @override
   PluginState build() => PluginState();
 
   Sandbox? getSandbox(String pluginId) => _sandboxes[pluginId];
+
+  String _configPath() {
+    final path = _vaultPath ?? ref.read(noteRepositoryProvider)?.vaultPath;
+    if (path == null) return '';
+    return '$path${Platform.pathSeparator}.rfbrowser${Platform.pathSeparator}plugin-config.json';
+  }
+
+  Future<void> loadConfig() async {
+    final configPath = _configPath();
+    if (configPath.isEmpty) return;
+    final file = File(configPath);
+    if (!await file.exists()) return;
+
+    try {
+      final content = await file.readAsString();
+      final data = jsonDecode(content) as Map<String, dynamic>;
+      final enabled = <String, bool>{};
+      for (final entry in data.entries) {
+        enabled[entry.key] = entry.value as bool;
+      }
+      state = state.copyWith(enabled: enabled);
+
+      for (final entry in enabled.entries) {
+        if (entry.value && state.manifests.containsKey(entry.key)) {
+          _startPluginSafely(entry.key);
+        }
+      }
+    } catch (e) {
+      debugPrint('PluginHost: failed to load plugin config: $e');
+    }
+  }
+
+  Future<void> _saveConfig() async {
+    final configPath = _configPath();
+    if (configPath.isEmpty) return;
+    final file = File(configPath);
+    final dir = file.parent;
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    try {
+      await file.writeAsString(jsonEncode(state.enabled));
+    } catch (e) {
+      debugPrint('PluginHost: failed to save plugin config: $e');
+    }
+  }
+
+  Future<void> registerManifest(PluginManifest manifest) async {
+    if (state.manifests.containsKey(manifest.id)) return;
+
+    state = state.copyWith(
+      manifests: {...state.manifests, manifest.id: manifest},
+    );
+  }
+
+  Future<void> setPluginEnabled(
+    String pluginId,
+    bool value, {
+    void Function(PluginManifest manifest, PluginHostNotifier host)?
+        onEnable,
+    void Function(PluginManifest manifest, PluginHostNotifier host)?
+        onDisable,
+  }) async {
+    final manifest = state.manifests[pluginId];
+    if (manifest == null) return;
+
+    final currentlyRunning = state.running[pluginId] == true;
+
+    if (value && !currentlyRunning) {
+      try {
+        await _startSandbox(manifest);
+        if (onEnable != null) onEnable(manifest, this);
+        state = state.copyWith(
+          enabled: {...state.enabled, pluginId: true},
+          running: {...state.running, pluginId: true},
+        );
+      } catch (e) {
+        state = state.copyWith(error: e.toString());
+        return;
+      }
+    } else if (!value && currentlyRunning) {
+      if (onDisable != null) onDisable(manifest, this);
+      await _stopSandbox(pluginId);
+      state = state.copyWith(
+        enabled: {...state.enabled, pluginId: false},
+        running: {...state.running}..remove(pluginId),
+      );
+    } else {
+      state = state.copyWith(
+        enabled: {...state.enabled, pluginId: value},
+      );
+    }
+
+    await _saveConfig();
+  }
+
+  Future<void> registerManifestAndEnable(
+    PluginManifest manifest, {
+    bool enabledByDefault = true,
+    void Function(PluginManifest manifest, PluginHostNotifier host)? onEnable,
+    void Function(PluginManifest manifest, PluginHostNotifier host)?
+        onDisable,
+  }) async {
+    await registerManifest(manifest);
+
+    final savedEnabled = state.enabled[manifest.id];
+    final shouldEnable = savedEnabled ?? enabledByDefault;
+
+    if (shouldEnable) {
+      await setPluginEnabled(
+        manifest.id,
+        true,
+        onEnable: onEnable,
+        onDisable: onDisable,
+      );
+    }
+  }
+
+  Future<void> _startSandbox(PluginManifest manifest) async {
+    final sandbox = Sandbox(
+      pluginId: manifest.id,
+      manifest: manifest,
+      apiHandler: _handleApiCall,
+    );
+    await sandbox.start();
+    _sandboxes[manifest.id] = sandbox;
+    sandbox.onError.listen((error) {
+      state = state.copyWith(error: error);
+    });
+  }
+
+  Future<void> _stopSandbox(String pluginId) async {
+    final sandbox = _sandboxes[pluginId];
+    if (sandbox != null) {
+      await sandbox.stop();
+      _sandboxes.remove(pluginId);
+    }
+  }
+
+  void _startPluginSafely(String pluginId) {
+    final manifest = state.manifests[pluginId];
+    if (manifest == null) return;
+    _startSandbox(manifest).then((_) {
+      state = state.copyWith(
+        running: {...state.running, pluginId: true},
+      );
+    }).catchError((e) {
+      state = state.copyWith(error: e.toString());
+    });
+  }
 
   Future<void> enablePlugin(PluginManifest manifest) async {
     final sandbox = Sandbox(
@@ -521,6 +697,29 @@ class PluginHostNotifier extends Notifier<PluginState> {
         return {'url': activeTab?.url ?? ''};
       case 'browser.extractText':
         return {'text': ''};
+      case 'agent.createTask':
+        final agent = ref.read(agentProvider.notifier);
+        final task = AgentTask(
+          id: 'plugin_${DateTime.now().millisecondsSinceEpoch}',
+          name: args['name'] as String? ?? 'Plugin Task',
+          description: args['description'] as String? ?? '',
+          steps: (args['steps'] as List?)
+                  ?.map((s) => AgentStep(description: s.toString()))
+                  .toList() ??
+              [],
+        );
+        await agent.executeTask(task);
+        return {'taskId': task.id, 'status': task.status.name};
+      case 'agent.getStatus':
+        final agent = ref.read(agentProvider.notifier);
+        final taskId = args['id'] as String? ?? '';
+        final task = agent.getTask(taskId);
+        if (task == null) return {'error': 'Task not found'};
+        return {
+          'id': task.id,
+          'status': task.status.name,
+          'result': task.result,
+        };
       default:
         throw UnimplementedError('Unknown API: $apiName');
     }
@@ -563,6 +762,28 @@ class PluginHostNotifier extends Notifier<PluginState> {
       args,
       requiredPermission: requiredPermission,
     );
+  }
+
+  void registerHookHandler(
+    String pluginId,
+    void Function(String event, Map<String, dynamic> data) handler,
+  ) {
+    _hookHandlers[pluginId] = handler;
+  }
+
+  void dispatchHook(String event, Map<String, dynamic> data) {
+    for (final pluginId in state.running.keys) {
+      final handler = _hookHandlers[pluginId];
+      if (handler != null) {
+        try {
+          handler(event, data);
+        } catch (e) {
+          debugPrint(
+            'PluginHost: hook $event for $pluginId failed: $e',
+          );
+        }
+      }
+    }
   }
 }
 

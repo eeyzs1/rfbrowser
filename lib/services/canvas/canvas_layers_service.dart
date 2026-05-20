@@ -1,3 +1,4 @@
+import 'package:uuid/uuid.dart';
 import '../../data/models/canvas_model.dart';
 
 class CanvasLayersService {
@@ -5,7 +6,7 @@ class CanvasLayersService {
 
   CanvasLayer createLayer(String name, int order) {
     return CanvasLayer(
-      id: 'layer_${DateTime.now().millisecondsSinceEpoch}',
+      id: 'layer_${const Uuid().v4()}',
       name: name,
       order: order,
     );

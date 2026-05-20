@@ -251,10 +251,10 @@ class _AiSummaryPanelState extends ConsumerState<_AiSummaryPanel> {
 
   String _errorRecoveryHint(AppLocalizations l) {
     return switch (_errorType) {
-      _ErrorType.network => '请检查网络连接后重试',
-      _ErrorType.rateLimit => 'API 调用频率超限，请稍后重试',
-      _ErrorType.noContent => '当前内容为空，请先打开网页或选择笔记',
-      _ErrorType.unknown => '发生未知错误，请重试或更换内容',
+      _ErrorType.network => l.errorNetworkHint,
+      _ErrorType.rateLimit => l.errorRateLimitHint,
+      _ErrorType.noContent => l.errorNoContentHint,
+      _ErrorType.unknown => l.errorUnknownHint,
     };
   }
 

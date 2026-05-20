@@ -914,5 +914,66 @@
   "clipButtonLabel": "Clip Page",
   "clipSelectionLabel": "Clip Selection",
   "readingModeFontIncrease": "Increase Font",
-  "readingModeFontDecrease": "Decrease Font"
+  "readingModeFontDecrease": "Decrease Font",
+  "extrazerodoBuiltin": "Builtin",
+  "extrazerodoInstall": "Install from directory...",
+  "extrazerodoDesc": "Place plugin folders in <vault>/.rfbrowser/plugins/ to install external plugins.",
+  "extrazerodoPermissions": "Permissions",
+  "extrazerodoCommandsN": "{count, plural, =0{No commands} =1{1 command} other{{count} commands}}",
+  "@extrazerodoCommandsN": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "extrazerodoSkillsN": "{count, plural, =0{No skills} =1{1 skill} other{{count} skills}}",
+  "@extrazerodoSkillsN": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "extrazerodoAuthor": "Author",
+  "extrazerodoErrorOccurred": "An error occurred with this plugin",
+  "extrazerodoInstallDialogTitle": "Install Plugin",
+  "extrazerodoInstallDialogDesc": "Enter a Git repository URL to install a plugin.",
+  "extrazerodoInstallUrlHint": "https://github.com/user/plugin-repo.git",
+  "extrazerodoInstallBtn": "Install",
+  "extrazerodoInstalling": "Installing...",
+  "extrazerodoInstalled": "Plugin {name} installed. Enable it in the plugin list.",
+  "@extrazerodoInstalled": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "extrazerodoNoVault": "Open a vault first",
+  "extrazerodoSkillBuiltin": "Builtin",
+  "extrazerodoSkillPlugin": "Plugin: {name}",
+  "@extrazerodoSkillPlugin": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "extrazerodoSkillCustom": "Custom",
+  "extrazerodoReloadPlugins": "Reload",
+  "extrazerodoMarketplace": "Marketplace",
+  "extrazerodoMarketplaceTitle": "Plugin Marketplace",
+  "extrazerodoMarketplaceDesc": "Browse and install community plugins",
+  "extrazerodoHookNoteOpened": "note.opened",
+  "extrazerodoHookNoteSaved": "note.saved",
+  "extrazerodoAgentDefault": "Run default agent task",
+  "vaultExplanation": "A vault is a folder that stores all your notes and knowledge data. Open an existing folder or create a new one to get started.",
+  "captureTooltip": "Browse the web, clip pages, and capture ideas with AI summaries",
+  "thinkTooltip": "Write and edit notes with Markdown, view backlinks and references",
+  "connectTooltip": "Visualize knowledge graph and organize ideas on infinite canvas",
+  "errorNetworkHint": "Check your network connection and try again",
+  "errorRateLimitHint": "API rate limit exceeded, please try again later",
+  "errorNoContentHint": "No content available, please open a webpage or select a note first",
+  "errorUnknownHint": "An unknown error occurred, please retry or try different content",
+  "settingsCategoryGeneral": "General",
+  "settingsCategoryAI": "AI & Automation",
+  "settingsCategoryAdvanced": "Advanced",
+  "switchScene": "Switch Scene"
 }

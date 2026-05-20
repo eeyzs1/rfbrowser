@@ -86,6 +86,7 @@ void main() {
 
         final indexStore = container.read(indexStoreProvider);
         await indexStore.indexNote(note);
+        addTearDown(() => indexStore.close());
 
         final host = container.read(pluginHostProvider.notifier);
         final result = await host._testHandleApiCall('knowledge.search', {

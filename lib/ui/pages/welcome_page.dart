@@ -46,6 +46,18 @@ class WelcomePage extends ConsumerWidget {
                     color: theme.hintColor,
                   ),
                 ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    l.vaultExplanation,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.hintColor.withValues(alpha: 0.8),
+                      height: 1.5,
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 36),
                 Row(
                   mainAxisSize: MainAxisSize.min,

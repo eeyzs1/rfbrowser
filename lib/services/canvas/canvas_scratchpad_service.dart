@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
+import 'package:uuid/uuid.dart';
 import '../../data/models/canvas_model.dart';
 
 class CanvasScratchpadService {
@@ -47,7 +48,7 @@ class CanvasScratchpadService {
 
   CanvasCard createCardFromScratchpad(ScratchpadItem item, Offset pos) {
     return CanvasCard(
-      id: 'card_${DateTime.now().millisecondsSinceEpoch}',
+      id: 'card_${const Uuid().v4()}',
       type: item.type,
       x: pos.dx,
       y: pos.dy,

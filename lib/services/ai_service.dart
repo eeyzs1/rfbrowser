@@ -72,20 +72,16 @@ class AINotifier extends Notifier<AIState> {
 
   @override
   AIState build() {
-    _syncActiveConfig();
-    return AIState();
-  }
-
-  void _syncActiveConfig() {
     final aiConfig = ref.read(aiConfigProvider);
     final config = aiConfig.activeConfig;
     if (config != null) {
       final provider = aiConfig.activeProvider;
       final model = aiConfig.activeModel;
       if (provider != null && model != null) {
-        state = state.copyWith(activeProvider: provider, activeModel: model);
+        return AIState(activeProvider: provider, activeModel: model);
       }
     }
+    return AIState();
   }
 
   void setActiveModel(AIProvider provider, AIModel model) {

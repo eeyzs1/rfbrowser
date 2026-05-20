@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rfbrowser/data/stores/vault_store.dart';
+import 'package:rfbrowser/l10n/app_localizations.dart';
 import 'package:rfbrowser/ui/layout/scene_scaffold.dart';
+
+class _TestVaultNotifier extends VaultNotifier {
+  @override
+  VaultState build() => VaultState();
+}
 
 void main() {
   group('SceneType', () {
@@ -15,13 +23,20 @@ void main() {
   group('SceneScaffold', () {
     testWidgets('renders scene content and switcher', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SceneScaffold(
-              initialScene: SceneType.capture,
-              captureView: (_) => const Text('Capture View'),
-              thinkView: (_) => const Text('Think View'),
-              connectView: (_) => const Text('Connect View'),
+        ProviderScope(
+          overrides: [
+            vaultProvider.overrideWith(() => _TestVaultNotifier()),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SceneScaffold(
+                initialScene: SceneType.capture,
+                captureView: (_) => const Text('Capture View'),
+                thinkView: (_) => const Text('Think View'),
+                connectView: (_) => const Text('Connect View'),
+              ),
             ),
           ),
         ),
@@ -34,13 +49,20 @@ void main() {
 
     testWidgets('scene icons are rendered', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SceneScaffold(
-              initialScene: SceneType.capture,
-              captureView: (_) => const SizedBox(),
-              thinkView: (_) => const SizedBox(),
-              connectView: (_) => const SizedBox(),
+        ProviderScope(
+          overrides: [
+            vaultProvider.overrideWith(() => _TestVaultNotifier()),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SceneScaffold(
+                initialScene: SceneType.capture,
+                captureView: (_) => const SizedBox(),
+                thinkView: (_) => const SizedBox(),
+                connectView: (_) => const SizedBox(),
+              ),
             ),
           ),
         ),

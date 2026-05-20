@@ -130,6 +130,12 @@ class ModelDiscovery {
     return models;
   }
 
+  @visibleForTesting
+  Set<ModelCapability> inferCapabilities(String modelId) => _inferCapabilities(modelId);
+
+  @visibleForTesting
+  String humanizeModelId(String id) => _humanizeModelId(id);
+
   Set<ModelCapability> _inferCapabilities(String modelId) {
     final id = modelId.toLowerCase();
     final visionKeywords = [

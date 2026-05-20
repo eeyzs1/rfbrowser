@@ -172,7 +172,9 @@ mixin _CanvasDialogsMixin on _CanvasViewStateBase {
                 for (final e in allConns) {
                   try {
                     ref.read(canvasProvider.notifier).removeConnection(e.conn.id);
-                  } catch (_) {}
+                  } catch (_) {
+                      debugPrint('Canvas: failed to remove connection');
+                    }
                 }
                 Navigator.pop(ctx);
               },

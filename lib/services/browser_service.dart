@@ -241,14 +241,15 @@ class BrowserNotifier extends Notifier<BrowserState> {
     state = state.copyWith(tabs: tabs);
   }
 
-  bool _wouldCreateCycle(String folderId, String parentId) {
+  bool _wouldCreateCycle(String folderId, String parentId, {List<BookmarkFolder>? folders}) {
     if (folderId == parentId) return true;
     var current = parentId;
     final visited = <String>{};
+    final bookmarkFolders = folders ?? state.bookmarkFolders;
     while (current.isNotEmpty) {
       if (current == folderId) return true;
       if (!visited.add(current)) return true;
-      final parent = state.bookmarkFolders
+      final parent = bookmarkFolders
           .where((f) => f.id == current)
           .firstOrNull;
       current = parent?.parentId ?? '';

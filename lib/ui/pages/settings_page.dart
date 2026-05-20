@@ -8,6 +8,7 @@ import 'settings/ai_settings_section.dart';
 import 'settings/editor_settings_section.dart';
 import 'settings/shortcut_settings_section.dart';
 import 'settings/sync_settings_section.dart';
+import 'settings/plugin_settings_section.dart';
 import 'settings/quick_moves_settings_section.dart';
 import 'settings/about_section.dart';
 
@@ -22,24 +23,66 @@ class SettingsPage extends ConsumerWidget {
       appBar: AppBar(title: Text(l.settings)),
       body: ListView(
         padding: const EdgeInsets.all(20),
-        children: const [
-          QuickMovesSettingsSection(),
-          SizedBox(height: 20),
-          ThemeSettingsSection(),
-          SizedBox(height: 20),
-          ComponentSettingsSection(),
-          SizedBox(height: 20),
-          LanguageSettingsSection(),
-          SizedBox(height: 20),
-          AISettingsSection(),
-          SizedBox(height: 20),
-          EditorSettingsSection(),
-          SizedBox(height: 20),
-          ShortcutSettingsSection(),
-          SizedBox(height: 20),
-          SyncSettingsSection(),
-          SizedBox(height: 20),
-          AboutSection(),
+        children: [
+          _CategoryHeader(title: l.settingsCategoryGeneral),
+          const SizedBox(height: 8),
+          const ThemeSettingsSection(),
+          const SizedBox(height: 16),
+          const ComponentSettingsSection(),
+          const SizedBox(height: 16),
+          const LanguageSettingsSection(),
+          const SizedBox(height: 16),
+          const EditorSettingsSection(),
+          const SizedBox(height: 16),
+          const QuickMovesSettingsSection(),
+          const SizedBox(height: 24),
+          _CategoryHeader(title: l.settingsCategoryAI),
+          const SizedBox(height: 8),
+          const AISettingsSection(),
+          const SizedBox(height: 16),
+          const ShortcutSettingsSection(),
+          const SizedBox(height: 24),
+          _CategoryHeader(title: l.settingsCategoryAdvanced),
+          const SizedBox(height: 8),
+          const SyncSettingsSection(),
+          const SizedBox(height: 16),
+          const PluginSettingsSection(),
+          const SizedBox(height: 16),
+          const AboutSection(),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryHeader extends StatelessWidget {
+  final String title;
+
+  const _CategoryHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 16,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(1.5),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );

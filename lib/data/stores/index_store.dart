@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,7 +14,40 @@ class IndexStore {
   Database? _db;
   Completer<Database>? _initCompleter;
 
+  static final _cjkPattern = RegExp(r'[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]');
+
   IndexStore(this._dbPath);
+
+  static String tokenizeForFts(String text) {
+    if (text.isEmpty) return text;
+    final buffer = StringBuffer();
+    var prevWasCjk = false;
+    String? prevCjkChar;
+    for (final rune in text.runes) {
+      final char = String.fromCharCode(rune);
+      final isCjk = _cjkPattern.hasMatch(char);
+      if (isCjk) {
+        if (buffer.isNotEmpty && buffer.toString().runes.last != 0x20) {
+          buffer.write(' ');
+        }
+        if (prevCjkChar != null) {
+          buffer.write('$prevCjkChar$char ');
+        }
+        buffer.write(char);
+        buffer.write(' ');
+        prevCjkChar = char;
+        prevWasCjk = true;
+      } else {
+        prevCjkChar = null;
+        if (prevWasCjk && char != ' ') {
+          buffer.write(' ');
+        }
+        buffer.write(char);
+        prevWasCjk = false;
+      }
+    }
+    return buffer.toString().replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
 
   Future<Database> get database async {
     if (_db != null) return _db!;
@@ -32,7 +66,7 @@ class IndexStore {
     }
     return openDatabase(
       _dbPath,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE notes (
@@ -48,7 +82,8 @@ class IndexStore {
         ''');
         await db.execute('''
           CREATE VIRTUAL TABLE notes_fts USING fts5(
-            id, title, content, tags
+            id UNINDEXED, title, content, tags,
+            tokenize=porter
           )
         ''');
         await db.execute('''
@@ -71,11 +106,12 @@ class IndexStore {
         ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
+        if (oldVersion < 3) {
           await db.execute('DROP TABLE IF EXISTS notes_fts');
           await db.execute('''
             CREATE VIRTUAL TABLE notes_fts USING fts5(
-              id, title, content, tags
+              id UNINDEXED, title, content, tags,
+              tokenize=porter
             )
           ''');
         }
@@ -96,9 +132,9 @@ class IndexStore {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     await db.insert('notes_fts', {
       'id': note.id,
-      'title': note.title,
-      'content': note.content,
-      'tags': note.tags.join(' '),
+      'title': tokenizeForFts(note.title),
+      'content': tokenizeForFts(note.content),
+      'tags': tokenizeForFts(note.tags.join(' ')),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     for (final tag in note.tags) {
       await db.rawInsert(
@@ -134,9 +170,9 @@ class IndexStore {
       }, conflictAlgorithm: ConflictAlgorithm.replace);
       await txn.insert('notes_fts', {
         'id': note.id,
-        'title': note.title,
-        'content': note.content,
-        'tags': note.tags.join(' '),
+        'title': tokenizeForFts(note.title),
+        'content': tokenizeForFts(note.content),
+        'tags': tokenizeForFts(note.tags.join(' ')),
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     });
   }
@@ -146,19 +182,23 @@ class IndexStore {
     int limit = 50,
   }) async {
     final db = await database;
-    final sanitized = query
-        .replaceAll(RegExp(r'[^\w\s\u4e00-\u9fff]'), ' ')
-        .trim();
-    if (sanitized.isEmpty) return [];
-    return db.rawQuery(
-      '''
-      SELECT * FROM notes_fts
-      WHERE notes_fts MATCH ?
-      ORDER BY rank
-      LIMIT ?
-    ''',
-      [sanitized, limit],
-    );
+    final tokenized = tokenizeForFts(query);
+    if (tokenized.isEmpty) return [];
+    try {
+      return await db.rawQuery(
+        '''
+        SELECT n.* FROM notes n
+        INNER JOIN notes_fts f ON f.id = n.id
+        WHERE notes_fts MATCH ?
+        ORDER BY rank
+        LIMIT ?
+      ''',
+        [tokenized, limit],
+      );
+    } catch (e) {
+      debugPrint('FTS search error for "$tokenized": $e');
+      return [];
+    }
   }
 
   Future<void> indexLink(Link link) async {
@@ -220,9 +260,9 @@ class IndexStore {
         }, conflictAlgorithm: ConflictAlgorithm.replace);
         batch.insert('notes_fts', {
           'id': note.id,
-          'title': note.title,
-          'content': note.content,
-          'tags': note.tags.join(' '),
+          'title': tokenizeForFts(note.title),
+          'content': tokenizeForFts(note.content),
+          'tags': tokenizeForFts(note.tags.join(' ')),
         }, conflictAlgorithm: ConflictAlgorithm.replace);
         for (final tag in note.tags) {
           batch.rawInsert(
@@ -244,13 +284,17 @@ class IndexStore {
 
 final indexStoreProvider = Provider<IndexStore>((ref) {
   final vaultState = ref.watch(vaultProvider);
+  IndexStore indexStore;
   if (vaultState.currentVault != null) {
     final dbPath = p.join(
       vaultState.currentVault!.path,
       '.rfbrowser',
       'index.db',
     );
-    return IndexStore(dbPath);
+    indexStore = IndexStore(dbPath);
+  } else {
+    indexStore = IndexStore(p.join('rfbrowser_default', 'index.db'));
   }
-  return IndexStore(p.join('rfbrowser_default', 'index.db'));
+  ref.onDispose(() => indexStore.close());
+  return indexStore;
 });

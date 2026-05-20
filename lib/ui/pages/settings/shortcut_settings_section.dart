@@ -5,12 +5,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../../services/shortcut_service.dart';
 import '../../widgets/settings_section.dart';
 
-final shortcutServiceProvider = Provider<ShortcutService>((ref) {
-  final service = ShortcutService();
-  service.load();
-  return service;
-});
-
 class ShortcutSettingsSection extends ConsumerStatefulWidget {
   const ShortcutSettingsSection({super.key});
 
@@ -33,6 +27,11 @@ class _ShortcutSettingsSectionState
     'toggle_browser',
     'toggle_graph',
     'toggle_canvas',
+    'switch_capture',
+    'switch_think',
+    'switch_connect',
+    'connect_canvas',
+    'connect_graph',
     'daily_note',
     'toggle_preview',
     'settings',
@@ -289,6 +288,11 @@ class _ShortcutSettingsSectionState
       'toggle_browser' => l.browser,
       'toggle_graph' => l.graph,
       'toggle_canvas' => l.canvas,
+      'switch_capture' => '${l.capture} (${l.switchScene})',
+      'switch_think' => '${l.think} (${l.switchScene})',
+      'switch_connect' => '${l.connect} (${l.switchScene})',
+      'connect_canvas' => '${l.canvas} (${l.connect})',
+      'connect_graph' => '${l.graph} (${l.connect})',
       'daily_note' => l.dailyNotes,
       'toggle_preview' => l.preview,
       'settings' => l.settings,

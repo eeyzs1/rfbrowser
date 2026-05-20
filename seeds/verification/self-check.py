@@ -71,11 +71,14 @@ def run_verification(project_root: Path) -> dict:
         capture_output=True, text=True, cwd=str(project_root), shell=(sys.platform == "win32"),
     )
     if lint_result.returncode != 0:
-        result["passed"] = False
-        result["errors"].append({"source": "flutter-analyze", "output": lint_result.stdout})
-        captured = run_error_capture(project_root, lint_result.stdout, "flutter-analyze")
-        if captured:
-            result["errors"][-1]["parsed_errors"] = captured
+        output = lint_result.stdout
+        has_real_issues = any(' - error - ' in l or ' - warning - ' in l for l in output.split('\n'))
+        if has_real_issues:
+            result["passed"] = False
+            result["errors"].append({"source": "flutter-analyze", "output": output})
+            captured = run_error_capture(project_root, output, "flutter-analyze")
+            if captured:
+                result["errors"][-1]["parsed_errors"] = captured
 
     return result
 

@@ -250,7 +250,9 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
           _canGoForward = canForward;
         });
       }
-    } catch (_) {}
+    } catch (_) {
+      debugPrint('BrowserPage: failed to check navigation state');
+    }
   }
 
   @override

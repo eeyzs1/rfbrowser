@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+// ignore_for_file: avoid_print
+
 class VaultConfig {
   final String path;
   final String name;
@@ -77,7 +79,9 @@ class VaultNotifier extends Notifier<VaultState> {
         return Map<String, dynamic>.from(
           jsonDecode(await file.readAsString()) as Map,
         );
-      } catch (_) {}
+      } catch (_) {
+        print('VaultStore: failed to read vaults.json');
+      }
     }
     return {};
   }
@@ -116,7 +120,9 @@ class VaultNotifier extends Notifier<VaultState> {
         currentVault = vaults.firstWhere(
           (v) => _normalizePath(v.path) == _normalizePath(currentVaultPath),
         );
-      } catch (_) {}
+      } catch (_) {
+        print('VaultStore: current vault not found in vault list');
+      }
     }
 
     state = state.copyWith(recentVaults: vaults, currentVault: currentVault);

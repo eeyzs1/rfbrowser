@@ -65,7 +65,9 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     final folders = <String>[];
     try {
       await _collectFolders(vaultPath, '', folders);
-    } catch (_) {}
+    } catch (_) {
+        debugPrint('NoteSidebar: failed to collect folders');
+      }
     if (mounted) {
       setState(() => _diskFolders = folders);
     }

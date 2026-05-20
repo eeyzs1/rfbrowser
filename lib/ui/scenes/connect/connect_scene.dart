@@ -4,6 +4,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../services/canvas_service.dart';
 import '../../../services/knowledge_service.dart';
 import '../../../services/settings_service.dart';
+import '../../../services/shortcut_service.dart';
 import '../../../data/models/canvas_model.dart';
 import '../../../data/models/note.dart';
 import '../../widgets/filter_panel.dart';
@@ -22,6 +23,7 @@ class ConnectScene extends ConsumerStatefulWidget {
   final bool rightPanelExpanded;
   final VoidCallback? onToggleLeftPanel;
   final VoidCallback? onToggleRightPanel;
+  final ConnectViewMode initialViewMode;
 
   const ConnectScene({
     super.key,
@@ -29,6 +31,7 @@ class ConnectScene extends ConsumerStatefulWidget {
     this.rightPanelExpanded = true,
     this.onToggleLeftPanel,
     this.onToggleRightPanel,
+    this.initialViewMode = ConnectViewMode.canvas,
   });
 
   @override
@@ -36,7 +39,21 @@ class ConnectScene extends ConsumerStatefulWidget {
 }
 
 class _ConnectSceneState extends ConsumerState<ConnectScene> {
-  ConnectViewMode _viewMode = ConnectViewMode.canvas;
+  late ConnectViewMode _viewMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewMode = widget.initialViewMode;
+  }
+
+  @override
+  void didUpdateWidget(ConnectScene oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialViewMode != oldWidget.initialViewMode) {
+      setState(() => _viewMode = widget.initialViewMode);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,8 +209,11 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
 
   Widget _buildViewModeSwitcher(ThemeData theme) {
     final l = AppLocalizations.of(context)!;
+    final shortcutService = ref.read(shortcutServiceProvider);
+    final canvasShortcut = shortcutService.getShortcut('connect_canvas') ?? 'Ctrl+4';
+    final graphShortcut = shortcutService.getShortcut('connect_graph') ?? 'Ctrl+5';
     return Container(
-      height: 32,
+      height: 36,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
@@ -205,8 +225,15 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
             ConnectViewMode.canvas,
             Icons.dashboard,
             l.canvas,
+            canvasShortcut,
           ),
-          _viewModeTab(theme, ConnectViewMode.graph, Icons.hub, l.graph),
+          _viewModeTab(
+            theme,
+            ConnectViewMode.graph,
+            Icons.hub,
+            l.graph,
+            graphShortcut,
+          ),
         ],
       ),
     );
@@ -217,42 +244,56 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
     ConnectViewMode mode,
     IconData icon,
     String label,
+    String shortcut,
   ) {
     final isActive = _viewMode == mode;
     return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _viewMode = mode),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: isActive
-                    ? theme.colorScheme.primary
-                    : Colors.transparent,
-                width: 2,
+      child: Tooltip(
+        message: '$label ($shortcut)',
+        waitDuration: const Duration(milliseconds: 600),
+        child: GestureDetector(
+          onTap: () => setState(() => _viewMode = mode),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: isActive
+                      ? theme.colorScheme.primary
+                      : Colors.transparent,
+                  width: 2,
+                ),
               ),
             ),
-          ),
-          child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 14,
-                  color: isActive ? theme.colorScheme.primary : theme.hintColor,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: isActive
-                        ? theme.colorScheme.primary
-                        : theme.hintColor,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 14,
+                    color: isActive ? theme.colorScheme.primary : theme.hintColor,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  Text(
+                    label,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isActive
+                          ? theme.colorScheme.primary
+                          : theme.hintColor,
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    shortcut,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: isActive
+                          ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

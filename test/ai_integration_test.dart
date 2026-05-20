@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+﻿// ignore_for_file: avoid_print
 
 import 'dart:convert';
 import 'dart:io' show Platform, HttpOverrides;
@@ -16,8 +16,7 @@ import 'package:rfbrowser/services/dio_factory.dart';
 
 const secureStorage = FlutterSecureStorage();
 
-class _RealHttpOverrides extends HttpOverrides {
-}
+class _RealHttpOverrides extends HttpOverrides {}
 
 class TestAIConfigNotifier extends AIConfigNotifier {
   final AIConfigState _state;
@@ -45,7 +44,7 @@ class TestConnectivityNotifier extends ConnectivityNotifier {
   set state(ConnectivityState newState) => super.state = newState;
 }
 
-Future<String> getBailianApiKey() async {
+Future<String?> tryGetBailianApiKey() async {
   String? apiKey;
 
   try {
@@ -60,36 +59,35 @@ Future<String> getBailianApiKey() async {
     apiKey = Platform.environment['DASHSCOPE_API_KEY'];
   }
 
-  if (apiKey == null || apiKey.isEmpty) {
-    fail(
-      '未找到百炼 API Key。请通过以下任一方式设置:\n'
-      '  1. 在 APP 设置中配置阿里百炼 (key: ai_key_bailian)\n'
-      '  2. 设置环境变量: \$env:BAILIAN_API_KEY = "sk-xxx"\n'
-      '  3. 设置环境变量: \$env:DASHSCOPE_API_KEY = "sk-xxx"',
-    );
-  }
-  return apiKey;
+  return (apiKey != null && apiKey.isNotEmpty) ? apiKey : null;
 }
+
+const _skipReason =
+    '未找到百炼 API Key，请设置环境变量 BAILIAN_API_KEY 或 DASHSCOPE_API_KEY';
+
+String? _cachedApiKey;
 
 void main() {
   HttpOverrides.global = _RealHttpOverrides();
 
   group('AI - 百炼 直接 API 测试', () {
-    test('1. 读取百炼 API Key', () async {
-      final apiKey = await getBailianApiKey();
-      expect(apiKey, isNotEmpty);
-      print('API Key 已找到 (长度: ${apiKey.length})');
+    setUpAll(() async {
+      _cachedApiKey = await tryGetBailianApiKey();
     });
 
+    test('1. 读取百炼 API Key', () async {
+      expect(_cachedApiKey, isNotEmpty);
+      print('API Key 已找到 (长度: ${_cachedApiKey!.length})');
+    }, skip: _cachedApiKey == null ? _skipReason : null);
+
     test('2. 发送简单消息并验证回复', () async {
-      final apiKey = await getBailianApiKey();
       final dio = DioFactory.instance;
 
       final response = await dio.post(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
         options: Options(headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
+          'Authorization': 'Bearer $_cachedApiKey',
         }),
         data: jsonEncode({
           'model': 'qwen-turbo',
@@ -105,17 +103,16 @@ void main() {
       final content = data['choices'][0]['message']['content'] as String;
       expect(content, isNotEmpty);
       print('百炼回复: $content');
-    });
+    }, skip: _cachedApiKey == null ? _skipReason : null);
 
     test('3. 中文对话上下文理解', () async {
-      final apiKey = await getBailianApiKey();
       final dio = DioFactory.instance;
 
       final response = await dio.post(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
         options: Options(headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
+          'Authorization': 'Bearer $_cachedApiKey',
         }),
         data: jsonEncode({
           'model': 'qwen-turbo',
@@ -136,10 +133,9 @@ void main() {
       expect(content, isNotEmpty);
       expect(content.length, greaterThan(20));
       print('推荐最佳实践:\n$content');
-    });
+    }, skip: _cachedApiKey == null ? _skipReason : null);
 
     test('4. 流式输出 (SSE)', () async {
-      final apiKey = await getBailianApiKey();
       final dio = DioFactory.instance;
 
       final response = await dio.post(
@@ -147,7 +143,7 @@ void main() {
         options: Options(
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer $apiKey',
+            'Authorization': 'Bearer $_cachedApiKey',
           },
           responseType: ResponseType.stream,
         ),
@@ -189,7 +185,7 @@ void main() {
       expect(fullContent, isNotEmpty);
       expect(chunkCount, greaterThan(0));
       print('流式输出 ($chunkCount chunks): $fullContent');
-    });
+    }, skip: _cachedApiKey == null ? _skipReason : null);
 
     test('5. AI 错误处理 - 无效 API Key', () async {
       final dio = DioFactory.instance;
@@ -202,7 +198,9 @@ void main() {
           }),
           data: jsonEncode({
             'model': 'qwen-turbo',
-            'messages': [{'role': 'user', 'content': 'Hello'}],
+            'messages': [
+              {'role': 'user', 'content': 'Hello'}
+            ],
           }),
         );
         fail('应该抛出异常');
@@ -213,14 +211,13 @@ void main() {
     });
 
     test('6. System Prompt 消息测试', () async {
-      final apiKey = await getBailianApiKey();
       final dio = DioFactory.instance;
 
       final response = await dio.post(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
         options: Options(headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
+          'Authorization': 'Bearer $_cachedApiKey',
         }),
         data: jsonEncode({
           'model': 'qwen-turbo',
@@ -244,17 +241,16 @@ void main() {
           response.data['choices'][0]['message']['content'] as String;
       expect(content, isNotEmpty);
       print('System Prompt 回复: $content');
-    });
+    }, skip: _cachedApiKey == null ? _skipReason : null);
 
     test('7. 长文本摘要', () async {
-      final apiKey = await getBailianApiKey();
       final dio = DioFactory.instance;
 
       final response = await dio.post(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
         options: Options(headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
+          'Authorization': 'Bearer $_cachedApiKey',
         }),
         data: jsonEncode({
           'model': 'qwen-turbo',
@@ -282,21 +278,22 @@ void main() {
           response.data['choices'][0]['message']['content'] as String;
       expect(content, isNotEmpty);
       print('摘要: $content');
-    });
+    }, skip: _cachedApiKey == null ? _skipReason : null);
 
     test('8. Token 用量统计', () async {
-      final apiKey = await getBailianApiKey();
       final dio = DioFactory.instance;
 
       final response = await dio.post(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
         options: Options(headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
+          'Authorization': 'Bearer $_cachedApiKey',
         }),
         data: jsonEncode({
           'model': 'qwen-turbo',
-          'messages': [{'role': 'user', 'content': 'Hi'}],
+          'messages': [
+            {'role': 'user', 'content': 'Hi'}
+          ],
           'max_tokens': 10,
         }),
       );
@@ -311,16 +308,15 @@ void main() {
             'total=${usage['total_tokens']}');
       }
       expect(data['choices'], isNotEmpty);
-    });
+    }, skip: _cachedApiKey == null ? _skipReason : null);
 
     test('9. 获取百炼可用模型列表', () async {
-      final apiKey = await getBailianApiKey();
       final dio = DioFactory.instance;
 
       final response = await dio.get(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/models',
         options: Options(headers: {
-          'Authorization': 'Bearer $apiKey',
+          'Authorization': 'Bearer $_cachedApiKey',
         }),
       );
 
@@ -333,33 +329,33 @@ void main() {
       for (final m in models.take(5)) {
         print('  - ${m['id']}');
       }
-    });
+    }, skip: _cachedApiKey == null ? _skipReason : null);
   });
 
   group('AI - AINotifier 集成测试', () {
     ProviderContainer? container;
     AINotifier? aiNotifier;
+    bool hasApiKey = false;
 
     setUpAll(() async {
       SharedPreferences.setMockInitialValues({});
+      final key = await tryGetBailianApiKey();
+      hasApiKey = key != null;
     });
 
     setUp(() async {
-      String? apiKey;
-      try {
-        apiKey = await secureStorage.read(key: 'ai_key_bailian');
-      } catch (_) {}
-      apiKey ??= Platform.environment['BAILIAN_API_KEY'] ??
-          Platform.environment['DASHSCOPE_API_KEY'];
+      if (!hasApiKey) return;
+
+      final apiKey = await tryGetBailianApiKey();
       if (apiKey == null) return;
 
       final bailianProvider = AIProvider(
-            id: 'bailian',
-            name: '阿里百炼',
-            protocol: ApiProtocol.openaiCompatible,
-            baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode',
-            apiKey: apiKey,
-          );
+        id: 'bailian',
+        name: '阿里百炼',
+        protocol: ApiProtocol.openaiCompatible,
+        baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode',
+        apiKey: apiKey,
+      );
       const bailianModel = AIModel(
         id: 'qwen-turbo',
         providerId: 'bailian',
@@ -393,12 +389,6 @@ void main() {
     });
 
     test('10. AINotifier.sendMessage 完整调用', () async {
-      final envKey = Platform.environment['BAILIAN_API_KEY'] ??
-          Platform.environment['DASHSCOPE_API_KEY'];
-      if (envKey == null) {
-        fail('请先完成 API Key 配置');
-      }
-
       expect(aiNotifier!.state.activeProvider?.id, 'bailian');
       expect(aiNotifier!.state.activeModel?.id, 'qwen-turbo');
 
@@ -419,33 +409,21 @@ void main() {
       expect(assistantMsg.content, isNotEmpty);
 
       print('AINotifier 回复: ${assistantMsg.content}');
-    });
+    }, skip: !hasApiKey ? _skipReason : null);
 
     test('11. sendMessage 后 clearMessages 正常工作', () async {
-      final envKey = Platform.environment['BAILIAN_API_KEY'] ??
-          Platform.environment['DASHSCOPE_API_KEY'];
-      if (envKey == null) {
-        fail('请先完成 API Key 配置');
-      }
-
       await aiNotifier!.sendMessage('1+1等于几？');
       expect(aiNotifier!.state.messages.length, greaterThanOrEqualTo(2));
 
       aiNotifier!.clearMessages();
       expect(aiNotifier!.state.messages, isEmpty);
-    });
+    }, skip: !hasApiKey ? _skipReason : null);
 
     test('12. sendMessage 当前 loading 时阻止重复发送', () async {
-      final envKey = Platform.environment['BAILIAN_API_KEY'] ??
-          Platform.environment['DASHSCOPE_API_KEY'];
-      if (envKey == null) {
-        fail('请先完成 API Key 配置');
-      }
-
       aiNotifier!.state = AIState(isLoading: true);
       final msgCountBefore = aiNotifier!.state.messages.length;
       await aiNotifier!.sendMessage('这个不应该发送');
       expect(aiNotifier!.state.messages.length, msgCountBefore);
-    });
+    }, skip: !hasApiKey ? _skipReason : null);
   });
 }

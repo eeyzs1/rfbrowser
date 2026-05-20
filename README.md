@@ -1,260 +1,328 @@
-# RFBrowser — AI-powered Knowledge Browser
+# RFBrowser — AI 驱动的知识浏览器
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.27+-blue?logo=flutter" alt="Flutter 3.27+"/>
-  <img src="https://img.shields.io/badge/Dart-3.11+-blue?logo=dart" alt="Dart 3.11+"/>
-  <img src="https://github.com/REPO_OWNER/rfbrowser/actions/workflows/ci.yml/badge.svg" alt="CI"/>
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License"/>
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-lightgrey" alt="Platforms"/>
-</p>
+<div align="center">
 
-> **Browse, Think, Connect, Automate.** A local-first, AI-augmented knowledge workbench — one app to bridge web research, note-taking, knowledge graphs, and AI automation.
+![Flutter](https://img.shields.io/badge/Flutter-3.27+-blue?logo=flutter)
+![Dart](https://img.shields.io/badge/Dart-3.11+-blue?logo=dart)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-lightgrey)
 
----
+</div>
 
-## What is RFBrowser?
-
-RFBrowser merges the **browser** with a **knowledge management system**. You can:
-
-- 🌐 **Browse the web** with multiple tabs (Chromium-based WebView)
-- ✍️ **Write notes** in pure Markdown with `[[wiki-links]]`
-- 🕸️ **Visualize connections** with an interactive knowledge graph
-- 🤖 **Chat with AI** while referencing your notes and web pages
-- 🎨 **Brainstorm freely** on an infinite canvas
-- ⚡ **Automate** repetitive tasks with AI Agents and Quick Moves
-- 🔄 **Sync across devices** via Git or WebDAV — no vendor lock-in
-
-**Think of it as: Obsidian + ChatGPT + a Web Browser + Canvas — all in one app.**
+> **浏览、思考、连接、自动化。** 一个本地优先、AI 增强的知识工作台——将网页研究、笔记记录、知识图谱和 AI 自动化融合在一个应用中。
 
 ---
 
-## Features
+## 什么是 RFBrowser？
 
-### Core Panels — Mix and Match
+RFBrowser 将**浏览器**与**知识管理系统**融合在一起。你可以：
 
-| Panel | What it does | Why you'd use it |
+- 🌐 **浏览网页**——多标签页 WebView（基于 Chromium 引擎）
+- ✍️ **撰写笔记**——纯 Markdown 编辑器，支持 `[[wiki-links]]`
+- 🕸️ **可视化连接**——交互式知识图谱
+- 🤖 **与 AI 对话**——在对话中引用你的笔记和网页内容
+- 🎨 **自由头脑风暴**——无限画布
+- ⚡ **自动化**——通过 AI Agent 和快捷指令自动执行重复任务
+- 🔄 **跨设备同步**——通过 Git 或 WebDAV 同步，无供应商锁定
+
+**可以理解为：Obsidian + ChatGPT + 网页浏览器 + 无限画布——全部在一个应用里。**
+
+> ⚠️ **注意**：目前仅在 **Windows** 平台上进行了充分测试。Linux 和 Android 平台已支持构建，但尚未经过完整测试，可能存在未知问题。
+
+---
+
+## 功能特性
+
+### 核心面板——自由组合
+
+| 面板 | 功能 | 使用场景 |
 |-------|-------------|------------------|
-| 🌐 **Browser** | Multi-tab WebView (Chromium engine) | Research articles, docs, anything on the web |
-| ✍️ **Editor** | Markdown editor with split preview + `[[links]]` | Write notes, daily journals, documentation |
-| 🕸️ **Graph** | Force-directed / circular layout of your links | Discover connections between your notes |
-| 🤖 **AI Chat** | Streaming chat with OpenAI-compatible APIs | Summarize, translate, brainstorm, code review |
-| 🎨 **Canvas** | Infinite space for cards and connections | Mind maps, project planning, visual thinking |
-| 📋 **Notes** | Note list sidebar with search | Navigate and organize your vault |
-| 🔗 **Links** | Backlinks / outlinks panel | See what references what |
+| 🌐 **浏览器** | 多标签页 WebView（Chromium 引擎） | 研究文章、文档、网页内容 |
+| ✍️ **编辑器** | Markdown 编辑器，支持分屏预览 + `[[链接]]` | 写笔记、日记、文档 |
+| 🕸️ **图谱** | 力导向 / 环形布局展示笔记链接关系 | 发现笔记之间的隐藏关联 |
+| 🤖 **AI 对话** | 流式对话，支持 OpenAI 兼容 API | 摘要、翻译、头脑风暴、代码审查 |
+| 🎨 **画布** | 无限空间，放置卡片和连线 | 思维导图、项目规划、可视化思考 |
+| 📋 **笔记列表** | 侧边栏笔记搜索与导航 | 浏览和组织你的知识库 |
+| 🔗 **反向链接** | 反向链接 / 外链面板 | 查看哪些笔记引用了当前笔记 |
 
-### Power Tools
+### 强力工具
 
-- 🔍 **Command Bar** (`Ctrl+K`): Search notes, run commands, trigger Quick Moves
-- ⚡ **Quick Moves**: Define custom slash-commands that send context (page content, selection, note) to AI
-- 🧠 **AI Agents**: Multi-step task automation with headless browser, step tracking, time limits
-- 📎 **Web Clipper**: Save full pages, selections, or bookmarks as notes in one click
-- 🔌 **Plugin System**: Built-in Dataview (SQL-like queries over notes), extensible via plugin API
-- 📅 **Daily Notes**: One-click daily journal entries
+- 🔍 **命令栏**（`Ctrl+K`）：搜索笔记、执行命令、触发快捷指令
+- ⚡ **快捷指令**：自定义斜杠命令，将上下文（页面内容、选中文字、笔记）发送给 AI
+- 🧠 **AI Agent**：多步骤任务自动化，支持无头浏览器、步骤追踪、时间限制
+- 📎 **网页剪藏**：一键将整页、选中内容或书签保存为笔记
+- 🔌 **插件系统**：通过 `BuiltinPlugin` 接口编写 Dart 插件，运行在独立沙箱中
+- 🎯 **Skill 技能**：用 YAML 文件定义 AI 提示词模板，零代码扩展 AI 能力
+- 📅 **日记**：一键创建每日日记
 
-### Sync & Portability
+### 扩展系统
 
-- 💾 **Local-first**: All notes stored as plain `.md` files in a folder you control (a *Vault*)
-- 🔄 **Git Sync**: Version history + push/pull with any Git remote
-- ☁️ **WebDAV Sync**: Auto-sync (configurable interval) to your own server
-- 🌍 **No Lock-in**: Compatible with Obsidian, Foam, VS Code — open any Vault folder
-- 🌐 **i18n**: English & Chinese UI, switchable at runtime
+RFBrowser 提供两套扩展机制，你可以根据需要选择：
 
-### Security
+#### Plugin 插件（代码级扩展）
 
-- API keys stored in platform-level secure storage (not in state objects)
-- WebView URL scheme filtering (`file://`, `javascript:`, `data://` blocked)
-- Path traversal protection
-- Destructive actions require confirmation
+插件可以扩展应用的核心功能——注册命令、渲染 UI 面板、调用知识库/浏览器/AI API。每个插件运行在独立 Dart Isolate 沙箱中，崩溃自动恢复。
 
----
+| 能力 | 说明 |
+|------|------|
+| **命令** | 注册可被命令栏（`Ctrl+K`）搜索到的命令 |
+| **UI 面板** | 渲染自定义窗口面板 |
+| **API 调用** | 通过沙箱调用知识库、浏览器、AI 服务 |
+| **Skill 声明** | 插件可以自带 Skill，供 AI Chat 使用 |
+| **权限** | 5 种权限（knowledge/read/write、browser、ai、ui），运行时检查 |
 
-## Screenshots
+> 内置示例：[HelloWorld 插件](lib/plugins/builtin/hello_world/hello_world_plugin.dart) 展示了完整的插件生命周期。
 
-<!-- Add your screenshots here! Suggested: -->
-<!-- - Main layout with Browser + Editor + AI Chat split -->
-<!-- - Knowledge Graph view -->
-<!-- - Infinite Canvas -->
-<!-- - Command Bar in action -->
-
-*(Screenshots coming soon — contributions welcome!)*
-
----
-
-## Quick Start (Users)
-
-### Download
-
-| Platform | Download |
-|----------|----------|
-| 🪟 **Windows** | [Latest Release](../../releases) → `rfbrowser-windows.zip` |
-| 🐧 **Linux** | [Latest Release](../../releases) → `rfbrowser-linux.tar.gz` |
-| 🤖 **Android** | [Latest Release](../../releases) → `rfbrowser-android.apk` |
-
-### First Launch
-
-1. **Open or Create a Vault** — Pick any folder on your computer (or create a new one). This is where your Markdown notes live.
-2. **Start browsing** — Open a web page in the Browser panel.
-3. **Clip content** — Right-click to save pages or selections as notes.
-4. **Link your notes** — Use `[[note-title]]` syntax. Links appear in the Graph automatically.
-5. **Chat with AI** — Configure an API key in Settings → AI, then send messages. The AI can see your notes and current page content via context references.
-
----
-
-## Development
-
-### Prerequisites
-
-- **Flutter SDK** `>= 3.27.0` ([install guide](https://flutter.dev/docs/get-started/install))
-- **Dart** `>= 3.11.0` (bundled with Flutter)
-- Platform-specific:
-  - **Windows**: Visual Studio 2022 with "Desktop development with C++"
-  - **Linux**: `clang`, `cmake`, `ninja`, `pkg-config`, `libgtk-3-dev`, `libsecret-1-dev`
-  - **Android**: Android Studio + Android SDK
-
-### Clone & Run
-
-```bash
-# Clone the repository
-git clone https://github.com/REPO_OWNER/rfbrowser.git
-cd rfbrowser
-
-# Install dependencies
-flutter pub get
-
-# Generate localization files
-flutter gen-l10n
-
-# Run on your platform
-flutter run -d windows    # Windows
-flutter run -d linux      # Linux
-flutter run -d android    # Android
+编写插件步骤：
+```dart
+// 1. 继承 BuiltinPlugin
+class MyPlugin extends BuiltinPlugin {
+  // 2. 声明 manifest（权限、元信息）
+  PluginManifest get manifest => PluginManifest(
+    id: 'my-plugin', name: 'My Plugin',
+    permissions: [Permission.knowledgeRead, Permission.uiPanel],
+  );
+  // 3. 注册命令
+  List<PluginCommand> get commands => [
+    PluginCommand(id: 'my.do', label: 'Do Something', pluginId: 'my-plugin'),
+  ];
+  // 4. 可选：声明 Skill 供 AI 使用
+  List<Skill> get skills => [
+    Skill(id: 'my.skill', name: 'My Skill', prompt: '...', pluginId: 'my-plugin'),
+  ];
+  // 5. 注册到 PluginRegistry
+}
+// 6. 在 PluginRegistry._builtinPlugins 中添加：MyPlugin(),
 ```
 
-### Project Structure
+#### Skill 技能（零代码扩展）
+
+Skill 是 AI 提示词模板——无需写代码，只需一个 YAML 文件即可为 AI Chat 添加新能力。创建的 Skill 会自动出现在 AI 对话面板的 Skill Picker 中。
+
+放置位置：`<你的知识库>/.rfbrowser/skills/<skill名称>.yaml`
+
+```yaml
+# 示例：创建一个翻译 Skill
+id: my-translate
+name: 翻译笔记
+description: 将当前笔记翻译为目标语言
+prompt: |
+  将以下笔记翻译成 {{target_language}}：
+  @note[current]
+```
+
+| Skill 来源 | 说明 |
+|------------|------|
+| **内置 Skills** | 7 个开箱即用（摘要、研究、大纲、标签等） |
+| **插件 Skills** | 插件自带，随插件自动加载 |
+| **自定义 Skills** | 放在 `.rfbrowser/skills/` 目录下的 YAML 文件 |
+
+---
+     
+### 同步与便携性
+
+- 💾 **本地优先**：所有笔记存储为纯 `.md` 文件，存放在你掌控的文件夹中（知识库/Vault）
+- 🔄 **Git 同步**：版本历史 + 推送到任意 Git 远程仓库
+- ☁️ **WebDAV 同步**：自动同步（可配置间隔）到你自己的服务器
+- 🌍 **无锁定**：兼容 Obsidian、Foam、VS Code——直接打开任意 Vault 文件夹
+- 🌐 **国际化**：支持中文和英文界面，运行时切换
+
+### 安全
+
+- API 密钥存储在平台级安全存储中（不在状态对象中）
+- WebView URL 协议过滤（拦截 `file://`、`javascript:`、`data://`）
+- 路径遍历防护
+- 破坏性操作需要二次确认
+
+---
+
+## 截图
+
+<!-- 在此添加截图！建议截图内容： -->
+<!-- - 浏览器 + 编辑器 + AI 对话的分屏主界面 -->
+<!-- - 知识图谱视图 -->
+<!-- - 无限画布 -->
+<!-- - 命令栏使用演示 -->
+
+*(截图即将添加——欢迎贡献！)*
+
+---
+
+## 快速开始（用户）
+
+### 下载
+
+| 平台 | 下载 | 测试状态 |
+|----------|----------|----------|
+| 🪟 **Windows** | [Latest Release](../../releases) → `rfbrowser-windows.zip` | ✅ 已测试 |
+| 🐧 **Linux** | [Latest Release](../../releases) → `rfbrowser-linux.tar.gz` | ⚠️ 未充分测试 |
+| 🤖 **Android** | [Latest Release](../../releases) → `rfbrowser-android.apk` | ⚠️ 未充分测试 |
+
+### 首次启动
+
+1. **打开或创建知识库**——选择电脑上的任意文件夹（或新建一个）。你的 Markdown 笔记将存放在这里。
+2. **开始浏览**——在浏览器面板中打开网页。
+3. **剪藏内容**——右键保存页面或选中内容为笔记。
+4. **链接笔记**——使用 `[[笔记标题]]` 语法。链接会自动出现在知识图谱中。
+5. **与 AI 对话**——在 设置 → AI 中配置 API 密钥，然后发送消息。AI 可以通过上下文引用看到你的笔记和当前网页内容。
+
+---
+
+## 开发
+
+### 环境要求
+
+- **Flutter SDK** `>= 3.27.0`（[安装指南](https://flutter.dev/docs/get-started/install)）
+- **Dart** `>= 3.11.0`（Flutter 自带）
+- 平台相关：
+  - **Windows**：Visual Studio 2022，勾选"使用 C++ 的桌面开发"
+  - **Linux**：`clang`、`cmake`、`ninja`、`pkg-config`、`libgtk-3-dev`、`libsecret-1-dev`
+  - **Android**：Android Studio + Android SDK
+
+### 克隆并运行
+
+```bash
+# 克隆仓库
+git clone https://github.com/YOUR_USERNAME/rfbrowser.git
+cd rfbrowser
+
+# 安装依赖
+flutter pub get
+
+# 生成本地化文件
+flutter gen-l10n
+
+# 在对应平台上运行
+flutter run -d windows    # Windows（推荐，已充分测试）
+flutter run -d linux      # Linux（未充分测试）
+flutter run -d android    # Android（未充分测试）
+```
+
+### 项目结构
 
 ```
 rfbrowser/
 ├── lib/
-│   ├── main.dart                    # App entry point
-│   ├── app.dart                     # MaterialApp + theme + vault init
-│   ├── core/                        # Pure Dart engines (no Flutter dependency)
-│   │   ├── context/                 #   Context assembly for AI prompts
-│   │   ├── editor/                  #   Markdown highlighter, sync scroll
-│   │   ├── graph/                   #   Force-directed layout, filters
-│   │   ├── link/                    #   Wiki-link extractor, resolver
-│   │   └── model/                   #   AI model/router configuration
-│   ├── data/                        # Data layer (models, repos, stores)
-│   │   ├── models/                  #   Note, Link, AgentTask, Skill, etc.
-│   │   ├── repositories/            #   Note persistence (Markdown ↔ DB)
-│   │   └── stores/                  #   Index, cache, sync state
-│   ├── services/                    # Business logic services
-│   │   ├── ai_service.dart          #   Chat messages, streaming, providers
-│   │   ├── agent_service.dart       #   Multi-step agent execution
-│   │   ├── browser_service.dart     #   Tab management, WebView state
-│   │   ├── knowledge_service.dart   #   Notes CRUD, linking, indexing
-│   │   ├── git_sync_service.dart    #   Git push/pull/init
-│   │   └── webdav_sync_service.dart #   WebDAV upload/download
-│   ├── ui/                          # Presentation layer
-│   │   ├── layout/main_layout.dart  #   Split pane, panels, shortcuts
-│   │   ├── pages/                   #   Browser, Editor, Graph, Canvas, Settings
-│   │   └── widgets/                 #   CommandBar, Backlinks, NoteSidebar, etc.
-│   ├── plugins/                     # Plugin system
-│   ├── platform/                    # WebView managers (inline + headless)
-│   └── l10n/                        # English & Chinese ARB files
-├── test/                            # Unit & widget tests
-├── docs/                            # Architecture & design docs
+│   ├── main.dart                    # 应用入口
+│   ├── app.dart                     # MaterialApp + 主题 + Vault 初始化
+│   ├── core/                        # 纯 Dart 引擎（不依赖 Flutter）
+│   │   ├── context/                 #   AI 提示词上下文组装
+│   │   ├── editor/                  #   Markdown 高亮、同步滚动
+│   │   ├── graph/                   #   力导向布局、过滤器
+│   │   ├── link/                    #   Wiki 链接提取器、解析器
+│   │   └── model/                   #   AI 模型/路由配置
+│   ├── data/                        # 数据层（模型、仓库、存储）
+│   │   ├── models/                  #   Note, Link, AgentTask, Skill 等
+│   │   ├── repositories/            #   笔记持久化（Markdown ↔ 数据库）
+│   │   └── stores/                  #   索引、缓存、同步状态
+│   ├── services/                    # 业务逻辑服务
+│   │   ├── ai_service.dart          #   对话消息、流式传输、AI 提供商
+│   │   ├── agent_service.dart       #   多步骤 Agent 执行
+│   │   ├── browser_service.dart     #   标签页管理、WebView 状态
+│   │   ├── knowledge_service.dart   #   笔记 CRUD、链接、索引
+│   │   ├── git_sync_service.dart    #   Git 推送/拉取/初始化
+│   │   └── webdav_sync_service.dart #   WebDAV 上传/下载
+│   ├── ui/                          # 表现层
+│   │   ├── layout/main_layout.dart  #   分屏面板、快捷键
+│   │   ├── pages/                   #   浏览器、编辑器、图谱、画布、设置
+│   │   └── widgets/                 #   命令栏、反向链接、笔记侧边栏等
+│   ├── plugins/                     # 插件系统
+│   ├── platform/                    # WebView 管理器（内联 + 无头）
+│   └── l10n/                        # 中英文 ARB 文件
+├── test/                            # 单元测试和组件测试
+├── docs/                            # 架构与设计文档
 ├── .github/
-│   ├── workflows/ci.yml             # CI/CD pipeline (analyze, test, build)
-│   └── ISSUE_TEMPLATE/              # Bug report & feature request templates
+│   ├── workflows/ci.yml             # CI/CD 流水线（分析、测试、构建）
+│   └── ISSUE_TEMPLATE/              # Bug 报告和功能请求模板
 └── pubspec.yaml
 ```
 
-For a deeper architecture dive, see [`docs/design/02-architecture.md`](docs/design/02-architecture.md).
+更深入的架构说明请参阅 [`docs/design/02-architecture.md`](docs/design/02-architecture.md)。
 
-### Common Commands
+### 常用命令
 
 ```bash
-# Code generation (Riverpod providers)
+# 代码生成（Riverpod providers）
 dart run build_runner build
 
-# Run all tests
+# 运行所有测试
 flutter test
 
-# Run tests with coverage
+# 运行测试并生成覆盖率报告
 flutter test --coverage
 
-# Code formatting
+# 代码格式化
 dart format lib/ test/
 
-# Static analysis
+# 静态分析
 flutter analyze
 ```
 
 ---
 
-## Tech Stack
+## 技术栈
 
-| Layer | Technology | Purpose |
+| 层级 | 技术 | 用途 |
 |-------|-----------|---------|
-| **Framework** | Flutter 3.x | Cross-platform UI |
-| **Language** | Dart 3.x | Application logic |
-| **WebView** | `flutter_inappwebview` | Embedded Chromium browser |
-| **Markdown** | `markdown` + `flutter_markdown` | Parsing & rendering |
-| **Database** | SQLite (`sqflite`) | Full-text search & link index |
-| **Cache** | Hive | Local key-value cache |
-| **HTTP** | Dio | REST API calls to AI providers |
-| **State Mgmt** | Riverpod | Reactive state with code-gen |
-| **Routing** | go_router | Declarative navigation |
-| **Sync** | Git CLI + WebDAV (Dio) | Multi-device sync |
-| **Secure Store** | `flutter_secure_storage` | API key encryption |
-| **Graph** | CustomPainter + Canvas | Force-directed graph rendering |
+| **框架** | Flutter 3.x | 跨平台 UI |
+| **语言** | Dart 3.x | 应用逻辑 |
+| **WebView** | `flutter_inappwebview` | 嵌入式 Chromium 浏览器 |
+| **Markdown** | `markdown` + `flutter_markdown` | 解析与渲染 |
+| **数据库** | SQLite (`sqflite`) | 全文搜索与链接索引 |
+| **缓存** | Hive | 本地键值缓存 |
+| **HTTP** | Dio | 调用 AI 提供商的 REST API |
+| **状态管理** | Riverpod | 响应式状态 + 代码生成 |
+| **路由** | go_router | 声明式导航 |
+| **同步** | Git CLI + WebDAV (Dio) | 多设备同步 |
+| **安全存储** | `flutter_secure_storage` | API 密钥加密 |
+| **图谱** | CustomPainter + Canvas | 力导向图渲染 |
 
-### AI Providers Supported
+### 支持的 AI 提供商
 
-Any OpenAI-compatible API — including:
-- OpenAI (GPT-4o, GPT-4, etc.)
-- Anthropic (Claude via compatible proxy)
-- Google Gemini (via compatible endpoint)
-- Ollama (local models)
-- LM Studio, LocalAI, vLLM, etc.
-
----
-
-## Contributing
-
-We welcome contributions of all kinds! Here's how to get started:
-
-1. **Read** [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines
-2. **Find an issue** — Look for [`good first issue`](../../labels/good%20first%20issue) labels
-3. **Fork & branch** — Create a feature branch off `main`
-4. **Code & test** — Ensure `flutter test` and `flutter analyze` pass
-5. **Open a PR** — Describe your changes and link any relevant issues
-
-### Good places to start contributing
-
-- 🖼️ **Screenshots** — Take some screenshots and add them to the README
-- 📝 **Documentation** — Improve docs, add code comments
-- 🧪 **Tests** — Increase test coverage on untested modules
-- 🎨 **UI Polish** — Fix minor visual inconsistencies
-- 🐛 **Bug fixes** — Check the [issues page](../../issues)
+任何兼容 OpenAI API 的服务——包括：
+- OpenAI（GPT-4o、GPT-4 等）
+- Anthropic（通过兼容代理使用 Claude）
+- Google Gemini（通过兼容端点）
+- Ollama（本地模型）
+- LM Studio、LocalAI、vLLM 等
 
 ---
 
-## Community
+## 参与贡献
 
-- 📖 [Architecture Docs](docs/design/)
-- 🐛 [Report a Bug](https://github.com/REPO_OWNER/rfbrowser/issues/new?template=bug_report.md)
-- 💡 [Request a Feature](https://github.com/REPO_OWNER/rfbrowser/issues/new?template=feature_request.md)
-- 💬 Discussions — Coming soon!
+欢迎各种形式的贡献！参与方式：
+
+1. **阅读** [`CONTRIBUTING.md`](CONTRIBUTING.md) 了解贡献指南
+2. **找到 Issue**——寻找标记为 `good first issue` 的问题
+3. **Fork 并创建分支**——从 `main` 创建功能分支
+4. **编码并测试**——确保 `flutter test` 和 `flutter analyze` 通过
+5. **提交 PR**——描述你的改动并关联相关 Issue
+
+### 适合开始贡献的方向
+
+- 🖼️ **截图**——截取应用截图并添加到 README
+- 📝 **文档**——改进文档，添加代码注释
+- 🧪 **测试**——提高未测试模块的覆盖率
+- 🎨 **UI 打磨**——修复细微的视觉不一致
+- 🐛 **Bug 修复**——查看 Issues 页面
 
 ---
 
-## License
+## 社区
+
+- 📖 [架构文档](docs/design/)
+- 🐛 [报告 Bug](../../issues/new?template=bug_report.md)
+- 💡 [请求功能](../../issues/new?template=feature_request.md)
+- 💬 讨论区——即将上线！
+
+---
+
+## 许可证
 
 [MIT](LICENSE) © 2024-2026 RFBrowser Contributors
 
 ---
 
 <p align="center">
-  <sub>Built with Flutter. Data stays local. Knowledge grows with you.</sub>
+  <sub>基于 Flutter 构建。数据留在本地。知识随你成长。</sub>
 </p>

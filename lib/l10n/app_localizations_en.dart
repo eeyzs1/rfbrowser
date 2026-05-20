@@ -2195,4 +2195,148 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readingModeFontDecrease => 'Decrease Font';
+
+  @override
+  String get extrazerodoBuiltin => 'Builtin';
+
+  @override
+  String get extrazerodoInstall => 'Install from directory...';
+
+  @override
+  String get extrazerodoDesc =>
+      'Place plugin folders in <vault>/.rfbrowser/plugins/ to install external plugins.';
+
+  @override
+  String get extrazerodoPermissions => 'Permissions';
+
+  @override
+  String extrazerodoCommandsN(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count commands',
+      one: '1 command',
+      zero: 'No commands',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String extrazerodoSkillsN(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skills',
+      one: '1 skill',
+      zero: 'No skills',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get extrazerodoAuthor => 'Author';
+
+  @override
+  String get extrazerodoErrorOccurred => 'An error occurred with this plugin';
+
+  @override
+  String get extrazerodoInstallDialogTitle => 'Install Plugin';
+
+  @override
+  String get extrazerodoInstallDialogDesc =>
+      'Enter a Git repository URL to install a plugin.';
+
+  @override
+  String get extrazerodoInstallUrlHint =>
+      'https://github.com/user/plugin-repo.git';
+
+  @override
+  String get extrazerodoInstallBtn => 'Install';
+
+  @override
+  String get extrazerodoInstalling => 'Installing...';
+
+  @override
+  String extrazerodoInstalled(String name) {
+    return 'Plugin $name installed. Enable it in the plugin list.';
+  }
+
+  @override
+  String get extrazerodoNoVault => 'Open a vault first';
+
+  @override
+  String get extrazerodoSkillBuiltin => 'Builtin';
+
+  @override
+  String extrazerodoSkillPlugin(String name) {
+    return 'Plugin: $name';
+  }
+
+  @override
+  String get extrazerodoSkillCustom => 'Custom';
+
+  @override
+  String get extrazerodoReloadPlugins => 'Reload';
+
+  @override
+  String get extrazerodoMarketplace => 'Marketplace';
+
+  @override
+  String get extrazerodoMarketplaceTitle => 'Plugin Marketplace';
+
+  @override
+  String get extrazerodoMarketplaceDesc =>
+      'Browse and install community plugins';
+
+  @override
+  String get extrazerodoHookNoteOpened => 'note.opened';
+
+  @override
+  String get extrazerodoHookNoteSaved => 'note.saved';
+
+  @override
+  String get extrazerodoAgentDefault => 'Run default agent task';
+
+  @override
+  String get vaultExplanation =>
+      'A vault is a folder that stores all your notes and knowledge data. Open an existing folder or create a new one to get started.';
+
+  @override
+  String get captureTooltip =>
+      'Browse the web, clip pages, and capture ideas with AI summaries';
+
+  @override
+  String get thinkTooltip =>
+      'Write and edit notes with Markdown, view backlinks and references';
+
+  @override
+  String get connectTooltip =>
+      'Visualize knowledge graph and organize ideas on infinite canvas';
+
+  @override
+  String get errorNetworkHint => 'Check your network connection and try again';
+
+  @override
+  String get errorRateLimitHint =>
+      'API rate limit exceeded, please try again later';
+
+  @override
+  String get errorNoContentHint =>
+      'No content available, please open a webpage or select a note first';
+
+  @override
+  String get errorUnknownHint =>
+      'An unknown error occurred, please retry or try different content';
+
+  @override
+  String get settingsCategoryGeneral => 'General';
+
+  @override
+  String get settingsCategoryAI => 'AI & Automation';
+
+  @override
+  String get settingsCategoryAdvanced => 'Advanced';
+
+  @override
+  String get switchScene => 'Switch Scene';
 }

@@ -1,11 +1,21 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:rfbrowser/data/models/agent_task.dart';
+import 'package:rfbrowser/data/stores/vault_store.dart';
 import 'package:rfbrowser/data/repositories/note_repository.dart';
 import 'package:rfbrowser/services/agent_service.dart';
 import 'package:rfbrowser/services/knowledge_service.dart';
+
+class TestVaultNotifier extends VaultNotifier {
+  final VaultState _state;
+  TestVaultNotifier(this._state);
+
+  @override
+  VaultState build() => _state;
+}
 
 void main() {
   setUpAll(() {
@@ -18,21 +28,35 @@ void main() {
       'AC-IMP-2-1: Create note step actually creates note via KnowledgeNotifier',
       () async {
         final tempDir = Directory.systemTemp.createTempSync('rfb_ai_');
-        addTearDown(() => tempDir.deleteSync(recursive: true));
+        addTearDown(() {
+          try { tempDir.deleteSync(recursive: true); } catch (_) {}
+        });
 
-        final repo = NoteRepository(tempDir.path);
-        final container = ProviderContainer(
-          overrides: [noteRepositoryProvider.overrideWith((ref) => repo)],
+        final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+        if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+
+        final vaultState = VaultState(
+          currentVault: VaultConfig(
+            path: tempDir.path,
+            name: 'test',
+            lastOpened: DateTime.now(),
+          ),
         );
+        final container = ProviderContainer(overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ]);
         addTearDown(container.dispose);
+
+        container.read(knowledgeProvider);
+        await Future.delayed(const Duration(milliseconds: 150));
 
         final kn = container.read(knowledgeProvider.notifier);
         final note = await kn.createNote(title: '量子研究笔记');
 
         expect(note.title, '量子研究笔记');
 
-        // Verify note exists on disk via repo
-        final onDisk = await repo.getNoteByPath(note.filePath);
+        final repo = container.read(noteRepositoryProvider);
+        final onDisk = await repo?.getNoteByPath(note.filePath);
         expect(onDisk, isNotNull);
         expect(onDisk!.title, '量子研究笔记');
       },
@@ -42,13 +66,27 @@ void main() {
       'AC-IMP-2-2: Note content can be updated and saved via saveActiveNote',
       () async {
         final tempDir = Directory.systemTemp.createTempSync('rfb_ai_');
-        addTearDown(() => tempDir.deleteSync(recursive: true));
+        addTearDown(() {
+          try { tempDir.deleteSync(recursive: true); } catch (_) {}
+        });
 
-        final repo = NoteRepository(tempDir.path);
-        final container = ProviderContainer(
-          overrides: [noteRepositoryProvider.overrideWith((ref) => repo)],
+        final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+        if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+
+        final vaultState = VaultState(
+          currentVault: VaultConfig(
+            path: tempDir.path,
+            name: 'test',
+            lastOpened: DateTime.now(),
+          ),
         );
+        final container = ProviderContainer(overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ]);
         addTearDown(container.dispose);
+
+        container.read(knowledgeProvider);
+        await Future.delayed(const Duration(milliseconds: 150));
 
         final kn = container.read(knowledgeProvider.notifier);
         final note = await kn.createNote(title: '带上下文的笔记');
@@ -56,7 +94,8 @@ void main() {
         kn.updateActiveNoteContent('# 带上下文的笔记\n\n## Context\n\nStep 1 result');
         await kn.saveActiveNote();
 
-        final onDisk = await repo.getNoteByPath(note.filePath);
+        final repo = container.read(noteRepositoryProvider);
+        final onDisk = await repo?.getNoteByPath(note.filePath);
         expect(onDisk, isNotNull);
         expect(onDisk!.content, contains('## Context'));
         expect(onDisk.content, contains('Step 1 result'));
@@ -67,33 +106,62 @@ void main() {
       'AC-IMP-2-3: Create note then search it via repo (knowledge state update)',
       () async {
         final tempDir = Directory.systemTemp.createTempSync('rfb_ai_');
-        addTearDown(() => tempDir.deleteSync(recursive: true));
+        addTearDown(() {
+          try { tempDir.deleteSync(recursive: true); } catch (_) {}
+        });
 
-        final repo = NoteRepository(tempDir.path);
-        final container = ProviderContainer(
-          overrides: [noteRepositoryProvider.overrideWith((ref) => repo)],
+        final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+        if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+
+        final vaultState = VaultState(
+          currentVault: VaultConfig(
+            path: tempDir.path,
+            name: 'test',
+            lastOpened: DateTime.now(),
+          ),
         );
+        final container = ProviderContainer(overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ]);
         addTearDown(container.dispose);
 
-        final allBefore = (await repo.getAllNotes()).length;
+        container.read(knowledgeProvider);
+        await Future.delayed(const Duration(milliseconds: 150));
+
+        final repo = container.read(noteRepositoryProvider);
+        final allBefore = (await repo?.getAllNotes() ?? []).length;
 
         final kn = container.read(knowledgeProvider.notifier);
         await kn.createNote(title: '新增笔记');
 
-        final allAfter = (await repo.getAllNotes()).length;
+        final allAfter = (await repo?.getAllNotes() ?? []).length;
         expect(allAfter, allBefore + 1);
       },
     );
 
     test('Agent._executeStep Create note: via ProviderContainer', () async {
       final tempDir = Directory.systemTemp.createTempSync('rfb_ai_');
-      addTearDown(() => tempDir.deleteSync(recursive: true));
+      addTearDown(() {
+        try { tempDir.deleteSync(recursive: true); } catch (_) {}
+      });
 
-      final repo = NoteRepository(tempDir.path);
-      final container = ProviderContainer(
-        overrides: [noteRepositoryProvider.overrideWith((ref) => repo)],
+      final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+      if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+
+      final vaultState = VaultState(
+        currentVault: VaultConfig(
+          path: tempDir.path,
+          name: 'test',
+          lastOpened: DateTime.now(),
+        ),
       );
+      final container = ProviderContainer(overrides: [
+        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+      ]);
       addTearDown(container.dispose);
+
+      container.read(knowledgeProvider);
+      await Future.delayed(const Duration(milliseconds: 150));
 
       final agent = container.read(agentProvider.notifier);
       final step = AgentStep(description: 'Create note: TestNote');
@@ -102,7 +170,8 @@ void main() {
       expect(result, contains('Note created: TestNote'));
       expect(result, contains('.md'));
 
-      final onDisk = await repo.getAllNotes();
+      final repo = container.read(noteRepositoryProvider);
+      final onDisk = await repo?.getAllNotes() ?? [];
       final created = onDisk.firstWhere(
         (n) => n.title == 'TestNote',
         orElse: () {

@@ -1,3 +1,5 @@
+import 'package:uuid/uuid.dart';
+
 class BookmarkFolder {
   final String id;
   final String name;
@@ -7,9 +9,9 @@ class BookmarkFolder {
   BookmarkFolder({
     String? id,
     required this.name,
-    this.parentId = 'bookmarks-bar',
+    this.parentId = '',
     this.isExpanded = true,
-  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
+  }) : id = id ?? const Uuid().v4();
 
   BookmarkFolder copyWith({String? name, String? parentId, bool? isExpanded}) {
     return BookmarkFolder(
@@ -53,7 +55,7 @@ class Bookmark {
     required this.title,
     String? folderId,
     DateTime? addedAt,
-  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+  }) : id = id ?? const Uuid().v4(),
        folderId = folderId ?? '',
        addedAt = addedAt ?? DateTime.now();
 

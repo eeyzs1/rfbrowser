@@ -4247,6 +4247,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Decrease Font'**
   String get readingModeFontDecrease;
+
+  /// No description provided for @extrazerodoBuiltin.
+  ///
+  /// In en, this message translates to:
+  /// **'Builtin'**
+  String get extrazerodoBuiltin;
+
+  /// No description provided for @extrazerodoInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install from directory...'**
+  String get extrazerodoInstall;
+
+  /// No description provided for @extrazerodoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Place plugin folders in <vault>/.rfbrowser/plugins/ to install external plugins.'**
+  String get extrazerodoDesc;
+
+  /// No description provided for @extrazerodoPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get extrazerodoPermissions;
+
+  /// No description provided for @extrazerodoCommandsN.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No commands} =1{1 command} other{{count} commands}}'**
+  String extrazerodoCommandsN(int count);
+
+  /// No description provided for @extrazerodoSkillsN.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No skills} =1{1 skill} other{{count} skills}}'**
+  String extrazerodoSkillsN(int count);
+
+  /// No description provided for @extrazerodoAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Author'**
+  String get extrazerodoAuthor;
+
+  /// No description provided for @extrazerodoErrorOccurred.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred with this plugin'**
+  String get extrazerodoErrorOccurred;
+
+  /// No description provided for @extrazerodoInstallDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Install Plugin'**
+  String get extrazerodoInstallDialogTitle;
+
+  /// No description provided for @extrazerodoInstallDialogDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a Git repository URL to install a plugin.'**
+  String get extrazerodoInstallDialogDesc;
+
+  /// No description provided for @extrazerodoInstallUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://github.com/user/plugin-repo.git'**
+  String get extrazerodoInstallUrlHint;
+
+  /// No description provided for @extrazerodoInstallBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get extrazerodoInstallBtn;
+
+  /// No description provided for @extrazerodoInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing...'**
+  String get extrazerodoInstalling;
+
+  /// No description provided for @extrazerodoInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin {name} installed. Enable it in the plugin list.'**
+  String extrazerodoInstalled(String name);
+
+  /// No description provided for @extrazerodoNoVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a vault first'**
+  String get extrazerodoNoVault;
+
+  /// No description provided for @extrazerodoSkillBuiltin.
+  ///
+  /// In en, this message translates to:
+  /// **'Builtin'**
+  String get extrazerodoSkillBuiltin;
+
+  /// No description provided for @extrazerodoSkillPlugin.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin: {name}'**
+  String extrazerodoSkillPlugin(String name);
+
+  /// No description provided for @extrazerodoSkillCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get extrazerodoSkillCustom;
+
+  /// No description provided for @extrazerodoReloadPlugins.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get extrazerodoReloadPlugins;
+
+  /// No description provided for @extrazerodoMarketplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketplace'**
+  String get extrazerodoMarketplace;
+
+  /// No description provided for @extrazerodoMarketplaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin Marketplace'**
+  String get extrazerodoMarketplaceTitle;
+
+  /// No description provided for @extrazerodoMarketplaceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse and install community plugins'**
+  String get extrazerodoMarketplaceDesc;
+
+  /// No description provided for @extrazerodoHookNoteOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'note.opened'**
+  String get extrazerodoHookNoteOpened;
+
+  /// No description provided for @extrazerodoHookNoteSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'note.saved'**
+  String get extrazerodoHookNoteSaved;
+
+  /// No description provided for @extrazerodoAgentDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Run default agent task'**
+  String get extrazerodoAgentDefault;
+
+  /// No description provided for @vaultExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'A vault is a folder that stores all your notes and knowledge data. Open an existing folder or create a new one to get started.'**
+  String get vaultExplanation;
+
+  /// No description provided for @captureTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse the web, clip pages, and capture ideas with AI summaries'**
+  String get captureTooltip;
+
+  /// No description provided for @thinkTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Write and edit notes with Markdown, view backlinks and references'**
+  String get thinkTooltip;
+
+  /// No description provided for @connectTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Visualize knowledge graph and organize ideas on infinite canvas'**
+  String get connectTooltip;
+
+  /// No description provided for @errorNetworkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your network connection and try again'**
+  String get errorNetworkHint;
+
+  /// No description provided for @errorRateLimitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'API rate limit exceeded, please try again later'**
+  String get errorRateLimitHint;
+
+  /// No description provided for @errorNoContentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No content available, please open a webpage or select a note first'**
+  String get errorNoContentHint;
+
+  /// No description provided for @errorUnknownHint.
+  ///
+  /// In en, this message translates to:
+  /// **'An unknown error occurred, please retry or try different content'**
+  String get errorUnknownHint;
+
+  /// No description provided for @settingsCategoryGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settingsCategoryGeneral;
+
+  /// No description provided for @settingsCategoryAI.
+  ///
+  /// In en, this message translates to:
+  /// **'AI & Automation'**
+  String get settingsCategoryAI;
+
+  /// No description provided for @settingsCategoryAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get settingsCategoryAdvanced;
+
+  /// No description provided for @switchScene.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Scene'**
+  String get switchScene;
 }
 
 class _AppLocalizationsDelegate

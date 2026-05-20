@@ -11,6 +11,7 @@ import '../core/graph/filter_engine.dart';
 import 'note_service.dart';
 import 'link_service.dart';
 import 'search_service.dart';
+import '../plugins/host/plugin_host.dart';
 
 export 'note_service.dart';
 export 'link_service.dart';
@@ -260,6 +261,9 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
 
   void openNote(String noteId) {
     state = state.copyWith(activeNoteId: noteId);
+    ref.read(pluginHostProvider.notifier).dispatchHook('note.opened', {
+      'noteId': noteId,
+    });
   }
 
   void updateActiveNoteContent(String content) {

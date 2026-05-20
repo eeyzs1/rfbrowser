@@ -2172,4 +2172,124 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get readingModeFontDecrease => '减小字体';
+
+  @override
+  String get extrazerodoBuiltin => '内置';
+
+  @override
+  String get extrazerodoInstall => '从目录安装...';
+
+  @override
+  String get extrazerodoDesc => '将插件文件夹放入 <vault>/.rfbrowser/plugins/ 可安装外部插件。';
+
+  @override
+  String get extrazerodoPermissions => '权限';
+
+  @override
+  String extrazerodoCommandsN(int count) {
+    return '$count 个命令';
+  }
+
+  @override
+  String extrazerodoSkillsN(int count) {
+    return '$count 个技能';
+  }
+
+  @override
+  String get extrazerodoAuthor => '作者';
+
+  @override
+  String get extrazerodoErrorOccurred => '此插件发生错误';
+
+  @override
+  String get extrazerodoInstallDialogTitle => '安装插件';
+
+  @override
+  String get extrazerodoInstallDialogDesc => '输入 Git 仓库地址来安装插件。';
+
+  @override
+  String get extrazerodoInstallUrlHint =>
+      'https://github.com/user/plugin-repo.git';
+
+  @override
+  String get extrazerodoInstallBtn => '安装';
+
+  @override
+  String get extrazerodoInstalling => '安装中...';
+
+  @override
+  String extrazerodoInstalled(String name) {
+    return '插件 $name 已安装。在插件列表中启用它。';
+  }
+
+  @override
+  String get extrazerodoNoVault => '请先打开知识库';
+
+  @override
+  String get extrazerodoSkillBuiltin => '内置';
+
+  @override
+  String extrazerodoSkillPlugin(String name) {
+    return '插件: $name';
+  }
+
+  @override
+  String get extrazerodoSkillCustom => '自定义';
+
+  @override
+  String get extrazerodoReloadPlugins => '重新加载';
+
+  @override
+  String get extrazerodoMarketplace => '插件市场';
+
+  @override
+  String get extrazerodoMarketplaceTitle => '插件市场';
+
+  @override
+  String get extrazerodoMarketplaceDesc => '浏览和安装社区插件';
+
+  @override
+  String get extrazerodoHookNoteOpened => 'note.opened';
+
+  @override
+  String get extrazerodoHookNoteSaved => 'note.saved';
+
+  @override
+  String get extrazerodoAgentDefault => '执行默认智能体任务';
+
+  @override
+  String get vaultExplanation => '知识库是存储所有笔记和知识数据的文件夹。打开已有文件夹或创建新文件夹即可开始使用。';
+
+  @override
+  String get captureTooltip => '浏览网页、剪藏页面，用 AI 摘要采集灵感';
+
+  @override
+  String get thinkTooltip => '用 Markdown 编写和编辑笔记，查看反向链接与引用';
+
+  @override
+  String get connectTooltip => '可视化知识图谱，在无限画布上组织灵感';
+
+  @override
+  String get errorNetworkHint => '请检查网络连接后重试';
+
+  @override
+  String get errorRateLimitHint => 'API 调用频率超限，请稍后重试';
+
+  @override
+  String get errorNoContentHint => '当前内容为空，请先打开网页或选择笔记';
+
+  @override
+  String get errorUnknownHint => '发生未知错误，请重试或更换内容';
+
+  @override
+  String get settingsCategoryGeneral => '通用';
+
+  @override
+  String get settingsCategoryAI => 'AI 与自动化';
+
+  @override
+  String get settingsCategoryAdvanced => '高级';
+
+  @override
+  String get switchScene => '切换场景';
 }

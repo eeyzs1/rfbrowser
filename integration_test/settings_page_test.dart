@@ -29,6 +29,11 @@ void main() {
     testWidgets('renders Quick Moves section', (tester) async {
       await pumpSettingsPage(tester);
 
+      await tester.scrollUntilVisible(
+        find.text('Quick Moves'),
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Quick Moves'), findsOneWidget);
     });
 
@@ -60,8 +65,13 @@ void main() {
     testWidgets('contains major visible sections in widget tree', (tester) async {
       await pumpSettingsPage(tester);
 
-      expect(find.text('Quick Moves'), findsOneWidget);
       expect(find.text('Theme'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Quick Moves'),
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Quick Moves'), findsOneWidget);
     });
   });
 }

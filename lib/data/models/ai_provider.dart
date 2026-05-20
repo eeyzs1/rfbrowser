@@ -87,8 +87,21 @@ class AIProvider {
     );
   }
 
-  String get modelsEndpoint => '$baseUrl${protocol.modelsPath}';
-  String get chatEndpoint => '$baseUrl${protocol.chatPath}';
+  String get modelsEndpoint {
+    final path = protocol.modelsPath;
+    if (baseUrl.endsWith('/v1') && path.startsWith('/v1')) {
+      return '$baseUrl${path.substring(3)}';
+    }
+    return '$baseUrl$path';
+  }
+
+  String get chatEndpoint {
+    final path = protocol.chatPath;
+    if (baseUrl.endsWith('/v1') && path.startsWith('/v1')) {
+      return '$baseUrl${path.substring(3)}';
+    }
+    return '$baseUrl$path';
+  }
 
   Map<String, String> authHeaders() {
     switch (protocol) {

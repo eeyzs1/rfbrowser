@@ -932,11 +932,20 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                       ? theme.colorScheme.primary
                       : theme.hintColor,
                 ),
-                title: Text(
-                  skill.name,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
+                title: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        skill.name,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    _skillSourceBadge(skill, theme),
+                  ],
                 ),
                 subtitle: skill.description.isNotEmpty
                     ? Text(
@@ -962,6 +971,43 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
             child: const Text('Cancel'),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _skillSourceBadge(dynamic skill, ThemeData theme) {
+    final l = AppLocalizations.of(context)!;
+    final pluginId = skill.pluginId as String?;
+    final isBuiltin = skill.isBuiltin == true;
+
+    String label;
+    Color color;
+
+    if (pluginId != null && pluginId.isNotEmpty) {
+      label = l.extrazerodoSkillPlugin(pluginId);
+      color = const Color(0xFF8B5CF6);
+    } else if (isBuiltin) {
+      label = l.extrazerodoSkillBuiltin;
+      color = theme.colorScheme.primary;
+    } else {
+      label = l.extrazerodoSkillCustom;
+      color = const Color(0xFF10B981);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

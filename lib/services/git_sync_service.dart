@@ -58,7 +58,7 @@ class GitSyncService {
       if (!await isGitRepo()) {
         return SyncState(status: SyncStatus.error, message: 'Not a git repo');
       }
-      final result = await _runGit(['pull', '--rebase']);
+      final result = await _runGit(['pull', '--rebase', 'origin', 'HEAD']);
       return SyncState(
         status: result.exitCode == 0 ? SyncStatus.success : SyncStatus.conflict,
         message: result.stdout.toString().trim(),
@@ -76,7 +76,7 @@ class GitSyncService {
       }
       await _runGit(['add', '-A']);
       await _runGit(['commit', '-m', message]);
-      final result = await _runGit(['push']);
+      final result = await _runGit(['push', 'origin', 'HEAD']);
       return SyncState(
         status: result.exitCode == 0 ? SyncStatus.success : SyncStatus.error,
         message: result.stdout.toString().trim(),

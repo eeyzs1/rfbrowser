@@ -20,9 +20,9 @@ class NoteRepository {
 
   void _validatePath(String relativePath) {
     final normalized = p.normalize(relativePath);
-    final canonical = File(p.join(vaultPath, normalized)).absolute.path;
+    final combined = p.normalize(p.join(vaultPath, normalized));
     final vaultCanonical = Directory(vaultPath).absolute.path;
-    if (!canonical.startsWith(vaultCanonical)) {
+    if (!combined.startsWith(vaultCanonical)) {
       throw PathTraversalException('Path traversal detected: $relativePath');
     }
   }
@@ -174,11 +174,11 @@ class NoteRepository {
   }
 
   String _sanitizeFileName(String name) {
-    var sanitized = name
+    var sanitized = p.basename(name).replaceAll('..', '');
+    sanitized = sanitized
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
         .replaceAll(RegExp(r'\s+'), '-');
-    sanitized = p.basename(p.normalize(sanitized));
-    if (sanitized.isEmpty || sanitized == '.') sanitized = 'untitled';
+    if (sanitized.isEmpty || sanitized == '.' || sanitized == '..' || sanitized == '...') sanitized = 'untitled';
     if (sanitized.length > 100) sanitized = sanitized.substring(0, 100);
     return sanitized;
   }

@@ -1,11 +1,20 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:rfbrowser/data/models/note.dart';
 import 'package:rfbrowser/data/stores/index_store.dart';
+import 'package:rfbrowser/data/stores/vault_store.dart';
 import 'package:rfbrowser/core/link/link_extractor.dart';
 import 'package:rfbrowser/core/link/link_resolver.dart';
+
+class _TestVaultNotifier extends VaultNotifier {
+  final VaultState _state;
+  _TestVaultNotifier(this._state);
+  @override
+  VaultState build() => _state;
+}
 
 void main() {
   setUpAll(() {
@@ -18,12 +27,26 @@ void main() {
 
   setUp(() async {
     tempDir = Directory.systemTemp.createTempSync('rfbrowser_link_test_');
-    container = ProviderContainer();
+    final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+    if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+
+    final vaultState = VaultState(
+      currentVault: VaultConfig(
+        path: tempDir.path,
+        name: 'test',
+        lastOpened: DateTime.now(),
+      ),
+    );
+    container = ProviderContainer(overrides: [
+      vaultProvider.overrideWith(() => _TestVaultNotifier(vaultState)),
+    ]);
   });
 
   tearDown(() {
     container.dispose();
-    if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
+    if (tempDir.existsSync()) {
+      try { tempDir.deleteSync(recursive: true); } catch (_) {}
+    }
   });
 
   Note makeNote(String id, String title, String content, String folder) {

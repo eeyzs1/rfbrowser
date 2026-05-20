@@ -9,6 +9,8 @@ import 'ui/theme/app_theme.dart';
 import 'ui/layout/main_layout.dart';
 import 'ui/pages/welcome_page.dart';
 import 'data/stores/vault_store.dart';
+import 'plugins/plugin_registry.dart';
+import 'plugins/host/plugin_host.dart';
 
 class RFBrowserApp extends ConsumerStatefulWidget {
   const RFBrowserApp({super.key});
@@ -37,7 +39,18 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
     await ref.read(aiConfigProvider.notifier).loadConfig();
     await ref.read(shortcutServiceProvider).load();
     await ref.read(vaultProvider.notifier).loadRecentVaults();
+
+    final pluginHost = ref.read(pluginHostProvider.notifier);
+    await pluginHost.loadConfig();
+    await PluginRegistry.loadAllBuiltinPlugins(pluginHost);
+
     final vaultState = ref.read(vaultProvider);
+    if (vaultState.currentVault != null) {
+      await PluginRegistry.loadExternalPlugins(
+        pluginHost,
+        vaultState.currentVault!.path,
+      );
+    }
     final settings = ref.read(settingsProvider);
     if (vaultState.currentVault != null) {
       if (!settings.alwaysShowWelcomePage) {

@@ -33,6 +33,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   SceneType _currentScene = SceneType.capture;
   bool _leftPanelExpanded = true;
   bool _rightPanelExpanded = true;
+  ConnectViewMode _connectViewMode = ConnectViewMode.canvas;
 
   void _switchScene(SceneType scene) => setState(() => _currentScene = scene);
   void _toggleLeftPanel() =>
@@ -78,6 +79,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                   onNoteOpened: _onNoteOpened,
                 ),
                 connectView: (_) => ConnectScene(
+                  initialViewMode: _connectViewMode,
                   leftPanelExpanded: _leftPanelExpanded,
                   rightPanelExpanded: _rightPanelExpanded,
                   onToggleLeftPanel: _toggleLeftPanel,
@@ -116,12 +118,6 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         setState(() => _showCommandBar = false);
       }
     };
-    b[const SingleActivator(LogicalKeyboardKey.digit1, control: true)] = () =>
-        _switchScene(SceneType.capture);
-    b[const SingleActivator(LogicalKeyboardKey.digit2, control: true)] = () =>
-        _switchScene(SceneType.think);
-    b[const SingleActivator(LogicalKeyboardKey.digit3, control: true)] = () =>
-        _switchScene(SceneType.connect);
     return b;
   }
 
@@ -129,9 +125,19 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     'new_note' => _createNewNote,
     'save' => () => ref.read(knowledgeProvider.notifier).saveActiveNote(),
     'search' || 'find' => () => setState(() => _showCommandBar = true),
-    'toggle_editor' => () => _switchScene(SceneType.think),
-    'toggle_browser' => () => _switchScene(SceneType.capture),
-    'toggle_graph' || 'toggle_canvas' => () => _switchScene(SceneType.connect),
+    'toggle_editor' || 'switch_think' => () => _switchScene(SceneType.think),
+    'toggle_browser' || 'switch_capture' => () =>
+        _switchScene(SceneType.capture),
+    'toggle_graph' || 'toggle_canvas' || 'switch_connect' => () =>
+        _switchScene(SceneType.connect),
+    'connect_canvas' => () {
+      _switchScene(SceneType.connect);
+      _connectViewMode = ConnectViewMode.canvas;
+    },
+    'connect_graph' => () {
+      _switchScene(SceneType.connect);
+      _connectViewMode = ConnectViewMode.graph;
+    },
     'daily_note' => () {
       ref.read(knowledgeProvider.notifier).createDailyNote(DateTime.now());
       _switchScene(SceneType.think);

@@ -9,6 +9,8 @@ import '../data/models/skill.dart';
 import '../data/models/web_clip.dart';
 import '../data/stores/index_store.dart';
 import '../data/stores/vault_store.dart';
+import '../plugins/plugin_registry.dart';
+import '../plugins/host/plugin_host.dart';
 import 'browser_service.dart';
 
 class NoteState {
@@ -95,6 +97,10 @@ class NoteNotifier extends Notifier<NoteState> {
       notes.add(updatedNote);
     }
     state = state.copyWith(notes: notes);
+    ref.read(pluginHostProvider.notifier).dispatchHook('note.saved', {
+      'noteId': note.id,
+      'title': note.title,
+    });
   }
 
   Future<Note> createNote({required String title, String content = ''}) async {
@@ -462,6 +468,7 @@ class NoteNotifier extends Notifier<NoteState> {
   Future<List<Skill>> getAllSkills() async {
     final skills = <Skill>[];
     skills.addAll(_getBuiltinSkills());
+    skills.addAll(PluginRegistry.getAllPluginSkills());
 
     final vault = ref.read(vaultProvider).currentVault;
     if (vault == null) return skills;

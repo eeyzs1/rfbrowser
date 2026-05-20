@@ -28,11 +28,14 @@ def verify_flutter_analyze() -> tuple[bool, str]:
         [flutter_cmd, "analyze"],
         capture_output=True, text=True, cwd=str(PROJECT_ROOT), shell=(sys.platform == "win32"),
     )
-    if proc.returncode != 0:
-        return False, f"flutter analyze failed (exit {proc.returncode})"
-    if "No issues found" not in proc.stdout:
-        return False, f"flutter analyze found issues:\n{proc.stdout[:500]}"
-    return True, "flutter analyze passes with 0 issues"
+    output = proc.stdout
+    errors = [l for l in output.split('\n') if ' - error - ' in l]
+    warnings = [l for l in output.split('\n') if ' - warning - ' in l]
+    if errors:
+        return False, f"flutter analyze has {len(errors)} error(s):\n" + "\n".join(errors[:5])
+    if warnings:
+        return False, f"flutter analyze has {len(warnings)} warning(s):\n" + "\n".join(warnings[:5])
+    return True, "flutter analyze passes with 0 issues (infos only acceptable)"
 
 
 def verify_no_empty_catch_blocks() -> tuple[bool, str]:

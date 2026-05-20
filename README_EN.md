@@ -1,364 +1,330 @@
-# Harness Engineering Framework
+# RFBrowser — AI-powered Knowledge Browser
 
-> Just say what you want. The system handles the rest.
+<div align="center">
+
+![Flutter](https://img.shields.io/badge/Flutter-3.27+-blue?logo=flutter)
+![Dart](https://img.shields.io/badge/Dart-3.11+-blue?logo=dart)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-lightgrey)
+
+</div>
+
+> **Browse, Think, Connect, Automate.** A local-first, AI-augmented knowledge workbench — one app to bridge web research, note-taking, knowledge graphs, and AI automation.
 
 [中文版](README.md)
 
-## What Is This?
+---
 
-Imagine: you have an idea but don't know how to build it. You tell this system "I need a customer onboarding system", and it:
+## What is RFBrowser?
 
-1. **Understands your idea** — translates vague intent into a clear task definition
-2. **Generates a complete project** — auto-generates a runnable project with 7 layers + 2 cross-cutting + evolution, each layer has executable artifacts
-3. **Assigns specialist roles** — creates a team of AI agents, each with a specific job
-4. **Orchestrates execution** — plans who goes first, who goes next, who works in parallel
-5. **Verifies results** — automatically checks if output meets the bar
-6. **Gets smarter over time** — every mistake makes the system better
-7. **Self-evolves** — actively optimizes its own rules, workflows, and agent configurations; the evolution rules themselves also evolve
-8. **Innovates beyond requirements** — after meeting all requirements, the system proactively discovers improvement opportunities and proposes innovations that go beyond the original ask
+RFBrowser merges the **browser** with a **knowledge management system**. You can:
 
-**In one sentence**: This is an "evolving, innovating AI agent management system" — it ensures AI agents produce reliable work, keeps getting more reliable, and can exceed your expectations.
+- 🌐 **Browse the web** with multiple tabs (Chromium-based WebView)
+- ✍️ **Write notes** in pure Markdown with `[[wiki-links]]`
+- 🕸️ **Visualize connections** with an interactive knowledge graph
+- 🤖 **Chat with AI** while referencing your notes and web pages
+- 🎨 **Brainstorm freely** on an infinite canvas
+- ⚡ **Automate** repetitive tasks with AI Agents and Quick Moves
+- 🔄 **Sync across devices** via Git or WebDAV — no vendor lock-in
+
+**Think of it as: Obsidian + ChatGPT + a Web Browser + Canvas — all in one app.**
+
+> ⚠️ **Note**: Currently only **Windows** has been thoroughly tested. Linux and Android builds are supported but have not undergone full testing — unknown issues may exist.
 
 ---
 
-## How Do I Use It?
+## Features
 
-### If You're Not a Developer
+### Core Panels — Mix and Match
 
-You don't need to know code. Just open this project in an AI coding tool and tell it what you want.
+| Panel | What it does | Why you'd use it |
+|-------|-------------|------------------|
+| 🌐 **Browser** | Multi-tab WebView (Chromium engine) | Research articles, docs, anything on the web |
+| ✍️ **Editor** | Markdown editor with split preview + `[[links]]` | Write notes, daily journals, documentation |
+| 🕸️ **Graph** | Force-directed / circular layout of your links | Discover connections between your notes |
+| 🤖 **AI Chat** | Streaming chat with OpenAI-compatible APIs | Summarize, translate, brainstorm, code review |
+| 🎨 **Canvas** | Infinite space for cards and connections | Mind maps, project planning, visual thinking |
+| 📋 **Notes** | Note list sidebar with search | Navigate and organize your vault |
+| 🔗 **Links** | Backlinks / outlinks panel | See what references what |
 
-**Supported tools and context loading:**
+### Power Tools
 
-| Tool | Rules File | Loading | What You Need to Do |
-|------|-----------|---------|-------------------|
-| **Trae** | `AGENTS.md` | ✅ Auto-loaded | Just open the project |
-| **Claude Code** | `CLAUDE.md` | ✅ Auto-loaded | Just open the project |
-| **Cursor** | `.cursorrules` | ⚠️ Manual | Copy `AGENTS.md` contents to `.cursorrules` |
-| **Other AI tools** | — | ⚠️ Manual | Paste `AGENTS.md` contents into the conversation as context |
+- 🔍 **Command Bar** (`Ctrl+K`): Search notes, run commands, trigger Quick Moves
+- ⚡ **Quick Moves**: Define custom slash-commands that send context (page content, selection, note) to AI
+- 🧠 **AI Agents**: Multi-step task automation with headless browser, step tracking, time limits
+- 📎 **Web Clipper**: Save full pages, selections, or bookmarks as notes in one click
+- 🔌 **Plugin System**: Write Dart plugins via `BuiltinPlugin` interface, running in isolated sandboxes
+- 🎯 **Skills**: Define AI prompt templates in YAML files — zero-code AI extensibility
+- 📅 **Daily Notes**: One-click daily journal entries
 
-**Critical: The AI MUST read the rules file to follow the pipeline.** If the AI doesn't read the rules, it will skip the pipeline and start working on its own — that's not what we want.
+### Extensibility
 
-**Examples — just say:**
+RFBrowser offers two extension mechanisms — choose the one that fits your needs:
 
-- "I need a customer onboarding system"
-- "Build me a competitor price monitoring tool"
-- "I want to automate our weekly report generation"
-- "Create a SaaS for freelance invoicing"
+#### Plugins (Code-level Extensions)
 
-The AI **automatically reads the project rules** (no manual action needed), then:
-- Parses your requirements
-- Generates a complete runnable project (7 layers + 2 cross-cutting + evolution)
-- Creates specialized agents to execute
-- Verifies the results meet your standards
-- After requirements are met, proactively proposes innovation suggestions
+Plugins extend the app's core functionality — register commands, render UI panels, call Knowledge/Browser/AI APIs. Each plugin runs in an isolated Dart Isolate sandbox with automatic crash recovery.
 
-**You only need to do two things:**
-1. **Say what you want** (the vaguer, the better — the system will help you clarify)
-2. **Confirm assumptions** (the system will list its assumptions; just confirm or correct them)
+| Capability | Description |
+|------|------|
+| **Commands** | Register commands discoverable via the Command Bar (`Ctrl+K`) |
+| **UI Panels** | Render custom panel widgets |
+| **API Calls** | Call Knowledge, Browser, and AI services through the sandbox |
+| **Skill Declaration** | Plugins can bundle Skills for use in AI Chat |
+| **Permissions** | 5 permission types (knowledge read/write, browser, ai, ui), checked at runtime |
 
-### If You're a Software Engineer
+> Built-in example: [HelloWorld Plugin](lib/plugins/builtin/hello_world/hello_world_plugin.dart) demonstrates the full plugin lifecycle.
 
-This project is a **self-bootstrapping meta-harness** — it's not a harness for a specific project, it's a **harness that generates harnesses**.
-
-**Core formula:**
+Plugin authoring:
+```dart
+// 1. Extend BuiltinPlugin
+class MyPlugin extends BuiltinPlugin {
+  // 2. Declare manifest (permissions, metadata)
+  PluginManifest get manifest => PluginManifest(
+    id: 'my-plugin', name: 'My Plugin',
+    permissions: [Permission.knowledgeRead, Permission.uiPanel],
+  );
+  // 3. Register commands
+  List<PluginCommand> get commands => [
+    PluginCommand(id: 'my.do', label: 'Do Something', pluginId: 'my-plugin'),
+  ];
+  // 4. Optional: declare Skills for AI use
+  List<Skill> get skills => [
+    Skill(id: 'my.skill', name: 'My Skill', prompt: '...', pluginId: 'my-plugin'),
+  ];
+  // 5. Register in PluginRegistry
+}
+// 6. Add to PluginRegistry._builtinPlugins: MyPlugin(),
 ```
-Agent = Model + Harness
-```
-- The Model provides intelligence
-- The Harness makes that intelligence reliably useful
-- **A better Harness often matters more than a better Model**
 
-**Generation Factory pattern:**
-```
-Vague Intent → [Interpreter] → Structured Task Definition
-                      ↓
-               [Harness Generator] → Complete runnable project (7+2+evolution)
-                      ↓                Each layer has executable artifacts (Python scripts, YAML configs, JSON schemas)
-               [Agent Factory] → Specialized Agent Topology (generated, not selected)
-                      ↓
-               [Orchestrator] → Execution Plan (coordinates across all layers)
-                      ↓
-               Agents execute within generated harness → Results
-                      ↓
-               Failure feedback → Meta-Harness improves → Evolution engine optimizes
-                      ↓
-               Requirements met → Innovation Engine → Innovate beyond requirements
+#### Skills (Zero-code Extensions)
+
+Skills are AI prompt templates — no coding required. Just drop a YAML file to add new capabilities to AI Chat. Created Skills automatically appear in the AI Chat Panel's Skill Picker.
+
+Location: `<your-vault>/.rfbrowser/skills/<skill-name>.yaml`
+
+```yaml
+# Example: a translation Skill
+id: my-translate
+name: Translate Note
+description: Translate the current note to another language
+prompt: |
+  Translate the following note to {{target_language}}:
+  @note[current]
 ```
 
-**Quick start:**
+| Skill Source | Description |
+|------------|------|
+| **Built-in Skills** | 7 ready-to-use (summarize, research, outline, auto-tag, etc.) |
+| **Plugin Skills** | Bundled with plugins, loaded automatically |
+| **Custom Skills** | YAML files placed in `.rfbrowser/skills/` directory |
 
-1. Open this project in Trae / Claude Code
-2. Tell the AI what you want (e.g., "I need a customer onboarding system")
-3. The AI auto-reads project rules and follows the pipeline
-4. Confirm the assumptions the AI lists
-5. The AI generates a complete harness project and executes
-6. After requirements are met, the AI proactively proposes innovations
+---
+     
+### Sync & Portability
 
-**Command-line usage:**
+- 💾 **Local-first**: All notes stored as plain `.md` files in a folder you control (a *Vault*)
+- 🔄 **Git Sync**: Version history + push/pull with any Git remote
+- ☁️ **WebDAV Sync**: Auto-sync (configurable interval) to your own server
+- 🌍 **No Lock-in**: Compatible with Obsidian, Foam, VS Code — open any Vault folder
+- 🌐 **i18n**: English & Chinese UI, switchable at runtime
+
+### Security
+
+- API keys stored in platform-level secure storage (not in state objects)
+- WebView URL scheme filtering (`file://`, `javascript:`, `data://` blocked)
+- Path traversal protection
+- Destructive actions require confirmation
+
+---
+
+## Screenshots
+
+<!-- Add your screenshots here! Suggested: -->
+<!-- - Main layout with Browser + Editor + AI Chat split -->
+<!-- - Knowledge Graph view -->
+<!-- - Infinite Canvas -->
+<!-- - Command Bar in action -->
+
+*(Screenshots coming soon — contributions welcome!)*
+
+---
+
+## Quick Start (Users)
+
+### Download
+
+| Platform | Download | Test Status |
+|----------|----------|-------------|
+| 🪟 **Windows** | [Latest Release](../../releases) → `rfbrowser-windows.zip` | ✅ Tested |
+| 🐧 **Linux** | [Latest Release](../../releases) → `rfbrowser-linux.tar.gz` | ⚠️ Not fully tested |
+| 🤖 **Android** | [Latest Release](../../releases) → `rfbrowser-android.apk` | ⚠️ Not fully tested |
+
+### First Launch
+
+1. **Open or Create a Vault** — Pick any folder on your computer (or create a new one). This is where your Markdown notes live.
+2. **Start browsing** — Open a web page in the Browser panel.
+3. **Clip content** — Right-click to save pages or selections as notes.
+4. **Link your notes** — Use `[[note-title]]` syntax. Links appear in the Graph automatically.
+5. **Chat with AI** — Configure an API key in Settings → AI, then send messages. The AI can see your notes and current page content via context references.
+
+---
+
+## Development
+
+### Prerequisites
+
+- **Flutter SDK** `>= 3.27.0` ([install guide](https://flutter.dev/docs/get-started/install))
+- **Dart** `>= 3.11.0` (bundled with Flutter)
+- Platform-specific:
+  - **Windows**: Visual Studio 2022 with "Desktop development with C++"
+  - **Linux**: `clang`, `cmake`, `ninja`, `pkg-config`, `libgtk-3-dev`, `libsecret-1-dev`
+  - **Android**: Android Studio + Android SDK
+
+### Clone & Run
+
 ```bash
-# Generate a complete harness project
-python scripts/generate.py --task <task-file.yaml> --template <domain>
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/rfbrowser.git
+cd rfbrowser
 
-# Verify generated project completeness (7+2 layer check)
-python scripts/verify-generation.py <generated-project-dir>
+# Install dependencies
+flutter pub get
 
-# Run evolution engine
-python scripts/evolve.py --project-root <generated-project-dir>
+# Generate localization files
+flutter gen-l10n
 
-# Run innovation engine (推陈出新)
-python seeds/evolution/innovation-engine.py --project-root <generated-project-dir>
+# Run on your platform
+flutter run -d windows    # Windows (recommended, thoroughly tested)
+flutter run -d linux      # Linux (not fully tested)
+flutter run -d android    # Android (not fully tested)
+```
 
-# Run innovation cycle in a generated project
-python orchestrator.py --innovate
+### Project Structure
 
-# View quality score
-python scripts/quality-score.py
+```
+rfbrowser/
+├── lib/
+│   ├── main.dart                    # App entry point
+│   ├── app.dart                     # MaterialApp + theme + vault init
+│   ├── core/                        # Pure Dart engines (no Flutter dependency)
+│   │   ├── context/                 #   Context assembly for AI prompts
+│   │   ├── editor/                  #   Markdown highlighter, sync scroll
+│   │   ├── graph/                   #   Force-directed layout, filters
+│   │   ├── link/                    #   Wiki-link extractor, resolver
+│   │   └── model/                   #   AI model/router configuration
+│   ├── data/                        # Data layer (models, repos, stores)
+│   │   ├── models/                  #   Note, Link, AgentTask, Skill, etc.
+│   │   ├── repositories/            #   Note persistence (Markdown ↔ DB)
+│   │   └── stores/                  #   Index, cache, sync state
+│   ├── services/                    # Business logic services
+│   │   ├── ai_service.dart          #   Chat messages, streaming, providers
+│   │   ├── agent_service.dart       #   Multi-step agent execution
+│   │   ├── browser_service.dart     #   Tab management, WebView state
+│   │   ├── knowledge_service.dart   #   Notes CRUD, linking, indexing
+│   │   ├── git_sync_service.dart    #   Git push/pull/init
+│   │   └── webdav_sync_service.dart #   WebDAV upload/download
+│   ├── ui/                          # Presentation layer
+│   │   ├── layout/main_layout.dart  #   Split pane, panels, shortcuts
+│   │   ├── pages/                   #   Browser, Editor, Graph, Canvas, Settings
+│   │   └── widgets/                 #   CommandBar, Backlinks, NoteSidebar, etc.
+│   ├── plugins/                     # Plugin system
+│   ├── platform/                    # WebView managers (inline + headless)
+│   └── l10n/                        # English & Chinese ARB files
+├── test/                            # Unit & widget tests
+├── docs/                            # Architecture & design docs
+├── .github/
+│   ├── workflows/ci.yml             # CI/CD pipeline (analyze, test, build)
+│   └── ISSUE_TEMPLATE/              # Bug report & feature request templates
+└── pubspec.yaml
+```
+
+For a deeper architecture dive, see [`docs/design/02-architecture.md`](docs/design/02-architecture.md).
+
+### Common Commands
+
+```bash
+# Code generation (Riverpod providers)
+dart run build_runner build
+
+# Run all tests
+flutter test
+
+# Run tests with coverage
+flutter test --coverage
+
+# Code formatting
+dart format lib/ test/
+
+# Static analysis
+flutter analyze
 ```
 
 ---
 
-## Project Structure
+## Tech Stack
 
-```
-README.md           ← Chinese version
-README_EN.md        ← You are here
-AGENTS.md           ← ⚡ Auto-loaded project rules (Trae entry point)
-CLAUDE.md           ← ⚡ Auto-loaded project rules (Claude Code entry point)
-META.md             ← The system's DNA (full pipeline specification)
-.gitignore          ← Git ignore rules (generated/ etc.)
-│
-meta/               ← The four stages of the compilation pipeline
-  interpreter.md      Step 1: Intent → Structured Task
-  harness-generator.md Step 2: Task → Executable Harness Project (7+2+evolution)
-  agent-factory.md    Step 3: Harness → Agent Topology
-  orchestrator.md     Step 4: Agents → Execution Plan (coordinates across all layers)
-  examples/           Reference examples (not preset templates)
-    topologies.md       Agent topology examples
-│
-evolution/          ← Meta-level self-evolution system
-  framework.md        Evolution algorithm (genome, fitness, mutation, selection)
-  genome.md           Current evolvable state (what can mutate)
-  log.md              Evolution history (fossil record)
-│
-templates/          ← Domain templates (Generation Factory format, each layer specifies executable artifacts)
-  web-app/            Web application
-  api-service/        API service
-  data-pipeline/      Data pipeline
-  content-system/     Content system
-  automation/         Automation
-│
-seeds/              ← Seed artifacts (executable template files per layer, copied by generate.py)
-  context/            loader.py, knowledge-index.yaml
-  tools/              schemas.yaml, sandbox.yaml, permissions.yaml, mcp-config.json
-  memory/             snapshot.py, compression-rules.yaml
-  planning/           dag-builder.py, flow-control.yaml, sub-agent-dispatch.yaml, budget.yaml
-  verification/       consistency-check.py, security-guardrails.yaml, self-check.py
-  feedback/           error-capture.py, retry-config.yaml, mistake-to-constraint.py, human-interface.yaml
-  constraints/        architecture-rules.yaml, linter-config.yaml, entropy-reduction.py, cost-budget.yaml
-  security/           sandbox-config.yaml, encryption-rules.yaml, audit-log.yaml
-  observability/      tracing.yaml, metrics-dashboard.yaml, session-replay.yaml, versioning.yaml
-  evolution/          framework.md, genome.yaml, log.yaml
-                       innovation-engine.py    ← Innovation engine (推陈出新)
-                       product-analyzer.py     ← Product state analyzer
-                       domain-advancements.yaml     ← Web app domain advancement patterns
-                       domain-advancements-api.yaml ← API service domain advancement patterns
-  orchestrator.py     ← Entry point for generated projects (orchestrator)
-│
-generated/          ← Generation output (result of each compilation, git-ignored)
-memory/             ← Meta-knowledge (cross-project, compounding over time)
-  generation-log.md   Every generation is tracked (human-readable)
-  generation-log.yaml Every generation tracked (machine-readable, maintained by generate.py)
-  meta-mistakes.md    Generation failures → pipeline improvements
-  task-patterns.md    Known task patterns (faster interpretation)
-  decisions.md        Architecture decision records
-  progress.md         Execution progress
-│
-scripts/            ← Executable scripts (cross-platform Python)
-  generate.py         Core generation pipeline: task → complete harness project
-  verify-generation.py Verify 7+2 layer completeness of generated projects
-  evolve.py           Evidence-driven evolution engine
-  verify.py           Post-task verification (lint, typecheck, test, secrets)
-  pre-task.py         Pre-task checks (task card, git status, blockers)
-  quality-score.py    Quality metrics
-```
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Framework** | Flutter 3.x | Cross-platform UI |
+| **Language** | Dart 3.x | Application logic |
+| **WebView** | `flutter_inappwebview` | Embedded Chromium browser |
+| **Markdown** | `markdown` + `flutter_markdown` | Parsing & rendering |
+| **Database** | SQLite (`sqflite`) | Full-text search & link index |
+| **Cache** | Hive | Local key-value cache |
+| **HTTP** | Dio | REST API calls to AI providers |
+| **State Mgmt** | Riverpod | Reactive state with code-gen |
+| **Routing** | go_router | Declarative navigation |
+| **Sync** | Git CLI + WebDAV (Dio) | Multi-device sync |
+| **Secure Store** | `flutter_secure_storage` | API key encryption |
+| **Graph** | CustomPainter + Canvas | Force-directed graph rendering |
+
+### AI Providers Supported
+
+Any OpenAI-compatible API — including:
+- OpenAI (GPT-4o, GPT-4, etc.)
+- Anthropic (Claude via compatible proxy)
+- Google Gemini (via compatible endpoint)
+- Ollama (local models)
+- LM Studio, LocalAI, vLLM, etc.
 
 ---
 
-## Key Concepts
+## Contributing
 
-### What Is a Harness?
+We welcome contributions of all kinds! Here's how to get started:
 
-A Harness is a **constraints + tools + verification** system built around AI agents. Just as a horse needs a harness to run in the right direction, AI agents need a harness to produce reliably.
+1. **Read** [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines
+2. **Find an issue** — Look for `good first issue` labels
+3. **Fork & branch** — Create a feature branch off `main`
+4. **Code & test** — Ensure `flutter test` and `flutter analyze` pass
+5. **Open a PR** — Describe your changes and link any relevant issues
 
-Without a harness: the agent might get it right, might get it wrong — you won't know which.
-With a harness: mistakes get caught, correct work gets verified, results are predictable.
+### Good places to start contributing
 
-### Generation Factory vs Description Framework
-
-**Old pattern (Description Framework)**: Generate markdown files → AI reads markdown and follows rules
-**New pattern (Generation Factory)**: Generate complete runnable project → Each layer has executable artifacts (Python scripts, YAML configs, JSON schemas)
-
-| Layer | Generated Executable Artifacts |
-|---|---|
-| 1. Context Engineering | AGENTS.md + context loader script + knowledge index |
-| 2. Tool Integration | Tool schemas + sandbox config + permission manifest + MCP config |
-| 3. Memory & State | Session state file + long-term memory structure + snapshot script + compression rules |
-| 4. Planning & Orchestration | DAG builder script + flow control config + sub-agent dispatch + budget config |
-| 5. Verification & Guardrails | Format validators + consistency check script + security guardrails + self-check loop script |
-| 6. Feedback & Self-Healing | Error capture script + retry strategy + mistake→constraint loop script + human intervention interface |
-| 7. Constraints & Entropy | Architecture rules + code enforcement config + entropy reduction script + cost constraints |
-| Security & Isolation | Sandbox config + encryption rules + audit log |
-| Observability | Tracing config + metrics dashboard + session replay + versioning |
-| Self-Evolution | Evolution framework + genome + evolution log + innovation engine + product analyzer |
-
-### Why Do Mistakes Make the System Stronger?
-
-Every generation failure gets root-cause-analyzed and logged to `memory/meta-mistakes.md`, then the generation pipeline is improved. This creates a **compounding feedback loop**:
-
-```
-Mistake → Root Cause Analysis → Constraint Improvement → Better Future Generations → Fewer Mistakes
-```
-
-The more you use it, the smarter it gets. This is the fundamental difference from a traditional template library.
-
-### Agent Topology Is Dynamically Generated
-
-The system synthesizes the optimal agent graph from task analysis, rather than selecting from preset patterns:
-
-1. Identify work units (each constraint, workflow step, domain)
-2. Map dependencies
-3. Determine parallelism
-4. Assign roles (merge tightly coupled, split when context exceeds budget)
-5. Add verification layer (there must ALWAYS be an independent verifier)
-6. Define handoff points
-
-### The System Self-Evolves
-
-This is the most radical design. The system doesn't just learn from mistakes — it **actively optimizes itself**:
-
-**Three-layer genome (what can evolve):**
-- **Harness genome**: constraints, workflows, skills, verification rules
-- **Agent genome**: topology, role scope, handoff formats, context budgets
-- **Evolution genome** (meta-evolution): mutation operators, selection criteria, fitness weights, mutation rate
-
-**Evolution loop:**
-```
-Collect evidence → Measure fitness → Propose mutation → Test mutation → Select or reject → Update genome
-                                                                                    ↓
-                                                          Meta-evolution: update mutation/selection rules themselves
-```
-
-**Safety constraints (preventing "cancer" and "suicide"):**
-- Never remove the verification layer (otherwise the system accepts wrong results — "cancer")
-- Never remove the evolution system itself (otherwise the system stops evolving — "suicide")
-- Mutation rate never exceeds 30% (otherwise the system descends into chaos)
-- All mutations must be reversible (previous genome version is always preserved)
-
-### Innovation Engine: Beyond Requirements
-
-The system's most unique capability — **not just meeting requirements, but exceeding them**.
-
-When all acceptance criteria are satisfied, the innovation engine automatically activates:
-
-```
-Requirements met → Product state analysis → Domain advancement matching → Innovation proposals → Priority ranking → Human confirmation
-```
-
-**Four-stage advancement model:**
-
-| Stage | Meaning | Description |
-|-------|---------|-------------|
-| **Basic** | Meets requirements | Core features implemented, basic tests pass |
-| **Solid** | Production-ready | Error handling, loading states, input validation, pagination, notifications |
-| **Advanced** | Competitive quality | Offline support, dark mode, keyboard shortcuts, search & filter, audit trail |
-| **Excellent** | Market-leading | Real-time collaboration, accessibility (WCAG), internationalization, performance monitoring |
-
-The innovation engine automatically proposes innovations for the next stage based on the product's current stage. For example:
-
-- After a web app completes the Basic stage, it suggests adding error boundaries, loading states, input validation, etc. (Solid stage features)
-- After an API service completes the Solid stage, it suggests adding cursor pagination, webhook notifications, caching layer, etc. (Advanced stage features)
-
-**Safety mechanisms:**
-- High-effort or security-related innovations require human approval (🔒 NEEDS APPROVAL)
-- Low-effort, non-security innovations can be auto-approved (🟢 AUTO-APPROVED)
-- Innovation proposals are saved to `evolution/innovation-log.yaml` for full traceability
+- 🖼️ **Screenshots** — Take some screenshots and add them to the README
+- 📝 **Documentation** — Improve docs, add code comments
+- 🧪 **Tests** — Increase test coverage on untested modules
+- 🎨 **UI Polish** — Fix minor visual inconsistencies
+- 🐛 **Bug fixes** — Check the issues page
 
 ---
 
-## Core Loop
+## Community
 
-Generated projects follow this orchestration loop:
-
-```
-┌─→ EXECUTE: Implement the next acceptance criterion
-│       ↓
-│   PROVE:   Collect evidence, verify each criterion is satisfied
-│       ↓
-│   JUDGE:   Are all criteria satisfied?
-│       ↓                ↓
-│       YES              NO → Root cause analysis → back to EXECUTE
-│       ↓
-│   EVOLVE:  Evolution engine optimizes the system
-│       ↓
-│   INNOVATE: Innovation engine proposes improvements beyond requirements
-│       ↓
-└── LOOP: Continuous improvement
-```
-
-When JUDGE determines all criteria are satisfied, the system doesn't stop — it enters the EVOLVE stage to optimize itself, then the INNOVATE stage to propose innovations.
+- 📖 [Architecture Docs](docs/design/)
+- 🐛 [Report a Bug](../../issues/new?template=bug_report.md)
+- 💡 [Request a Feature](../../issues/new?template=feature_request.md)
+- 💬 Discussions — Coming soon!
 
 ---
 
-## Verification Mechanism
+## License
 
-The system uses a **three-layer verification approach**:
-
-| Layer | File | Purpose |
-|---|---|---|
-| Declarative | `scripts/verify-spec.md` | Defines **WHAT to check** (platform-agnostic) |
-| Executable | `scripts/verify.py` | Implements **HOW to check** (cross-platform Python) |
-| Completeness | `scripts/verify-generation.py` | Verifies generated projects have all 7+2 layers |
-
-AI agents read the declarative layer and translate checks to their current platform. Humans can run the Python scripts directly.
+[MIT](LICENSE) © 2024-2026 RFBrowser Contributors
 
 ---
 
-## AI Agent Instructions
-
-<!-- AGENT-INSTRUCTION: If you are an AI agent, follow the instructions below. -->
-
-### You Are an AI Agent. Start Here.
-
-1. **Read `META.md`** — it contains the full compilation pipeline
-2. **Follow the pipeline stages in order:**
-   - `meta/interpreter.md` — parse user intent into a structured task
-   - `meta/harness-generator.md` — generate a task-specific harness (7+2+evolution, each layer has executable artifacts)
-   - `meta/agent-factory.md` — generate agent topology (from analysis, NOT from presets)
-   - `meta/orchestrator.md` — plan execution (coordinates across all layers)
-3. **Output goes to `generated/[project-name]/`**
-4. **Run `scripts/verify-generation.py`** to verify 7+2 layer completeness
-5. **Log every generation to `memory/generation-log.md`**
-6. **Log every failure to `memory/meta-mistakes.md`**
-7. **After requirements are met, run the innovation engine** — `python seeds/evolution/innovation-engine.py --project-root <dir>`
-
-### Mandatory Rules
-
-- No execution without interpretation — run the interpreter first
-- No agent without a harness — every agent operates within generated constraints
-- No constraint without a reason — every rule must trace to a task requirement
-- No completion without verification — run `scripts/verify.py` after changes
-- Generate EXECUTABLE systems, not just documents — every layer must have concrete artifacts
-- Agent topology is GENERATED from task analysis, not selected from presets
-- Context files must stay under 60 lines
-- Evolution must never remove verification (cancer prevention)
-- Evolution must never remove itself (suicide prevention)
-- All mutations must be reversible
-- After requirements are met, the innovation engine MUST be run (推陈出新)
-
-### If You're Working in a Generated Project
-
-1. Read `generated/[project]/AGENTS.md` — that's the project-specific harness
-2. Follow the workflows defined there
-3. Stay within the constraints defined there
-4. Run verification after every change
-5. After all acceptance criteria are met, run `python orchestrator.py --innovate` to get innovation suggestions
+<p align="center">
+  <sub>Built with Flutter. Data stays local. Knowledge grows with you.</sub>
+</p>

@@ -362,7 +362,9 @@ class OnnxEmbeddingService {
     if (_session != null) {
       try {
         await _session!.close();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('OnnxEmbedding: error closing session: $e');
+      }
       _session = null;
     }
     _initialized = false;

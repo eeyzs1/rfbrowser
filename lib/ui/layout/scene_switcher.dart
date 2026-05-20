@@ -6,6 +6,7 @@ import '../pages/settings_page.dart';
 import '../../data/stores/vault_store.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/browser_service.dart';
+import '../../services/shortcut_service.dart';
 import 'scene_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -49,33 +50,42 @@ class _SceneSwitcherState extends ConsumerState<SceneSwitcher> {
             ),
           ),
           const SizedBox(width: DesignSpacing.sm),
-          _VaultSwitcher(vaultName: vaultName),
+          Flexible(child: _VaultSwitcher(vaultName: vaultName)),
           const Spacer(),
-          _SceneButton(
-            scene: SceneType.capture,
-            icon: Icons.explore,
-            label: l.capture,
-            shortcut: 'Ctrl+1',
-            isActive: widget.currentScene == SceneType.capture,
-            onTap: () => widget.onSceneChanged(SceneType.capture),
+          Flexible(
+            child: _SceneButton(
+              scene: SceneType.capture,
+              icon: Icons.explore,
+              label: l.capture,
+              shortcut: ref.read(shortcutServiceProvider).getShortcut('switch_capture') ?? 'Ctrl+1',
+              tooltip: l.captureTooltip,
+              isActive: widget.currentScene == SceneType.capture,
+              onTap: () => widget.onSceneChanged(SceneType.capture),
+            ),
           ),
           const SizedBox(width: DesignSpacing.xs),
-          _SceneButton(
-            scene: SceneType.think,
-            icon: Icons.edit_note,
-            label: l.think,
-            shortcut: 'Ctrl+2',
-            isActive: widget.currentScene == SceneType.think,
-            onTap: () => widget.onSceneChanged(SceneType.think),
+          Flexible(
+            child: _SceneButton(
+              scene: SceneType.think,
+              icon: Icons.edit_note,
+              label: l.think,
+              shortcut: ref.read(shortcutServiceProvider).getShortcut('switch_think') ?? 'Ctrl+2',
+              tooltip: l.thinkTooltip,
+              isActive: widget.currentScene == SceneType.think,
+              onTap: () => widget.onSceneChanged(SceneType.think),
+            ),
           ),
           const SizedBox(width: DesignSpacing.xs),
-          _SceneButton(
-            scene: SceneType.connect,
-            icon: Icons.hub,
-            label: l.connect,
-            shortcut: 'Ctrl+3',
-            isActive: widget.currentScene == SceneType.connect,
-            onTap: () => widget.onSceneChanged(SceneType.connect),
+          Flexible(
+            child: _SceneButton(
+              scene: SceneType.connect,
+              icon: Icons.hub,
+              label: l.connect,
+              shortcut: ref.read(shortcutServiceProvider).getShortcut('switch_connect') ?? 'Ctrl+3',
+              tooltip: l.connectTooltip,
+              isActive: widget.currentScene == SceneType.connect,
+              onTap: () => widget.onSceneChanged(SceneType.connect),
+            ),
           ),
           const SizedBox(width: DesignSpacing.xs),
           const _SettingsButton(),
@@ -127,13 +137,15 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
                   color: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: DesignSpacing.xs),
-                Text(
-                  widget.vaultName,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.primary,
+                Flexible(
+                  child: Text(
+                    widget.vaultName,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 Icon(Icons.arrow_drop_down, size: 14, color: theme.hintColor),
               ],
@@ -314,6 +326,7 @@ class _SceneButton extends StatefulWidget {
   final IconData icon;
   final String label;
   final String shortcut;
+  final String tooltip;
   final bool isActive;
   final VoidCallback onTap;
 
@@ -322,6 +335,7 @@ class _SceneButton extends StatefulWidget {
     required this.icon,
     required this.label,
     required this.shortcut,
+    required this.tooltip,
     required this.isActive,
     required this.onTap,
   });
@@ -344,62 +358,69 @@ class _SceneButtonState extends State<_SceneButton> {
       button: true,
       selected: active,
       label: widget.label,
-      child: Material(
-        color: active
-            ? DesignColors.primaryMuted
-            : (_isHovered ? DesignColors.primaryHover : Colors.transparent),
-        borderRadius: BorderRadius.circular(DesignRadius.sm),
-        child: InkWell(
+      child: Tooltip(
+        message: widget.tooltip,
+        waitDuration: const Duration(milliseconds: 500),
+        child: Material(
+          color: active
+              ? DesignColors.primaryMuted
+              : (_isHovered ? DesignColors.primaryHover : Colors.transparent),
           borderRadius: BorderRadius.circular(DesignRadius.sm),
-          onTap: active ? null : widget.onTap,
-          onHover: (hovered) => setState(() => _isHovered = hovered),
-          onFocusChange: (focused) => setState(() => _isFocused = focused),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DesignSpacing.md,
-              vertical: DesignSpacing.sm,
-            ),
-            constraints: const BoxConstraints(minHeight: DesignTouchTarget.minSize),
-            decoration: BoxDecoration(
-              border: _isFocused && !active
-                  ? Border.all(color: primary, width: 2)
-                  : null,
-              borderRadius: BorderRadius.circular(DesignRadius.sm),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  widget.icon,
-                  size: 18,
-                  color: active ? primary : theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: DesignSpacing.xs),
-                Flexible(
-                  child: Text(
-                    widget.label,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                      color: active
-                          ? primary
-                          : theme.colorScheme.onSurfaceVariant,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(DesignRadius.sm),
+            onTap: active ? null : widget.onTap,
+            onHover: (hovered) => setState(() => _isHovered = hovered),
+            onFocusChange: (focused) => setState(() => _isFocused = focused),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DesignSpacing.md,
+                vertical: DesignSpacing.sm,
+              ),
+              constraints: const BoxConstraints(minHeight: DesignTouchTarget.minSize),
+              decoration: BoxDecoration(
+                border: _isFocused && !active
+                    ? Border.all(color: primary, width: 2)
+                    : null,
+                borderRadius: BorderRadius.circular(DesignRadius.sm),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    widget.icon,
+                    size: 18,
+                    color: active ? primary : theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: DesignSpacing.xs),
+                  Flexible(
+                    child: Text(
+                      widget.label,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                        color: active
+                            ? primary
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const SizedBox(width: DesignSpacing.xs),
-                Text(
-                  widget.shortcut,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: active
-                        ? primary.withValues(alpha: 0.6)
-                        : theme.colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.5,
-                          ),
+                  const SizedBox(width: DesignSpacing.xs),
+                  Flexible(
+                    child: Text(
+                      widget.shortcut,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: active
+                            ? primary.withValues(alpha: 0.6)
+                            : theme.colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.5,
+                              ),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

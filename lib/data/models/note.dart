@@ -74,7 +74,7 @@ class Note {
 
   String toMarkdown() {
     final buffer = StringBuffer();
-    if (frontMatter.isNotEmpty || tags.isNotEmpty || aliases.isNotEmpty) {
+    if (frontMatter.isNotEmpty || tags.isNotEmpty || aliases.isNotEmpty || title.isNotEmpty) {
       buffer.writeln('---');
       if (title.isNotEmpty) buffer.writeln('title: "$title"');
       buffer.writeln('created: ${created.toIso8601String()}');

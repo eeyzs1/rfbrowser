@@ -1,79 +1,129 @@
-version: 10
-status: solid
-updated_at: "2026-05-13"
-task: "RFBrowser — AI-Powered Knowledge Browser"
+checkpoints:
+- id: ckpt-001
+  name: initial-app-fixes
+- id: ckpt-002
+  name: harness-evolution
+- id: ckpt-003
+  name: ux-redesign-planning
+- id: ckpt-004
+  name: ux-redesign-implementation
+- id: ckpt-005
+  name: six-epics-architecture-refactor
+- id: ckpt-006
+  name: cicd-pipeline-update
+- id: ckpt-007
+  name: next-phase-planning
+- id: ckpt-008
+  name: phase1-completion-and-reassessment
+- id: ckpt-009
+  name: remaining-epics-completion
+- id: ckpt-010
+  name: final-epics-completion
+- criteria: 12
+  date: '2026-05-08'
+  id: ckpt-011
+  name: ux-storage-refactor-session
+- criteria: 16
+  date: '2026-05-08'
+  id: ckpt-012
+  name: editor-ux-and-theme-overhaul
+- criteria: 5
+  date: '2026-05-11'
+  id: ckpt-013
+  name: canvas-refactor-and-bugfix-session
+- criteria: 7
+  date: '2026-05-12'
+  id: ckpt-014
+  name: canvas-toolbar-hover-shortcuts-session
 current_iteration: 5
-next_phase: "v1.0 Release: macOS build + E2E tests + docs + version bump"
+evolution_counts:
+  constraints_activated: 50
+  constraints_added: 60
+  constraints_verified: 60
+  innovations_proposed: 6
+  mutations_applied: 36
+metrics:
+  completed: 95
+  constraint_violations: 0
+  lint_issues: 0
+  satisfaction_rate: 1.0
+  test_count: 97
+  total_criteria: 95
+next_phase: 'v1.0 Release: macOS build + E2E tests + docs + version bump'
 progress:
+  completed_criteria:
+  - '[lint_and_analyze] flutter analyze 0 issues, 17 lint fixes applied'
+  - '[agents_md_rules] All P/C/S/A/U/F/UX rules verified (P-1 through UX-15)'
+  - '[performance] SharedPreferences cached, shouldRepaint data comparison, Stack+Visibility
+    for WebView tabs, debounced save, _CameraNotifier+ListenableBuilder'
+  - '[security] WebView URL filtering (13/13 pass), API keys in flutter_secure_storage,
+    path normalization'
+  - '[canvas] Persistence .json in vault/.rf/, live note data via noteId, auto vs
+    manual connections distinct, clip-before-draw, FocusNode hasFocus check, connection
+    hit test in onScaleStart, cycle-select overlapping lines, hover dropdown menus,
+    undo/redo shortcuts, configurable shortcuts'
+  - '[ux] Error dismiss clears state, empty states with CTA, CommandBar searches actual
+    data, AI streaming real-time, top 5 keyboard shortcuts, LinkExtractor+LinkResolver
+    wired, editor formatting toolbar, status bar with counts, SegmentedButton view
+    switcher, explicit save feedback, l10n compliance (100+ keys)'
+  - '[storage] Chrome-style bookmark folders, note Trie tree, bookmark persistence
+    to vault/.rfbrowser/, vault config JSON migration'
+  - '[theme] Independent scaffold/surface/accent colors, isDarkMode computed from
+    luminance, color presets with distinct hues'
+  - '[ai] AI summary for web+notes with toggle, save-as-note button, back button on
+    AI panel'
+  - '[search] HybridSearch (semantic+FTS+RRF), EmbeddingService (Ollama+OpenAI+local+HNSW)'
+  - '[graph] Force-directed+circular layouts, bridge nodes, stats'
+  - '[services] NoteNotifier/LinkNotifier/SearchNotifier split from KnowledgeNotifier,
+    14 core services after pruning'
+  - '[architecture] 3-scene architecture (capture/think/connect), every component
+    has data flow path'
+  - '[ci_cd] Analyze + constraints + audit + tests + 4-platform build + release'
+  - '[testing] 97 tests pass, HNSW benchmark 4/4, WebView security 13/13, Graph+Canvas
+    15/15'
+  - '[harness] Evolution cycles x4, 48/48 genome constraints verified, execution layer
+    functional, paths adapted to RFBrowser'
+  - flutter analyze passes with 0 issues
+  - All empty catch blocks replaced with proper error logging
   completed_criteria_summary:
-    lint_and_analyze: "flutter analyze 0 issues, 17 lint fixes applied"
-    agents_md_rules: "All P/C/S/A/U/F/UX rules verified (P-1 through UX-15)"
-    performance: "SharedPreferences cached, shouldRepaint data comparison, Stack+Visibility for WebView tabs, debounced save, _CameraNotifier+ListenableBuilder"
-    security: "WebView URL filtering (13/13 pass), API keys in flutter_secure_storage, path normalization"
-    canvas: "Persistence .json in vault/.rf/, live note data via noteId, auto vs manual connections distinct, clip-before-draw, FocusNode hasFocus check, connection hit test in onScaleStart, cycle-select overlapping lines, hover dropdown menus, undo/redo shortcuts, configurable shortcuts"
-    ux: "Error dismiss clears state, empty states with CTA, CommandBar searches actual data, AI streaming real-time, top 5 keyboard shortcuts, LinkExtractor+LinkResolver wired, editor formatting toolbar, status bar with counts, SegmentedButton view switcher, explicit save feedback, l10n compliance (100+ keys)"
-    storage: "Chrome-style bookmark folders, note Trie tree, bookmark persistence to vault/.rfbrowser/, vault config JSON migration"
-    theme: "Independent scaffold/surface/accent colors, isDarkMode computed from luminance, color presets with distinct hues"
-    ai: "AI summary for web+notes with toggle, save-as-note button, back button on AI panel"
-    search: "HybridSearch (semantic+FTS+RRF), EmbeddingService (Ollama+OpenAI+local+HNSW)"
-    graph: "Force-directed+circular layouts, bridge nodes, stats"
-    services: "NoteNotifier/LinkNotifier/SearchNotifier split from KnowledgeNotifier, 14 core services after pruning"
-    architecture: "3-scene architecture (capture/think/connect), every component has data flow path"
-    ci_cd: "Analyze + constraints + audit + tests + 4-platform build + release"
-    testing: "97 tests pass, HNSW benchmark 4/4, WebView security 13/13, Graph+Canvas 15/15"
-    harness: "Evolution cycles x4, 48/48 genome constraints verified, execution layer functional, paths adapted to RFBrowser"
-  total_completed: 95
+    agents_md_rules: All P/C/S/A/U/F/UX rules verified (P-1 through UX-15)
+    ai: AI summary for web+notes with toggle, save-as-note button, back button on
+      AI panel
+    architecture: 3-scene architecture (capture/think/connect), every component has
+      data flow path
+    canvas: Persistence .json in vault/.rf/, live note data via noteId, auto vs manual
+      connections distinct, clip-before-draw, FocusNode hasFocus check, connection
+      hit test in onScaleStart, cycle-select overlapping lines, hover dropdown menus,
+      undo/redo shortcuts, configurable shortcuts
+    ci_cd: Analyze + constraints + audit + tests + 4-platform build + release
+    graph: Force-directed+circular layouts, bridge nodes, stats
+    harness: Evolution cycles x4, 48/48 genome constraints verified, execution layer
+      functional, paths adapted to RFBrowser
+    lint_and_analyze: flutter analyze 0 issues, 17 lint fixes applied
+    performance: SharedPreferences cached, shouldRepaint data comparison, Stack+Visibility
+      for WebView tabs, debounced save, _CameraNotifier+ListenableBuilder
+    search: HybridSearch (semantic+FTS+RRF), EmbeddingService (Ollama+OpenAI+local+HNSW)
+    security: WebView URL filtering (13/13 pass), API keys in flutter_secure_storage,
+      path normalization
+    services: NoteNotifier/LinkNotifier/SearchNotifier split from KnowledgeNotifier,
+      14 core services after pruning
+    storage: Chrome-style bookmark folders, note Trie tree, bookmark persistence to
+      vault/.rfbrowser/, vault config JSON migration
+    testing: 97 tests pass, HNSW benchmark 4/4, WebView security 13/13, Graph+Canvas
+      15/15
+    theme: Independent scaffold/surface/accent colors, isDarkMode computed from luminance,
+      color presets with distinct hues
+    ux: Error dismiss clears state, empty states with CTA, CommandBar searches actual
+      data, AI streaming real-time, top 5 keyboard shortcuts, LinkExtractor+LinkResolver
+      wired, editor formatting toolbar, status bar with counts, SegmentedButton view
+      switcher, explicit save feedback, l10n compliance (100+ keys)
   failed_criteria: []
   in_progress: []
   pending:
-    - "v1.0 Release: macOS build job + E2E user journey tests + auto-generated docs + version bump"
-checkpoints:
-  - id: ckpt-001
-    name: "initial-app-fixes"
-  - id: ckpt-002
-    name: "harness-evolution"
-  - id: ckpt-003
-    name: "ux-redesign-planning"
-  - id: ckpt-004
-    name: "ux-redesign-implementation"
-  - id: ckpt-005
-    name: "six-epics-architecture-refactor"
-  - id: ckpt-006
-    name: "cicd-pipeline-update"
-  - id: ckpt-007
-    name: "next-phase-planning"
-  - id: ckpt-008
-    name: "phase1-completion-and-reassessment"
-  - id: ckpt-009
-    name: "remaining-epics-completion"
-  - id: ckpt-010
-    name: "final-epics-completion"
-  - id: ckpt-011
-    name: "ux-storage-refactor-session"
-    date: "2026-05-08"
-    criteria: 12
-  - id: ckpt-012
-    name: "editor-ux-and-theme-overhaul"
-    date: "2026-05-08"
-    criteria: 16
-  - id: ckpt-013
-    name: "canvas-refactor-and-bugfix-session"
-    date: "2026-05-11"
-    criteria: 5
-  - id: ckpt-014
-    name: "canvas-toolbar-hover-shortcuts-session"
-    date: "2026-05-12"
-    criteria: 7
-metrics:
-  total_criteria: 95
-  completed: 95
-  satisfaction_rate: 1.0
-  lint_issues: 0
-  constraint_violations: 0
-  test_count: 97
-evolution_counts:
-  mutations_applied: 36
-  constraints_added: 60
-  innovations_proposed: 6
-  constraints_activated: 50
-  constraints_verified: 60
+  - 'v1.0 Release: macOS build job + E2E user journey tests + auto-generated docs
+    + version bump'
+  total_completed: 95
+status: in_progress
+task: RFBrowser — AI-Powered Knowledge Browser
+updated_at: '2026-05-20T08:47:28.509200'
+version: 10

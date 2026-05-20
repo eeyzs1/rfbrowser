@@ -14,14 +14,11 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('C-6: Bookmark Folder Cycle Detection', () {
-    late BrowserNotifier browserNotifier;
-
     Future<void> pumpBrowserHarness(WidgetTester tester) async {
-      browserNotifier = _TestBrowserNotifier();
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            browserProvider.overrideWith(() => browserNotifier),
+            browserProvider.overrideWith(() => _TestBrowserNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -40,9 +37,7 @@ void main() {
       expect(root.parentId, isEmpty);
     });
 
-    testWidgets('fromJson forces root parentId to empty (C-6)', (tester) async {
-      await pumpBrowserHarness(tester);
-
+    test('fromJson forces root parentId to empty (C-6)', () {
       final json = {
         'id': 'bookmarks-bar',
         'name': 'Bookmarks',
@@ -56,6 +51,9 @@ void main() {
     testWidgets('createBookmarkFolder prevents self-referencing (C-6)', (tester) async {
       await pumpBrowserHarness(tester);
 
+      final element = tester.element(find.byType(Scaffold));
+      final container = ProviderScope.containerOf(element);
+      final browserNotifier = container.read(browserProvider.notifier);
       final folderId = browserNotifier.createBookmarkFolder('Test');
       final folder = browserNotifier.state.bookmarkFolders.firstWhere(
         (f) => f.id == folderId,
@@ -66,19 +64,25 @@ void main() {
     testWidgets('deleteBookmarkFolder handles cycles safely (C-6)', (tester) async {
       await pumpBrowserHarness(tester);
 
-      final folderId1 = browserNotifier.createBookmarkFolder('Folder1');
-      browserNotifier.createBookmarkFolder('Folder2');
+      final element = tester.element(find.byType(Scaffold));
+      final container = ProviderScope.containerOf(element);
+      final browserNotifier = container.read(browserProvider.notifier);
 
-      expect(browserNotifier.state.bookmarkFolders.length, equals(2));
+      final folderId1 = browserNotifier.createBookmarkFolder('Folder1', parentId: 'bookmarks-bar');
+      final folderId2 = browserNotifier.createBookmarkFolder('Folder2', parentId: 'bookmarks-bar');
+
+      final countBeforeDelete = browserNotifier.state.bookmarkFolders.length;
+      debugPrint('BEFORE DELETE: count=$countBeforeDelete, folders=${browserNotifier.state.bookmarkFolders.map((f) => '${f.id}:${f.parentId}')}');
 
       browserNotifier.deleteBookmarkFolder(folderId1);
       await tester.pumpAndSettle();
 
-      expect(
-        browserNotifier.state.bookmarkFolders.length,
-        equals(1),
-        reason: 'Should delete one folder without infinite loop',
-      );
+      final countAfterDelete = browserNotifier.state.bookmarkFolders.length;
+      debugPrint('AFTER DELETE: count=$countAfterDelete, folders=${browserNotifier.state.bookmarkFolders.map((f) => '${f.id}:${f.parentId}')}');
+
+      expect(countAfterDelete, equals(countBeforeDelete - 1), reason: 'Should delete only Folder1');
+      expect(browserNotifier.state.bookmarkFolders.any((f) => f.id == folderId1), isFalse, reason: 'Folder1 should be deleted');
+      expect(browserNotifier.state.bookmarkFolders.any((f) => f.id == folderId2), isTrue, reason: 'Folder2 should still exist');
     });
   });
 
