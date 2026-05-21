@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/agent_service.dart';
 import '../../data/models/agent_task.dart';
+import '../../l10n/app_localizations.dart';
 
 class AgentMonitor extends ConsumerWidget {
   const AgentMonitor({super.key});
@@ -9,6 +10,7 @@ class AgentMonitor extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final agentState = ref.watch(agentProvider);
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     if (agentState.tasks.isEmpty) {
@@ -18,10 +20,10 @@ class AgentMonitor extends ConsumerWidget {
           children: [
             Icon(Icons.smart_toy, size: 48, color: theme.hintColor),
             const SizedBox(height: 12),
-            Text('No agent tasks', style: theme.textTheme.bodyMedium),
+            Text(l10n.agentNoTasks, style: theme.textTheme.bodyMedium),
             const SizedBox(height: 4),
             Text(
-              'Start a research or extraction task',
+              l10n.agentNoTasksHint,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.hintColor,
               ),
@@ -50,11 +52,11 @@ class _TaskCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final statusColor = _statusColor(task.status, theme);
     final statusIcon = _statusIcon(task.status);
-    final completedSteps = task.steps
-        .where((s) => s.status == TaskStatus.completed)
-        .length;
+    final completedSteps =
+        task.steps.where((s) => s.status == TaskStatus.completed).length;
     final totalSteps = task.steps.length;
     final progress = totalSteps > 0 ? completedSteps / totalSteps : 0.0;
 
@@ -78,28 +80,25 @@ class _TaskCard extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                _ModeBadge(mode: task.mode),
                 if (task.status == TaskStatus.running) ...[
                   IconButton(
                     icon: const Icon(Icons.pause, size: 16),
                     onPressed: () =>
                         ref.read(agentProvider.notifier).pauseTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
-                    ),
-                    tooltip: 'Pause',
+                    constraints:
+                        const BoxConstraints(minWidth: 24, minHeight: 24),
+                    tooltip: l10n.agentPause,
                   ),
                   IconButton(
                     icon: const Icon(Icons.stop, size: 16),
                     onPressed: () =>
                         ref.read(agentProvider.notifier).cancelTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
-                    ),
-                    tooltip: 'Cancel',
+                    constraints:
+                        const BoxConstraints(minWidth: 24, minHeight: 24),
+                    tooltip: l10n.agentCancel,
                   ),
                 ],
                 if (task.status == TaskStatus.paused)
@@ -108,11 +107,9 @@ class _TaskCard extends ConsumerWidget {
                     onPressed: () =>
                         ref.read(agentProvider.notifier).resumeTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
-                    ),
-                    tooltip: 'Resume',
+                    constraints:
+                        const BoxConstraints(minWidth: 24, minHeight: 24),
+                    tooltip: l10n.agentResume,
                   ),
                 if (task.status == TaskStatus.completed ||
                     task.status == TaskStatus.failed)
@@ -121,11 +118,9 @@ class _TaskCard extends ConsumerWidget {
                     onPressed: () =>
                         ref.read(agentProvider.notifier).removeTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
-                    ),
-                    tooltip: 'Remove',
+                    constraints:
+                        const BoxConstraints(minWidth: 24, minHeight: 24),
+                    tooltip: l10n.remove,
                   ),
               ],
             ),
@@ -141,7 +136,7 @@ class _TaskCard extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '$completedSteps/$totalSteps steps',
+                l10n.agentStepProgress(completedSteps, totalSteps),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.hintColor,
                 ),
@@ -186,6 +181,40 @@ class _TaskCard extends ConsumerWidget {
   }
 }
 
+class _ModeBadge extends StatelessWidget {
+  final TaskMode mode;
+
+  const _ModeBadge({required this.mode});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final (label, color) = switch (mode) {
+      TaskMode.manual => (l10n.agentModeManual, theme.hintColor),
+      TaskMode.aiPlanned => (l10n.agentModeAiPlanned, theme.colorScheme.primary),
+      TaskMode.reactLoop => (l10n.agentModeReact, theme.colorScheme.tertiary),
+    };
+
+    return Container(
+      margin: const EdgeInsets.only(left: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
 class _StepRow extends StatelessWidget {
   final AgentStep step;
 
@@ -200,22 +229,62 @@ class _StepRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 12, color: color),
           const SizedBox(width: 6),
           Expanded(
-            child: Text(
-              step.description,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: step.status == TaskStatus.completed
-                    ? theme.hintColor
-                    : theme.textTheme.bodySmall?.color,
-                decoration: step.status == TaskStatus.completed
-                    ? TextDecoration.lineThrough
-                    : null,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    if (step.toolName != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Text(
+                          step.toolName!,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Expanded(
+                      child: Text(
+                        step.description,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: step.status == TaskStatus.completed
+                              ? theme.hintColor
+                              : theme.textTheme.bodySmall?.color,
+                          decoration: step.status == TaskStatus.completed
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                if (step.retryCount > 0 && step.status == TaskStatus.running)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      'retry ${step.retryAttempt}/${step.retryCount}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.tertiary,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],

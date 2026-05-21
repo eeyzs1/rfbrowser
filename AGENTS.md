@@ -103,7 +103,8 @@ seeds/
 UI (lib/ui/)        → pages (Browser, Editor, Graph, Canvas, Settings, AI Chat)
                        widgets (CommandBar, Backlinks, NoteSidebar, SplitPane, etc.)
 Service (lib/services/) → ai_service, agent_service, browser_service, knowledge_service,
-                          git_sync_service, webdav_sync_service, clipper_service, etc.
+                          git_sync_service, webdav_sync_service, clipper_service, webhook_server, etc.
+                          agent/ → AgentTool, AgentToolRegistry, BuiltinTools, PlanGenerator
 Core (lib/core/)       → graph algorithms, link extractor/resolver, context assembler,
                           markdown highlighter, editor controllers
 Data (lib/data/)       → models (Note, Link, AgentTask, Skill, QuickMove, Bookmark, BookmarkFolder, etc.)
@@ -209,6 +210,9 @@ Plugins (lib/plugins/) → Plugin host + API + builtin Dataview
 - **F-8**: `Markdown` widget doesn't accept `scrollController` — use `MarkdownBody`.
 - **F-9**: `SegmentedButton.segments` cannot be `const` when labels use runtime l10n values — remove `const` keyword.
 - **F-10**: `AppLocalizations` is only available inside `build()` — pass it as parameter to helper methods that need localized strings.
+- **F-11**: Never use `const` constructor when parameters include `DateTime.now()` or other runtime values.
+- **F-12**: Use `Color.withValues(alpha:)` instead of deprecated `Color.withOpacity()` for Flutter 3.27+.
+- **F-13**: When referencing Riverpod providers from other service files, always add the corresponding import to avoid undefined identifier errors.
 
 ### Product UX
 - **UX-1**: Every backend service must have at least one user-accessible trigger.

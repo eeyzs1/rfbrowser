@@ -35,6 +35,14 @@ checkpoints:
   date: '2026-05-12'
   id: ckpt-014
   name: canvas-toolbar-hover-shortcuts-session
+- criteria: 8
+  date: '2026-05-21'
+  id: ckpt-015
+  name: agent-engine-implementation
+- criteria: 5
+  date: '2026-05-21'
+  id: ckpt-016
+  name: agent-ui-integration-and-tools
 current_iteration: 5
 evolution_counts:
   constraints_activated: 50
@@ -43,12 +51,12 @@ evolution_counts:
   innovations_proposed: 6
   mutations_applied: 36
 metrics:
-  completed: 95
+  completed: 108
   constraint_violations: 0
   lint_issues: 0
   satisfaction_rate: 1.0
   test_count: 97
-  total_criteria: 95
+  total_criteria: 108
 next_phase: 'v1.0 Release: macOS build + E2E tests + docs + version bump'
 progress:
   completed_criteria:
@@ -85,8 +93,22 @@ progress:
     functional, paths adapted to RFBrowser'
   - flutter analyze passes with 0 issues
   - All empty catch blocks replaced with proper error logging
+  - '[agent_engine] Tool system (AgentTool + ToolResult + AgentToolRegistry), 7 builtin tools (navigate, extract_text, create_note, search_notes, ai_reason, web_clip, delete_note)'
+  - '[agent_engine] LLM plan generator with ReAct loop support, step reference resolution, fallback parsing'
+  - '[agent_engine] AgentService with 3 task modes (manual/aiPlanned/reactLoop), step retry, condition evaluation, time/step limits'
+  - '[agent_engine] Plugin API extension (AgentAPI) for custom tool registration'
+  - '[agent_engine] Webhook REST server (shelf) with auth, CORS, agent/notes/browser/AI endpoints'
+  - '[agent_engine] Agent monitor UI with task cards, step progress, mode badges, pause/resume/cancel controls'
+  - '[agent_engine] Agent-related l10n keys (zh + en)'
+  - '[agent_engine] Unit tests for tool system, plan generator, agent service'
+  - '[agent_ui] AgentFloat floating panel with goal input, mode selector, task list, quick actions'
+  - '[agent_ui] Agent settings section in Settings page (Webhook server config, API key, port)'
+  - '[agent_tools] 5 new builtin tools: update_note, list_notes, get_tags, move_note, rename_note (total 12 tools)'
+  - '[agent_persistence] Agent task persistence via AgentPersistence (JSON in ApplicationSupport), auto-load on startup, auto-save on task changes'
   completed_criteria_summary:
     agents_md_rules: All P/C/S/A/U/F/UX rules verified (P-1 through UX-15)
+    agent_engine: Tool system, plan generator, 3 task modes, plugin API, webhook server, monitor UI, l10n, unit tests
+    agent_ui: AgentFloat panel, settings section, quick actions, 12 builtin tools, task persistence
     ai: AI summary for web+notes with toggle, save-as-note button, back button on
       AI panel
     architecture: 3-scene architecture (capture/think/connect), every component has
@@ -122,8 +144,8 @@ progress:
   pending:
   - 'v1.0 Release: macOS build job + E2E user journey tests + auto-generated docs
     + version bump'
-  total_completed: 95
+  total_completed: 108
 status: in_progress
 task: RFBrowser — AI-Powered Knowledge Browser
-updated_at: '2026-05-20T08:47:28.509200'
-version: 10
+updated_at: '2026-05-21T12:00:00.000000'
+version: 12

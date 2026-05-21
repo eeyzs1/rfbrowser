@@ -4599,7 +4599,7 @@ abstract class AppLocalizations {
   /// No description provided for @serviceNotRunningConfirm.
   ///
   /// In en, this message translates to:
-  /// **'{name} is not currently running on your computer. The provider will be added but won't work until you start the service. Do you want to add it anyway?'**
+  /// **'{name} is not currently running on your computer. The provider will be added but won\'t work until you start the service. Do you want to add it anyway?'**
   String serviceNotRunningConfirm(String name);
 
   /// No description provided for @addAnyway.
@@ -4607,6 +4607,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add Anyway'**
   String get addAnyway;
+
+  /// No description provided for @agentNoTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No agent tasks'**
+  String get agentNoTasks;
+
+  /// No description provided for @agentNoTasksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a research or extraction task'**
+  String get agentNoTasksHint;
+
+  /// No description provided for @agentPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get agentPause;
+
+  /// No description provided for @agentCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get agentCancel;
+
+  /// No description provided for @agentResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get agentResume;
+
+  /// No description provided for @agentStepProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed}/{total} steps'**
+  String agentStepProgress(int completed, int total);
+
+  /// No description provided for @agentModeManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get agentModeManual;
+
+  /// No description provided for @agentModeAiPlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Plan'**
+  String get agentModeAiPlanned;
+
+  /// No description provided for @agentModeReact.
+  ///
+  /// In en, this message translates to:
+  /// **'ReAct'**
+  String get agentModeReact;
+
+  /// No description provided for @agentToolNavigate.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate'**
+  String get agentToolNavigate;
+
+  /// No description provided for @agentToolExtractText.
+  ///
+  /// In en, this message translates to:
+  /// **'Extract Text'**
+  String get agentToolExtractText;
+
+  /// No description provided for @agentToolCreateNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Note'**
+  String get agentToolCreateNote;
+
+  /// No description provided for @agentToolSearchNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Notes'**
+  String get agentToolSearchNotes;
+
+  /// No description provided for @agentToolAIReason.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Reason'**
+  String get agentToolAIReason;
+
+  /// No description provided for @agentToolWebClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Web Clip'**
+  String get agentToolWebClip;
+
+  /// No description provided for @agentToolDeleteNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Note'**
+  String get agentToolDeleteNote;
+
+  /// No description provided for @webhookServerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Webhook Server'**
+  String get webhookServerTitle;
+
+  /// No description provided for @webhookServerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Expose REST API for external automation tools (N8N, Zapier, etc.)'**
+  String get webhookServerDesc;
+
+  /// No description provided for @webhookServerPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get webhookServerPort;
+
+  /// No description provided for @webhookServerApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API Key'**
+  String get webhookServerApiKey;
+
+  /// No description provided for @webhookServerStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Server'**
+  String get webhookServerStart;
+
+  /// No description provided for @webhookServerStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Server'**
+  String get webhookServerStop;
+
+  /// No description provided for @webhookServerRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Server running on {url}'**
+  String webhookServerRunning(String url);
+
+  /// No description provided for @webhookServerStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Server stopped'**
+  String get webhookServerStopped;
+
+  /// No description provided for @webhookServerCopyKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy API Key'**
+  String get webhookServerCopyKey;
+
+  /// No description provided for @webhookServerApiKeyCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'API Key copied to clipboard'**
+  String get webhookServerApiKeyCopied;
+
+  /// No description provided for @agentGoalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a goal, e.g.: Research latest quantum computing advances'**
+  String get agentGoalHint;
+
+  /// No description provided for @agentQuickResearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Research'**
+  String get agentQuickResearch;
+
+  /// No description provided for @agentQuickSummarize.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize'**
+  String get agentQuickSummarize;
+
+  /// No description provided for @agentQuickOrganize.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize'**
+  String get agentQuickOrganize;
 }
 
 class _AppLocalizationsDelegate

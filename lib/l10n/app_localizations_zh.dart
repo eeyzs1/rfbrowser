@@ -2360,9 +2360,104 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serviceNotRunningTitle => '服务未运行';
 
   @override
-  String serviceNotRunningConfirm(String name) =>
-      '$name 当前未在您的电脑上运行。提供商将被添加，但在启动服务之前无法使用。是否仍然添加？';
+  String serviceNotRunningConfirm(String name) {
+    return '$name 当前未在您的电脑上运行。提供商将被添加，但在启动服务之前无法使用。是否仍然添加？';
+  }
 
   @override
   String get addAnyway => '仍然添加';
+
+  @override
+  String get agentNoTasks => '暂无智能体任务';
+
+  @override
+  String get agentNoTasksHint => '开始一个研究或提取任务';
+
+  @override
+  String get agentPause => '暂停';
+
+  @override
+  String get agentCancel => '取消';
+
+  @override
+  String get agentResume => '继续';
+
+  @override
+  String agentStepProgress(int completed, int total) {
+    return '$completed/$total 步';
+  }
+
+  @override
+  String get agentModeManual => '手动';
+
+  @override
+  String get agentModeAiPlanned => 'AI 计划';
+
+  @override
+  String get agentModeReact => 'ReAct 循环';
+
+  @override
+  String get agentToolNavigate => '导航';
+
+  @override
+  String get agentToolExtractText => '提取文本';
+
+  @override
+  String get agentToolCreateNote => '创建笔记';
+
+  @override
+  String get agentToolSearchNotes => '搜索笔记';
+
+  @override
+  String get agentToolAIReason => 'AI 推理';
+
+  @override
+  String get agentToolWebClip => '网页剪藏';
+
+  @override
+  String get agentToolDeleteNote => '删除笔记';
+
+  @override
+  String get webhookServerTitle => 'Webhook 服务器';
+
+  @override
+  String get webhookServerDesc => '为外部自动化工具（N8N、Zapier 等）提供 REST API 接口';
+
+  @override
+  String get webhookServerPort => '端口';
+
+  @override
+  String get webhookServerApiKey => 'API 密钥';
+
+  @override
+  String get webhookServerStart => '启动服务器';
+
+  @override
+  String get webhookServerStop => '停止服务器';
+
+  @override
+  String webhookServerRunning(String url) {
+    return '服务器运行于 $url';
+  }
+
+  @override
+  String get webhookServerStopped => '服务器已停止';
+
+  @override
+  String get webhookServerCopyKey => '复制 API 密钥';
+
+  @override
+  String get webhookServerApiKeyCopied => 'API 密钥已复制到剪贴板';
+
+  @override
+  String get agentGoalHint => '输入目标，如：研究量子计算最新进展';
+
+  @override
+  String get agentQuickResearch => '研究';
+
+  @override
+  String get agentQuickSummarize => '总结';
+
+  @override
+  String get agentQuickOrganize => '整理';
 }

@@ -1,6 +1,6 @@
 # Meta-Mistakes — RFBrowser (Compressed)
 
-All 20 meta-mistakes are Resolved. Detailed evidence is in git history.
+All 23 meta-mistakes are Resolved. Detailed evidence is in git history.
 Each mistake produced a constraint tracked in genome.yaml.
 
 | ID | Lesson | Constraint |
@@ -25,3 +25,6 @@ Each mistake produced a constraint tracked in genome.yaml.
 | MM-018 | FocusNode must not be disposed while hasFocus is true | C049 |
 | MM-019 | Camera state should use ChangeNotifier + ListenableBuilder, not setState per frame | C050 |
 | MM-020 | Every clickable element must be hit-tested in onScaleStart, not just in onTap | C051 |
+| MM-021 | Never use const constructor when parameters include DateTime.now() or other runtime values | C052 |
+| MM-022 | When referencing providers from other services, always add the corresponding import — missing imports cause undefined identifier errors | C053 |
+| MM-023 | Use Color.withValues(alpha:) instead of deprecated Color.withOpacity() for Flutter 3.27+ | C054 |

@@ -1008,5 +1008,46 @@
       "name": {"type": "String"}
     }
   },
-  "addAnyway": "Add Anyway"
+  "addAnyway": "Add Anyway",
+  "agentNoTasks": "No agent tasks",
+  "agentNoTasksHint": "Start a research or extraction task",
+  "agentPause": "Pause",
+  "agentCancel": "Cancel",
+  "agentResume": "Resume",
+  "agentStepProgress": "{completed}/{total} steps",
+  "@agentStepProgress": {
+    "placeholders": {
+      "completed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "agentModeManual": "Manual",
+  "agentModeAiPlanned": "AI Plan",
+  "agentModeReact": "ReAct",
+  "agentToolNavigate": "Navigate",
+  "agentToolExtractText": "Extract Text",
+  "agentToolCreateNote": "Create Note",
+  "agentToolSearchNotes": "Search Notes",
+  "agentToolAIReason": "AI Reason",
+  "agentToolWebClip": "Web Clip",
+  "agentToolDeleteNote": "Delete Note",
+  "webhookServerTitle": "Webhook Server",
+  "webhookServerDesc": "Expose REST API for external automation tools (N8N, Zapier, etc.)",
+  "webhookServerPort": "Port",
+  "webhookServerApiKey": "API Key",
+  "webhookServerStart": "Start Server",
+  "webhookServerStop": "Stop Server",
+  "webhookServerRunning": "Server running on {url}",
+  "@webhookServerRunning": {
+    "placeholders": {
+      "url": {"type": "String"}
+    }
+  },
+  "webhookServerStopped": "Server stopped",
+  "webhookServerCopyKey": "Copy API Key",
+  "webhookServerApiKeyCopied": "API Key copied to clipboard",
+  "agentGoalHint": "Enter a goal, e.g.: Research latest quantum computing advances",
+  "agentQuickResearch": "Research",
+  "agentQuickSummarize": "Summarize",
+  "agentQuickOrganize": "Organize"
 }

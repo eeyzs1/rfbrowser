@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/note_repository.dart';
 import '../../data/stores/index_store.dart';
+import '../../services/agent/agent_tool.dart';
 import '../../services/browser_service.dart';
 import '../../services/agent_service.dart';
 import '../../data/models/agent_task.dart';
@@ -699,12 +700,27 @@ class PluginHostNotifier extends Notifier<PluginState> {
         return {'text': ''};
       case 'agent.createTask':
         final agent = ref.read(agentProvider.notifier);
+        final modeStr = args['mode'] as String? ?? 'manual';
+        final mode = TaskMode.values.firstWhere(
+          (e) => e.name == modeStr,
+          orElse: () => TaskMode.manual,
+        );
         final task = AgentTask(
           id: 'plugin_${DateTime.now().millisecondsSinceEpoch}',
           name: args['name'] as String? ?? 'Plugin Task',
           description: args['description'] as String? ?? '',
+          mode: mode,
           steps: (args['steps'] as List?)
-                  ?.map((s) => AgentStep(description: s.toString()))
+                  ?.map((s) {
+                if (s is Map<String, dynamic>) {
+                  return AgentStep(
+                    description: s['description'] as String? ?? '',
+                    toolName: s['tool'] as String?,
+                    args: (s['args'] as Map<String, dynamic>?) ?? {},
+                  );
+                }
+                return AgentStep(description: s.toString());
+              })
                   .toList() ??
               [],
         );
@@ -720,6 +736,49 @@ class PluginHostNotifier extends Notifier<PluginState> {
           'status': task.status.name,
           'result': task.result,
         };
+      case 'agent.listTools':
+        final agent = ref.read(agentProvider.notifier);
+        return {'tools': agent.toolRegistry.allToolDefinitions()};
+      case 'agent.registerTool':
+        final agent = ref.read(agentProvider.notifier);
+        final toolDef = args['tool'] as Map<String, dynamic>?;
+        if (toolDef == null) return {'error': 'tool definition required'};
+        final pluginTool = _PluginAgentTool(
+          name: toolDef['name'] as String? ?? '',
+          description: toolDef['description'] as String? ?? '',
+          parametersSchema: (toolDef['parameters'] as Map<String, dynamic>?) ?? {},
+          isDestructive: toolDef['isDestructive'] as bool? ?? false,
+          source: toolDef['source'] as String? ?? 'plugin',
+          executeFn: (toolArgs) async {
+            final result = await callPluginApi(
+              args['pluginId'] as String? ?? '',
+              'agent.toolExecute',
+              {'toolName': toolDef['name'], 'args': toolArgs},
+              requiredPermission: Permission.aiChat,
+            );
+            return ToolResult(
+              success: result?['success'] as bool? ?? false,
+              output: result?['output'] as String? ?? '',
+              error: result?['error'] as String?,
+            );
+          },
+        );
+        agent.registerPluginTool(pluginTool);
+        return {'registered': true};
+      case 'agent.unregisterTool':
+        final agent = ref.read(agentProvider.notifier);
+        final toolName = args['toolName'] as String? ?? '';
+        agent.unregisterPluginTool(toolName);
+        return {'unregistered': true};
+      case 'agent.listTasks':
+        final agent = ref.read(agentProvider.notifier);
+        final tasks = agent.state.tasks.map((t) => {
+          'id': t.id,
+          'name': t.name,
+          'status': t.status.name,
+          'mode': t.mode.name,
+        }).toList();
+        return {'tasks': tasks};
       default:
         throw UnimplementedError('Unknown API: $apiName');
     }
@@ -790,3 +849,19 @@ class PluginHostNotifier extends Notifier<PluginState> {
 final pluginHostProvider = NotifierProvider<PluginHostNotifier, PluginState>(
   PluginHostNotifier.new,
 );
+
+class _PluginAgentTool extends AgentTool {
+  final Future<ToolResult> Function(Map<String, dynamic> args) _executeFn;
+
+  _PluginAgentTool({
+    required super.name,
+    required super.description,
+    required super.parametersSchema,
+    required super.isDestructive,
+    required super.source,
+    required Future<ToolResult> Function(Map<String, dynamic> args) executeFn,
+  }) : _executeFn = executeFn;
+
+  @override
+  Future<ToolResult> execute(Map<String, dynamic> args) => _executeFn(args);
+}

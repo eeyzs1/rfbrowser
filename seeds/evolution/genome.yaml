@@ -145,6 +145,24 @@ harness_genome:
     source: 'meta-mistake: connection line unselectable'
     last_triggered: '2026-05-11'
     trigger_count: 1
+  - id: C052
+    rule: Never use const constructor when parameters include DateTime.now() or other
+      runtime values
+    source: 'meta-mistake: AgentTask const constructor with DateTime.now()'
+    last_triggered: '2026-05-21'
+    trigger_count: 1
+  - id: C053
+    rule: When referencing providers from other services, always add the corresponding
+      import
+    source: 'meta-mistake: webhook_server missing browserProvider/aiProvider imports'
+    last_triggered: '2026-05-21'
+    trigger_count: 1
+  - id: C054
+    rule: Use Color.withValues(alpha:) instead of deprecated Color.withOpacity() for
+      Flutter 3.27+
+    source: 'meta-mistake: agent_monitor withOpacity deprecated'
+    last_triggered: '2026-05-21'
+    trigger_count: 1
   workflows:
   - id: W001
     name: base flow
@@ -225,3 +243,9 @@ evolution_genome:
     details: Removed 30+ generic template files, deduplicated genome, fixed script
       paths, simplified harness to essentials only.
     fitness_delta: 0.15
+  - date: '2026-05-21'
+    type: agent_engine
+    details: 'Built self-built Agent engine: Tool system (7 builtin tools), Plan generator
+      (ReAct loop), AgentService (3 task modes), Plugin API extension (AgentAPI),
+      Webhook REST server, Agent monitor UI. Added 3 constraints (C052-C054).'
+    fitness_delta: 0.3

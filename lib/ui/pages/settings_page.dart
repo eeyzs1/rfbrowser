@@ -5,6 +5,7 @@ import 'settings/theme_settings_section.dart';
 import 'settings/component_settings_section.dart';
 import 'settings/language_settings_section.dart';
 import 'settings/ai_settings_section.dart';
+import 'settings/agent_settings_section.dart';
 import 'settings/editor_settings_section.dart';
 import 'settings/shortcut_settings_section.dart';
 import 'settings/sync_settings_section.dart';
@@ -39,6 +40,8 @@ class SettingsPage extends ConsumerWidget {
           _CategoryHeader(title: l.settingsCategoryAI),
           const SizedBox(height: 8),
           const AISettingsSection(),
+          const SizedBox(height: 16),
+          const AgentSettingsSection(),
           const SizedBox(height: 16),
           const ShortcutSettingsSection(),
           const SizedBox(height: 24),

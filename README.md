@@ -49,7 +49,7 @@ RFBrowser 将**浏览器**与**知识管理系统**融合在一起。你可以�
 
 - 🔍 **命令栏**（`Ctrl+K`）：搜索笔记、执行命令、触发快捷指令
 - ⚡ **快捷指令**：自定义斜杠命令，将上下文（页面内容、选中文字、笔记）发送给 AI
-- 🧠 **AI Agent**：多步骤任务自动化，支持无头浏览器、步骤追踪、时间限制
+- 🧠 **AI Agent**：自建 Agent 引擎，支持 3 种任务模式（手动/AI 计划/ReAct 循环），12 个内置工具，插件可扩展
 - 📎 **网页剪藏**：一键将整页、选中内容或书签保存为笔记
 - 🔌 **插件系统**：通过 `BuiltinPlugin` 接口编写 Dart 插件，运行在独立沙箱中
 - 🎯 **Skill 技能**：用 YAML 文件定义 AI 提示词模板，零代码扩展 AI 能力
@@ -69,6 +69,7 @@ RFBrowser 提供两套扩展机制，你可以根据需要选择：
 | **UI 面板** | 渲染自定义窗口面板 |
 | **API 调用** | 通过沙箱调用知识库、浏览器、AI 服务 |
 | **Skill 声明** | 插件可以自带 Skill，供 AI Chat 使用 |
+| **Agent 工具** | 通过 AgentAPI 注册自定义 Agent 工具 |
 | **权限** | 5 种权限（knowledge/read/write、browser、ai、ui），运行时检查 |
 
 > 内置示例：[HelloWorld 插件](lib/plugins/builtin/hello_world/hello_world_plugin.dart) 展示了完整的插件生命周期。
@@ -116,6 +117,42 @@ prompt: |
 | **内置 Skills** | 7 个开箱即用（摘要、研究、大纲、标签等） |
 | **插件 Skills** | 插件自带，随插件自动加载 |
 | **自定义 Skills** | 放在 `.rfbrowser/skills/` 目录下的 YAML 文件 |
+
+### AI Agent 引擎
+
+RFBrowser 内置了一个自建 Agent 引擎，让 AI 可以自主执行多步骤任务。
+
+#### 三种任务模式
+
+| 模式 | 说明 | 适用场景 |
+|------|------|---------|
+| **手动 (Manual)** | 用户定义每一步，Agent 按顺序执行 | 流程明确的固定任务 |
+| **AI 计划 (AI Planned)** | 用户给目标，AI 自动生成计划并执行 | 目标明确但步骤不确定 |
+| **ReAct 循环** | AI 自主思考→行动→观察循环，直到完成 | 需要多轮探索的复杂任务 |
+
+#### 12 个内置工具
+
+| 工具 | 功能 | 破坏性 |
+|------|------|--------|
+| `navigate` | 无头浏览器导航到 URL | ❌ |
+| `extract_text` | 从网页提取文本 | ❌ |
+| `create_note` | 创建笔记 | ❌ |
+| `search_notes` | 搜索笔记 | ❌ |
+| `ai_reason` | AI 推理/总结/问答 | ❌ |
+| `web_clip` | 剪藏网页为笔记 | ❌ |
+| `update_note` | 更新笔记内容 | ❌ |
+| `list_notes` | 列出笔记（可按标签过滤） | ❌ |
+| `get_tags` | 获取所有标签 | ❌ |
+| `move_note` | 移动笔记到文件夹 | ❌ |
+| `rename_note` | 重命名笔记 | ❌ |
+| `delete_note` | 删除笔记 | ⚠️ 是 |
+
+#### 使用方式
+
+1. **浮层面板**：点击右下角 🤖 按钮，输入目标，选择模式，点击执行
+2. **命令栏**：输入 `research <主题>` 触发 ReAct 研究
+3. **REST API**：通过 Webhook 服务器（默认端口 18765）外部调用
+4. **插件扩展**：通过 `AgentAPI.registerTool()` 注册自定义工具
 
 ---
      
@@ -217,7 +254,14 @@ rfbrowser/
 │   │   └── stores/                  #   索引、缓存、同步状态
 │   ├── services/                    # 业务逻辑服务
 │   │   ├── ai_service.dart          #   对话消息、流式传输、AI 提供商
-│   │   ├── agent_service.dart       #   多步骤 Agent 执行
+│   │   ├── agent_service.dart       #   Agent 任务调度（3 种模式）
+│   │   ├── agent/                   #   Agent 子模块
+│   │   │   ├── agent_tool.dart      #     工具基类 + ToolResult
+│   │   │   ├── agent_tool_registry.dart # 工具注册与执行
+│   │   │   ├── builtin_tools.dart   #     12 个内置工具
+│   │   │   ├── plan_generator.dart  #     LLM 计划生成 + ReAct 循环
+│   │   │   └── agent_persistence.dart #  任务持久化
+│   │   ├── webhook_server.dart      #   REST API 服务器
 │   │   ├── browser_service.dart     #   标签页管理、WebView 状态
 │   │   ├── knowledge_service.dart   #   笔记 CRUD、链接、索引
 │   │   ├── git_sync_service.dart    #   Git 推送/拉取/初始化
@@ -248,6 +292,9 @@ dart run build_runner build
 # 运行所有测试
 flutter test
 
+# 运行 Agent 百炼集成测试（需要 .env 中的 API Key）
+flutter test test/agent_bailian_integration_test.dart
+
 # 运行测试并生成覆盖率报告
 flutter test --coverage
 
@@ -257,6 +304,27 @@ dart format lib/ test/
 # 静态分析
 flutter analyze
 ```
+
+### 集成测试配置
+
+Agent 集成测试需要阿里百炼 API Key。配置步骤：
+
+1. 复制 `.env.example` 为 `.env`：
+   ```bash
+   cp .env.example .env
+   ```
+
+2. 编辑 `.env`，填入真实的 API Key：
+   ```
+   BAILIAN_API_KEY=sk-your-real-key-here
+   ```
+
+3. 运行测试：
+   ```bash
+   flutter test test/agent_bailian_integration_test.dart
+   ```
+
+> `.env` 文件已在 `.gitignore` 中，不会被提交到仓库。如果没有 API Key，需要网络的测试会自动跳过，不需要 Key 的测试（工具验证、持久化）仍会正常运行。
 
 ---
 
@@ -280,6 +348,7 @@ flutter analyze
 ### 支持的 AI 提供商
 
 任何兼容 OpenAI API 的服务——包括：
+- **阿里百炼**（Qwen 系列，推荐国内用户）
 - OpenAI（GPT-4o、GPT-4 等）
 - Anthropic（通过兼容代理使用 Claude）
 - Google Gemini（通过兼容端点）

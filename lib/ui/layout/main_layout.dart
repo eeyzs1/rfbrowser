@@ -15,6 +15,7 @@ import '../widgets/command_bar.dart';
 import '../widgets/create_note_dialog.dart';
 import '../widgets/empty_vault_guide.dart';
 import '../widgets/status_bar.dart';
+import '../widgets/agent_float.dart';
 import '../scenes/capture/capture_scene.dart';
 import '../scenes/think/think_scene.dart';
 import '../scenes/connect/connect_scene.dart';
@@ -99,6 +100,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                     ),
                   ),
                 ),
+              const AgentFloat(),
             ],
           ),
         ),

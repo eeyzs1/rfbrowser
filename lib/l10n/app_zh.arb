@@ -994,5 +994,46 @@
       "name": {"type": "String"}
     }
   },
-  "addAnyway": "仍然添加"
+  "addAnyway": "仍然添加",
+  "agentNoTasks": "暂无智能体任务",
+  "agentNoTasksHint": "开始一个研究或提取任务",
+  "agentPause": "暂停",
+  "agentCancel": "取消",
+  "agentResume": "继续",
+  "agentStepProgress": "{completed}/{total} 步",
+  "@agentStepProgress": {
+    "placeholders": {
+      "completed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "agentModeManual": "手动",
+  "agentModeAiPlanned": "AI 计划",
+  "agentModeReact": "ReAct 循环",
+  "agentToolNavigate": "导航",
+  "agentToolExtractText": "提取文本",
+  "agentToolCreateNote": "创建笔记",
+  "agentToolSearchNotes": "搜索笔记",
+  "agentToolAIReason": "AI 推理",
+  "agentToolWebClip": "网页剪藏",
+  "agentToolDeleteNote": "删除笔记",
+  "webhookServerTitle": "Webhook 服务器",
+  "webhookServerDesc": "为外部自动化工具（N8N、Zapier 等）提供 REST API 接口",
+  "webhookServerPort": "端口",
+  "webhookServerApiKey": "API 密钥",
+  "webhookServerStart": "启动服务器",
+  "webhookServerStop": "停止服务器",
+  "webhookServerRunning": "服务器运行于 {url}",
+  "@webhookServerRunning": {
+    "placeholders": {
+      "url": {"type": "String"}
+    }
+  },
+  "webhookServerStopped": "服务器已停止",
+  "webhookServerCopyKey": "复制 API 密钥",
+  "webhookServerApiKeyCopied": "API 密钥已复制到剪贴板",
+  "agentGoalHint": "输入目标，如：研究量子计算最新进展",
+  "agentQuickResearch": "研究",
+  "agentQuickSummarize": "总结",
+  "agentQuickOrganize": "整理"
 }

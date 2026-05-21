@@ -1,4 +1,4 @@
-version: 3
+version: 4
 description: "Innovation log — tracks proposed and applied innovations"
 current_stage: "Solid"
 target_stage: "Advanced"
@@ -18,3 +18,11 @@ applied_proposals:
   - id: INN-HARNESS-005
     name: "Domain Advancement Roadmap"
     applied_at: "2026-05-06"
+  - id: INN-AGENT-001
+    name: "Self-built Agent Engine"
+    applied_at: "2026-05-21"
+    description: "Built a complete Agent engine with Tool system (AgentTool + ToolResult + AgentToolRegistry), LLM plan generator (ReAct loop), 3 task modes (manual/aiPlanned/reactLoop), plugin API extension (AgentAPI), webhook REST server, and agent monitor UI. 7 builtin tools, unit tests, l10n support."
+  - id: INN-AGENT-002
+    name: "Agent UI Integration & Extended Tools"
+    applied_at: "2026-05-21"
+    description: "Added AgentFloat floating panel (goal input, mode selector, task list, quick actions), Agent settings section (Webhook server config), 5 new builtin tools (update_note, list_notes, get_tags, move_note, rename_note for total 12), and AgentPersistence for task state survival across app restarts."

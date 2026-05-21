@@ -3,6 +3,7 @@ abstract class PluginAPI {
   BrowserAPI get browser;
   AIAPI get ai;
   UIAPI get ui;
+  AgentAPI get agent;
 }
 
 abstract class KnowledgeAPI {
@@ -28,4 +29,13 @@ abstract class UIAPI {
   void showNotification(String message);
   void registerCommand(String id, String name, void Function() handler);
   void showPanel(String id, String title, dynamic content);
+}
+
+abstract class AgentAPI {
+  Future<List<Map<String, dynamic>>> listTools();
+  Future<void> registerTool(Map<String, dynamic> toolDefinition);
+  Future<void> unregisterTool(String toolName);
+  Future<Map<String, dynamic>> executeTask(Map<String, dynamic> taskSpec);
+  Future<Map<String, dynamic>?> getTaskStatus(String taskId);
+  Future<List<Map<String, dynamic>>> listTasks();
 }

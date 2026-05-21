@@ -2411,9 +2411,106 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serviceNotRunningTitle => 'Service Not Running';
 
   @override
-  String serviceNotRunningConfirm(String name) =>
-      '$name is not currently running on your computer. The provider will be added but won\'t work until you start the service. Do you want to add it anyway?';
+  String serviceNotRunningConfirm(String name) {
+    return '$name is not currently running on your computer. The provider will be added but won\'t work until you start the service. Do you want to add it anyway?';
+  }
 
   @override
   String get addAnyway => 'Add Anyway';
+
+  @override
+  String get agentNoTasks => 'No agent tasks';
+
+  @override
+  String get agentNoTasksHint => 'Start a research or extraction task';
+
+  @override
+  String get agentPause => 'Pause';
+
+  @override
+  String get agentCancel => 'Cancel';
+
+  @override
+  String get agentResume => 'Resume';
+
+  @override
+  String agentStepProgress(int completed, int total) {
+    return '$completed/$total steps';
+  }
+
+  @override
+  String get agentModeManual => 'Manual';
+
+  @override
+  String get agentModeAiPlanned => 'AI Plan';
+
+  @override
+  String get agentModeReact => 'ReAct';
+
+  @override
+  String get agentToolNavigate => 'Navigate';
+
+  @override
+  String get agentToolExtractText => 'Extract Text';
+
+  @override
+  String get agentToolCreateNote => 'Create Note';
+
+  @override
+  String get agentToolSearchNotes => 'Search Notes';
+
+  @override
+  String get agentToolAIReason => 'AI Reason';
+
+  @override
+  String get agentToolWebClip => 'Web Clip';
+
+  @override
+  String get agentToolDeleteNote => 'Delete Note';
+
+  @override
+  String get webhookServerTitle => 'Webhook Server';
+
+  @override
+  String get webhookServerDesc =>
+      'Expose REST API for external automation tools (N8N, Zapier, etc.)';
+
+  @override
+  String get webhookServerPort => 'Port';
+
+  @override
+  String get webhookServerApiKey => 'API Key';
+
+  @override
+  String get webhookServerStart => 'Start Server';
+
+  @override
+  String get webhookServerStop => 'Stop Server';
+
+  @override
+  String webhookServerRunning(String url) {
+    return 'Server running on $url';
+  }
+
+  @override
+  String get webhookServerStopped => 'Server stopped';
+
+  @override
+  String get webhookServerCopyKey => 'Copy API Key';
+
+  @override
+  String get webhookServerApiKeyCopied => 'API Key copied to clipboard';
+
+  @override
+  String get agentGoalHint =>
+      'Enter a goal, e.g.: Research latest quantum computing advances';
+
+  @override
+  String get agentQuickResearch => 'Research';
+
+  @override
+  String get agentQuickSummarize => 'Summarize';
+
+  @override
+  String get agentQuickOrganize => 'Organize';
 }
