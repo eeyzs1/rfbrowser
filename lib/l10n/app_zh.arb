@@ -77,10 +77,11 @@
   "openaiApiKey": "OpenAI API 密钥",
   "notSet": "未设置",
   "activeModel": "当前模型",
-  "localModelOllama": "本地模型 (Ollama)",
+  "localModel": "本地模型",
   "configureLocalModel": "配置本地模型端点",
-  "ollamaEndpoint": "Ollama 端点",
-  "ollamaHint": "使用本地模型前请确保 Ollama 已在本地运行。",
+  "localModelEndpoint": "本地模型端点",
+  "localModelHint": "使用本地模型前请确保本地模型服务（如 Ollama、LM Studio）已在运行。",
+  "requireApiKey": "需要 API 密钥",
   "editorSection": "编辑器",
   "syncSection": "同步",
   "configureGitRemote": "配置 Git 远程仓库进行知识库同步",
@@ -961,5 +962,37 @@
   "settingsCategoryGeneral": "通用",
   "settingsCategoryAI": "AI 与自动化",
   "settingsCategoryAdvanced": "高级",
-  "switchScene": "切换场景"
+  "switchScene": "切换场景",
+  "quickStart": "快速开始",
+  "quickStartDesc": "选择下方本地模型服务即可开始使用 AI 功能，也可以添加云端提供商。",
+  "localModelPresets": "本地模型服务",
+  "scanLocalServices": "扫描正在运行的服务",
+  "addCloudProvider": "添加云端提供商（OpenAI、Anthropic 等）",
+  "localModelSetupGuide": "使用本地模型的步骤：1) 安装 Ollama 或 LM Studio 等工具，2) 下载一个模型，3) 确保服务正在运行，4) 点击上方预设即可添加。",
+  "localServiceDetected": "检测到本地服务",
+  "detectedLocalServices": "检测到本地模型服务",
+  "detectedLocalServicesDesc": "在您的电脑上发现了以下正在运行的本地模型服务，点击添加即可配置。",
+  "noLocalServiceFound": "未发现本地模型服务，请确保 Ollama 或 LM Studio 已启动。",
+  "providerAdded": "已添加提供商",
+  "addLocalModel": "添加本地模型",
+  "serviceRunning": "运行中",
+  "serviceNotRunning": "未运行",
+  "modelsLabel": "个模型",
+  "providerAddedNoModels": "已添加 {name}，但未发现模型。请确保服务正在运行且已下载模型。",
+  "@providerAddedNoModels": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "noModelsLocalHint": "请确保本地服务正在运行且已下载模型。",
+  "noModelsCloudHint": "请检查 API Key 和网络连接。",
+  "scanning": "扫描中...",
+  "serviceNotRunningTitle": "服务未运行",
+  "serviceNotRunningConfirm": "{name} 当前未在您的电脑上运行。提供商将被添加，但在启动服务之前无法使用。是否仍然添加？",
+  "@serviceNotRunningConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "addAnyway": "仍然添加"
 }

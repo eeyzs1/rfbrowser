@@ -21,8 +21,6 @@ class ModelDiscovery {
           return _fetchOpenAIModels(provider, apiKey);
         case ApiProtocol.anthropic:
           return _fetchAnthropicModels(provider, apiKey);
-        case ApiProtocol.ollama:
-          return _fetchOllamaModels(provider);
       }
     } catch (e) {
       debugPrint('Model discovery error: $e');
@@ -91,39 +89,6 @@ class ModelDiscovery {
           providerId: provider.id,
           displayName: _humanizeModelId(id),
           capabilities: _inferCapabilities(id),
-        ),
-      );
-    }
-    return models;
-  }
-
-  Future<List<AIModel>> _fetchOllamaModels(AIProvider provider) async {
-    final response = await _dio.get(provider.modelsEndpoint);
-
-    final data = response.data;
-    if (data is! Map || !data.containsKey('models')) return [];
-
-    final models = <AIModel>[];
-    for (final item in data['models']) {
-      final name = item['name'] as String;
-      final model = item['model'] as String? ?? name;
-      final details = item['details'] as Map<String, dynamic>?;
-
-      Set<ModelCapability> capabilities = {ModelCapability.text};
-      if (details != null) {
-        final families = details['families'] as List?;
-        if (families != null &&
-            families.any((f) => f == 'clip' || f == 'llava')) {
-          capabilities = {ModelCapability.text, ModelCapability.vision};
-        }
-      }
-
-      models.add(
-        AIModel(
-          id: model,
-          providerId: provider.id,
-          displayName: name,
-          capabilities: capabilities,
         ),
       );
     }

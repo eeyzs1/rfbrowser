@@ -131,7 +131,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityState> {
     final aiConfig = ref.read(aiConfigProvider);
     final providers = aiConfig.providers;
     try {
-      return providers.firstWhere((p) => p.protocol == ApiProtocol.ollama);
+      return providers.firstWhere((p) => p.isLocal && p.isEnabled);
     } catch (_) {
       return null;
     }

@@ -240,17 +240,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activeModel => 'Active Model';
 
   @override
-  String get localModelOllama => 'Local Model (Ollama)';
+  String get localModel => 'Local Model';
 
   @override
   String get configureLocalModel => 'Configure local model endpoint';
 
   @override
-  String get ollamaEndpoint => 'Ollama Endpoint';
+  String get localModelEndpoint => 'Local Model Endpoint';
 
   @override
-  String get ollamaHint =>
-      'Make sure Ollama is running locally before using local models.';
+  String get localModelHint =>
+      'Make sure a local model server (e.g. Ollama, LM Studio) is running before using local models.';
+
+  @override
+  String get requireApiKey => 'Require API Key';
 
   @override
   String get editorSection => 'Editor';
@@ -2339,4 +2342,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get switchScene => 'Switch Scene';
+
+  @override
+  String get quickStart => 'Quick Start';
+
+  @override
+  String get quickStartDesc =>
+      'Choose a local model service below to get started with AI features, or add a cloud provider.';
+
+  @override
+  String get localModelPresets => 'Local Model Services';
+
+  @override
+  String get scanLocalServices => 'Scan for running services';
+
+  @override
+  String get addCloudProvider => 'Add cloud provider (OpenAI, Anthropic, etc.)';
+
+  @override
+  String get localModelSetupGuide =>
+      'To use local models: 1) Install a tool like Ollama or LM Studio, 2) Download a model, 3) Make sure the service is running, 4) Click a preset above to add it.';
+
+  @override
+  String get localServiceDetected => 'Local service detected';
+
+  @override
+  String get detectedLocalServices => 'Detected Local Services';
+
+  @override
+  String get detectedLocalServicesDesc =>
+      'The following local model services were found running on your computer. Click Add to configure them.';
+
+  @override
+  String get noLocalServiceFound =>
+      'No local model service found. Make sure Ollama or LM Studio is running.';
+
+  @override
+  String get providerAdded => 'Provider added';
+
+  @override
+  String get addLocalModel => 'Add Local Model';
+
+  @override
+  String get serviceRunning => 'Running';
+
+  @override
+  String get serviceNotRunning => 'Not running';
+
+  @override
+  String get modelsLabel => 'models';
+
+  @override
+  String providerAddedNoModels(String name) {
+    return '$name added, but no models found. Make sure the service is running and has models downloaded.';
+  }
+
+  @override
+  String get noModelsLocalHint =>
+      'Make sure the local service is running and has models downloaded.';
+
+  @override
+  String get noModelsCloudHint => 'Check your API key and network connection.';
+
+  @override
+  String get scanning => 'Scanning...';
+
+  @override
+  String get serviceNotRunningTitle => 'Service Not Running';
+
+  @override
+  String serviceNotRunningConfirm(String name) =>
+      '$name is not currently running on your computer. The provider will be added but won\'t work until you start the service. Do you want to add it anyway?';
+
+  @override
+  String get addAnyway => 'Add Anyway';
 }

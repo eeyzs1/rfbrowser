@@ -240,16 +240,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get activeModel => '当前模型';
 
   @override
-  String get localModelOllama => '本地模型 (Ollama)';
+  String get localModel => '本地模型';
 
   @override
   String get configureLocalModel => '配置本地模型端点';
 
   @override
-  String get ollamaEndpoint => 'Ollama 端点';
+  String get localModelEndpoint => '本地模型端点';
 
   @override
-  String get ollamaHint => '使用本地模型前请确保 Ollama 已在本地运行。';
+  String get localModelHint => '使用本地模型前请确保本地模型服务（如 Ollama、LM Studio）已在运行。';
+
+  @override
+  String get requireApiKey => '需要 API 密钥';
 
   @override
   String get editorSection => '编辑器';
@@ -2292,4 +2295,74 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get switchScene => '切换场景';
+
+  @override
+  String get quickStart => '快速开始';
+
+  @override
+  String get quickStartDesc => '选择下方本地模型服务即可开始使用 AI 功能，也可以添加云端提供商。';
+
+  @override
+  String get localModelPresets => '本地模型服务';
+
+  @override
+  String get scanLocalServices => '扫描正在运行的服务';
+
+  @override
+  String get addCloudProvider => '添加云端提供商（OpenAI、Anthropic 等）';
+
+  @override
+  String get localModelSetupGuide =>
+      '使用本地模型的步骤：1) 安装 Ollama 或 LM Studio 等工具，2) 下载一个模型，3) 确保服务正在运行，4) 点击上方预设即可添加。';
+
+  @override
+  String get localServiceDetected => '检测到本地服务';
+
+  @override
+  String get detectedLocalServices => '检测到本地模型服务';
+
+  @override
+  String get detectedLocalServicesDesc => '在您的电脑上发现了以下正在运行的本地模型服务，点击添加即可配置。';
+
+  @override
+  String get noLocalServiceFound => '未发现本地模型服务，请确保 Ollama 或 LM Studio 已启动。';
+
+  @override
+  String get providerAdded => '已添加提供商';
+
+  @override
+  String get addLocalModel => '添加本地模型';
+
+  @override
+  String get serviceRunning => '运行中';
+
+  @override
+  String get serviceNotRunning => '未运行';
+
+  @override
+  String get modelsLabel => '个模型';
+
+  @override
+  String providerAddedNoModels(String name) {
+    return '已添加 $name，但未发现模型。请确保服务正在运行且已下载模型。';
+  }
+
+  @override
+  String get noModelsLocalHint => '请确保本地服务正在运行且已下载模型。';
+
+  @override
+  String get noModelsCloudHint => '请检查 API Key 和网络连接。';
+
+  @override
+  String get scanning => '扫描中...';
+
+  @override
+  String get serviceNotRunningTitle => '服务未运行';
+
+  @override
+  String serviceNotRunningConfirm(String name) =>
+      '$name 当前未在您的电脑上运行。提供商将被添加，但在启动服务之前无法使用。是否仍然添加？';
+
+  @override
+  String get addAnyway => '仍然添加';
 }

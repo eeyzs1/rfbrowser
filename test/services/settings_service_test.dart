@@ -441,8 +441,9 @@ void main() {
       final provider = AIProvider(
         id: 'p1',
         name: 'Test',
-        protocol: ApiProtocol.ollama,
+        protocol: ApiProtocol.openaiCompatible,
         baseUrl: 'http://localhost:11434',
+        requiresApiKey: false,
       );
       final state = AIConfigState(providers: [provider]);
       expect(state.providerById('p1'), isNotNull);
@@ -460,8 +461,9 @@ void main() {
         AIProvider(
           id: 'p1',
           name: 'P1',
-          protocol: ApiProtocol.ollama,
+          protocol: ApiProtocol.openaiCompatible,
           baseUrl: 'http://localhost:11434',
+          requiresApiKey: false,
         ),
       ];
       final models = [
@@ -500,14 +502,15 @@ void main() {
       expect(provider.modelsEndpoint, 'https://api.openai.com/v1/models');
     });
 
-    test('chatEndpoint for ollama', () {
+    test('chatEndpoint for local provider', () {
       final provider = AIProvider(
         id: 'p1',
         name: 'Local',
-        protocol: ApiProtocol.ollama,
+        protocol: ApiProtocol.openaiCompatible,
         baseUrl: 'http://localhost:11434',
+        requiresApiKey: false,
       );
-      expect(provider.chatEndpoint, 'http://localhost:11434/api/chat');
+      expect(provider.chatEndpoint, 'http://localhost:11434/v1/chat/completions');
     });
 
     test('authHeaders for openai returns Bearer', () {
@@ -547,12 +550,13 @@ void main() {
       expect(headers['anthropic-version'], '2023-06-01');
     });
 
-    test('authHeaders for ollama returns empty', () {
+    test('authHeaders for local provider without key returns empty', () {
       final provider = AIProvider(
         id: 'p1',
         name: 'Local',
-        protocol: ApiProtocol.ollama,
+        protocol: ApiProtocol.openaiCompatible,
         baseUrl: 'http://localhost:11434',
+        requiresApiKey: false,
       );
       final headers = provider.authHeaders();
       expect(headers.isEmpty, isTrue);
@@ -562,9 +566,10 @@ void main() {
       final provider = AIProvider(
         id: 'p1',
         name: 'Test',
-        protocol: ApiProtocol.ollama,
+        protocol: ApiProtocol.openaiCompatible,
         baseUrl: 'http://localhost:11434',
         apiKey: 'secret',
+        requiresApiKey: false,
       );
       final json = provider.toJson();
       expect(json['id'], 'p1');
@@ -591,9 +596,10 @@ void main() {
       final provider = AIProvider(
         id: 'p1',
         name: 'Original',
-        protocol: ApiProtocol.ollama,
+        protocol: ApiProtocol.openaiCompatible,
         baseUrl: 'http://localhost:11434',
         apiKey: 'secret',
+        requiresApiKey: false,
       );
       final copied = provider.copyWith(name: 'Renamed');
       expect(copied.id, 'p1');
@@ -605,7 +611,7 @@ void main() {
       final a = AIProvider(
         id: 'same',
         name: 'A',
-        protocol: ApiProtocol.ollama,
+        protocol: ApiProtocol.openaiCompatible,
         baseUrl: 'http://a',
       );
       final b = AIProvider(
@@ -693,18 +699,99 @@ void main() {
     test('label returns correct values', () {
       expect(ApiProtocol.openaiCompatible.label, 'OpenAI Compatible');
       expect(ApiProtocol.anthropic.label, 'Anthropic');
-      expect(ApiProtocol.ollama.label, 'Ollama');
-    });
-
-    test('requiresApiKey returns true except ollama', () {
-      expect(ApiProtocol.openaiCompatible.requiresApiKey, isTrue);
-      expect(ApiProtocol.anthropic.requiresApiKey, isTrue);
-      expect(ApiProtocol.ollama.requiresApiKey, isFalse);
     });
 
     test('defaultBaseUrl returns correct URLs', () {
       expect(ApiProtocol.openaiCompatible.defaultBaseUrl, 'https://api.openai.com');
-      expect(ApiProtocol.ollama.defaultBaseUrl, 'http://localhost:11434');
+      expect(ApiProtocol.anthropic.defaultBaseUrl, 'https://api.anthropic.com');
+    });
+  });
+
+  group('AIProvider isLocal and requiresApiKey', () {
+    test('isLocal returns true for localhost', () {
+      final provider = AIProvider(
+        id: 'p1',
+        name: 'Local',
+        protocol: ApiProtocol.openaiCompatible,
+        baseUrl: 'http://localhost:11434',
+        requiresApiKey: false,
+      );
+      expect(provider.isLocal, isTrue);
+      expect(provider.requiresApiKey, isFalse);
+    });
+
+    test('isLocal returns true for 127.0.0.1', () {
+      final provider = AIProvider(
+        id: 'p1',
+        name: 'Local',
+        protocol: ApiProtocol.openaiCompatible,
+        baseUrl: 'http://127.0.0.1:1234',
+        requiresApiKey: false,
+      );
+      expect(provider.isLocal, isTrue);
+    });
+
+    test('isLocal returns false for remote URL', () {
+      final provider = AIProvider(
+        id: 'p1',
+        name: 'Remote',
+        protocol: ApiProtocol.openaiCompatible,
+        baseUrl: 'https://api.openai.com',
+      );
+      expect(provider.isLocal, isFalse);
+    });
+
+    test('requiresApiKey defaults to true for remote', () {
+      final provider = AIProvider(
+        id: 'p1',
+        name: 'Remote',
+        protocol: ApiProtocol.openaiCompatible,
+        baseUrl: 'https://api.openai.com',
+      );
+      expect(provider.requiresApiKey, isTrue);
+    });
+
+    test('requiresApiKey can be explicitly set to false for remote', () {
+      final provider = AIProvider(
+        id: 'p1',
+        name: 'Custom',
+        protocol: ApiProtocol.openaiCompatible,
+        baseUrl: 'https://custom-api.example.com',
+        requiresApiKey: false,
+      );
+      expect(provider.requiresApiKey, isFalse);
+    });
+
+    test('displayIcon returns computer for local provider', () {
+      final provider = AIProvider(
+        id: 'p1',
+        name: 'Local',
+        protocol: ApiProtocol.openaiCompatible,
+        baseUrl: 'http://localhost:11434',
+        requiresApiKey: false,
+      );
+      expect(provider.displayIcon, Icons.computer);
+    });
+
+    test('embeddingEndpoint returns correct path', () {
+      final provider = AIProvider(
+        id: 'p1',
+        name: 'Test',
+        protocol: ApiProtocol.openaiCompatible,
+        baseUrl: 'https://api.openai.com',
+      );
+      expect(provider.embeddingEndpoint, 'https://api.openai.com/v1/embeddings');
+    });
+
+    test('embeddingEndpoint handles /v1 suffix', () {
+      final provider = AIProvider(
+        id: 'p1',
+        name: 'Test',
+        protocol: ApiProtocol.openaiCompatible,
+        baseUrl: 'http://localhost:11434/v1',
+        requiresApiKey: false,
+      );
+      expect(provider.embeddingEndpoint, 'http://localhost:11434/v1/embeddings');
     });
   });
 }

@@ -106,7 +106,7 @@ class AINotifier extends Notifier<AIState> {
 
     final connectivity = ref.read(connectivityProvider);
     if (!connectivity.isOnline) {
-      if (provider != null && provider.protocol != ApiProtocol.ollama) {
+      if (provider != null && !provider.isLocal) {
         final offlineProvider = ref
             .read(connectivityProvider.notifier)
             .getOfflineProvider();
@@ -130,7 +130,7 @@ class AINotifier extends Notifier<AIState> {
       return;
     }
 
-    if (provider.protocol.requiresApiKey) {
+    if (provider.requiresApiKey) {
       final apiKey = await ref
           .read(aiConfigProvider.notifier)
           .getApiKeyForProvider(provider.id);
@@ -157,24 +157,11 @@ class AINotifier extends Notifier<AIState> {
 
     try {
       final messages = _buildMessages(systemPrompt, context);
-      final apiKey = provider.protocol.requiresApiKey
+      final apiKey = provider.requiresApiKey
           ? await ref
                 .read(aiConfigProvider.notifier)
                 .getApiKeyForProvider(provider.id)
           : null;
-
-      if (provider.protocol == ApiProtocol.ollama) {
-        final response = await _sendRequest(
-          provider: provider,
-          model: model,
-          messages: messages,
-          apiKey: apiKey,
-          stream: false,
-        );
-        final content = _extractContent(response, provider.protocol);
-        _updateLastAssistantMessage(content, isStreaming: false);
-        return;
-      }
 
       final response = await _sendRequest(
         provider: provider,
@@ -325,37 +312,6 @@ class AINotifier extends Notifier<AIState> {
             'stream': stream,
           }),
         );
-
-      case ApiProtocol.ollama:
-        return _dio.post(
-          provider.chatEndpoint,
-          data: jsonEncode({
-            'model': model.id,
-            'messages': messages,
-            'stream': false,
-          }),
-        );
-    }
-  }
-
-  String _extractContent(dynamic response, ApiProtocol protocol) {
-    try {
-      final data = response.data;
-      switch (protocol) {
-        case ApiProtocol.openaiCompatible:
-          final choices = data?['choices'] as List?;
-          if (choices == null || choices.isEmpty) return '';
-          return choices[0]?['message']?['content'] as String? ?? '';
-        case ApiProtocol.anthropic:
-          final content = data?['content'] as List?;
-          if (content == null || content.isEmpty) return '';
-          return content.first?['text'] as String? ?? '';
-        case ApiProtocol.ollama:
-          return data?['message']?['content'] as String? ?? '';
-      }
-    } catch (e) {
-      debugPrint('Extract content error: $e');
-      return '';
     }
   }
 
@@ -368,8 +324,6 @@ class AINotifier extends Notifier<AIState> {
         if (type == 'content_block_delta') {
           return json['delta']?['text'] as String?;
         }
-        return null;
-      case ApiProtocol.ollama:
         return null;
     }
   }
@@ -387,8 +341,6 @@ class AINotifier extends Notifier<AIState> {
             return data['error']?['message'] as String? ??
                 e.message ??
                 'Unknown error';
-          case ApiProtocol.ollama:
-            return data['error'] as String? ?? e.message ?? 'Unknown error';
         }
       }
     } catch (_) {

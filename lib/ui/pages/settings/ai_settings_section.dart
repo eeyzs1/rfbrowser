@@ -1,17 +1,71 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/settings_service.dart';
 import '../../../services/ai_service.dart';
+import '../../../services/local_service_scanner.dart';
 import '../../../data/models/ai_provider.dart';
 import '../../../core/domain/model_discovery.dart';
 import '../../widgets/settings_section.dart';
 
-class AISettingsSection extends ConsumerWidget {
+class AISettingsSection extends ConsumerStatefulWidget {
   const AISettingsSection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AISettingsSection> createState() => _AISettingsSectionState();
+}
+
+class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
+  bool _hasScanned = false;
+  bool _isScanning = false;
+  bool _isAddingPreset = false;
+  Map<String, bool> _presetOnlineStatus = {};
+  List<LocalServiceInfo> _detectedServices = [];
+  StreamSubscription? _scanSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_hasScanned) {
+        _hasScanned = true;
+        _checkPresetStatus();
+        _autoScanAndPrompt();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scanSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkPresetStatus() async {
+    final scanner = ref.read(localServiceScannerProvider);
+    final results = <String, bool>{};
+    for (final preset in LocalServiceScanner.presets) {
+      results[preset.name] = await scanner.isServiceRunning(preset.baseUrl);
+    }
+    if (mounted) {
+      setState(() => _presetOnlineStatus = results);
+    }
+  }
+
+  Future<void> _autoScanAndPrompt() async {
+    final aiConfig = ref.read(aiConfigProvider);
+    if (aiConfig.providers.isNotEmpty) return;
+
+    final scanner = ref.read(localServiceScannerProvider);
+    final detected = await scanner.scan();
+    if (detected.isEmpty || !mounted) return;
+
+    setState(() => _detectedServices = detected);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
     final aiConfig = ref.watch(aiConfigProvider);
@@ -30,11 +84,15 @@ class AISettingsSection extends ConsumerWidget {
               : l.notSet,
         ),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => _showActiveModelDialog(context, ref, l),
+        onTap: () => _showActiveModelDialog(context, l),
       ),
     );
 
     children.add(const Divider(height: 1));
+
+    if (_detectedServices.isNotEmpty && providers.isEmpty) {
+      children.add(_buildDetectedBanner(theme, l));
+    }
 
     children.add(
       Padding(
@@ -59,15 +117,7 @@ class AISettingsSection extends ConsumerWidget {
     );
 
     if (providers.isEmpty) {
-      children.add(
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
-            l.noProvidersHint,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-          ),
-        ),
-      );
+      children.add(_buildQuickStartCard(context, theme, l));
     } else {
       for (final provider in providers) {
         children.add(
@@ -82,9 +132,796 @@ class AISettingsSection extends ConsumerWidget {
           ),
         );
       }
+      children.add(_buildAddLocalModelButton(theme, l));
     }
 
     return SettingsSection(title: l.aiModels, children: children);
+  }
+
+  Widget _buildDetectedBanner(ThemeData theme, AppLocalizations l) {
+    return Material(
+      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+      child: InkWell(
+        onTap: () {
+          _showDetectedServicesDialog(_detectedServices);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                Icons.sensors,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '${l.localServiceDetected}: ${_detectedServices.map((s) => s.name).join(', ')}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                size: 16,
+                color: theme.hintColor,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddLocalModelButton(ThemeData theme, AppLocalizations l) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: OutlinedButton.icon(
+        onPressed: () => _showLocalModelPresetsSheet(theme, l),
+        icon: const Icon(Icons.computer, size: 16),
+        label: Text(l.addLocalModel),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: theme.colorScheme.primary,
+          side: BorderSide(
+            color: theme.colorScheme.outlineVariant,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLocalModelPresetsSheet(ThemeData theme, AppLocalizations l) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.7,
+        expand: false,
+        builder: (ctx, scrollController) => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.computer,
+                    size: 20,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    l.localModelPresets,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  l.quickStartDesc,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  ...LocalServiceScanner.presets.map(
+                    (preset) => _buildPresetTileSheet(
+                      context,
+                      theme,
+                      l,
+                      preset,
+                      ctx,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _isScanning
+                        ? null
+                        : () async {
+                            await _scanForLocalServicesFromSheet(ctx, l);
+                          },
+                    icon: _isScanning
+                        ? SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.primary,
+                            ),
+                          )
+                        : const Icon(Icons.search, size: 14),
+                    label: Text(l.scanLocalServices),
+                  ),
+                  const SizedBox(height: 16),
+            ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPresetTileSheet(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l,
+    LocalServiceInfo preset,
+    BuildContext sheetCtx,
+  ) {
+    final isOnline = _presetOnlineStatus[preset.name];
+    final isAddingThis = _isAddingPreset;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: isAddingThis
+            ? null
+            : () async {
+                await _onPresetTap(preset, isOnline, sheetCtx: sheetCtx);
+              },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isOnline == true
+                  ? theme.colorScheme.primary.withValues(alpha: 0.4)
+                  : theme.colorScheme.outlineVariant,
+            ),
+            borderRadius: BorderRadius.circular(10),
+            color: isOnline == true
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.15)
+                : null,
+          ),
+          child: Row(
+            children: [
+              Stack(
+                children: [
+                  Icon(
+                    preset.icon,
+                    size: 22,
+                    color: isOnline == true
+                        ? theme.colorScheme.primary
+                        : theme.hintColor,
+                  ),
+                  if (isOnline != null)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: isOnline
+                              ? Colors.green
+                              : theme.colorScheme.outlineVariant,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: theme.colorScheme.surface,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      preset.name,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      isOnline == true
+                          ? l.serviceRunning
+                          : isOnline == false
+                              ? l.serviceNotRunning
+                              : preset.description,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isOnline == true
+                            ? Colors.green.shade700
+                            : isOnline == false
+                                ? theme.hintColor
+                                : theme.hintColor,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (_isAddingPreset)
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.primary,
+                  ),
+                )
+              else
+                Icon(
+                  isOnline == true
+                      ? Icons.add_circle
+                      : Icons.add_circle_outline,
+                  size: 20,
+                  color: isOnline == true
+                      ? theme.colorScheme.primary
+                      : theme.hintColor,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickStartCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.rocket_launch,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l.quickStart,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l.quickStartDesc,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...LocalServiceScanner.presets.map(
+                  (preset) => _buildPresetTile(context, theme, l, preset),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _isScanning
+                        ? null
+                        : () => _scanForLocalServices(context, l),
+                    icon: _isScanning
+                        ? SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.primary,
+                            ),
+                          )
+                        : const Icon(Icons.search, size: 14),
+                    label: Text(l.scanLocalServices),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Divider(height: 1, color: theme.colorScheme.outlineVariant),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        _showAddProviderDialog(context, ref, l),
+                    icon: const Icon(Icons.cloud, size: 14),
+                    label: Text(l.addCloudProvider),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: theme.colorScheme.tertiary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: theme.colorScheme.tertiary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l.localModelSetupGuide,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPresetTile(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l,
+    LocalServiceInfo preset,
+  ) {
+    final isOnline = _presetOnlineStatus[preset.name];
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: InkWell(
+        onTap: _isAddingPreset
+            ? null
+            : () => _onPresetTap(preset, isOnline),
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isOnline == true
+                  ? theme.colorScheme.primary.withValues(alpha: 0.4)
+                  : theme.colorScheme.outlineVariant,
+            ),
+            borderRadius: BorderRadius.circular(10),
+            color: isOnline == true
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.15)
+                : null,
+          ),
+          child: Row(
+            children: [
+              Stack(
+                children: [
+                  Icon(
+                    preset.icon,
+                    size: 18,
+                    color: isOnline == true
+                        ? theme.colorScheme.primary
+                        : theme.hintColor,
+                  ),
+                  if (isOnline != null)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: isOnline
+                              ? Colors.green
+                              : theme.colorScheme.outlineVariant,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: theme.colorScheme.surface,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      preset.name,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      isOnline == true
+                          ? l.serviceRunning
+                          : isOnline == false
+                              ? l.serviceNotRunning
+                              : preset.description,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isOnline == true
+                            ? Colors.green.shade700
+                            : theme.hintColor,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (_isAddingPreset)
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.primary,
+                  ),
+                )
+              else
+                Icon(
+                  isOnline == true
+                      ? Icons.add_circle
+                      : Icons.add_circle_outline,
+                  size: 18,
+                  color: isOnline == true
+                      ? theme.colorScheme.primary
+                      : theme.hintColor,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onPresetTap(
+    LocalServiceInfo preset,
+    bool? isOnline, {
+    BuildContext? sheetCtx,
+  }) async {
+    if (isOnline == false) {
+      final shouldAdd = await _showOfflinePresetConfirmDialog(preset);
+      if (shouldAdd != true) return;
+    }
+
+    await _addPresetProvider(preset);
+
+    if (sheetCtx != null && sheetCtx.mounted && mounted) {
+      Navigator.pop(sheetCtx);
+    }
+  }
+
+  Future<bool?> _showOfflinePresetConfirmDialog(LocalServiceInfo preset) {
+    final l = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: Icon(
+          Icons.warning_amber,
+          color: theme.colorScheme.error,
+        ),
+        title: Text(l.serviceNotRunningTitle),
+        content: Text(l.serviceNotRunningConfirm(preset.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.addAnyway),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _addPresetProvider(LocalServiceInfo preset) async {
+    setState(() => _isAddingPreset = true);
+
+    try {
+      final provider = preset.toProvider();
+      await ref.read(aiConfigProvider.notifier).addProvider(provider);
+
+      final discovery = ref.read(modelDiscoveryProvider);
+      final models = await discovery.fetchModels(provider);
+
+      if (models.isNotEmpty) {
+        await ref
+            .read(aiConfigProvider.notifier)
+            .setModelsForProvider(provider.id, models);
+        ref.read(aiProvider.notifier).setActiveModel(provider, models.first);
+
+        if (mounted) {
+          final l = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${l.providerAdded}: ${preset.name} (${models.length} ${l.modelsLabel})',
+              ),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          final l = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              duration: const Duration(seconds: 5),
+              content: Text(l.providerAddedNoModels(preset.name)),
+              action: SnackBarAction(
+                label: l.retry,
+                onPressed: () => _refreshModelsAfterAdd(provider, l),
+              ),
+            ),
+          );
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isAddingPreset = false);
+      }
+    }
+  }
+
+  Future<void> _refreshModelsAfterAdd(
+    AIProvider provider,
+    AppLocalizations l,
+  ) async {
+    final discovery = ref.read(modelDiscoveryProvider);
+    final models = await discovery.fetchModels(provider);
+    if (models.isNotEmpty) {
+      await ref
+          .read(aiConfigProvider.notifier)
+          .setModelsForProvider(provider.id, models);
+      ref.read(aiProvider.notifier).setActiveModel(provider, models.first);
+    }
+  }
+
+  Future<void> _scanForLocalServices(
+    BuildContext context,
+    AppLocalizations l,
+  ) async {
+    setState(() => _isScanning = true);
+    final scanner = ref.read(localServiceScannerProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    final detected = await scanner.scan();
+
+    if (!mounted) return;
+    setState(() {
+      _isScanning = false;
+      _detectedServices = detected;
+    });
+
+    await _checkPresetStatus();
+
+    if (detected.isEmpty) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l.noLocalServiceFound),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    _showDetectedServicesDialog(detected);
+  }
+
+  Future<void> _scanForLocalServicesFromSheet(
+    BuildContext sheetCtx,
+    AppLocalizations l,
+  ) async {
+    setState(() => _isScanning = true);
+    final scanner = ref.read(localServiceScannerProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    final detected = await scanner.scan();
+
+    if (!mounted) return;
+    setState(() {
+      _isScanning = false;
+      _detectedServices = detected;
+    });
+
+    await _checkPresetStatus();
+
+    if (detected.isEmpty) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l.noLocalServiceFound),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    if (sheetCtx.mounted) {
+      Navigator.pop(sheetCtx);
+    }
+    _showDetectedServicesDialog(detected);
+  }
+
+  void _showDetectedServicesDialog(List<LocalServiceInfo> detected) {
+    final l = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.sensors, size: 20, color: theme.colorScheme.primary),
+            const SizedBox(width: 8),
+            Text(l.detectedLocalServices),
+          ],
+        ),
+        content: SizedBox(
+          width: 380,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l.detectedLocalServicesDesc,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...detected.map(
+                (service) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: InkWell(
+                    onTap: () {
+                      _addPresetProvider(service);
+                      Navigator.pop(ctx);
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer
+                            .withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: theme.colorScheme.primary
+                              .withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Stack(
+                            children: [
+                              Icon(
+                                service.icon,
+                                color: theme.colorScheme.primary,
+                              ),
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: theme.colorScheme.surface,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  service.name,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  l.serviceRunning,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: Colors.green.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          FilledButton.tonal(
+                            onPressed: () {
+                              _addPresetProvider(service);
+                              Navigator.pop(ctx);
+                            },
+                            child: Text(l.add),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.cancel),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildProviderTile(
@@ -117,7 +954,28 @@ class AISettingsSection extends ConsumerWidget {
       backgroundColor: enabled ? null : disabledBg,
       title: Row(
         children: [
-          Icon(provider.protocol.icon, size: 16, color: iconColor),
+          Stack(
+            children: [
+              Icon(provider.displayIcon, size: 16, color: iconColor),
+              if (provider.isLocal)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: enabled ? Colors.green : dimColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: theme.colorScheme.surface,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -189,22 +1047,7 @@ class AISettingsSection extends ConsumerWidget {
               if (models.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Text(
-                        l.noModelsFound,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.hintColor,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton(
-                        onPressed: () =>
-                            _refreshModels(context, ref, provider, l),
-                        child: Text(l.refresh),
-                      ),
-                    ],
-                  ),
+                  child: _buildNoModelsHint(context, ref, theme, l, provider),
                 )
               else
                 ...models.map(
@@ -222,6 +1065,67 @@ class AISettingsSection extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildNoModelsHint(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l,
+    AIProvider provider,
+  ) {
+    final isLocal = provider.isLocal;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.warning_amber,
+                size: 14,
+                color: theme.colorScheme.error,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                l.noModelsFound,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isLocal ? l.noModelsLocalHint : l.noModelsCloudHint,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.hintColor,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              FilledButton.tonal(
+                onPressed: () =>
+                    _refreshModels(context, ref, provider, l),
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  textStyle: theme.textTheme.labelSmall,
+                ),
+                child: Text(l.retry),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -326,8 +1230,8 @@ class AISettingsSection extends ConsumerWidget {
     } else {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text(l.noModelsFound),
-          duration: const Duration(seconds: 2),
+          content: Text(provider.isLocal ? l.noModelsLocalHint : l.noModelsCloudHint),
+          duration: const Duration(seconds: 4),
         ),
       );
     }
@@ -369,6 +1273,7 @@ class AISettingsSection extends ConsumerWidget {
     );
     final apiKeyController = TextEditingController();
     ApiProtocol selectedProtocol = ApiProtocol.openaiCompatible;
+    bool requiresApiKey = true;
 
     showDialog(
       context: context,
@@ -384,6 +1289,7 @@ class AISettingsSection extends ConsumerWidget {
                     )) {
                   baseUrlController.text = p.defaultBaseUrl;
                 }
+                requiresApiKey = true;
               });
             }
           }
@@ -426,8 +1332,17 @@ class AISettingsSection extends ConsumerWidget {
                         hintText: 'https://api.example.com',
                       ),
                     ),
-                    if (selectedProtocol.requiresApiKey) ...[
-                      const SizedBox(height: 12),
+                    const SizedBox(height: 12),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l.requireApiKey),
+                      value: requiresApiKey,
+                      onChanged: (val) {
+                        setState(() => requiresApiKey = val);
+                      },
+                    ),
+                    if (requiresApiKey) ...[
+                      const SizedBox(height: 4),
                       TextField(
                         controller: apiKeyController,
                         obscureText: true,
@@ -461,9 +1376,10 @@ class AISettingsSection extends ConsumerWidget {
                       RegExp(r'/$'),
                       '',
                     ),
-                    apiKey: selectedProtocol.requiresApiKey
+                    apiKey: requiresApiKey
                         ? apiKeyController.text.trim()
                         : null,
+                    requiresApiKey: requiresApiKey,
                   );
                   ref.read(aiConfigProvider.notifier).addProvider(provider);
                   Navigator.pop(ctx);
@@ -487,6 +1403,7 @@ class AISettingsSection extends ConsumerWidget {
     final baseUrlController = TextEditingController(text: provider.baseUrl);
     final apiKeyController = TextEditingController();
     ApiProtocol selectedProtocol = provider.protocol;
+    bool requiresApiKey = provider.requiresApiKey;
 
     showDialog(
       context: context,
@@ -526,8 +1443,17 @@ class AISettingsSection extends ConsumerWidget {
                       controller: baseUrlController,
                       decoration: InputDecoration(labelText: l.baseUrl),
                     ),
-                    if (selectedProtocol.requiresApiKey) ...[
-                      const SizedBox(height: 12),
+                    const SizedBox(height: 12),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l.requireApiKey),
+                      value: requiresApiKey,
+                      onChanged: (val) {
+                        setState(() => requiresApiKey = val);
+                      },
+                    ),
+                    if (requiresApiKey) ...[
+                      const SizedBox(height: 4),
                       TextField(
                         controller: apiKeyController,
                         obscureText: true,
@@ -555,10 +1481,11 @@ class AISettingsSection extends ConsumerWidget {
                       '',
                     ),
                     apiKey:
-                        selectedProtocol.requiresApiKey &&
+                        requiresApiKey &&
                             apiKeyController.text.trim().isNotEmpty
                         ? apiKeyController.text.trim()
                         : null,
+                    requiresApiKey: requiresApiKey,
                   );
                   await ref
                       .read(aiConfigProvider.notifier)
@@ -696,7 +1623,6 @@ class AISettingsSection extends ConsumerWidget {
 
   void _showActiveModelDialog(
     BuildContext context,
-    WidgetRef ref,
     AppLocalizations l,
   ) {
     final aiConfig = ref.read(aiConfigProvider);
@@ -725,7 +1651,7 @@ class AISettingsSection extends ConsumerWidget {
                           activeConfig?.providerId == provider.id,
                       title: Row(
                         children: [
-                          Icon(provider.protocol.icon, size: 16),
+                          Icon(provider.displayIcon, size: 16),
                           const SizedBox(width: 8),
                           Text(provider.name),
                         ],

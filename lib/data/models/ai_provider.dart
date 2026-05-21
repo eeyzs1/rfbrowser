@@ -2,39 +2,31 @@ import 'package:flutter/material.dart';
 
 enum ApiProtocol {
   openaiCompatible,
-  anthropic,
-  ollama;
+  anthropic;
 
   String get label => switch (this) {
     ApiProtocol.openaiCompatible => 'OpenAI Compatible',
     ApiProtocol.anthropic => 'Anthropic',
-    ApiProtocol.ollama => 'Ollama',
   };
 
   IconData get icon => switch (this) {
     ApiProtocol.openaiCompatible => Icons.cloud,
     ApiProtocol.anthropic => Icons.auto_awesome,
-    ApiProtocol.ollama => Icons.computer,
   };
 
   String get defaultBaseUrl => switch (this) {
     ApiProtocol.openaiCompatible => 'https://api.openai.com',
     ApiProtocol.anthropic => 'https://api.anthropic.com',
-    ApiProtocol.ollama => 'http://localhost:11434',
   };
-
-  bool get requiresApiKey => this != ApiProtocol.ollama;
 
   String get modelsPath => switch (this) {
     ApiProtocol.openaiCompatible => '/v1/models',
     ApiProtocol.anthropic => '/v1/models',
-    ApiProtocol.ollama => '/api/tags',
   };
 
   String get chatPath => switch (this) {
     ApiProtocol.openaiCompatible => '/v1/chat/completions',
     ApiProtocol.anthropic => '/v1/messages',
-    ApiProtocol.ollama => '/api/chat',
   };
 }
 
@@ -60,15 +52,34 @@ class AIProvider {
   final String baseUrl;
   final String? apiKey;
   final bool isEnabled;
+  final bool requiresApiKey;
 
-  const AIProvider({
+  AIProvider({
     required this.id,
     required this.name,
     required this.protocol,
     required this.baseUrl,
     this.apiKey,
     this.isEnabled = true,
-  });
+    bool? requiresApiKey,
+  }) : requiresApiKey = requiresApiKey ?? _inferRequiresApiKey(protocol, baseUrl);
+
+  static bool _inferRequiresApiKey(ApiProtocol protocol, String baseUrl) {
+    if (_isLocalUrl(baseUrl)) return false;
+    return true;
+  }
+
+  static bool _isLocalUrl(String url) {
+    final lower = url.toLowerCase();
+    return lower.contains('localhost') ||
+        lower.contains('127.0.0.1') ||
+        lower.contains('0.0.0.0') ||
+        lower.contains('[::1]');
+  }
+
+  bool get isLocal => _isLocalUrl(baseUrl);
+
+  IconData get displayIcon => isLocal ? Icons.computer : protocol.icon;
 
   AIProvider copyWith({
     String? name,
@@ -76,14 +87,17 @@ class AIProvider {
     String? baseUrl,
     String? apiKey,
     bool? isEnabled,
+    bool? requiresApiKey,
+    bool clearApiKey = false,
   }) {
     return AIProvider(
       id: id,
       name: name ?? this.name,
       protocol: protocol ?? this.protocol,
       baseUrl: baseUrl ?? this.baseUrl,
-      apiKey: apiKey ?? this.apiKey,
+      apiKey: clearApiKey ? null : (apiKey ?? this.apiKey),
       isEnabled: isEnabled ?? this.isEnabled,
+      requiresApiKey: requiresApiKey ?? this.requiresApiKey,
     );
   }
 
@@ -103,14 +117,19 @@ class AIProvider {
     return '$baseUrl$path';
   }
 
+  String get embeddingEndpoint {
+    if (baseUrl.endsWith('/v1')) {
+      return '$baseUrl/embeddings';
+    }
+    return '$baseUrl/v1/embeddings';
+  }
+
   Map<String, String> authHeaders() {
     switch (protocol) {
       case ApiProtocol.openaiCompatible:
         return apiKey != null ? {'Authorization': 'Bearer $apiKey'} : {};
       case ApiProtocol.anthropic:
         return {'x-api-key': apiKey ?? '', 'anthropic-version': '2023-06-01'};
-      case ApiProtocol.ollama:
-        return {};
     }
   }
 
@@ -120,15 +139,24 @@ class AIProvider {
     'protocol': protocol.index,
     'baseUrl': baseUrl,
     'isEnabled': isEnabled,
+    'requiresApiKey': requiresApiKey,
   };
 
-  factory AIProvider.fromJson(Map<String, dynamic> json) => AIProvider(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    protocol: ApiProtocol.values[json['protocol'] as int],
-    baseUrl: json['baseUrl'] as String,
-    isEnabled: json['isEnabled'] as bool? ?? true,
-  );
+  factory AIProvider.fromJson(Map<String, dynamic> json) {
+    final protocolIndex = json['protocol'] as int;
+    final protocol = protocolIndex < ApiProtocol.values.length
+        ? ApiProtocol.values[protocolIndex]
+        : ApiProtocol.openaiCompatible;
+    final baseUrl = json['baseUrl'] as String;
+    return AIProvider(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      protocol: protocol,
+      baseUrl: baseUrl,
+      isEnabled: json['isEnabled'] as bool? ?? true,
+      requiresApiKey: json['requiresApiKey'] as bool?,
+    );
+  }
 
   @override
   bool operator ==(Object other) =>

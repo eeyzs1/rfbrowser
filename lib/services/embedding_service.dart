@@ -25,10 +25,15 @@ class EmbeddingService {
       _hnswIndex ??= HnswIndex(M: 16, efConstruction: 200);
   VectorStore get store => _vectorStore ??= VectorStore();
 
-  String _ollamaBaseUrl = 'http://localhost:11434';
+  String _localBaseUrl = 'http://localhost:11434';
+  String _localEmbeddingModel = 'nomic-embed-text';
 
-  void setOllamaBaseUrl(String url) {
-    _ollamaBaseUrl = url;
+  void setLocalBaseUrl(String url) {
+    _localBaseUrl = url;
+  }
+
+  void setLocalEmbeddingModel(String model) {
+    _localEmbeddingModel = model;
   }
 
   Future<void> initOnnx() async {
@@ -54,7 +59,7 @@ class EmbeddingService {
         debugPrint('ONNX embedding failed, falling back: $e');
       }
     }
-    return _embedViaOllama(text);
+    return _embedViaLocalProvider(text);
   }
 
   Future<List<double>> _embedViaApi(
@@ -70,7 +75,7 @@ class EmbeddingService {
       };
 
       final response = await _dio.post(
-        '${provider.baseUrl}/embeddings',
+        provider.embeddingEndpoint,
         options: Options(headers: headers),
         data: jsonEncode({
           'model': modelId,
@@ -86,28 +91,35 @@ class EmbeddingService {
     } catch (e) {
       debugPrint('Embedding API error: $e');
     }
-    return _embedViaOllama(text);
+    return _embedViaLocalProvider(text);
   }
 
-  Future<List<double>> _embedViaOllama(String text) async {
+  Future<List<double>> _embedViaLocalProvider(String text) async {
     try {
+      final baseUrl = _localBaseUrl.replaceAll(RegExp(r'/$'), '');
+      String embeddingUrl;
+      if (baseUrl.endsWith('/v1')) {
+        embeddingUrl = '$baseUrl/embeddings';
+      } else {
+        embeddingUrl = '$baseUrl/v1/embeddings';
+      }
+
       final response = await _dio.post(
-        '$_ollamaBaseUrl/api/embed',
+        embeddingUrl,
         options: Options(headers: {'Content-Type': 'application/json'}),
         data: jsonEncode({
-          'model': 'nomic-embed-text',
+          'model': _localEmbeddingModel,
           'input': text.length > 2000 ? text.substring(0, 2000) : text,
         }),
       );
 
       final data = response.data;
-      final embeddings = data?['embeddings'] as List?;
-      if (embeddings != null && embeddings.isNotEmpty) {
-        final firstEmbedding = embeddings[0] as List;
-        return firstEmbedding.map((e) => (e as num).toDouble()).toList();
+      final embedding = data?['data']?[0]?['embedding'] as List?;
+      if (embedding != null && embedding.isNotEmpty) {
+        return embedding.map((e) => (e as num).toDouble()).toList();
       }
     } catch (e) {
-      debugPrint('Ollama embedding error: $e');
+      debugPrint('Local provider embedding error: $e');
     }
     return _embedLocally(text);
   }
@@ -158,7 +170,7 @@ class EmbeddingService {
       debugPrint(
         'EmbeddingService: WARNING - Using local n-gram hashing fallback. '
         'Semantic search quality will be degraded. '
-        'Configure Ollama (http://localhost:11434) or an API-based embedding model for accurate results.',
+        'Configure a local model provider (e.g. Ollama, LM Studio) or an API-based embedding model for accurate results.',
       );
     }
     return embedding;

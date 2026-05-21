@@ -560,11 +560,11 @@ abstract class AppLocalizations {
   /// **'Active Model'**
   String get activeModel;
 
-  /// No description provided for @localModelOllama.
+  /// No description provided for @localModel.
   ///
   /// In en, this message translates to:
-  /// **'Local Model (Ollama)'**
-  String get localModelOllama;
+  /// **'Local Model'**
+  String get localModel;
 
   /// No description provided for @configureLocalModel.
   ///
@@ -572,17 +572,23 @@ abstract class AppLocalizations {
   /// **'Configure local model endpoint'**
   String get configureLocalModel;
 
-  /// No description provided for @ollamaEndpoint.
+  /// No description provided for @localModelEndpoint.
   ///
   /// In en, this message translates to:
-  /// **'Ollama Endpoint'**
-  String get ollamaEndpoint;
+  /// **'Local Model Endpoint'**
+  String get localModelEndpoint;
 
-  /// No description provided for @ollamaHint.
+  /// No description provided for @localModelHint.
   ///
   /// In en, this message translates to:
-  /// **'Make sure Ollama is running locally before using local models.'**
-  String get ollamaHint;
+  /// **'Make sure a local model server (e.g. Ollama, LM Studio) is running before using local models.'**
+  String get localModelHint;
+
+  /// No description provided for @requireApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Require API Key'**
+  String get requireApiKey;
 
   /// No description provided for @editorSection.
   ///
@@ -4469,6 +4475,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Switch Scene'**
   String get switchScene;
+
+  /// No description provided for @quickStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Start'**
+  String get quickStart;
+
+  /// No description provided for @quickStartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a local model service below to get started with AI features, or add a cloud provider.'**
+  String get quickStartDesc;
+
+  /// No description provided for @localModelPresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Model Services'**
+  String get localModelPresets;
+
+  /// No description provided for @scanLocalServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan for running services'**
+  String get scanLocalServices;
+
+  /// No description provided for @addCloudProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Add cloud provider (OpenAI, Anthropic, etc.)'**
+  String get addCloudProvider;
+
+  /// No description provided for @localModelSetupGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'To use local models: 1) Install a tool like Ollama or LM Studio, 2) Download a model, 3) Make sure the service is running, 4) Click a preset above to add it.'**
+  String get localModelSetupGuide;
+
+  /// No description provided for @localServiceDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Local service detected'**
+  String get localServiceDetected;
+
+  /// No description provided for @detectedLocalServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected Local Services'**
+  String get detectedLocalServices;
+
+  /// No description provided for @detectedLocalServicesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The following local model services were found running on your computer. Click Add to configure them.'**
+  String get detectedLocalServicesDesc;
+
+  /// No description provided for @noLocalServiceFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No local model service found. Make sure Ollama or LM Studio is running.'**
+  String get noLocalServiceFound;
+
+  /// No description provided for @providerAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider added'**
+  String get providerAdded;
+
+  /// No description provided for @addLocalModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Local Model'**
+  String get addLocalModel;
+
+  /// No description provided for @serviceRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get serviceRunning;
+
+  /// No description provided for @serviceNotRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Not running'**
+  String get serviceNotRunning;
+
+  /// No description provided for @modelsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'models'**
+  String get modelsLabel;
+
+  /// No description provided for @providerAddedNoModels.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} added, but no models found. Make sure the service is running and has models downloaded.'**
+  String providerAddedNoModels(String name);
+
+  /// No description provided for @noModelsLocalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure the local service is running and has models downloaded.'**
+  String get noModelsLocalHint;
+
+  /// No description provided for @noModelsCloudHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your API key and network connection.'**
+  String get noModelsCloudHint;
+
+  /// No description provided for @scanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning...'**
+  String get scanning;
+
+  /// No description provided for @serviceNotRunningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Not Running'**
+  String get serviceNotRunningTitle;
+
+  /// No description provided for @serviceNotRunningConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is not currently running on your computer. The provider will be added but won't work until you start the service. Do you want to add it anyway?'**
+  String serviceNotRunningConfirm(String name);
+
+  /// No description provided for @addAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Anyway'**
+  String get addAnyway;
 }
 
 class _AppLocalizationsDelegate

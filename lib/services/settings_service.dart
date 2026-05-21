@@ -416,7 +416,7 @@ class AIConfigNotifier extends Notifier<AIConfigState> {
   Future<void> _loadApiKeys() async {
     final updatedProviders = <AIProvider>[];
     for (final provider in state.providers) {
-      if (provider.protocol.requiresApiKey) {
+      if (provider.requiresApiKey) {
         final key = await _secureStorage.read(key: 'ai_key_${provider.id}');
         updatedProviders.add(provider.copyWith(apiKey: key));
       } else {
@@ -457,7 +457,7 @@ class AIConfigNotifier extends Notifier<AIConfigState> {
   Future<void> addProvider(AIProvider provider) async {
     var providers = List<AIProvider>.from(state.providers);
     providers.removeWhere((p) => p.id == provider.id);
-    if (provider.protocol.requiresApiKey && provider.apiKey != null) {
+    if (provider.requiresApiKey && provider.apiKey != null) {
       await _secureStorage.write(
         key: 'ai_key_${provider.id}',
         value: provider.apiKey,
@@ -471,7 +471,7 @@ class AIConfigNotifier extends Notifier<AIConfigState> {
   Future<void> updateProvider(AIProvider provider) async {
     final idx = state.providers.indexWhere((p) => p.id == provider.id);
     if (idx >= 0) {
-      if (provider.protocol.requiresApiKey && provider.apiKey != null) {
+      if (provider.requiresApiKey && provider.apiKey != null) {
         await _secureStorage.write(
           key: 'ai_key_${provider.id}',
           value: provider.apiKey,

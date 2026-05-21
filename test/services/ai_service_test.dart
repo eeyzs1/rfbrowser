@@ -103,8 +103,9 @@ void main() {
       final provider = AIProvider(
         id: 'p1',
         name: 'Test',
-        protocol: ApiProtocol.ollama,
+        protocol: ApiProtocol.openaiCompatible,
         baseUrl: 'http://localhost:11434',
+        requiresApiKey: false,
       );
       final updated = state.copyWith(activeProvider: provider);
       expect(updated.activeProvider!.id, 'p1');
@@ -114,8 +115,9 @@ void main() {
       final provider = AIProvider(
         id: 'p1',
         name: 'Test',
-        protocol: ApiProtocol.ollama,
+        protocol: ApiProtocol.openaiCompatible,
         baseUrl: 'http://localhost:11434',
+        requiresApiKey: false,
       );
       final state = AIState(activeProvider: provider);
       final updated = state.copyWith(clearProvider: true);

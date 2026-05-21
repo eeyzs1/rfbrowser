@@ -585,7 +585,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(provider.protocol.icon, size: 12, color: theme.hintColor),
+            Icon(provider.displayIcon, size: 12, color: theme.hintColor),
             const SizedBox(width: 4),
             Text(
               model.displayName,
@@ -655,7 +655,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                   bottom: 4,
                 ),
                 leading: Icon(
-                  provider.protocol.icon,
+                  provider.displayIcon,
                   size: 16,
                   color: theme.hintColor,
                 ),
@@ -754,6 +754,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
     );
     final apiKeyController = TextEditingController();
     ApiProtocol selectedProtocol = ApiProtocol.openaiCompatible;
+    bool requiresApiKey = true;
 
     showDialog(
       context: context,
@@ -811,7 +812,16 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                         hintText: 'https://api.example.com',
                       ),
                     ),
-                    if (selectedProtocol.requiresApiKey) ...[
+                    const SizedBox(height: 12),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Require API Key'),
+                      value: requiresApiKey,
+                      onChanged: (val) {
+                        setState(() => requiresApiKey = val);
+                      },
+                    ),
+                    if (requiresApiKey) ...[
                       const SizedBox(height: 12),
                       TextField(
                         controller: apiKeyController,
@@ -846,9 +856,10 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                       RegExp(r'/$'),
                       '',
                     ),
-                    apiKey: selectedProtocol.requiresApiKey
+                    apiKey: requiresApiKey
                         ? apiKeyController.text.trim()
                         : null,
+                    requiresApiKey: requiresApiKey,
                   );
                   ref.read(aiConfigProvider.notifier).addProvider(provider);
                   Navigator.pop(ctx);

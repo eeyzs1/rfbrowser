@@ -77,10 +77,11 @@
   "openaiApiKey": "OpenAI API Key",
   "notSet": "Not set",
   "activeModel": "Active Model",
-  "localModelOllama": "Local Model (Ollama)",
+  "localModel": "Local Model",
   "configureLocalModel": "Configure local model endpoint",
-  "ollamaEndpoint": "Ollama Endpoint",
-  "ollamaHint": "Make sure Ollama is running locally before using local models.",
+  "localModelEndpoint": "Local Model Endpoint",
+  "localModelHint": "Make sure a local model server (e.g. Ollama, LM Studio) is running before using local models.",
+  "requireApiKey": "Require API Key",
   "editorSection": "Editor",
   "syncSection": "Sync",
   "configureGitRemote": "Configure Git remote for vault sync",
@@ -975,5 +976,37 @@
   "settingsCategoryGeneral": "General",
   "settingsCategoryAI": "AI & Automation",
   "settingsCategoryAdvanced": "Advanced",
-  "switchScene": "Switch Scene"
+  "switchScene": "Switch Scene",
+  "quickStart": "Quick Start",
+  "quickStartDesc": "Choose a local model service below to get started with AI features, or add a cloud provider.",
+  "localModelPresets": "Local Model Services",
+  "scanLocalServices": "Scan for running services",
+  "addCloudProvider": "Add cloud provider (OpenAI, Anthropic, etc.)",
+  "localModelSetupGuide": "To use local models: 1) Install a tool like Ollama or LM Studio, 2) Download a model, 3) Make sure the service is running, 4) Click a preset above to add it.",
+  "localServiceDetected": "Local service detected",
+  "detectedLocalServices": "Detected Local Services",
+  "detectedLocalServicesDesc": "The following local model services were found running on your computer. Click Add to configure them.",
+  "noLocalServiceFound": "No local model service found. Make sure Ollama or LM Studio is running.",
+  "providerAdded": "Provider added",
+  "addLocalModel": "Add Local Model",
+  "serviceRunning": "Running",
+  "serviceNotRunning": "Not running",
+  "modelsLabel": "models",
+  "providerAddedNoModels": "{name} added, but no models found. Make sure the service is running and has models downloaded.",
+  "@providerAddedNoModels": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "noModelsLocalHint": "Make sure the local service is running and has models downloaded.",
+  "noModelsCloudHint": "Check your API key and network connection.",
+  "scanning": "Scanning...",
+  "serviceNotRunningTitle": "Service Not Running",
+  "serviceNotRunningConfirm": "{name} is not currently running on your computer. The provider will be added but won't work until you start the service. Do you want to add it anyway?",
+  "@serviceNotRunningConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "addAnyway": "Add Anyway"
 }
