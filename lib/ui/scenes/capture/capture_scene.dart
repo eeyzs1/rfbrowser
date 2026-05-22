@@ -7,7 +7,6 @@ import '../../../services/ai_service.dart';
 import '../../../data/models/note.dart';
 import '../../theme/design_tokens.dart';
 import '../../widgets/note_sidebar.dart';
-import '../../widgets/ai_float.dart';
 import '../../widgets/resizable_panel.dart';
 import '../../pages/browser_page.dart';
 
@@ -130,7 +129,6 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
             ),
           ],
         ),
-        const Positioned.fill(child: AIFloat()),
       ],
     );
   }

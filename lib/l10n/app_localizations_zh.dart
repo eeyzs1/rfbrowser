@@ -2240,6 +2240,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String get extrazerodoSkillCustom => '自定义';
 
   @override
+  String get extrazerodoSkillCreate => '创建技能';
+
+  @override
+  String get extrazerodoSkillEdit => '编辑技能';
+
+  @override
+  String get extrazerodoSkillDelete => '删除技能';
+
+  @override
+  String extrazerodoSkillDeleteConfirm(String name) {
+    return '确定要删除 \"$name\" 吗？';
+  }
+
+  @override
+  String get extrazerodoSkillEmptyHint => '创建你的第一个 AI 技能来增强助手能力';
+
+  @override
+  String get extrazerodoSkillNameHint => '例如：文章摘要';
+
+  @override
+  String get extrazerodoSkillDescHint => '这个技能做什么？';
+
+  @override
+  String get extrazerodoSkillPromptHint =>
+      '你是一个专家...\n\n任务：总结以下内容：\n\n@note[current]';
+
+  @override
+  String get extrazerodoSkillPromptTips =>
+      '使用 @note[current] 或 @web[current] 引用内容。使用 \$参数 表示用户输入变量。';
+
+  @override
+  String get extrazerodoSkillParams => '参数';
+
+  @override
+  String get required => '必填';
+
+  @override
+  String get optional => '可选';
+
+  @override
   String get extrazerodoReloadPlugins => '重新加载';
 
   @override
@@ -2391,10 +2431,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentModeManual => '手动';
 
   @override
+  String get agentModeManualDesc => '按预设步骤逐步执行，适合已知流程的重复任务';
+
+  @override
   String get agentModeAiPlanned => 'AI 计划';
 
   @override
+  String get agentModeAiPlannedDesc => 'AI 先生成执行计划，再按计划逐步执行';
+
+  @override
   String get agentModeReact => 'ReAct 循环';
+
+  @override
+  String get agentModeReactDesc => 'AI 思考→行动→观察循环，动态调整策略（推荐）';
 
   @override
   String get agentToolNavigate => '导航';

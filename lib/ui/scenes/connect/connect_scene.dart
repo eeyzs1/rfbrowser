@@ -11,7 +11,6 @@ import '../../widgets/filter_panel.dart';
 import '../../widgets/node_detail_panel.dart';
 import '../../widgets/card_properties_panel.dart';
 import '../../widgets/connection_properties_panel.dart';
-import '../../widgets/ai_float.dart';
 import '../../widgets/resizable_panel.dart';
 import '../../pages/graph_page.dart';
 import '../../pages/canvas_page.dart';
@@ -155,7 +154,6 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
               ),
           ],
         ),
-        const Positioned.fill(child: AIFloat()),
       ],
     );
   }

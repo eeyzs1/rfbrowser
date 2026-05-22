@@ -231,6 +231,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
   Future<void> createSkill(Skill skill) => _noteSvc.createSkill(skill);
 
   Future<void> deleteSkill(String skillId) => _noteSvc.deleteSkill(skillId);
+  Future<void> updateSkill(Skill skill) => _noteSvc.updateSkill(skill);
 
   List<Link> getNoteLinks(String noteId) => _linkSvc.getNoteLinks(noteId);
 

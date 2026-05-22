@@ -2279,6 +2279,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get extrazerodoSkillCustom => 'Custom';
 
   @override
+  String get extrazerodoSkillCreate => 'Create Skill';
+
+  @override
+  String get extrazerodoSkillEdit => 'Edit Skill';
+
+  @override
+  String get extrazerodoSkillDelete => 'Delete Skill';
+
+  @override
+  String extrazerodoSkillDeleteConfirm(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String get extrazerodoSkillEmptyHint =>
+      'Create your first AI skill to enhance the assistant';
+
+  @override
+  String get extrazerodoSkillNameHint => 'e.g. Summarize Article';
+
+  @override
+  String get extrazerodoSkillDescHint => 'What does this skill do?';
+
+  @override
+  String get extrazerodoSkillPromptHint =>
+      'You are an expert...\n\nTask: summarise the following content:\n\n@note[current]';
+
+  @override
+  String get extrazerodoSkillPromptTips =>
+      'Use @note[current] or @web[current] to reference content. Use variables like \$param for user inputs.';
+
+  @override
+  String get extrazerodoSkillParams => 'Parameters';
+
+  @override
+  String get required => 'Required';
+
+  @override
+  String get optional => 'Optional';
+
+  @override
   String get extrazerodoReloadPlugins => 'Reload';
 
   @override
@@ -2442,10 +2483,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentModeManual => 'Manual';
 
   @override
+  String get agentModeManualDesc =>
+      'Step-by-step execution with predefined steps';
+
+  @override
   String get agentModeAiPlanned => 'AI Plan';
 
   @override
+  String get agentModeAiPlannedDesc =>
+      'AI generates a plan first, then executes it step by step';
+
+  @override
   String get agentModeReact => 'ReAct';
+
+  @override
+  String get agentModeReactDesc =>
+      'AI thinks, acts, observes, and adapts dynamically (recommended)';
 
   @override
   String get agentToolNavigate => 'Navigate';

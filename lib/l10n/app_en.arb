@@ -958,6 +958,23 @@
     }
   },
   "extrazerodoSkillCustom": "Custom",
+  "extrazerodoSkillCreate": "Create Skill",
+  "extrazerodoSkillEdit": "Edit Skill",
+  "extrazerodoSkillDelete": "Delete Skill",
+  "extrazerodoSkillDeleteConfirm": "Are you sure you want to delete \"{name}\"?",
+  "@extrazerodoSkillDeleteConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "extrazerodoSkillEmptyHint": "Create your first AI skill to enhance the assistant",
+  "extrazerodoSkillNameHint": "e.g. Summarize Article",
+  "extrazerodoSkillDescHint": "What does this skill do?",
+  "extrazerodoSkillPromptHint": "You are an expert...\n\nTask: summarise the following content:\n\n@note[current]",
+  "extrazerodoSkillPromptTips": "Use @note[current] or @web[current] to reference content. Use variables like $param for user inputs.",
+  "extrazerodoSkillParams": "Parameters",
+  "required": "Required",
+  "optional": "Optional",
   "extrazerodoReloadPlugins": "Reload",
   "extrazerodoMarketplace": "Marketplace",
   "extrazerodoMarketplaceTitle": "Plugin Marketplace",
@@ -1022,8 +1039,11 @@
     }
   },
   "agentModeManual": "Manual",
+  "agentModeManualDesc": "Step-by-step execution with predefined steps",
   "agentModeAiPlanned": "AI Plan",
+  "agentModeAiPlannedDesc": "AI generates a plan first, then executes it step by step",
   "agentModeReact": "ReAct",
+  "agentModeReactDesc": "AI thinks, acts, observes, and adapts dynamically (recommended)",
   "agentToolNavigate": "Navigate",
   "agentToolExtractText": "Extract Text",
   "agentToolCreateNote": "Create Note",

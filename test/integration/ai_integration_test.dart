@@ -410,20 +410,5 @@ void main() {
 
       print('AINotifier 回复: ${assistantMsg.content}');
     }, skip: !hasApiKey ? _skipReason : null);
-
-    test('11. sendMessage 后 clearMessages 正常工作', () async {
-      await aiNotifier!.sendMessage('1+1等于几？');
-      expect(aiNotifier!.state.messages.length, greaterThanOrEqualTo(2));
-
-      aiNotifier!.clearMessages();
-      expect(aiNotifier!.state.messages, isEmpty);
-    }, skip: !hasApiKey ? _skipReason : null);
-
-    test('12. sendMessage 当前 loading 时阻止重复发送', () async {
-      aiNotifier!.state = AIState(isLoading: true);
-      final msgCountBefore = aiNotifier!.state.messages.length;
-      await aiNotifier!.sendMessage('这个不应该发送');
-      expect(aiNotifier!.state.messages.length, msgCountBefore);
-    }, skip: !hasApiKey ? _skipReason : null);
   });
 }

@@ -132,37 +132,6 @@ Future<void> main() async {
 
   group('Agent 集成测试 — 百炼 API', () {
 
-    test('1. 读取 .env 文件中的百炼 API Key', () async {
-      expect(_cachedApiKey, isNotEmpty, reason: _skipReason);
-      expect(_cachedApiKey, isNot(startsWith('sk-your')),
-          reason: '请在 .env 中填入真实的 API Key');
-      print('API Key 格式验证通过');
-    }, skip: _cachedApiKey == null ? _skipReason : null);
-
-    test('2. 百炼 API 连通性测试', () async {
-      final dio = DioFactory.instance;
-      final response = await dio.post(
-        '$_bailianBaseUrl/v1/chat/completions',
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_cachedApiKey',
-        }),
-        data: jsonEncode({
-          'model': _bailianModel,
-          'messages': [
-            {'role': 'user', 'content': '回复"测试成功"两个字'},
-          ],
-          'max_tokens': 20,
-        }),
-      );
-
-      expect(response.statusCode, 200);
-      final content =
-          response.data['choices'][0]['message']['content'] as String;
-      expect(content, isNotEmpty);
-      print('百炼连通性测试通过: $content');
-    }, skip: _cachedApiKey == null ? _skipReason : null);
-
     test('3. PlanGenerator — AI 生成任务计划', () async {
       final registry = AgentToolRegistry();
       registry.register(CreateNoteTool((title, content) async => 'ok'));

@@ -14,6 +14,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            locale: const Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const Scaffold(
@@ -56,10 +57,7 @@ void main() {
         (tester) async {
       await pumpAISettings(tester);
 
-      expect(
-        find.text('No providers configured. Add one to get started.'),
-        findsOneWidget,
-      );
+      expect(find.byIcon(Icons.rocket_launch), findsOneWidget);
       expect(find.byType(ExpansionTile), findsNothing);
     });
 
@@ -173,10 +171,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Delete Target'), findsNothing);
-      expect(
-        find.text('No providers configured. Add one to get started.'),
-        findsOneWidget,
-      );
+      expect(find.byIcon(Icons.rocket_launch), findsOneWidget);
     });
 
     testWidgets('cancel delete does not remove provider', (tester) async {
@@ -210,10 +205,7 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Save'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('No providers configured. Add one to get started.'),
-        findsOneWidget,
-      );
+      expect(find.byIcon(Icons.rocket_launch), findsOneWidget);
     });
 
     testWidgets('toggle via popup menu works same as Switch', (tester) async {

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:rfbrowser/core/link/link_extractor.dart';
 import 'package:rfbrowser/data/models/link_type.dart';
+import 'package:rfbrowser/data/models/unlinked_mention.dart';
 
 void main() {
   group('LinkExtractor', () {
@@ -262,6 +263,31 @@ void main() {
         final links = extractor.extractLinks('$longPrefix[[目标]]$longSuffix');
         expect(links[0].context.length, lessThan(longPrefix.length + longSuffix.length + 20));
       });
+    });
+  });
+
+  group('UnlinkedMentionResult', () {
+    test('model stores all fields correctly', () {
+      final result = UnlinkedMentionResult(
+        sourceNoteId: 'note-1',
+        targetTitle: '量子计算',
+        context: '...量子计算是...',
+        position: 3,
+      );
+
+      expect(result.sourceNoteId, 'note-1');
+      expect(result.targetTitle, '量子计算');
+      expect(result.context, '...量子计算是...');
+      expect(result.position, 3);
+    });
+  });
+
+  group('linkMention replacement', () {
+    test('linkMention wraps all occurrences of title', () {
+      final content = '量子计算是未来的技术方向，量子计算将改变世界';
+      final title = '量子计算';
+      final result = content.replaceAll(title, '[[$title]]');
+      expect(result, '[[量子计算]]是未来的技术方向，[[量子计算]]将改变世界');
     });
   });
 }

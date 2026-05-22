@@ -76,6 +76,7 @@ class Note {
     final buffer = StringBuffer();
     if (frontMatter.isNotEmpty || tags.isNotEmpty || aliases.isNotEmpty || title.isNotEmpty) {
       buffer.writeln('---');
+      buffer.writeln('id: $id');
       if (title.isNotEmpty) buffer.writeln('title: "$title"');
       buffer.writeln('created: ${created.toIso8601String()}');
       buffer.writeln('modified: ${modified.toIso8601String()}');
@@ -94,6 +95,7 @@ class Note {
       }
       frontMatter.forEach((key, value) {
         if (![
+          'id',
           'title',
           'created',
           'modified',
@@ -126,6 +128,7 @@ class Note {
     String? agentTaskId;
     String? rawHtmlPath;
     String? screenshotPath;
+    String? noteId;
 
     if (markdown.startsWith('---')) {
       final endIndex = markdown.indexOf('---', 3);
@@ -135,6 +138,7 @@ class Note {
         try {
           final parsed = loadYaml(fmText);
           if (parsed is YamlMap) {
+            noteId = parsed['id']?.toString();
             title = (parsed['title'] ?? '').toString();
             tags = _parseStringList(parsed['tags']);
             aliases = _parseStringList(parsed['aliases']);
@@ -146,6 +150,7 @@ class Note {
             for (final entry in parsed.entries) {
               final key = entry.key.toString();
               if (![
+                'id',
                 'title',
                 'created',
                 'modified',
@@ -176,6 +181,7 @@ class Note {
     }
 
     return Note(
+      id: noteId,
       title: title,
       filePath: filePath,
       content: content,

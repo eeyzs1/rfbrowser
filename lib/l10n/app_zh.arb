@@ -944,6 +944,23 @@
     }
   },
   "extrazerodoSkillCustom": "自定义",
+  "extrazerodoSkillCreate": "创建技能",
+  "extrazerodoSkillEdit": "编辑技能",
+  "extrazerodoSkillDelete": "删除技能",
+  "extrazerodoSkillDeleteConfirm": "确定要删除 \"{name}\" 吗？",
+  "@extrazerodoSkillDeleteConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "extrazerodoSkillEmptyHint": "创建你的第一个 AI 技能来增强助手能力",
+  "extrazerodoSkillNameHint": "例如：文章摘要",
+  "extrazerodoSkillDescHint": "这个技能做什么？",
+  "extrazerodoSkillPromptHint": "你是一个专家...\n\n任务：总结以下内容：\n\n@note[current]",
+  "extrazerodoSkillPromptTips": "使用 @note[current] 或 @web[current] 引用内容。使用 $参数 表示用户输入变量。",
+  "extrazerodoSkillParams": "参数",
+  "required": "必填",
+  "optional": "可选",
   "extrazerodoReloadPlugins": "重新加载",
   "extrazerodoMarketplace": "插件市场",
   "extrazerodoMarketplaceTitle": "插件市场",
@@ -1008,8 +1025,11 @@
     }
   },
   "agentModeManual": "手动",
+  "agentModeManualDesc": "按预设步骤逐步执行，适合已知流程的重复任务",
   "agentModeAiPlanned": "AI 计划",
+  "agentModeAiPlannedDesc": "AI 先生成执行计划，再按计划逐步执行",
   "agentModeReact": "ReAct 循环",
+  "agentModeReactDesc": "AI 思考→行动→观察循环，动态调整策略（推荐）",
   "agentToolNavigate": "导航",
   "agentToolExtractText": "提取文本",
   "agentToolCreateNote": "创建笔记",

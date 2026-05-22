@@ -4362,6 +4362,78 @@ abstract class AppLocalizations {
   /// **'Custom'**
   String get extrazerodoSkillCustom;
 
+  /// No description provided for @extrazerodoSkillCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Skill'**
+  String get extrazerodoSkillCreate;
+
+  /// No description provided for @extrazerodoSkillEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Skill'**
+  String get extrazerodoSkillEdit;
+
+  /// No description provided for @extrazerodoSkillDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Skill'**
+  String get extrazerodoSkillDelete;
+
+  /// No description provided for @extrazerodoSkillDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String extrazerodoSkillDeleteConfirm(String name);
+
+  /// No description provided for @extrazerodoSkillEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first AI skill to enhance the assistant'**
+  String get extrazerodoSkillEmptyHint;
+
+  /// No description provided for @extrazerodoSkillNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Summarize Article'**
+  String get extrazerodoSkillNameHint;
+
+  /// No description provided for @extrazerodoSkillDescHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What does this skill do?'**
+  String get extrazerodoSkillDescHint;
+
+  /// No description provided for @extrazerodoSkillPromptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You are an expert...\n\nTask: summarise the following content:\n\n@note[current]'**
+  String get extrazerodoSkillPromptHint;
+
+  /// No description provided for @extrazerodoSkillPromptTips.
+  ///
+  /// In en, this message translates to:
+  /// **'Use @note[current] or @web[current] to reference content. Use variables like \$param for user inputs.'**
+  String get extrazerodoSkillPromptTips;
+
+  /// No description provided for @extrazerodoSkillParams.
+  ///
+  /// In en, this message translates to:
+  /// **'Parameters'**
+  String get extrazerodoSkillParams;
+
+  /// No description provided for @required.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get required;
+
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optional;
+
   /// No description provided for @extrazerodoReloadPlugins.
   ///
   /// In en, this message translates to:
@@ -4650,17 +4722,35 @@ abstract class AppLocalizations {
   /// **'Manual'**
   String get agentModeManual;
 
+  /// No description provided for @agentModeManualDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Step-by-step execution with predefined steps'**
+  String get agentModeManualDesc;
+
   /// No description provided for @agentModeAiPlanned.
   ///
   /// In en, this message translates to:
   /// **'AI Plan'**
   String get agentModeAiPlanned;
 
+  /// No description provided for @agentModeAiPlannedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AI generates a plan first, then executes it step by step'**
+  String get agentModeAiPlannedDesc;
+
   /// No description provided for @agentModeReact.
   ///
   /// In en, this message translates to:
   /// **'ReAct'**
   String get agentModeReact;
+
+  /// No description provided for @agentModeReactDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AI thinks, acts, observes, and adapts dynamically (recommended)'**
+  String get agentModeReactDesc;
 
   /// No description provided for @agentToolNavigate.
   ///

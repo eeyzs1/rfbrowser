@@ -3,16 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:rfbrowser/l10n/app_localizations.dart';
-import 'package:rfbrowser/ui/pages/editor_page.dart';
+import 'package:rfbrowser/data/models/note.dart';
 import 'package:rfbrowser/services/knowledge_service.dart';
 import 'package:rfbrowser/services/settings_service.dart';
 import 'package:rfbrowser/data/stores/vault_store.dart';
-import 'package:rfbrowser/data/models/note.dart';
+import 'package:rfbrowser/ui/pages/editor_page.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Editor Page', () {
+  group('EditorView CRUD Widget Interaction', () {
     final testNote = Note(
       title: 'Test Note',
       filePath: 'test-note.md',
@@ -48,32 +48,28 @@ void main() {
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const EditorView(),
+            home: const Material(child: EditorView()),
           ),
         ),
       );
-      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
     }
 
-    testWidgets('shows no vault connected when no vault', (tester) async {
+    testWidgets('shows empty state when no vault connected', (tester) async {
       await pumpEditorPage(tester);
 
       expect(find.byIcon(Icons.edit_note), findsOneWidget);
     });
 
-    testWidgets('shows no note selected when vault exists but no active note', (tester) async {
-      await pumpEditorPage(tester, currentVault: testVault);
-
-      expect(find.byIcon(Icons.edit_note), findsOneWidget);
-    });
-
-    testWidgets('shows new note button when no note selected', (tester) async {
+    testWidgets('shows create note button when vault connected but no active note',
+        (tester) async {
       await pumpEditorPage(tester, currentVault: testVault);
 
       expect(find.byIcon(Icons.add), findsOneWidget);
     });
 
-    testWidgets('shows note title in header when active note exists', (tester) async {
+    testWidgets('shows note title and format toolbar when active note exists',
+        (tester) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -82,69 +78,11 @@ void main() {
       );
 
       expect(find.text('Test Note'), findsOneWidget);
-    });
-
-    testWidgets('shows format toolbar in edit mode', (tester) async {
-      await pumpEditorPage(
-        tester,
-        notes: [testNote],
-        activeNoteId: testNote.id,
-        currentVault: testVault,
-      );
-
       expect(find.byIcon(Icons.format_bold), findsOneWidget);
-      expect(find.byIcon(Icons.format_italic), findsOneWidget);
-      expect(find.byIcon(Icons.title), findsOneWidget);
     });
 
-    testWidgets('format toolbar contains all formatting buttons', (tester) async {
-      await pumpEditorPage(
-        tester,
-        notes: [testNote],
-        activeNoteId: testNote.id,
-        currentVault: testVault,
-      );
-
-      expect(find.byIcon(Icons.title), findsOneWidget);
-      expect(find.byIcon(Icons.format_bold), findsOneWidget);
-      expect(find.byIcon(Icons.format_italic), findsOneWidget);
-      expect(find.byIcon(Icons.strikethrough_s), findsOneWidget);
-      expect(find.byIcon(Icons.code), findsOneWidget);
-      expect(find.byIcon(Icons.data_object), findsOneWidget);
-      expect(find.byIcon(Icons.format_list_bulleted), findsOneWidget);
-      expect(find.byIcon(Icons.format_list_numbered), findsOneWidget);
-      expect(find.byIcon(Icons.format_quote), findsOneWidget);
-      expect(find.byIcon(Icons.checklist), findsOneWidget);
-      expect(find.byIcon(Icons.link), findsOneWidget);
-      expect(find.byIcon(Icons.add_link), findsOneWidget);
-      expect(find.byIcon(Icons.input), findsOneWidget);
-      expect(find.byIcon(Icons.horizontal_rule), findsOneWidget);
-      expect(find.byIcon(Icons.table_chart), findsOneWidget);
-    });
-
-    testWidgets('shows status bar with file path', (tester) async {
-      await pumpEditorPage(
-        tester,
-        notes: [testNote],
-        activeNoteId: testNote.id,
-        currentVault: testVault,
-      );
-
-      expect(find.byIcon(Icons.description_outlined), findsOneWidget);
-    });
-
-    testWidgets('shows save status as saved initially', (tester) async {
-      await pumpEditorPage(
-        tester,
-        notes: [testNote],
-        activeNoteId: testNote.id,
-        currentVault: testVault,
-      );
-
-      expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
-    });
-
-    testWidgets('shows view mode SegmentedButton with edit and preview labels', (tester) async {
+    testWidgets('shows Edit, Preview, Split segmented buttons',
+        (tester) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -157,7 +95,8 @@ void main() {
       expect(find.text('Split'), findsOneWidget);
     });
 
-    testWidgets('shows save button in header', (tester) async {
+    testWidgets('shows save button with check icon when saved',
+        (tester) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -166,9 +105,67 @@ void main() {
       );
 
       expect(find.byIcon(Icons.save), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
     });
 
-    testWidgets('switching to preview mode hides format toolbar', (tester) async {
+    testWidgets('format toolbar contains bold, italic, heading buttons',
+        (tester) async {
+      await pumpEditorPage(
+        tester,
+        notes: [testNote],
+        activeNoteId: testNote.id,
+        currentVault: testVault,
+      );
+
+      expect(find.byIcon(Icons.format_bold), findsOneWidget);
+      expect(find.byIcon(Icons.format_italic), findsOneWidget);
+      expect(find.byIcon(Icons.title), findsOneWidget);
+    });
+
+    testWidgets('format toolbar contains list, link, quote, code buttons',
+        (tester) async {
+      await pumpEditorPage(
+        tester,
+        notes: [testNote],
+        activeNoteId: testNote.id,
+        currentVault: testVault,
+      );
+
+      expect(find.byIcon(Icons.format_list_bulleted), findsOneWidget);
+      expect(find.byIcon(Icons.link), findsOneWidget);
+      expect(find.byIcon(Icons.format_quote), findsOneWidget);
+      expect(find.byIcon(Icons.code), findsOneWidget);
+    });
+
+    testWidgets(
+        'format toolbar contains strikethrough, checklist, table, hr buttons',
+        (tester) async {
+      await pumpEditorPage(
+        tester,
+        notes: [testNote],
+        activeNoteId: testNote.id,
+        currentVault: testVault,
+      );
+
+      expect(find.byIcon(Icons.strikethrough_s), findsOneWidget);
+      expect(find.byIcon(Icons.checklist), findsOneWidget);
+      expect(find.byIcon(Icons.table_chart), findsOneWidget);
+      expect(find.byIcon(Icons.horizontal_rule), findsOneWidget);
+    });
+
+    testWidgets('shows status bar with file path and word count icons',
+        (tester) async {
+      await pumpEditorPage(
+        tester,
+        notes: [testNote],
+        activeNoteId: testNote.id,
+        currentVault: testVault,
+      );
+
+      expect(find.byIcon(Icons.description_outlined), findsOneWidget);
+    });
+
+    testWidgets('tapping preview hides format toolbar', (tester) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -181,9 +178,52 @@ void main() {
       final previewSegment = find.text('Preview');
       if (previewSegment.evaluate().isNotEmpty) {
         await tester.tap(previewSegment);
-        await tester.pump(const Duration(seconds: 1));
+        await tester.pumpAndSettle();
 
         expect(find.byIcon(Icons.format_bold), findsNothing);
+      }
+    });
+
+    testWidgets('tapping split shows both edit and preview', (tester) async {
+      await pumpEditorPage(
+        tester,
+        notes: [testNote],
+        activeNoteId: testNote.id,
+        currentVault: testVault,
+      );
+
+      final splitSegment = find.text('Split');
+      if (splitSegment.evaluate().isNotEmpty) {
+        await tester.tap(splitSegment);
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.format_bold), findsOneWidget);
+      }
+    });
+
+    testWidgets('tapping edit shows toolbar again after preview',
+        (tester) async {
+      await pumpEditorPage(
+        tester,
+        notes: [testNote],
+        activeNoteId: testNote.id,
+        currentVault: testVault,
+      );
+
+      final previewSegment = find.text('Preview');
+      if (previewSegment.evaluate().isNotEmpty) {
+        await tester.tap(previewSegment);
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.format_bold), findsNothing);
+      }
+
+      final editSegment = find.text('Edit');
+      if (editSegment.evaluate().isNotEmpty) {
+        await tester.tap(editSegment);
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.format_bold), findsOneWidget);
       }
     });
   });

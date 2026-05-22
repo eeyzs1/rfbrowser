@@ -20,6 +20,26 @@ void main() {
       expect(updated.isOnline, false);
       expect(updated.syncQueue.length, 2);
     });
+
+    test('AC-P5-5-2: offline state tracks sync queue', () {
+      var state = ConnectivityState(isOnline: false);
+      expect(state.syncQueue, isEmpty);
+
+      state = state.copyWith(syncQueue: ['notes/a.md', 'notes/b.md']);
+      expect(state.syncQueue.length, 2);
+      expect(state.syncQueue, contains('notes/a.md'));
+    });
+
+    test('AC-P5-5-4: sync queue flush clears all entries', () {
+      var state = ConnectivityState(
+        isOnline: false,
+        syncQueue: ['a.md', 'b.md', 'c.md'],
+      );
+      expect(state.syncQueue.length, 3);
+
+      state = state.copyWith(syncQueue: []);
+      expect(state.syncQueue, isEmpty);
+    });
   });
 
   group('OfflineNoModelError', () {

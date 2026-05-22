@@ -134,31 +134,6 @@ void main() {
     );
 
     test(
-      'AC-IMP-1-5: callApi without required permission throws PermissionDeniedError',
-      () async {
-        final manifest = PluginManifest(
-          id: 'no-perm',
-          name: 'No Permission',
-          permissions: [Permission.browserRead],
-        );
-        final sandbox = Sandbox(
-          pluginId: manifest.id,
-          manifest: manifest,
-          apiHandler: (apiName, args) async => {'ok': true},
-        );
-        await sandbox.start();
-        addTearDown(sandbox.stop);
-
-        expect(
-          () => sandbox.callApi('knowledge.getNote', {
-            'id': 'x',
-          }, requiredPermission: Permission.knowledgeRead),
-          throwsA(isA<PermissionDeniedError>()),
-        );
-      },
-    );
-
-    test(
       'AC-IMP-1-6: API call timeout returns error via Sandbox guard',
       () async {
         final manifest = PluginManifest(

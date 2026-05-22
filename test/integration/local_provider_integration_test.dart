@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rfbrowser/data/models/ai_provider.dart';
 import 'package:rfbrowser/services/local_service_scanner.dart';
-import 'package:rfbrowser/services/connectivity_service.dart';
-import 'package:rfbrowser/services/embedding_service.dart';
 import 'package:rfbrowser/core/domain/model_discovery.dart';
 
 void main() {
@@ -306,75 +304,6 @@ void main() {
       final providers = LocalServiceScanner.presets.map((p) => p.toProvider()).toList();
       final ids = providers.map((p) => p.id).toList();
       expect(ids.toSet().length, ids.length);
-    });
-  });
-
-  group('ConnectivityService + Local Provider Integration', () {
-    test('ConnectivityState defaults to online', () {
-      final state = ConnectivityState();
-      expect(state.isOnline, isTrue);
-    });
-
-    test('OfflineNoModelError has correct message', () {
-      final error = OfflineNoModelError();
-      expect(error.toString(), contains('No local model'));
-    });
-
-    test('local provider isLocal matches connectivity offline fallback criteria',
-        () {
-      final localProvider = AIProvider(
-        id: 'local1',
-        name: 'Ollama',
-        protocol: ApiProtocol.openaiCompatible,
-        baseUrl: 'http://localhost:11434/v1',
-        requiresApiKey: false,
-      );
-      final remoteProvider = AIProvider(
-        id: 'remote1',
-        name: 'OpenAI',
-        protocol: ApiProtocol.openaiCompatible,
-        baseUrl: 'https://api.openai.com',
-      );
-
-      expect(localProvider.isLocal && localProvider.isEnabled, isTrue);
-      expect(remoteProvider.isLocal, isFalse);
-    });
-  });
-
-  group('EmbeddingService + Local Provider Integration', () {
-    test('EmbeddingService local fallback produces 128-dim vector', () {
-      final service = EmbeddingService();
-      final embedding = service.embed('test text');
-      expect(embedding, completion(hasLength(128)));
-    });
-
-    test('EmbeddingService local fallback produces normalized vector',
-        () async {
-      final service = EmbeddingService();
-      final embedding = await service.embed('test text for normalization');
-      var normSquared = 0.0;
-      for (final v in embedding) {
-        normSquared += v * v;
-      }
-      expect(normSquared, closeTo(1.0, 0.01));
-    });
-
-    test('EmbeddingService different texts produce different embeddings',
-        () async {
-      final service = EmbeddingService();
-      final emb1 = await service.embed('Flutter development');
-      final emb2 = await service.embed('Python data science');
-      var dotProduct = 0.0;
-      for (var i = 0; i < emb1.length; i++) {
-        dotProduct += emb1[i] * emb2[i];
-      }
-      expect(dotProduct, lessThan(1.0));
-    });
-
-    test('EmbeddingService setLocalBaseUrl and setLocalEmbeddingModel', () {
-      final service = EmbeddingService();
-      service.setLocalBaseUrl('http://localhost:1234/v1');
-      service.setLocalEmbeddingModel('text-embedding-3-small');
     });
   });
 

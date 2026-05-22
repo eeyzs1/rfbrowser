@@ -41,7 +41,7 @@ class ShortcutService {
       'canvas_delete': 'Delete',
       'canvas_select_all': 'Ctrl+A',
       'canvas_group': 'Ctrl+G',
-      'canvas_ungroup': 'Ctrl+Shift+G',
+      'canvas_ungroup': 'Ctrl+Shift+U',
     };
     _bindings = Map.from(_defaults);
   }

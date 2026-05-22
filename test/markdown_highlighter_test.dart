@@ -22,7 +22,7 @@ void main() {
       expect(types, contains(HighlightType.link));
     });
 
-    test('AC-P5-3-2: wikilink highlighted', () {
+    test('AC-P5-3-2: wikilink highlighted with substring verification', () {
       final text = 'See [[量子计算]] for details';
       final ranges = highlighter.highlight(text);
 
@@ -31,6 +31,7 @@ void main() {
           .toList();
       expect(wikilinks.length, 1);
       expect(wikilinks.first.start, lessThan(wikilinks.first.end));
+      expect(text.substring(wikilinks.first.start, wikilinks.first.end), contains('量子计算'));
     });
 
     test('heading highlight', () {
@@ -102,6 +103,14 @@ void main() {
       expect(tags.length, 1);
     });
 
+    test('multiple tags highlighted', () {
+      final text = 'This is #project and #important';
+      final ranges = highlighter.highlight(text);
+
+      final tags = ranges.where((r) => r.type == HighlightType.tag).toList();
+      expect(tags.length, 2);
+    });
+
     test('embed syntax highlighted differently from wikilink', () {
       final text = '[[link]] and ![[embed]]';
       final ranges = highlighter.highlight(text);
@@ -124,6 +133,36 @@ void main() {
           .where((r) => r.type == HighlightType.contextRef)
           .toList();
       expect(refs.length, 1);
+    });
+
+    test('multiple context references highlighted', () {
+      final text = 'See @note[量子计算] and @web[https://example.com]';
+      final ranges = highlighter.highlight(text);
+
+      final refs = ranges
+          .where((r) => r.type == HighlightType.contextRef)
+          .toList();
+      expect(refs.length, 2);
+    });
+
+    test('blockquote highlight', () {
+      final text = '> This is a quote';
+      final ranges = highlighter.highlight(text);
+
+      final quotes = ranges
+          .where((r) => r.type == HighlightType.blockquote)
+          .toList();
+      expect(quotes.isNotEmpty, true);
+    });
+
+    test('list item highlight', () {
+      final text = '- First item\n- Second item';
+      final ranges = highlighter.highlight(text);
+
+      final lists = ranges
+          .where((r) => r.type == HighlightType.list)
+          .toList();
+      expect(lists.isNotEmpty, true);
     });
 
     test('empty text returns no ranges', () {

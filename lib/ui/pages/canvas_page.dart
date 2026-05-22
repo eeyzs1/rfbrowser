@@ -343,7 +343,7 @@ class _CanvasViewState extends _CanvasViewStateBase
     final deleteActivator = parseShortcut(shortcutSvc.getShortcut('canvas_delete') ?? 'Delete');
     final selectAllActivator = parseShortcut(shortcutSvc.getShortcut('canvas_select_all') ?? 'Ctrl+A');
     final groupActivator = parseShortcut(shortcutSvc.getShortcut('canvas_group') ?? 'Ctrl+G');
-    final ungroupActivator = parseShortcut(shortcutSvc.getShortcut('canvas_ungroup') ?? 'Ctrl+Shift+G');
+    final ungroupActivator = parseShortcut(shortcutSvc.getShortcut('canvas_ungroup') ?? 'Ctrl+Shift+U');
 
     final Map<ShortcutActivator, VoidCallback> canvasBindings = {};
     canvasBindings[const SingleActivator(LogicalKeyboardKey.f3)] = _searchNext;

@@ -81,6 +81,36 @@ void main() {
       expect(sim12, greaterThan(sim13));
     });
 
+    test('AC-IMP-4-1: related terms have high similarity (>0.35)', () async {
+      final service = EmbeddingService();
+      final emb1 = await service.embed('机器学习');
+      final emb2 = await service.embed('深度学习');
+
+      final sim = _cosineSimilarity(emb1, emb2);
+      expect(sim, greaterThan(0.35));
+    });
+
+    test('AC-IMP-4-3: unrelated terms have low similarity (<0.3)', () async {
+      final service = EmbeddingService();
+      final emb1 = await service.embed('机器学习');
+      final emb2 = await service.embed('周末计划');
+
+      final sim = _cosineSimilarity(emb1, emb2);
+      expect(sim, lessThan(0.3));
+    });
+
+    test(
+      'AC-IMP-4-4: same text produces identical embeddings (deterministic)',
+      () async {
+        final service = EmbeddingService();
+        final emb1 = await service.embed('机器学习 with some extra words');
+        final emb2 = await service.embed('机器学习 with some extra words');
+
+        final sim = _cosineSimilarity(emb1, emb2);
+        expect(sim, closeTo(1.0, 1e-15));
+      },
+    );
+
     test('AC-P4-3-5: onNoteSaved inserts into store', () async {
       final service = EmbeddingService();
       final note = Note(

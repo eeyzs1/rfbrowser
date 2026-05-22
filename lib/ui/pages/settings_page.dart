@@ -12,6 +12,7 @@ import 'settings/sync_settings_section.dart';
 import 'settings/plugin_settings_section.dart';
 import 'settings/quick_moves_settings_section.dart';
 import 'settings/about_section.dart';
+import 'skills_management_page.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -42,6 +43,8 @@ class SettingsPage extends ConsumerWidget {
           const AISettingsSection(),
           const SizedBox(height: 16),
           const AgentSettingsSection(),
+          const SizedBox(height: 16),
+          _SkillsSettingsTile(),
           const SizedBox(height: 16),
           const ShortcutSettingsSection(),
           const SizedBox(height: 24),
@@ -88,6 +91,41 @@ class _CategoryHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SkillsSettingsTile extends ConsumerWidget {
+  const _SkillsSettingsTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+
+    return ListTile(
+      leading: CircleAvatar(
+        radius: 16,
+        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+        child: Icon(Icons.auto_awesome,
+            size: 18, color: theme.colorScheme.primary),
+      ),
+      title: Text(l.skills),
+      subtitle: Text(
+        l.extrazerodoSkillEmptyHint,
+        style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => const SkillsManagementPage()),
+        );
+      },
     );
   }
 }

@@ -6,7 +6,6 @@ import '../../widgets/note_sidebar.dart';
 import '../../widgets/backlinks_panel.dart';
 import '../../widgets/inline_ai_editor.dart';
 import '../../widgets/quick_search_bar.dart';
-import '../../widgets/ai_float.dart';
 import '../../widgets/resizable_panel.dart';
 import '../../pages/editor_page.dart';
 import '../../../data/models/note.dart';
@@ -111,7 +110,6 @@ class ThinkScene extends ConsumerWidget {
                     ),
                 ],
               ),
-              const Positioned.fill(child: AIFloat()),
             ],
           ),
         ),

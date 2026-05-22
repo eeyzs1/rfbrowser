@@ -499,16 +499,7 @@ class NoteNotifier extends Notifier<NoteState> {
   }
 
   Future<void> createSkill(Skill skill) async {
-    final vault = ref.read(vaultProvider).currentVault;
-    if (vault == null) return;
-    final skillDir = Directory(p.join(vault.path, '.rfbrowser', 'skills'));
-    if (!await skillDir.exists()) {
-      await skillDir.create(recursive: true);
-    }
-    final content =
-        'id: ${skill.id}\nname: ${skill.name}\ndescription: ${skill.description}\nprompt: |\n  ${skill.prompt.split('\n').join('\n  ')}\n';
-    final file = File(p.join(skillDir.path, '${skill.id}.yaml'));
-    await file.writeAsString(content);
+    await updateSkill(skill);
   }
 
   Future<void> deleteSkill(String skillId) async {
@@ -520,6 +511,37 @@ class NoteNotifier extends Notifier<NoteState> {
     if (await file.exists()) {
       await file.delete();
     }
+  }
+
+  Future<void> updateSkill(Skill skill) async {
+    final vault = ref.read(vaultProvider).currentVault;
+    if (vault == null) return;
+    final skillDir = Directory(p.join(vault.path, '.rfbrowser', 'skills'));
+    if (!await skillDir.exists()) {
+      await skillDir.create(recursive: true);
+    }
+    final buffer = StringBuffer();
+    buffer.writeln('id: ${skill.id}');
+    buffer.writeln('name: ${skill.name}');
+    buffer.writeln('description: ${skill.description}');
+    buffer.writeln('prompt: |');
+    for (final line in skill.prompt.split('\n')) {
+      buffer.writeln('  $line');
+    }
+    if (skill.params.isNotEmpty) {
+      buffer.writeln('params:');
+      for (final param in skill.params.values) {
+        buffer.writeln('  ${param.name}:');
+        buffer.writeln('    type: ${param.type}');
+        buffer.writeln('    description: ${param.description}');
+        buffer.writeln('    required: ${param.required}');
+        if (param.defaultValue != null) {
+          buffer.writeln('    default: ${param.defaultValue}');
+        }
+      }
+    }
+    final file = File(p.join(skillDir.path, '${skill.id}.yaml'));
+    await file.writeAsString(buffer.toString());
   }
 
   String _sanitizeFileName(String name) {
