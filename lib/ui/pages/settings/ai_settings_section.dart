@@ -389,11 +389,15 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                 Icon(
                   isOnline == true
                       ? Icons.add_circle
-                      : Icons.add_circle_outline,
+                      : isOnline == false
+                          ? Icons.warning_amber_rounded
+                          : Icons.add_circle_outline,
                   size: 20,
                   color: isOnline == true
                       ? theme.colorScheme.primary
-                      : theme.hintColor,
+                      : isOnline == false
+                          ? theme.colorScheme.error
+                          : theme.hintColor,
                 ),
             ],
           ),
@@ -623,11 +627,15 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                 Icon(
                   isOnline == true
                       ? Icons.add_circle
-                      : Icons.add_circle_outline,
+                      : isOnline == false
+                          ? Icons.warning_amber_rounded
+                          : Icons.add_circle_outline,
                   size: 18,
                   color: isOnline == true
                       ? theme.colorScheme.primary
-                      : theme.hintColor,
+                      : isOnline == false
+                          ? theme.colorScheme.error
+                          : theme.hintColor,
                 ),
             ],
           ),
@@ -642,8 +650,16 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
     BuildContext? sheetCtx,
   }) async {
     if (isOnline == false) {
-      final shouldAdd = await _showOfflinePresetConfirmDialog(preset);
-      if (shouldAdd != true) return;
+      if (mounted) {
+        final l = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.serviceNotRunning),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
     }
 
     await _addPresetProvider(preset);
@@ -651,33 +667,6 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
     if (sheetCtx != null && sheetCtx.mounted && mounted) {
       Navigator.pop(sheetCtx);
     }
-  }
-
-  Future<bool?> _showOfflinePresetConfirmDialog(LocalServiceInfo preset) {
-    final l = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-
-    return showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        icon: Icon(
-          Icons.warning_amber,
-          color: theme.colorScheme.error,
-        ),
-        title: Text(l.serviceNotRunningTitle),
-        content: Text(l.serviceNotRunningConfirm(preset.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l.addAnyway),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _addPresetProvider(LocalServiceInfo preset) async {

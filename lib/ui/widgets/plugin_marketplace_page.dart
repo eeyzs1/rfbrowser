@@ -35,6 +35,7 @@ class _PluginMarketplacePageState extends ConsumerState<PluginMarketplacePage> {
   }
 
   Future<void> _loadIndex() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -42,6 +43,7 @@ class _PluginMarketplacePageState extends ConsumerState<PluginMarketplacePage> {
 
     try {
       final allEntries = await _client.fetchIndex();
+      if (!mounted) return;
       final hostState = ref.read(pluginHostProvider);
       final installedIds = hostState.manifests.keys.toSet();
       setState(() {
@@ -51,6 +53,7 @@ class _PluginMarketplacePageState extends ConsumerState<PluginMarketplacePage> {
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;

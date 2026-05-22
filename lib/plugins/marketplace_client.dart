@@ -50,7 +50,7 @@ class PluginMarketEntry {
 
 class PluginMarketplaceClient {
   static const _defaultIndexUrl =
-      'https://raw.githubusercontent.com/eeyzs1/rfbrowser-marketplace/main/index.json';
+      'https://raw.githubusercontent.com/eeyzs1/rfbrowser-marketplace/main';
 
   final String _baseUrl;
 
