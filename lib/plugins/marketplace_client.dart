@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class PluginMarketEntry {
   final String id;
@@ -48,9 +49,12 @@ class PluginMarketEntry {
 }
 
 class PluginMarketplaceClient {
+  static const _defaultIndexUrl =
+      'https://raw.githubusercontent.com/eeyzs1/rfbrowser-marketplace/main/index.json';
+
   final String _baseUrl;
 
-  PluginMarketplaceClient(this._baseUrl);
+  PluginMarketplaceClient([String? baseUrl]) : _baseUrl = baseUrl ?? _defaultIndexUrl;
 
   Future<List<PluginMarketEntry>> fetchIndex() async {
     final uri = Uri.parse('$_baseUrl/index.json');
@@ -58,15 +62,19 @@ class PluginMarketplaceClient {
     try {
       final request = await client.getUrl(uri);
       final response = await request.close();
+      if (response.statusCode != 200) {
+        throw Exception('Failed to fetch marketplace index: HTTP ${response.statusCode}');
+      }
       final body = await response.transform(utf8.decoder).join();
       final list = jsonDecode(body) as List;
       return list
           .map((e) => PluginMarketEntry.fromJson(e as Map<String, dynamic>))
           .toList();
+    } catch (e) {
+      debugPrint('MarketplaceClient: failed to fetch index: $e');
+      rethrow;
     } finally {
       client.close();
     }
   }
-
-  static const sampleIndexUrl = '';
 }

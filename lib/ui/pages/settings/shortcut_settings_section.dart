@@ -18,6 +18,8 @@ class _ShortcutSettingsSectionState
   late ShortcutService _service;
   String? _editingAction;
   final FocusNode _editFocusNode = FocusNode();
+  bool _globalExpanded = true;
+  bool _canvasExpanded = false;
 
   static const _globalActions = [
     'new_note',
@@ -181,27 +183,23 @@ class _ShortcutSettingsSectionState
       child: SettingsSection(
         title: l.shortcuts,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: Text(
-              l.globalShortcuts,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
+          _buildCategoryTile(
+            theme: theme,
+            title: l.globalShortcuts,
+            isExpanded: _globalExpanded,
+            onToggle: () => setState(() => _globalExpanded = !_globalExpanded),
+            actions: _globalActions,
+            l: l,
           ),
-          ..._buildActionList(_globalActions, l, theme),
-          const Divider(height: 24, indent: 16, endIndent: 16),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: Text(
-              l.canvasShortcuts,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          _buildCategoryTile(
+            theme: theme,
+            title: l.canvasShortcuts,
+            isExpanded: _canvasExpanded,
+            onToggle: () => setState(() => _canvasExpanded = !_canvasExpanded),
+            actions: _canvasActions,
+            l: l,
           ),
-          ..._buildActionList(_canvasActions, l, theme),
           const Divider(height: 1),
           ListTile(
             leading: Icon(Icons.restore, size: 18, color: theme.hintColor),
@@ -210,6 +208,55 @@ class _ShortcutSettingsSectionState
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCategoryTile({
+    required ThemeData theme,
+    required String title,
+    required bool isExpanded,
+    required VoidCallback onToggle,
+    required List<String> actions,
+    required AppLocalizations l,
+  }) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onToggle,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.25 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: theme.hintColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedCrossFade(
+          firstChild: const SizedBox(width: double.infinity),
+          secondChild: Column(children: _buildActionList(actions, l, theme)),
+          crossFadeState:
+              isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 200),
+          sizeCurve: Curves.easeInOut,
+        ),
+      ],
     );
   }
 
