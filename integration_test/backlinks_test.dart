@@ -19,14 +19,9 @@ void main() {
         ProviderScope(
           overrides: [
             knowledgeProvider.overrideWith(
-              () => _TestKnowledgeNotifier(
-                notes: [],
-                activeNoteId: null,
-              ),
+              () => _TestKnowledgeNotifier(notes: [], activeNoteId: null),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -40,12 +35,10 @@ void main() {
       expect(find.byIcon(Icons.link), findsOneWidget);
     });
 
-    testWidgets('shows noBacklinks when active note has no backlinks',
-        (tester) async {
-      final note = Note(
-        title: 'Lonely Note',
-        filePath: 'lonely.md',
-      );
+    testWidgets('shows noBacklinks when active note has no backlinks', (
+      tester,
+    ) async {
+      final note = Note(title: 'Lonely Note', filePath: 'lonely.md');
 
       await tester.pumpWidget(
         ProviderScope(
@@ -57,9 +50,7 @@ void main() {
                 links: [],
               ),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -74,10 +65,7 @@ void main() {
     });
 
     testWidgets('shows backlink count badge with zero', (tester) async {
-      final note = Note(
-        title: 'Count Zero',
-        filePath: 'zero.md',
-      );
+      final note = Note(title: 'Count Zero', filePath: 'zero.md');
 
       await tester.pumpWidget(
         ProviderScope(
@@ -89,9 +77,7 @@ void main() {
                 links: [],
               ),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -106,14 +92,8 @@ void main() {
     });
 
     testWidgets('renders backlink items from source notes', (tester) async {
-      final sourceNote = Note(
-        title: 'Source Note',
-        filePath: 'source.md',
-      );
-      final targetNote = Note(
-        title: 'Target Note',
-        filePath: 'target.md',
-      );
+      final sourceNote = Note(title: 'Source Note', filePath: 'source.md');
+      final targetNote = Note(title: 'Target Note', filePath: 'target.md');
       final link = Link(
         sourceId: sourceNote.id,
         targetId: targetNote.id,
@@ -131,9 +111,7 @@ void main() {
                 links: [link],
               ),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -149,14 +127,8 @@ void main() {
     });
 
     testWidgets('renders backlink count badge', (tester) async {
-      final sourceNote = Note(
-        title: 'Ref Note',
-        filePath: 'ref.md',
-      );
-      final targetNote = Note(
-        title: 'Referred Note',
-        filePath: 'referred.md',
-      );
+      final sourceNote = Note(title: 'Ref Note', filePath: 'ref.md');
+      final targetNote = Note(title: 'Referred Note', filePath: 'referred.md');
       final link = Link(
         sourceId: sourceNote.id,
         targetId: targetNote.id,
@@ -173,9 +145,7 @@ void main() {
                 links: [link],
               ),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -195,8 +165,16 @@ void main() {
       final target = Note(title: 'Hub Note', filePath: 'hub.md');
 
       final links = [
-        Link(sourceId: source1.id, targetId: target.id, type: LinkType.wikilink),
-        Link(sourceId: source2.id, targetId: target.id, type: LinkType.reference),
+        Link(
+          sourceId: source1.id,
+          targetId: target.id,
+          type: LinkType.wikilink,
+        ),
+        Link(
+          sourceId: source2.id,
+          targetId: target.id,
+          type: LinkType.reference,
+        ),
       ];
 
       await tester.pumpWidget(
@@ -209,9 +187,7 @@ void main() {
                 links: links,
               ),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -227,16 +203,11 @@ void main() {
       expect(find.text('2'), findsOneWidget);
     });
 
-    testWidgets('embed backlinks show input icon instead of link icon',
-        (tester) async {
-      final sourceNote = Note(
-        title: 'Embedder',
-        filePath: 'embedder.md',
-      );
-      final targetNote = Note(
-        title: 'Embedded',
-        filePath: 'embedded.md',
-      );
+    testWidgets('embed backlinks show input icon instead of link icon', (
+      tester,
+    ) async {
+      final sourceNote = Note(title: 'Embedder', filePath: 'embedder.md');
+      final targetNote = Note(title: 'Embedded', filePath: 'embedded.md');
       final link = Link(
         sourceId: sourceNote.id,
         targetId: targetNote.id,
@@ -253,9 +224,7 @@ void main() {
                 links: [link],
               ),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -277,14 +246,10 @@ void main() {
         ProviderScope(
           overrides: [
             knowledgeProvider.overrideWith(
-              () => _TestKnowledgeNotifier(
-                notes: [note],
-                activeNoteId: note.id,
-              ),
+              () =>
+                  _TestKnowledgeNotifier(notes: [note], activeNoteId: note.id),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -305,14 +270,10 @@ void main() {
         ProviderScope(
           overrides: [
             knowledgeProvider.overrideWith(
-              () => _TestKnowledgeNotifier(
-                notes: [note],
-                activeNoteId: note.id,
-              ),
+              () =>
+                  _TestKnowledgeNotifier(notes: [note], activeNoteId: note.id),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -334,21 +295,15 @@ void main() {
         ProviderScope(
           overrides: [
             knowledgeProvider.overrideWith(
-              () => _TestKnowledgeNotifier(
-                notes: [note],
-                activeNoteId: note.id,
-              ),
+              () =>
+                  _TestKnowledgeNotifier(notes: [note], activeNoteId: note.id),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: BacklinksPanel(onClose: () => closed = true),
-            ),
+            home: Scaffold(body: BacklinksPanel(onClose: () => closed = true)),
           ),
         ),
       );
@@ -360,17 +315,15 @@ void main() {
       expect(closed, isTrue);
     });
 
-    testWidgets('unlinked mentions section renders with link_off icon',
-        (tester) async {
+    testWidgets('unlinked mentions section renders with link_off icon', (
+      tester,
+    ) async {
       final sourceNote = Note(
         title: 'Mentioner',
         filePath: 'mentioner.md',
         content: 'I mentioned Unlinked Title here',
       );
-      final targetNote = Note(
-        title: 'Unlinked Title',
-        filePath: 'unlinked.md',
-      );
+      final targetNote = Note(title: 'Unlinked Title', filePath: 'unlinked.md');
 
       await tester.pumpWidget(
         ProviderScope(
@@ -390,9 +343,7 @@ void main() {
                 ],
               ),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -433,9 +384,7 @@ void main() {
                 ],
               ),
             ),
-            linkServiceProvider.overrideWith(
-              () => _TestLinkNotifier(),
-            ),
+            linkServiceProvider.overrideWith(() => _TestLinkNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -467,17 +416,14 @@ class _TestKnowledgeNotifier extends KnowledgeNotifier {
     String? activeNoteId,
     List<Link>? links,
     List<UnlinkedMentionResult>? unlinkedMentions,
-  })  : _notes = notes ?? [],
-        _activeNoteId = activeNoteId,
-        _links = links ?? [],
-        _unlinkedMentions = unlinkedMentions;
+  }) : _notes = notes ?? [],
+       _activeNoteId = activeNoteId,
+       _links = links ?? [],
+       _unlinkedMentions = unlinkedMentions;
 
   @override
-  KnowledgeState build() => KnowledgeState(
-        notes: _notes,
-        activeNoteId: _activeNoteId,
-        links: _links,
-      );
+  KnowledgeState build() =>
+      KnowledgeState(notes: _notes, activeNoteId: _activeNoteId, links: _links);
 
   @override
   List<UnlinkedMentionResult> getUnlinkedMentions(String noteId) =>

@@ -14,7 +14,9 @@ class IndexStore {
   Database? _db;
   Completer<Database>? _initCompleter;
 
-  static final _cjkPattern = RegExp(r'[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]');
+  static final _cjkPattern = RegExp(
+    r'[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]',
+  );
 
   IndexStore(this._dbPath);
 

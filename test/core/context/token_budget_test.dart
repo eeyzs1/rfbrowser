@@ -53,11 +53,7 @@ void main() {
       test('单个项目在预算内完整保留', () {
         final budget = TokenBudget(maxTokens: 100);
         final items = [
-          ContextItem(
-            type: ContextType.note,
-            id: 'item1',
-            content: 'a' * 200,
-          ),
+          ContextItem(type: ContextType.note, id: 'item1', content: 'a' * 200),
         ];
         final result = budget.trim(items);
         expect(result.items.length, 1);
@@ -68,11 +64,7 @@ void main() {
       test('超出预算的项目被截断', () {
         final budget = TokenBudget(maxTokens: 200);
         final items = [
-          ContextItem(
-            type: ContextType.note,
-            id: 'item1',
-            content: 'a' * 1200,
-          ),
+          ContextItem(type: ContextType.note, id: 'item1', content: 'a' * 1200),
         ];
         final result = budget.trim(items);
         expect(result.items.length, 1);
@@ -84,16 +76,8 @@ void main() {
       test('多个项目按顺序填充预算', () {
         final budget = TokenBudget(maxTokens: 100);
         final items = [
-          ContextItem(
-            type: ContextType.note,
-            id: 'item1',
-            content: 'a' * 200,
-          ),
-          ContextItem(
-            type: ContextType.note,
-            id: 'item2',
-            content: 'b' * 200,
-          ),
+          ContextItem(type: ContextType.note, id: 'item1', content: 'a' * 200),
+          ContextItem(type: ContextType.note, id: 'item2', content: 'b' * 200),
         ];
         final result = budget.trim(items);
         expect(result.items[0].id, 'item1');
@@ -103,16 +87,8 @@ void main() {
       test('剩余 token < 100 时跳过项目', () {
         final budget = TokenBudget(maxTokens: 150);
         final items = [
-          ContextItem(
-            type: ContextType.note,
-            id: 'item1',
-            content: 'a' * 200,
-          ),
-          ContextItem(
-            type: ContextType.note,
-            id: 'item2',
-            content: 'b' * 800,
-          ),
+          ContextItem(type: ContextType.note, id: 'item1', content: 'a' * 200),
+          ContextItem(type: ContextType.note, id: 'item2', content: 'b' * 800),
         ];
         final result = budget.trim(items);
         expect(result.truncated, true);
@@ -121,11 +97,7 @@ void main() {
       test('空内容项目被跳过', () {
         final budget = TokenBudget(maxTokens: 100);
         final items = [
-          ContextItem(
-            type: ContextType.note,
-            id: 'empty',
-            content: '',
-          ),
+          ContextItem(type: ContextType.note, id: 'empty', content: ''),
         ];
         final result = budget.trim(items);
         expect(result.items, isEmpty);
@@ -159,8 +131,10 @@ void main() {
         ];
         final result = budget.trim(items);
         if (result.items.isNotEmpty) {
-          expect(result.items[0].content.length,
-              lessThanOrEqualTo(shortContent.length + 20));
+          expect(
+            result.items[0].content.length,
+            lessThanOrEqualTo(shortContent.length + 20),
+          );
         }
       });
 

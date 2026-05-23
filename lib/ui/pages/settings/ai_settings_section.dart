@@ -149,11 +149,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Icon(
-                Icons.sensors,
-                size: 18,
-                color: theme.colorScheme.primary,
-              ),
+              Icon(Icons.sensors, size: 18, color: theme.colorScheme.primary),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -163,11 +159,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                   ),
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                size: 16,
-                color: theme.hintColor,
-              ),
+              Icon(Icons.chevron_right, size: 16, color: theme.hintColor),
             ],
           ),
         ),
@@ -184,9 +176,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
         label: Text(l.addLocalModel),
         style: OutlinedButton.styleFrom(
           foregroundColor: theme.colorScheme.primary,
-          side: BorderSide(
-            color: theme.colorScheme.outlineVariant,
-          ),
+          side: BorderSide(color: theme.colorScheme.outlineVariant),
         ),
       ),
     );
@@ -246,13 +236,8 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   ...LocalServiceScanner.presets.map(
-                    (preset) => _buildPresetTileSheet(
-                      context,
-                      theme,
-                      l,
-                      preset,
-                      ctx,
-                    ),
+                    (preset) =>
+                        _buildPresetTileSheet(context, theme, l, preset, ctx),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
@@ -274,7 +259,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                     label: Text(l.scanLocalServices),
                   ),
                   const SizedBox(height: 16),
-            ],
+                ],
               ),
             ),
           ],
@@ -362,14 +347,14 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                       isOnline == true
                           ? l.serviceRunning
                           : isOnline == false
-                              ? l.serviceNotRunning
-                              : preset.description,
+                          ? l.serviceNotRunning
+                          : preset.description,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: isOnline == true
                             ? Colors.green.shade700
                             : isOnline == false
-                                ? theme.hintColor
-                                : theme.hintColor,
+                            ? theme.hintColor
+                            : theme.hintColor,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -390,14 +375,14 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                   isOnline == true
                       ? Icons.add_circle
                       : isOnline == false
-                          ? Icons.warning_amber_rounded
-                          : Icons.add_circle_outline,
+                      ? Icons.warning_amber_rounded
+                      : Icons.add_circle_outline,
                   size: 20,
                   color: isOnline == true
                       ? theme.colorScheme.primary
                       : isOnline == false
-                          ? theme.colorScheme.error
-                          : theme.hintColor,
+                      ? theme.colorScheme.error
+                      : theme.hintColor,
                 ),
             ],
           ),
@@ -482,8 +467,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed: () =>
-                        _showAddProviderDialog(context, ref, l),
+                    onPressed: () => _showAddProviderDialog(context, ref, l),
                     icon: const Icon(Icons.cloud, size: 14),
                     label: Text(l.addCloudProvider),
                     style: OutlinedButton.styleFrom(
@@ -538,9 +522,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: InkWell(
-        onTap: _isAddingPreset
-            ? null
-            : () => _onPresetTap(preset, isOnline),
+        onTap: _isAddingPreset ? null : () => _onPresetTap(preset, isOnline),
         borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -602,8 +584,8 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                       isOnline == true
                           ? l.serviceRunning
                           : isOnline == false
-                              ? l.serviceNotRunning
-                              : preset.description,
+                          ? l.serviceNotRunning
+                          : preset.description,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: isOnline == true
                             ? Colors.green.shade700
@@ -628,14 +610,14 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                   isOnline == true
                       ? Icons.add_circle
                       : isOnline == false
-                          ? Icons.warning_amber_rounded
-                          : Icons.add_circle_outline,
+                      ? Icons.warning_amber_rounded
+                      : Icons.add_circle_outline,
                   size: 18,
                   color: isOnline == true
                       ? theme.colorScheme.primary
                       : isOnline == false
-                          ? theme.colorScheme.error
-                          : theme.hintColor,
+                      ? theme.colorScheme.error
+                      : theme.hintColor,
                 ),
             ],
           ),
@@ -833,12 +815,14 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer
-                            .withValues(alpha: 0.3),
+                        color: theme.colorScheme.primaryContainer.withValues(
+                          alpha: 0.3,
+                        ),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: theme.colorScheme.primary
-                              .withValues(alpha: 0.3),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.3,
+                          ),
                         ),
                       ),
                       child: Row(
@@ -1095,16 +1079,13 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
           const SizedBox(height: 4),
           Text(
             isLocal ? l.noModelsLocalHint : l.noModelsCloudHint,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.hintColor,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
           ),
           const SizedBox(height: 6),
           Row(
             children: [
               FilledButton.tonal(
-                onPressed: () =>
-                    _refreshModels(context, ref, provider, l),
+                onPressed: () => _refreshModels(context, ref, provider, l),
                 style: FilledButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                   textStyle: theme.textTheme.labelSmall,
@@ -1219,7 +1200,9 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
     } else {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text(provider.isLocal ? l.noModelsLocalHint : l.noModelsCloudHint),
+          content: Text(
+            provider.isLocal ? l.noModelsLocalHint : l.noModelsCloudHint,
+          ),
           duration: const Duration(seconds: 4),
         ),
       );
@@ -1610,10 +1593,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
     );
   }
 
-  void _showActiveModelDialog(
-    BuildContext context,
-    AppLocalizations l,
-  ) {
+  void _showActiveModelDialog(BuildContext context, AppLocalizations l) {
     final aiConfig = ref.read(aiConfigProvider);
     final providers = aiConfig.providers.where((p) => p.isEnabled).toList();
     final activeConfig = aiConfig.activeConfig;

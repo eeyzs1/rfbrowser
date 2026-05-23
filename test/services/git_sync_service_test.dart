@@ -71,7 +71,9 @@ void main() {
         if (!hasGit) return;
         await File(p.join(vaultDir, '.gitignore')).writeAsString('custom');
         await service.init(null);
-        final content = await File(p.join(vaultDir, '.gitignore')).readAsString();
+        final content = await File(
+          p.join(vaultDir, '.gitignore'),
+        ).readAsString();
         expect(content, 'custom');
       });
 
@@ -79,8 +81,11 @@ void main() {
         final hasGit = await _hasGitInstalled();
         if (!hasGit) return;
         await service.init('https://example.com/repo.git');
-        final result = await Process.run('git', ['remote', 'get-url', 'origin'],
-            workingDirectory: vaultDir);
+        final result = await Process.run('git', [
+          'remote',
+          'get-url',
+          'origin',
+        ], workingDirectory: vaultDir);
         expect(result.stdout.toString().trim(), 'https://example.com/repo.git');
       });
     });
@@ -212,7 +217,9 @@ void main() {
 
         // 1. init vault + push to bare repo
         await service.init(remoteUrl);
-        await File(p.join(vaultDir, 'integration.md')).writeAsString('# Integration');
+        await File(
+          p.join(vaultDir, 'integration.md'),
+        ).writeAsString('# Integration');
         final pushState = await service.push(message: 'integration test');
         expect(pushState.status, SyncStatus.success);
 
@@ -229,8 +236,11 @@ void main() {
         // 3. make a change in clone, push back
         await File(p.join(cloneDir, 'clone_note.md')).writeAsString('# Clone');
         await Process.run('git', ['add', '-A'], workingDirectory: cloneDir);
-        await Process.run('git', ['commit', '-m', 'clone note'],
-            workingDirectory: cloneDir);
+        await Process.run('git', [
+          'commit',
+          '-m',
+          'clone note',
+        ], workingDirectory: cloneDir);
         await Process.run('git', ['push'], workingDirectory: cloneDir);
 
         // 4. pull into our vault
@@ -263,8 +273,11 @@ void main() {
         await Process.run('git', ['clone', remoteUrl, cloneDir]);
         await File(p.join(cloneDir, 'note_b.md')).writeAsString('# Note B');
         await Process.run('git', ['add', '-A'], workingDirectory: cloneDir);
-        await Process.run('git', ['commit', '-m', 'add note B'],
-            workingDirectory: cloneDir);
+        await Process.run('git', [
+          'commit',
+          '-m',
+          'add note B',
+        ], workingDirectory: cloneDir);
         await Process.run('git', ['push'], workingDirectory: cloneDir);
 
         // 3. vault makes a local change (no conflict expected)

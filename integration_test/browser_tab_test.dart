@@ -5,7 +5,6 @@ import 'package:integration_test/integration_test.dart';
 import 'package:rfbrowser/l10n/app_localizations.dart';
 import 'package:rfbrowser/services/browser_service.dart';
 
-
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -16,15 +15,11 @@ void main() {
       browserNotifier = _TestBrowserNotifier();
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            browserProvider.overrideWith(() => browserNotifier),
-          ],
+          overrides: [browserProvider.overrideWith(() => browserNotifier)],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const Scaffold(
-              body: _BrowserTestHarness(),
-            ),
+            home: const Scaffold(body: _BrowserTestHarness()),
           ),
         ),
       );
@@ -69,10 +64,15 @@ void main() {
 
       expect(browserNotifier.state.tabs.length, equals(1));
       expect(browserNotifier.state.activeTabId, isNotNull);
-      expect(browserNotifier.state.activeTab!.url, equals('https://example.com'));
+      expect(
+        browserNotifier.state.activeTab!.url,
+        equals('https://example.com'),
+      );
     });
 
-    testWidgets('closing the only tab sets activeTabId to null', (tester) async {
+    testWidgets('closing the only tab sets activeTabId to null', (
+      tester,
+    ) async {
       await pumpBrowserHarness(tester);
 
       browserNotifier.createTab(url: 'https://only.com');
@@ -86,7 +86,9 @@ void main() {
       expect(browserNotifier.state.activeTabId, isNull);
     });
 
-    testWidgets('closing active first tab activates previous index (C-3)', (tester) async {
+    testWidgets('closing active first tab activates previous index (C-3)', (
+      tester,
+    ) async {
       await pumpBrowserHarness(tester);
 
       browserNotifier.createTab(url: 'https://first.com');
@@ -101,10 +103,15 @@ void main() {
       browserNotifier.closeTab(firstTabId);
       await tester.pumpAndSettle();
 
-      expect(browserNotifier.state.activeTab!.url, equals('https://second.com'));
+      expect(
+        browserNotifier.state.activeTab!.url,
+        equals('https://second.com'),
+      );
     });
 
-    testWidgets('closing active middle tab activates previous tab (C-3)', (tester) async {
+    testWidgets('closing active middle tab activates previous tab (C-3)', (
+      tester,
+    ) async {
       await pumpBrowserHarness(tester);
 
       browserNotifier.createTab(url: 'https://first.com');
@@ -217,7 +224,10 @@ void main() {
 
       browserNotifier.toggleBookmark('https://example.com', 'Example');
       await tester.pumpAndSettle();
-      expect(browserNotifier.state.isBookmarked('https://example.com'), isFalse);
+      expect(
+        browserNotifier.state.isBookmarked('https://example.com'),
+        isFalse,
+      );
     });
 
     testWidgets('createGroup adds a tab group', (tester) async {
@@ -282,7 +292,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(browserNotifier.state.ungroupedTabs.length, equals(1));
-      expect(browserNotifier.state.ungroupedTabs.first.url, equals('https://b.com'));
+      expect(
+        browserNotifier.state.ungroupedTabs.first.url,
+        equals('https://b.com'),
+      );
     });
   });
 }
@@ -307,8 +320,9 @@ class _BrowserTestHarness extends ConsumerWidget {
           child: const Text('Create Tab'),
         ),
         ElevatedButton(
-          onPressed: () =>
-              ref.read(browserProvider.notifier).createTab(url: 'https://example.com'),
+          onPressed: () => ref
+              .read(browserProvider.notifier)
+              .createTab(url: 'https://example.com'),
           child: const Text('Create Tab with URL'),
         ),
       ],

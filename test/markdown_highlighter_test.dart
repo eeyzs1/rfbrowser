@@ -31,7 +31,10 @@ void main() {
           .toList();
       expect(wikilinks.length, 1);
       expect(wikilinks.first.start, lessThan(wikilinks.first.end));
-      expect(text.substring(wikilinks.first.start, wikilinks.first.end), contains('量子计算'));
+      expect(
+        text.substring(wikilinks.first.start, wikilinks.first.end),
+        contains('量子计算'),
+      );
     });
 
     test('heading highlight', () {
@@ -159,9 +162,7 @@ void main() {
       final text = '- First item\n- Second item';
       final ranges = highlighter.highlight(text);
 
-      final lists = ranges
-          .where((r) => r.type == HighlightType.list)
-          .toList();
+      final lists = ranges.where((r) => r.type == HighlightType.list).toList();
       expect(lists.isNotEmpty, true);
     });
 

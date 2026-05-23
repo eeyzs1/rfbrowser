@@ -241,7 +241,11 @@ class BrowserNotifier extends Notifier<BrowserState> {
     state = state.copyWith(tabs: tabs);
   }
 
-  bool _wouldCreateCycle(String folderId, String parentId, {List<BookmarkFolder>? folders}) {
+  bool _wouldCreateCycle(
+    String folderId,
+    String parentId, {
+    List<BookmarkFolder>? folders,
+  }) {
     if (folderId == parentId) return true;
     var current = parentId;
     final visited = <String>{};
@@ -249,15 +253,16 @@ class BrowserNotifier extends Notifier<BrowserState> {
     while (current.isNotEmpty) {
       if (current == folderId) return true;
       if (!visited.add(current)) return true;
-      final parent = bookmarkFolders
-          .where((f) => f.id == current)
-          .firstOrNull;
+      final parent = bookmarkFolders.where((f) => f.id == current).firstOrNull;
       current = parent?.parentId ?? '';
     }
     return false;
   }
 
-  String createBookmarkFolder(String name, {String parentId = 'bookmarks-bar'}) {
+  String createBookmarkFolder(
+    String name, {
+    String parentId = 'bookmarks-bar',
+  }) {
     final folder = BookmarkFolder(name: name, parentId: parentId);
     if (_wouldCreateCycle(folder.id, parentId)) {
       debugPrint('createBookmarkFolder: cycle detected, using root');

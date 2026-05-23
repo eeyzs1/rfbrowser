@@ -17,9 +17,11 @@ class TestVaultNotifier extends VaultNotifier {
 }
 
 ProviderContainer createContainer() {
-  return ProviderContainer(overrides: [
-    vaultProvider.overrideWith(() => TestVaultNotifier(VaultState())),
-  ]);
+  return ProviderContainer(
+    overrides: [
+      vaultProvider.overrideWith(() => TestVaultNotifier(VaultState())),
+    ],
+  );
 }
 
 void main() {
@@ -63,7 +65,9 @@ void main() {
     });
 
     test('copyWith updates searchResults', () {
-      final results = [{'title': 'Result 1'}];
+      final results = [
+        {'title': 'Result 1'},
+      ];
       final state = KnowledgeState().copyWith(searchResults: results);
       expect(state.searchResults, results);
     });
@@ -85,10 +89,7 @@ void main() {
 
     test('activeNote returns note matching activeNoteId', () {
       final note = Note(title: 'Active', filePath: 'active.md');
-      final state = KnowledgeState(
-        notes: [note],
-        activeNoteId: note.id,
-      );
+      final state = KnowledgeState(notes: [note], activeNoteId: note.id);
       expect(state.activeNote, isNotNull);
       expect(state.activeNote!.title, 'Active');
     });
@@ -102,9 +103,21 @@ void main() {
     });
 
     test('outlinks returns links from active note', () {
-      final link1 = Link(sourceId: 'n1', targetId: 'a', type: LinkType.wikilink);
-      final link2 = Link(sourceId: 'n2', targetId: 'b', type: LinkType.wikilink);
-      final link3 = Link(sourceId: 'n1', targetId: 'c', type: LinkType.wikilink);
+      final link1 = Link(
+        sourceId: 'n1',
+        targetId: 'a',
+        type: LinkType.wikilink,
+      );
+      final link2 = Link(
+        sourceId: 'n2',
+        targetId: 'b',
+        type: LinkType.wikilink,
+      );
+      final link3 = Link(
+        sourceId: 'n1',
+        targetId: 'c',
+        type: LinkType.wikilink,
+      );
       final state = KnowledgeState(
         activeNoteId: 'n1',
         links: [link1, link2, link3],
@@ -115,32 +128,39 @@ void main() {
     });
 
     test('outlinks returns empty when no activeNoteId', () {
-      final state = KnowledgeState(links: [
-        Link(sourceId: 'n1', targetId: 't', type: LinkType.wikilink),
-      ]);
+      final state = KnowledgeState(
+        links: [Link(sourceId: 'n1', targetId: 't', type: LinkType.wikilink)],
+      );
       expect(state.outlinks, isEmpty);
     });
 
     test('backlinks returns links to active note', () {
-      final link1 = Link(sourceId: 'n1', targetId: 'n2', type: LinkType.wikilink);
-      final link2 = Link(sourceId: 'n3', targetId: 'n4', type: LinkType.wikilink);
-      final state = KnowledgeState(
-        activeNoteId: 'n2',
-        links: [link1, link2],
+      final link1 = Link(
+        sourceId: 'n1',
+        targetId: 'n2',
+        type: LinkType.wikilink,
       );
+      final link2 = Link(
+        sourceId: 'n3',
+        targetId: 'n4',
+        type: LinkType.wikilink,
+      );
+      final state = KnowledgeState(activeNoteId: 'n2', links: [link1, link2]);
       expect(state.backlinks, hasLength(1));
       expect(state.backlinks.first.sourceId, 'n1');
     });
 
     test('backlinks returns empty when no activeNoteId', () {
-      final state = KnowledgeState(links: [
-        Link(sourceId: 'n1', targetId: 'n2', type: LinkType.wikilink),
-      ]);
+      final state = KnowledgeState(
+        links: [Link(sourceId: 'n1', targetId: 'n2', type: LinkType.wikilink)],
+      );
       expect(state.backlinks, isEmpty);
     });
 
     test('copyWith updates backlinksCache', () {
-      final cache = {'n1': [Link(sourceId: 'n1', targetId: 'n2', type: LinkType.wikilink)]};
+      final cache = {
+        'n1': [Link(sourceId: 'n1', targetId: 'n2', type: LinkType.wikilink)],
+      };
       final state = KnowledgeState().copyWith(backlinksCache: cache);
       expect(state.backlinksCache, cache);
     });
@@ -178,10 +198,7 @@ void main() {
       final container = createContainer();
       final notifier = container.read(knowledgeProvider.notifier);
       final note = Note(title: 'Test', filePath: 'test.md');
-      notifier.state = KnowledgeState(
-        notes: [note],
-        activeNoteId: note.id,
-      );
+      notifier.state = KnowledgeState(notes: [note], activeNoteId: note.id);
       notifier.updateActiveNoteContent('updated content');
       expect(notifier.state.activeNote?.content, 'updated content');
     });
@@ -190,7 +207,11 @@ void main() {
       final container = createContainer();
       final notifier = container.read(knowledgeProvider.notifier);
       final note1 = Note(title: 'Note 1', filePath: 'note1.md');
-      final note2 = Note(title: 'Note 2', filePath: 'note2.md', content: 'original');
+      final note2 = Note(
+        title: 'Note 2',
+        filePath: 'note2.md',
+        content: 'original',
+      );
       notifier.state = KnowledgeState(
         notes: [note1, note2],
         activeNoteId: note2.id,

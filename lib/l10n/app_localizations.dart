@@ -3942,6 +3942,18 @@ abstract class AppLocalizations {
   /// **'Add layers to organize your cards'**
   String get addLayersToOrganize;
 
+  /// No description provided for @tagActiveFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get tagActiveFilter;
+
+  /// No description provided for @tagFilterUnassigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Unassigned'**
+  String get tagFilterUnassigned;
+
   /// No description provided for @scratchpadEmptyHint.
   ///
   /// In en, this message translates to:

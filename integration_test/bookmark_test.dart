@@ -18,8 +18,9 @@ void main() {
       title: 'Example',
     );
 
-    testWidgets('shows unbookmarked icon when page is not bookmarked',
-        (tester) async {
+    testWidgets('shows unbookmarked icon when page is not bookmarked', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -52,9 +53,14 @@ void main() {
       expect(find.byIcon(Icons.bookmark), findsNothing);
     });
 
-    testWidgets('shows bookmarked icon when page is bookmarked', (tester) async {
-      final bookmark =
-          Bookmark(id: 'bm1', url: 'https://example.com', title: 'Example');
+    testWidgets('shows bookmarked icon when page is bookmarked', (
+      tester,
+    ) async {
+      final bookmark = Bookmark(
+        id: 'bm1',
+        url: 'https://example.com',
+        title: 'Example',
+      );
 
       await tester.pumpWidget(
         ProviderScope(
@@ -88,48 +94,54 @@ void main() {
       expect(find.byIcon(Icons.bookmark_border_outlined), findsNothing);
     });
 
-    testWidgets('triggers onAddBookmark callback when unbookmarked page tapped',
-        (tester) async {
-      bool wasCalled = false;
+    testWidgets(
+      'triggers onAddBookmark callback when unbookmarked page tapped',
+      (tester) async {
+        bool wasCalled = false;
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            browserProvider.overrideWith(
-              () => _TestBrowserNotifier(bookmarks: []),
-            ),
-            settingsProvider.overrideWith(() => _TestSettingsNotifier()),
-          ],
-          child: MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: Builder(
-                builder: (context) {
-                  final l = AppLocalizations.of(context)!;
-                  return BrowserBookmarkButton(
-                    activeTab: testTab,
-                    l: l,
-                    onAddBookmark: () => wasCalled = true,
-                  );
-                },
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              browserProvider.overrideWith(
+                () => _TestBrowserNotifier(bookmarks: []),
+              ),
+              settingsProvider.overrideWith(() => _TestSettingsNotifier()),
+            ],
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: Builder(
+                  builder: (context) {
+                    final l = AppLocalizations.of(context)!;
+                    return BrowserBookmarkButton(
+                      activeTab: testTab,
+                      l: l,
+                      onAddBookmark: () => wasCalled = true,
+                    );
+                  },
+                ),
               ),
             ),
           ),
-        ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(IconButton));
+        await tester.pumpAndSettle();
+
+        expect(wasCalled, isTrue);
+      },
+    );
+
+    testWidgets('removes bookmark when already bookmarked page tapped', (
+      tester,
+    ) async {
+      final bookmark = Bookmark(
+        id: 'bm1',
+        url: 'https://example.com',
+        title: 'Example',
       );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byType(IconButton));
-      await tester.pumpAndSettle();
-
-      expect(wasCalled, isTrue);
-    });
-
-    testWidgets('removes bookmark when already bookmarked page tapped',
-        (tester) async {
-      final bookmark =
-          Bookmark(id: 'bm1', url: 'https://example.com', title: 'Example');
 
       await tester.pumpWidget(
         ProviderScope(
@@ -253,13 +265,18 @@ void main() {
 
       notifier.addBookmark('https://new.com', 'New Page', 'bookmarks-bar');
       expect(container.read(browserProvider).bookmarks.length, 1);
-      expect(container.read(browserProvider).bookmarks.first.url,
-          'https://new.com');
+      expect(
+        container.read(browserProvider).bookmarks.first.url,
+        'https://new.com',
+      );
     });
 
     testWidgets('removeBookmark removes from bookmarks list', (tester) async {
-      final bookmark =
-          Bookmark(id: 'bm1', url: 'https://example.com', title: 'Example');
+      final bookmark = Bookmark(
+        id: 'bm1',
+        url: 'https://example.com',
+        title: 'Example',
+      );
 
       final container = ProviderContainer(
         overrides: [
@@ -296,8 +313,11 @@ void main() {
     });
 
     testWidgets('isBookmarked returns true for matching URL', (tester) async {
-      final bookmark =
-          Bookmark(id: 'bm1', url: 'https://example.com', title: 'Example');
+      final bookmark = Bookmark(
+        id: 'bm1',
+        url: 'https://example.com',
+        title: 'Example',
+      );
 
       final container = ProviderContainer(
         overrides: [
@@ -326,8 +346,10 @@ void main() {
 
       notifier.createBookmarkFolder('Test Folder');
       expect(container.read(browserProvider).bookmarkFolders.length, 2);
-      expect(container.read(browserProvider).bookmarkFolders.last.name,
-          'Test Folder');
+      expect(
+        container.read(browserProvider).bookmarkFolders.last.name,
+        'Test Folder',
+      );
     });
 
     testWidgets('deleteBookmarkFolder removes folder', (tester) async {
@@ -337,8 +359,7 @@ void main() {
       final notifier = container.read(browserProvider.notifier);
 
       notifier.createBookmarkFolder('To Delete');
-      final folderId =
-          container.read(browserProvider).bookmarkFolders.last.id;
+      final folderId = container.read(browserProvider).bookmarkFolders.last.id;
 
       notifier.deleteBookmarkFolder(folderId);
       expect(container.read(browserProvider).bookmarkFolders.length, 1);
@@ -378,8 +399,9 @@ void main() {
       expect(restored.parentId, folder.parentId);
     });
 
-    testWidgets('BookmarkFolder default constructor creates root folder',
-        (tester) async {
+    testWidgets('BookmarkFolder default constructor creates root folder', (
+      tester,
+    ) async {
       final folder = BookmarkFolder(name: '收藏夹栏');
 
       expect(folder.parentId, isEmpty);
@@ -391,7 +413,7 @@ class _TestBrowserNotifier extends BrowserNotifier {
   final List<Bookmark> _bookmarks;
 
   _TestBrowserNotifier({List<Bookmark>? bookmarks})
-      : _bookmarks = bookmarks ?? [];
+    : _bookmarks = bookmarks ?? [];
 
   @override
   BrowserState build() => BrowserState(bookmarks: _bookmarks);

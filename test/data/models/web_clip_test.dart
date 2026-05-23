@@ -29,7 +29,10 @@ void main() {
       expect(json, containsPair('content', '<p>Hello world</p>'));
       expect(json, containsPair('rawHtmlPath', '/raw/page.html'));
       expect(json, containsPair('screenshotPath', '/img/screenshot.png'));
-      expect(json, containsPair('selectedText', ['first selection', 'second selection']));
+      expect(
+        json,
+        containsPair('selectedText', ['first selection', 'second selection']),
+      );
       expect(json, containsPair('captured', testCaptured.toIso8601String()));
       expect(json, containsPair('noteId', 'note-1'));
     });
@@ -105,8 +108,14 @@ void main() {
       final clip = WebClip.fromJson(json);
       final after = DateTime.now();
 
-      expect(clip.captured.isAfter(before.subtract(const Duration(seconds: 1))), isTrue);
-      expect(clip.captured.isBefore(after.add(const Duration(seconds: 1))), isTrue);
+      expect(
+        clip.captured.isAfter(before.subtract(const Duration(seconds: 1))),
+        isTrue,
+      );
+      expect(
+        clip.captured.isBefore(after.add(const Duration(seconds: 1))),
+        isTrue,
+      );
     });
   });
 

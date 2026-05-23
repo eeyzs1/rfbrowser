@@ -64,7 +64,7 @@ void main() {
         parametersSchema: const {
           'type': 'object',
           'properties': {
-            'query': {'type': 'string', 'description': 'Search query'}
+            'query': {'type': 'string', 'description': 'Search query'},
           },
           'required': ['query'],
         },
@@ -121,7 +121,8 @@ void main() {
       final tool = _TestTool(
         name: 'echo',
         description: 'Echo',
-        executeFn: (args) async => ToolResult.success(args['msg'] as String? ?? ''),
+        executeFn: (args) async =>
+            ToolResult.success(args['msg'] as String? ?? ''),
       );
       registry.register(tool);
       final result = await registry.execute('echo', {'msg': 'hello'});
@@ -136,16 +137,20 @@ void main() {
     });
 
     test('allToolDefinitions returns all tools', () {
-      registry.register(_TestTool(
-        name: 'a',
-        description: 'A',
-        executeFn: (_) async => ToolResult.success(''),
-      ));
-      registry.register(_TestTool(
-        name: 'b',
-        description: 'B',
-        executeFn: (_) async => ToolResult.success(''),
-      ));
+      registry.register(
+        _TestTool(
+          name: 'a',
+          description: 'A',
+          executeFn: (_) async => ToolResult.success(''),
+        ),
+      );
+      registry.register(
+        _TestTool(
+          name: 'b',
+          description: 'B',
+          executeFn: (_) async => ToolResult.success(''),
+        ),
+      );
       final defs = registry.allToolDefinitions();
       expect(defs.length, 2);
       expect(defs.any((d) => d['name'] == 'a'), true);
@@ -153,22 +158,26 @@ void main() {
     });
 
     test('toolsPrompt includes all tool descriptions', () {
-      registry.register(_TestTool(
-        name: 'alpha',
-        description: 'Alpha tool',
-        executeFn: (_) async => ToolResult.success(''),
-      ));
+      registry.register(
+        _TestTool(
+          name: 'alpha',
+          description: 'Alpha tool',
+          executeFn: (_) async => ToolResult.success(''),
+        ),
+      );
       final prompt = registry.toolsPrompt();
       expect(prompt, contains('alpha'));
       expect(prompt, contains('Alpha tool'));
     });
 
     test('clear removes all tools', () {
-      registry.register(_TestTool(
-        name: 'a',
-        description: 'A',
-        executeFn: (_) async => ToolResult.success(''),
-      ));
+      registry.register(
+        _TestTool(
+          name: 'a',
+          description: 'A',
+          executeFn: (_) async => ToolResult.success(''),
+        ),
+      );
       registry.clear();
       expect(registry.allTools, isEmpty);
     });
@@ -218,10 +227,12 @@ void main() {
     });
 
     test('SearchNotesTool returns formatted results', () async {
-      final tool = SearchNotesTool((query) async => [
-        {'title': 'Note 1', 'score': 0.9},
-        {'title': 'Note 2', 'score': 0.7},
-      ]);
+      final tool = SearchNotesTool(
+        (query) async => [
+          {'title': 'Note 1', 'score': 0.9},
+          {'title': 'Note 2', 'score': 0.7},
+        ],
+      );
       final result = await tool.execute({'query': 'test'});
       expect(result.success, true);
       expect(result.output, contains('Note 1'));

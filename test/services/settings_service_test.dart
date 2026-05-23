@@ -83,7 +83,10 @@ void main() {
 
     test('effectiveVisualDensity spacious', () {
       final settings = AppSettings(density: ComponentDensity.spacious);
-      expect(settings.effectiveVisualDensity, const VisualDensity(horizontal: 0, vertical: 2));
+      expect(
+        settings.effectiveVisualDensity,
+        const VisualDensity(horizontal: 0, vertical: 2),
+      );
     });
 
     test('copyWith overrides locale', () {
@@ -252,16 +255,17 @@ void main() {
       expect(s.searchEngine, 'google');
     });
 
-    test('loadSettings uses preset color when accentColorValue not saved', () async {
-      SharedPreferences.setMockInitialValues({
-        'themePreset': 'rose',
-      });
+    test(
+      'loadSettings uses preset color when accentColorValue not saved',
+      () async {
+        SharedPreferences.setMockInitialValues({'themePreset': 'rose'});
 
-      await notifier().loadSettings();
+        await notifier().loadSettings();
 
-      expect(state().themePreset, 'rose');
-      expect(state().accentColorValue, getPresetColor('rose').toARGB32());
-    });
+        expect(state().themePreset, 'rose');
+        expect(state().accentColorValue, getPresetColor('rose').toARGB32());
+      },
+    );
 
     test('setLocale persists and updates state', () async {
       await notifier().setLocale('zh');
@@ -412,11 +416,7 @@ void main() {
     });
 
     test('activeModel returns matching model', () {
-      final model = AIModel(
-        id: 'm1',
-        providerId: 'p1',
-        displayName: 'GPT-4',
-      );
+      final model = AIModel(id: 'm1', providerId: 'p1', displayName: 'GPT-4');
       final state = AIConfigState(
         models: [model],
         activeConfig: const ActiveAIConfig(providerId: 'p1', modelId: 'm1'),
@@ -466,9 +466,7 @@ void main() {
           requiresApiKey: false,
         ),
       ];
-      final models = [
-        AIModel(id: 'm1', providerId: 'p1', displayName: 'M1'),
-      ];
+      final models = [AIModel(id: 'm1', providerId: 'p1', displayName: 'M1')];
       final config = const ActiveAIConfig(providerId: 'p1', modelId: 'm1');
 
       final copied = state.copyWith(
@@ -510,7 +508,10 @@ void main() {
         baseUrl: 'http://localhost:11434',
         requiresApiKey: false,
       );
-      expect(provider.chatEndpoint, 'http://localhost:11434/v1/chat/completions');
+      expect(
+        provider.chatEndpoint,
+        'http://localhost:11434/v1/chat/completions',
+      );
     });
 
     test('authHeaders for openai returns Bearer', () {
@@ -702,7 +703,10 @@ void main() {
     });
 
     test('defaultBaseUrl returns correct URLs', () {
-      expect(ApiProtocol.openaiCompatible.defaultBaseUrl, 'https://api.openai.com');
+      expect(
+        ApiProtocol.openaiCompatible.defaultBaseUrl,
+        'https://api.openai.com',
+      );
       expect(ApiProtocol.anthropic.defaultBaseUrl, 'https://api.anthropic.com');
     });
   });
@@ -780,7 +784,10 @@ void main() {
         protocol: ApiProtocol.openaiCompatible,
         baseUrl: 'https://api.openai.com',
       );
-      expect(provider.embeddingEndpoint, 'https://api.openai.com/v1/embeddings');
+      expect(
+        provider.embeddingEndpoint,
+        'https://api.openai.com/v1/embeddings',
+      );
     });
 
     test('embeddingEndpoint handles /v1 suffix', () {
@@ -791,7 +798,10 @@ void main() {
         baseUrl: 'http://localhost:11434/v1',
         requiresApiKey: false,
       );
-      expect(provider.embeddingEndpoint, 'http://localhost:11434/v1/embeddings');
+      expect(
+        provider.embeddingEndpoint,
+        'http://localhost:11434/v1/embeddings',
+      );
     });
   });
 }

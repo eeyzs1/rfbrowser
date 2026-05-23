@@ -18,7 +18,9 @@ void main() {
 
   group('User Journey — End-to-End Scenarios', () {
     group('Step 1: Canvas — Infinite Canvas Model', () {
-      testWidgets('canvas data serializes cards and connections', (tester) async {
+      testWidgets('canvas data serializes cards and connections', (
+        tester,
+      ) async {
         final data = CanvasData(
           cards: [
             CanvasCard(
@@ -58,8 +60,18 @@ void main() {
       });
 
       testWidgets('canvas connection computes sides correctly', (tester) async {
-        final from = CanvasCard(id: 'from', type: CanvasCardType.text, x: 0, y: 0);
-        final to = CanvasCard(id: 'to', type: CanvasCardType.text, x: 300, y: 0);
+        final from = CanvasCard(
+          id: 'from',
+          type: CanvasCardType.text,
+          x: 0,
+          y: 0,
+        );
+        final to = CanvasCard(
+          id: 'to',
+          type: CanvasCardType.text,
+          x: 300,
+          y: 0,
+        );
 
         final (fromSide, toSide) = CanvasConnection.computeSides(from, to);
         expect(fromSide, ConnectionSide.right);
@@ -78,7 +90,9 @@ void main() {
         expect(json, contains('card1'));
       });
 
-      testWidgets('canvas copyWith clearSelectedCardIds works (C-4)', (tester) async {
+      testWidgets('canvas copyWith clearSelectedCardIds works (C-4)', (
+        tester,
+      ) async {
         final data = CanvasData(
           cards: [
             CanvasCard(id: 'card1', type: CanvasCardType.text, title: 'Card 1'),
@@ -93,7 +107,9 @@ void main() {
     });
 
     group('Step 2: Security — Safe Browsing', () {
-      testWidgets('bookmark folder fromJson prevents self-referencing (C-6)', (tester) async {
+      testWidgets('bookmark folder fromJson prevents self-referencing (C-6)', (
+        tester,
+      ) async {
         final json = {
           'id': 'bookmarks-bar',
           'name': 'Bookmarks',
@@ -104,7 +120,9 @@ void main() {
         expect(folder.parentId, isEmpty);
       });
 
-      testWidgets('non-root bookmark folder keeps its parentId', (tester) async {
+      testWidgets('non-root bookmark folder keeps its parentId', (
+        tester,
+      ) async {
         final json = {
           'id': 'sub-folder',
           'name': 'Sub Folder',
@@ -117,7 +135,9 @@ void main() {
     });
 
     group('Step 3: End-to-End Workflow', () {
-      testWidgets('complete user journey: vault → note → editor loaded', (tester) async {
+      testWidgets('complete user journey: vault → note → editor loaded', (
+        tester,
+      ) async {
         final vault = VaultConfig(
           path: '/vault',
           name: 'Research Vault',
@@ -162,20 +182,26 @@ void main() {
     });
 
     group('Step 4: Shortcut Customization', () {
-      testWidgets('ShortcutService has scene switching shortcuts registered', (tester) async {
+      testWidgets('ShortcutService has scene switching shortcuts registered', (
+        tester,
+      ) async {
         final service = ShortcutService();
         expect(service.getShortcut('switch_capture'), 'Ctrl+1');
         expect(service.getShortcut('switch_think'), 'Ctrl+2');
         expect(service.getShortcut('switch_connect'), 'Ctrl+3');
       });
 
-      testWidgets('ShortcutService has connect view shortcuts registered', (tester) async {
+      testWidgets('ShortcutService has connect view shortcuts registered', (
+        tester,
+      ) async {
         final service = ShortcutService();
         expect(service.getShortcut('connect_canvas'), 'Ctrl+4');
         expect(service.getShortcut('connect_graph'), 'Ctrl+5');
       });
 
-      testWidgets('user can customize a shortcut without conflict', (tester) async {
+      testWidgets('user can customize a shortcut without conflict', (
+        tester,
+      ) async {
         final service = ShortcutService();
         service.register('switch_capture', 'Ctrl+Shift+1');
         expect(service.getShortcut('switch_capture'), 'Ctrl+Shift+1');
@@ -198,7 +224,9 @@ void main() {
         expect(service.getShortcut('switch_capture'), 'Ctrl+1');
       });
 
-      testWidgets('ShortcutService defaults include all actions', (tester) async {
+      testWidgets('ShortcutService defaults include all actions', (
+        tester,
+      ) async {
         final service = ShortcutService();
         expect(service.allBindings.length, greaterThanOrEqualTo(20));
       });
@@ -221,7 +249,8 @@ class _TestSettingsNotifier extends SettingsNotifier {
 class _TestVaultNotifier extends VaultNotifier {
   final VaultConfig? _currentVault;
 
-  _TestVaultNotifier({VaultConfig? currentVault}) : _currentVault = currentVault;
+  _TestVaultNotifier({VaultConfig? currentVault})
+    : _currentVault = currentVault;
 
   @override
   VaultState build() => VaultState(currentVault: _currentVault);
@@ -236,14 +265,11 @@ class _TestKnowledgeNotifier extends KnowledgeNotifier {
     List<Note>? notes,
     String? activeNoteId,
     List<Link>? links,
-  })  : _notes = notes ?? [],
-        _activeNoteId = activeNoteId,
-        _links = links ?? [];
+  }) : _notes = notes ?? [],
+       _activeNoteId = activeNoteId,
+       _links = links ?? [];
 
   @override
-  KnowledgeState build() => KnowledgeState(
-        notes: _notes,
-        activeNoteId: _activeNoteId,
-        links: _links,
-      );
+  KnowledgeState build() =>
+      KnowledgeState(notes: _notes, activeNoteId: _activeNoteId, links: _links);
 }

@@ -2029,6 +2029,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addLayersToOrganize => 'Add layers to organize your cards';
 
   @override
+  String get tagActiveFilter => 'Active';
+
+  @override
+  String get tagFilterUnassigned => 'Unassigned';
+
+  @override
   String get scratchpadEmptyHint => 'Right-click a card → Save to Scratchpad';
 
   @override

@@ -519,43 +519,40 @@ void main() {
 
   group('CanvasLayer', () {
     test('round-trip serialization preserves all fields', () {
-      final layer = CanvasLayer(
-        id: 'layer1',
-        name: 'Background',
-        visible: false,
-        locked: true,
-        order: 2,
-      );
+      final layer = CanvasLayer(id: 'layer1', name: 'Background', order: 2);
       final json = layer.toJson();
       final restored = CanvasLayer.fromJson(json);
       expect(restored.id, equals('layer1'));
       expect(restored.name, equals('Background'));
-      expect(restored.visible, isFalse);
-      expect(restored.locked, isTrue);
       expect(restored.order, equals(2));
     });
 
     test('old JSON without optional fields -> defaults', () {
       final json = <String, dynamic>{'id': 'l1', 'name': 'Test'};
       final restored = CanvasLayer.fromJson(json);
-      expect(restored.visible, isTrue);
-      expect(restored.locked, isFalse);
       expect(restored.order, equals(0));
     });
 
     test('copyWith updates fields correctly', () {
       const layer = CanvasLayer(id: 'l1', name: 'A', order: 0);
-      final updated = layer.copyWith(
-        name: 'B',
-        visible: false,
-        locked: true,
-        order: 3,
-      );
+      final updated = layer.copyWith(name: 'B', order: 3);
       expect(updated.name, equals('B'));
-      expect(updated.visible, isFalse);
-      expect(updated.locked, isTrue);
       expect(updated.order, equals(3));
       expect(updated.id, equals('l1'));
+    });
+
+    test('backward compatible: ignores visible and locked in old JSON', () {
+      final json = <String, dynamic>{
+        'id': 'l1',
+        'name': 'Old',
+        'visible': false,
+        'locked': true,
+        'order': 0,
+      };
+      final restored = CanvasLayer.fromJson(json);
+      expect(restored.id, equals('l1'));
+      expect(restored.name, equals('Old'));
+      expect(restored.order, equals(0));
     });
   });
 
@@ -676,14 +673,30 @@ void main() {
       final data = CanvasData(
         layers: [
           CanvasLayer(id: 'l1', name: 'Layer 1', order: 0),
-          CanvasLayer(id: 'l2', name: 'Layer 2', visible: false, order: 1),
+          CanvasLayer(id: 'l2', name: 'Layer 2', order: 1),
         ],
       );
       final json = data.toJsonString();
       final restored = CanvasData.fromJsonString(json);
       expect(restored.layers.length, equals(2));
       expect(restored.layers[0].name, equals('Layer 1'));
-      expect(restored.layers[1].visible, isFalse);
+      expect(restored.layers[1].name, equals('Layer 2'));
+    });
+
+    test('selectedLayerId serialization', () {
+      final data = CanvasData(
+        layers: [CanvasLayer(id: 'l1', name: 'Layer 1', order: 0)],
+        selectedLayerId: 'l1',
+      );
+      final json = data.toJsonString();
+      final restored = CanvasData.fromJsonString(json);
+      expect(restored.selectedLayerId, equals('l1'));
+    });
+
+    test('selectedLayerId null is not written to JSON', () {
+      final data = CanvasData();
+      final json = data.toJsonString();
+      expect(json.contains('selectedLayerId'), isFalse);
     });
 
     test('old JSON without layers -> empty list', () {
@@ -691,6 +704,7 @@ void main() {
           '{"cards":[],"connections":[],"settings":{"autoConnectionsEnabled":true,"snapToGrid":true,"gridVisible":true,"lastModified":"2026-01-01T00:00:00.000"}}';
       final data = CanvasData.fromJsonString(json);
       expect(data.layers, isEmpty);
+      expect(data.selectedLayerId, isNull);
     });
   });
 }

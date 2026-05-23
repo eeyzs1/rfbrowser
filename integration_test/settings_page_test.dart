@@ -62,7 +62,9 @@ void main() {
       expect(find.text('Violet'), findsOneWidget);
     });
 
-    testWidgets('contains major visible sections in widget tree', (tester) async {
+    testWidgets('contains major visible sections in widget tree', (
+      tester,
+    ) async {
       await pumpSettingsPage(tester);
 
       expect(find.text('Theme'), findsOneWidget);

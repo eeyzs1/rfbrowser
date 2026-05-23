@@ -152,7 +152,10 @@ void main() {
           style: const CanvasCardStyle(borderRadius: 5),
         );
 
-        final card = service.createCardFromScratchpad(item, const Offset(300, 400));
+        final card = service.createCardFromScratchpad(
+          item,
+          const Offset(300, 400),
+        );
         expect(card.type, CanvasCardType.ellipse);
         expect(card.x, 300);
         expect(card.y, 400);

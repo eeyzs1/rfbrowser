@@ -29,7 +29,9 @@ void main() {
       () async {
         final tempDir = Directory.systemTemp.createTempSync('rfb_ai_');
         addTearDown(() {
-          try { tempDir.deleteSync(recursive: true); } catch (_) {}
+          try {
+            tempDir.deleteSync(recursive: true);
+          } catch (_) {}
         });
 
         final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
@@ -42,9 +44,11 @@ void main() {
             lastOpened: DateTime.now(),
           ),
         );
-        final container = ProviderContainer(overrides: [
-          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-        ]);
+        final container = ProviderContainer(
+          overrides: [
+            vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+          ],
+        );
         addTearDown(container.dispose);
 
         container.read(knowledgeProvider);
@@ -67,7 +71,9 @@ void main() {
       () async {
         final tempDir = Directory.systemTemp.createTempSync('rfb_ai_');
         addTearDown(() {
-          try { tempDir.deleteSync(recursive: true); } catch (_) {}
+          try {
+            tempDir.deleteSync(recursive: true);
+          } catch (_) {}
         });
 
         final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
@@ -80,9 +86,11 @@ void main() {
             lastOpened: DateTime.now(),
           ),
         );
-        final container = ProviderContainer(overrides: [
-          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-        ]);
+        final container = ProviderContainer(
+          overrides: [
+            vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+          ],
+        );
         addTearDown(container.dispose);
 
         container.read(knowledgeProvider);
@@ -107,7 +115,9 @@ void main() {
       () async {
         final tempDir = Directory.systemTemp.createTempSync('rfb_ai_');
         addTearDown(() {
-          try { tempDir.deleteSync(recursive: true); } catch (_) {}
+          try {
+            tempDir.deleteSync(recursive: true);
+          } catch (_) {}
         });
 
         final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
@@ -120,9 +130,11 @@ void main() {
             lastOpened: DateTime.now(),
           ),
         );
-        final container = ProviderContainer(overrides: [
-          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-        ]);
+        final container = ProviderContainer(
+          overrides: [
+            vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+          ],
+        );
         addTearDown(container.dispose);
 
         container.read(knowledgeProvider);
@@ -142,7 +154,9 @@ void main() {
     test('Agent._executeStep Create note: via ProviderContainer', () async {
       final tempDir = Directory.systemTemp.createTempSync('rfb_ai_');
       addTearDown(() {
-        try { tempDir.deleteSync(recursive: true); } catch (_) {}
+        try {
+          tempDir.deleteSync(recursive: true);
+        } catch (_) {}
       });
 
       final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
@@ -155,9 +169,11 @@ void main() {
           lastOpened: DateTime.now(),
         ),
       );
-      final container = ProviderContainer(overrides: [
-        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ],
+      );
       addTearDown(container.dispose);
 
       container.read(knowledgeProvider);

@@ -37,15 +37,19 @@ void main() {
         lastOpened: DateTime.now(),
       ),
     );
-    container = ProviderContainer(overrides: [
-      vaultProvider.overrideWith(() => _TestVaultNotifier(vaultState)),
-    ]);
+    container = ProviderContainer(
+      overrides: [
+        vaultProvider.overrideWith(() => _TestVaultNotifier(vaultState)),
+      ],
+    );
   });
 
   tearDown(() {
     container.dispose();
     if (tempDir.existsSync()) {
-      try { tempDir.deleteSync(recursive: true); } catch (_) {}
+      try {
+        tempDir.deleteSync(recursive: true);
+      } catch (_) {}
     }
   });
 

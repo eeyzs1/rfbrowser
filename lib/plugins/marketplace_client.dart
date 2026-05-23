@@ -54,7 +54,8 @@ class PluginMarketplaceClient {
 
   final String _baseUrl;
 
-  PluginMarketplaceClient([String? baseUrl]) : _baseUrl = baseUrl ?? _defaultIndexUrl;
+  PluginMarketplaceClient([String? baseUrl])
+    : _baseUrl = baseUrl ?? _defaultIndexUrl;
 
   Future<List<PluginMarketEntry>> fetchIndex() async {
     final uri = Uri.parse('$_baseUrl/index.json');
@@ -63,7 +64,9 @@ class PluginMarketplaceClient {
       final request = await client.getUrl(uri);
       final response = await request.close();
       if (response.statusCode != 200) {
-        throw Exception('Failed to fetch marketplace index: HTTP ${response.statusCode}');
+        throw Exception(
+          'Failed to fetch marketplace index: HTTP ${response.statusCode}',
+        );
       }
       final body = await response.transform(utf8.decoder).join();
       final list = jsonDecode(body) as List;

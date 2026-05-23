@@ -144,8 +144,11 @@ void main() {
       final defaults = service.defaults;
       final values = defaults.values.toList();
       final uniqueValues = values.toSet();
-      expect(values.length, equals(uniqueValues.length),
-          reason: 'Default shortcuts must all be unique');
+      expect(
+        values.length,
+        equals(uniqueValues.length),
+        reason: 'Default shortcuts must all be unique',
+      );
     });
 
     test('findActionForShortcut is case-insensitive for modifiers', () {
@@ -225,9 +228,12 @@ void main() {
     test('all default shortcuts parse to valid SingleActivator', () {
       for (final entry in service.defaults.entries) {
         final activator = parseShortcut(entry.value);
-        expect(activator, isNotNull,
-            reason:
-                'Default shortcut "${entry.value}" for "${entry.key}" must parse to a valid SingleActivator');
+        expect(
+          activator,
+          isNotNull,
+          reason:
+              'Default shortcut "${entry.value}" for "${entry.key}" must parse to a valid SingleActivator',
+        );
       }
     });
 
@@ -264,7 +270,10 @@ void main() {
 
     test('same base key different modifiers do not conflict', () {
       service.register('action_a', 'Ctrl+Q');
-      expect(() => service.register('action_b', 'Ctrl+Shift+Q'), returnsNormally);
+      expect(
+        () => service.register('action_b', 'Ctrl+Shift+Q'),
+        returnsNormally,
+      );
       expect(() => service.register('action_c', 'Ctrl+Alt+Q'), returnsNormally);
       expect(() => service.register('action_d', 'Alt+Q'), returnsNormally);
     });

@@ -30,7 +30,9 @@ class AgentPersistence {
         if (e is Map<String, dynamic>) {
           try {
             tasks.add(AgentTask.fromJson(e));
-          } catch (_) {}
+          } catch (ex) {
+            debugPrint('AgentPersistence: failed to deserialize task: $ex');
+          }
         }
       }
       return tasks;

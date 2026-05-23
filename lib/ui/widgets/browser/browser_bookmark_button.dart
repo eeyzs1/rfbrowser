@@ -60,7 +60,10 @@ class BrowserBookmarkButton extends ConsumerWidget {
       },
       tooltip: isBookmarked ? l.unbookmark : l.bookmarkThisPage,
       padding: const EdgeInsets.all(4),
-      constraints: BoxConstraints(minWidth: iconSize + 16, minHeight: iconSize + 16),
+      constraints: BoxConstraints(
+        minWidth: iconSize + 16,
+        minHeight: iconSize + 16,
+      ),
     );
   }
 }

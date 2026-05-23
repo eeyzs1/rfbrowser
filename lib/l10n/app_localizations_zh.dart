@@ -2007,6 +2007,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addLayersToOrganize => '添加图层来组织你的卡片';
 
   @override
+  String get tagActiveFilter => '已筛选';
+
+  @override
+  String get tagFilterUnassigned => '未分配';
+
+  @override
   String get scratchpadEmptyHint => '右键点击卡片 → 保存到便签本';
 
   @override

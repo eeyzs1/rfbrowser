@@ -17,9 +17,7 @@ void main() {
             locale: const Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const Scaffold(
-              body: AISettingsSection(),
-            ),
+            home: const Scaffold(body: AISettingsSection()),
           ),
         ),
       );
@@ -53,16 +51,18 @@ void main() {
       await prefs.remove('ai_active_config');
     });
 
-    testWidgets('shows empty state when no providers configured',
-        (tester) async {
+    testWidgets('shows empty state when no providers configured', (
+      tester,
+    ) async {
       await pumpAISettings(tester);
 
       expect(find.byIcon(Icons.rocket_launch), findsOneWidget);
       expect(find.byType(ExpansionTile), findsNothing);
     });
 
-    testWidgets('can add a provider via dialog and it appears in list',
-        (tester) async {
+    testWidgets('can add a provider via dialog and it appears in list', (
+      tester,
+    ) async {
       await pumpAISettings(tester);
 
       await addProviderViaDialog(tester, 'Test Provider');
@@ -86,8 +86,9 @@ void main() {
       expect(find.byType(ExpansionTile), findsNWidgets(2));
     });
 
-    testWidgets('can toggle provider enabled/disabled via Switch',
-        (tester) async {
+    testWidgets('can toggle provider enabled/disabled via Switch', (
+      tester,
+    ) async {
       await pumpAISettings(tester);
 
       await addProviderViaDialog(tester, 'Toggle Test');
@@ -130,10 +131,7 @@ void main() {
       await tester.tap(switchFinder);
       await tester.pumpAndSettle();
 
-      final nameFinder = find.descendant(
-        of: tile,
-        matching: find.byType(Text),
-      );
+      final nameFinder = find.descendant(of: tile, matching: find.byType(Text));
 
       bool foundLineThrough = false;
       for (final element in nameFinder.evaluate()) {
@@ -148,31 +146,32 @@ void main() {
     });
 
     testWidgets(
-        'deleting a provider removes it from list immediately (C-7 regression)',
-        (tester) async {
-      await pumpAISettings(tester);
+      'deleting a provider removes it from list immediately (C-7 regression)',
+      (tester) async {
+        await pumpAISettings(tester);
 
-      await addProviderViaDialog(tester, 'Delete Target');
+        await addProviderViaDialog(tester, 'Delete Target');
 
-      expect(find.text('Delete Target'), findsOneWidget);
+        expect(find.text('Delete Target'), findsOneWidget);
 
-      final tile = find.widgetWithText(ExpansionTile, 'Delete Target');
-      final menuButton = find.descendant(
-        of: tile,
-        matching: find.byIcon(Icons.more_vert),
-      );
-      await tester.tap(menuButton);
-      await tester.pumpAndSettle();
+        final tile = find.widgetWithText(ExpansionTile, 'Delete Target');
+        final menuButton = find.descendant(
+          of: tile,
+          matching: find.byIcon(Icons.more_vert),
+        );
+        await tester.tap(menuButton);
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Delete'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Delete'));
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Delete Target'), findsNothing);
-      expect(find.byIcon(Icons.rocket_launch), findsOneWidget);
-    });
+        expect(find.text('Delete Target'), findsNothing);
+        expect(find.byIcon(Icons.rocket_launch), findsOneWidget);
+      },
+    );
 
     testWidgets('cancel delete does not remove provider', (tester) async {
       await pumpAISettings(tester);

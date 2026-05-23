@@ -28,7 +28,11 @@ void main() {
     test('copyWith updates backlinksCache', () {
       final state = LinkState();
       final link = Link(sourceId: 'a', targetId: 'b', type: LinkType.wikilink);
-      final updated = state.copyWith(backlinksCache: {'b': [link]});
+      final updated = state.copyWith(
+        backlinksCache: {
+          'b': [link],
+        },
+      );
       expect(updated.backlinksCache['b']!.length, 1);
     });
 
@@ -72,24 +76,27 @@ void main() {
         expect(state.links.first.position, isNotNull);
       });
 
-      test('builds backlinks cache entries for all notes (note: backlinks may be empty due to id mismatch)', () {
-        final container = ProviderContainer();
-        addTearDown(container.dispose);
-        final notifier = container.read(linkServiceProvider.notifier);
+      test(
+        'builds backlinks cache entries for all notes (note: backlinks may be empty due to id mismatch)',
+        () {
+          final container = ProviderContainer();
+          addTearDown(container.dispose);
+          final notifier = container.read(linkServiceProvider.notifier);
 
-        final noteA = Note(
-          title: 'Note A',
-          filePath: 'notes/note_a.md',
-          content: '[[Note B]]',
-        );
-        final noteB = Note(title: 'Note B', filePath: 'notes/note_b.md');
+          final noteA = Note(
+            title: 'Note A',
+            filePath: 'notes/note_a.md',
+            content: '[[Note B]]',
+          );
+          final noteB = Note(title: 'Note B', filePath: 'notes/note_b.md');
 
-        notifier.rebuildAllLinks([noteA, noteB]);
+          notifier.rebuildAllLinks([noteA, noteB]);
 
-        final state = container.read(linkServiceProvider);
-        expect(state.backlinksCache.containsKey(noteA.id), isTrue);
-        expect(state.backlinksCache.containsKey(noteB.id), isTrue);
-      });
+          final state = container.read(linkServiceProvider);
+          expect(state.backlinksCache.containsKey(noteA.id), isTrue);
+          expect(state.backlinksCache.containsKey(noteB.id), isTrue);
+        },
+      );
 
       test('handles multiple wikilinks in one note', () {
         final container = ProviderContainer();
@@ -153,24 +160,27 @@ void main() {
         expect(state.links, isEmpty);
       });
 
-      test('handles embed links (note: ![[X]] also matches wikilink regex)', () {
-        final container = ProviderContainer();
-        addTearDown(container.dispose);
-        final notifier = container.read(linkServiceProvider.notifier);
+      test(
+        'handles embed links (note: ![[X]] also matches wikilink regex)',
+        () {
+          final container = ProviderContainer();
+          addTearDown(container.dispose);
+          final notifier = container.read(linkServiceProvider.notifier);
 
-        final noteA = Note(
-          title: 'Note A',
-          filePath: 'notes/note_a.md',
-          content: '![[Note B]]',
-        );
-        final noteB = Note(title: 'Note B', filePath: 'notes/note_b.md');
+          final noteA = Note(
+            title: 'Note A',
+            filePath: 'notes/note_a.md',
+            content: '![[Note B]]',
+          );
+          final noteB = Note(title: 'Note B', filePath: 'notes/note_b.md');
 
-        notifier.rebuildAllLinks([noteA, noteB]);
+          notifier.rebuildAllLinks([noteA, noteB]);
 
-        final state = container.read(linkServiceProvider);
-        expect(state.links.any((l) => l.type == LinkType.embed), isTrue);
-        expect(state.links.any((l) => l.type == LinkType.wikilink), isTrue);
-      });
+          final state = container.read(linkServiceProvider);
+          expect(state.links.any((l) => l.type == LinkType.embed), isTrue);
+          expect(state.links.any((l) => l.type == LinkType.wikilink), isTrue);
+        },
+      );
 
       test('handles wikilink with alias', () {
         final container = ProviderContainer();
@@ -466,7 +476,10 @@ void main() {
         );
         final shortNote = Note(title: 'ab', filePath: 'notes/ab.md');
 
-        final mentions = notifier.getUnlinkedMentions(noteA.id, [noteA, shortNote]);
+        final mentions = notifier.getUnlinkedMentions(noteA.id, [
+          noteA,
+          shortNote,
+        ]);
         expect(mentions, isEmpty);
       });
 
@@ -483,7 +496,11 @@ void main() {
         final noteB = Note(title: 'Note B', filePath: 'notes/note_b.md');
         final noteC = Note(title: 'Note C', filePath: 'notes/note_c.md');
 
-        final mentions = notifier.getUnlinkedMentions(noteA.id, [noteA, noteB, noteC]);
+        final mentions = notifier.getUnlinkedMentions(noteA.id, [
+          noteA,
+          noteB,
+          noteC,
+        ]);
         expect(mentions.length, 2);
       });
     });
@@ -531,8 +548,8 @@ void main() {
         notifier.rebuildAllLinks([noteA, noteB, noteC]);
 
         final graphData = notifier.getGraphData([noteA, noteB, noteC]);
-        final nodes =
-            (graphData.first['nodes'] as List).cast<Map<String, dynamic>>();
+        final nodes = (graphData.first['nodes'] as List)
+            .cast<Map<String, dynamic>>();
         final nodeCData = nodes.firstWhere((n) => n['title'] == 'Note C');
         expect(nodeCData['degree'], 0);
 
@@ -565,8 +582,8 @@ void main() {
         notifier.rebuildAllLinks([noteA]);
 
         final graphData = notifier.getGraphData([noteA]);
-        final nodes =
-            (graphData.first['nodes'] as List).cast<Map<String, dynamic>>();
+        final nodes = (graphData.first['nodes'] as List)
+            .cast<Map<String, dynamic>>();
         final nodeData = nodes.first;
         expect(nodeData['tags'], ['tag1', 'tag2']);
       });
@@ -592,8 +609,11 @@ void main() {
 
         notifier.rebuildAllLinks([noteA, noteB, noteC]);
 
-        final graph =
-            notifier.getLocalGraph(noteB.id, [noteA, noteB, noteC], depth: 1);
+        final graph = notifier.getLocalGraph(noteB.id, [
+          noteA,
+          noteB,
+          noteC,
+        ], depth: 1);
         expect(graph.notes, isNotEmpty);
         expect(graph.notes.any((n) => n.id == noteB.id), isTrue);
       });
@@ -607,8 +627,7 @@ void main() {
 
         notifier.rebuildAllLinks([noteA]);
 
-        final graph =
-            notifier.getLocalGraph(noteA.id, [noteA], depth: 1);
+        final graph = notifier.getLocalGraph(noteA.id, [noteA], depth: 1);
         expect(graph.notes.length, 1);
         expect(graph.notes.first.id, noteA.id);
       });

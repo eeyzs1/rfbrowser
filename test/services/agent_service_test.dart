@@ -16,9 +16,11 @@ class TestVaultNotifier extends VaultNotifier {
 }
 
 ProviderContainer createContainer() {
-  return ProviderContainer(overrides: [
-    vaultProvider.overrideWith(() => TestVaultNotifier(VaultState())),
-  ]);
+  return ProviderContainer(
+    overrides: [
+      vaultProvider.overrideWith(() => TestVaultNotifier(VaultState())),
+    ],
+  );
 }
 
 void main() {
@@ -127,7 +129,11 @@ void main() {
         mode: TaskMode.aiPlanned,
         maxIterations: 30,
         steps: [
-          AgentStep(description: 'Step 1', toolName: 'search_notes', args: {'query': 'AI'}),
+          AgentStep(
+            description: 'Step 1',
+            toolName: 'search_notes',
+            args: {'query': 'AI'},
+          ),
         ],
       );
       final json = task.toJson();
@@ -300,19 +306,22 @@ void main() {
       expect(result.mode, TaskMode.reactLoop);
     });
 
-    test('summarizeUrls creates task with manual mode and tool steps', () async {
-      final container = createContainer();
-      final notifier = container.read(agentProvider.notifier);
-      final result = await notifier.summarizeUrls([
-        'https://example.com',
-        'https://flutter.dev',
-      ]);
-      expect(result.name, 'Summarize URLs');
-      expect(result.mode, TaskMode.manual);
-      expect(result.steps.length, 3);
-      expect(result.steps[0].toolName, 'extract_text');
-      expect(result.steps[2].toolName, 'ai_reason');
-    });
+    test(
+      'summarizeUrls creates task with manual mode and tool steps',
+      () async {
+        final container = createContainer();
+        final notifier = container.read(agentProvider.notifier);
+        final result = await notifier.summarizeUrls([
+          'https://example.com',
+          'https://flutter.dev',
+        ]);
+        expect(result.name, 'Summarize URLs');
+        expect(result.mode, TaskMode.manual);
+        expect(result.steps.length, 3);
+        expect(result.steps[0].toolName, 'extract_text');
+        expect(result.steps[2].toolName, 'ai_reason');
+      },
+    );
 
     test('extractDataFromWeb creates task with tool steps', () async {
       final container = createContainer();
@@ -368,11 +377,11 @@ void main() {
 
 class _TestPluginTool extends AgentTool {
   _TestPluginTool()
-      : super(
-          name: 'plugin_test',
-          description: 'A plugin test tool',
-          source: 'plugin',
-        );
+    : super(
+        name: 'plugin_test',
+        description: 'A plugin test tool',
+        source: 'plugin',
+      );
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async =>

@@ -39,16 +39,16 @@ class _SkillsManagementPageState extends ConsumerState<SkillsManagementPage> {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
 
-    final customSkills =
-        _skills.where((s) => !s.isBuiltin && s.pluginId == null).toList();
+    final customSkills = _skills
+        .where((s) => !s.isBuiltin && s.pluginId == null)
+        .toList();
     final builtinSkills = _skills.where((s) => s.isBuiltin).toList();
-    final pluginSkills =
-        _skills.where((s) => !s.isBuiltin && s.pluginId != null).toList();
+    final pluginSkills = _skills
+        .where((s) => !s.isBuiltin && s.pluginId != null)
+        .toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l.skills),
-      ),
+      appBar: AppBar(title: Text(l.skills)),
       floatingActionButton: FloatingActionButton(
         heroTag: 'add_skill',
         onPressed: () => _showSkillEditor(context, l),
@@ -58,53 +58,53 @@ class _SkillsManagementPageState extends ConsumerState<SkillsManagementPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _skills.isEmpty
-              ? _buildEmptyState(theme, l)
-              : ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    if (customSkills.isNotEmpty) ...[
-                      _SectionHeader(
-                        icon: Icons.edit_note,
-                        title: l.extrazerodoSkillCustom,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(height: 8),
-                      ...customSkills.map(
-                        (s) => _SkillCard(
-                          skill: s,
-                          onEdit: () =>
-                              _showSkillEditor(context, l, existing: s),
-                          onDelete: () => _confirmDelete(context, l, s),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    if (builtinSkills.isNotEmpty) ...[
-                      _SectionHeader(
-                        icon: Icons.bolt,
-                        title: l.extrazerodoSkillBuiltin,
-                        color: Colors.amber.shade700,
-                      ),
-                      const SizedBox(height: 8),
-                      ...builtinSkills.map(
-                        (s) => _SkillCard(skill: s, readOnly: true),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    if (pluginSkills.isNotEmpty) ...[
-                      _SectionHeader(
-                        icon: Icons.extension,
-                        title: l.extrazerodoSkillPlugin(
-                            pluginSkills.first.pluginId ?? ''),
-                        color: theme.colorScheme.tertiary,
-                      ),
-                      const SizedBox(height: 8),
-                      ...pluginSkills.map(
-                        (s) => _SkillCard(skill: s, readOnly: true),
-                      ),
-                    ],
-                  ],
-                ),
+          ? _buildEmptyState(theme, l)
+          : ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                if (customSkills.isNotEmpty) ...[
+                  _SectionHeader(
+                    icon: Icons.edit_note,
+                    title: l.extrazerodoSkillCustom,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(height: 8),
+                  ...customSkills.map(
+                    (s) => _SkillCard(
+                      skill: s,
+                      onEdit: () => _showSkillEditor(context, l, existing: s),
+                      onDelete: () => _confirmDelete(context, l, s),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                if (builtinSkills.isNotEmpty) ...[
+                  _SectionHeader(
+                    icon: Icons.bolt,
+                    title: l.extrazerodoSkillBuiltin,
+                    color: Colors.amber.shade700,
+                  ),
+                  const SizedBox(height: 8),
+                  ...builtinSkills.map(
+                    (s) => _SkillCard(skill: s, readOnly: true),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                if (pluginSkills.isNotEmpty) ...[
+                  _SectionHeader(
+                    icon: Icons.extension,
+                    title: l.extrazerodoSkillPlugin(
+                      pluginSkills.first.pluginId ?? '',
+                    ),
+                    color: theme.colorScheme.tertiary,
+                  ),
+                  const SizedBox(height: 8),
+                  ...pluginSkills.map(
+                    (s) => _SkillCard(skill: s, readOnly: true),
+                  ),
+                ],
+              ],
+            ),
     );
   }
 
@@ -119,9 +119,7 @@ class _SkillsManagementPageState extends ConsumerState<SkillsManagementPage> {
           const SizedBox(height: 8),
           Text(
             l.extrazerodoSkillEmptyHint,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.hintColor,
-            ),
+            style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
@@ -135,7 +133,10 @@ class _SkillsManagementPageState extends ConsumerState<SkillsManagementPage> {
   }
 
   Future<void> _confirmDelete(
-      BuildContext context, AppLocalizations l, Skill skill) async {
+    BuildContext context,
+    AppLocalizations l,
+    Skill skill,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -163,8 +164,11 @@ class _SkillsManagementPageState extends ConsumerState<SkillsManagementPage> {
     }
   }
 
-  void _showSkillEditor(BuildContext context, AppLocalizations l,
-      {Skill? existing}) {
+  void _showSkillEditor(
+    BuildContext context,
+    AppLocalizations l, {
+    Skill? existing,
+  }) {
     showDialog(
       context: context,
       builder: (ctx) => _SkillEditorDialog(existing: existing),
@@ -264,8 +268,11 @@ class _SkillCard extends StatelessWidget {
                     tooltip: l.edit,
                   ),
                   IconButton(
-                    icon:
-                        Icon(Icons.delete_outline, size: 18, color: theme.colorScheme.error),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: theme.colorScheme.error,
+                    ),
                     onPressed: onDelete,
                     tooltip: l.delete,
                   ),
@@ -273,8 +280,7 @@ class _SkillCard extends StatelessWidget {
               ),
         children: [
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -283,7 +289,8 @@ class _SkillCard extends StatelessWidget {
                     const Icon(Icons.code, size: 14),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text('Prompt',
+                      child: Text(
+                        'Prompt',
                         style: theme.textTheme.labelMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: theme.hintColor,
@@ -331,11 +338,17 @@ class _SkillCard extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 1),
+                              horizontal: 5,
+                              vertical: 1,
+                            ),
                             decoration: BoxDecoration(
                               color: param.required
-                                  ? theme.colorScheme.error.withValues(alpha: 0.1)
-                                  : theme.colorScheme.primary.withValues(alpha: 0.1),
+                                  ? theme.colorScheme.error.withValues(
+                                      alpha: 0.1,
+                                    )
+                                  : theme.colorScheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
                               borderRadius: BorderRadius.circular(3),
                             ),
                             child: Text(
@@ -387,8 +400,7 @@ class _SkillEditorDialog extends ConsumerStatefulWidget {
   const _SkillEditorDialog({this.existing});
 
   @override
-  ConsumerState<_SkillEditorDialog> createState() =>
-      _SkillEditorDialogState();
+  ConsumerState<_SkillEditorDialog> createState() => _SkillEditorDialogState();
 }
 
 class _SkillEditorDialogState extends ConsumerState<_SkillEditorDialog> {
@@ -404,8 +416,7 @@ class _SkillEditorDialogState extends ConsumerState<_SkillEditorDialog> {
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.existing?.name ?? '');
-    _descCtrl =
-        TextEditingController(text: widget.existing?.description ?? '');
+    _descCtrl = TextEditingController(text: widget.existing?.description ?? '');
     _promptCtrl = TextEditingController(text: widget.existing?.prompt ?? '');
   }
 
@@ -423,7 +434,9 @@ class _SkillEditorDialogState extends ConsumerState<_SkillEditorDialog> {
     final l = AppLocalizations.of(context)!;
 
     return AlertDialog(
-      title: Text(_isEditing ? l.extrazerodoSkillEdit : l.extrazerodoSkillCreate),
+      title: Text(
+        _isEditing ? l.extrazerodoSkillEdit : l.extrazerodoSkillCreate,
+      ),
       content: SizedBox(
         width: 500,
         child: Form(

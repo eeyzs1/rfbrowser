@@ -26,9 +26,11 @@ ProviderContainer createContainer(String vaultPath) {
       lastOpened: DateTime.now(),
     ),
   );
-  return ProviderContainer(overrides: [
-    vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-  ]);
+  return ProviderContainer(
+    overrides: [
+      vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+    ],
+  );
 }
 
 void main() {
@@ -49,7 +51,9 @@ void main() {
     test('copyWith updates searchResults', () {
       const state = SearchState();
       final updated = state.copyWith(
-        searchResults: [{'noteId': '1', 'title': 'Test'}],
+        searchResults: [
+          {'noteId': '1', 'title': 'Test'},
+        ],
       );
       expect(updated.searchResults.length, 1);
       expect(updated.searchResults.first['noteId'], '1');
@@ -58,7 +62,9 @@ void main() {
     test('copyWith updates hybridResults', () {
       const state = SearchState();
       final updated = state.copyWith(
-        hybridResults: [{'noteId': '2', 'title': 'Hybrid'}],
+        hybridResults: [
+          {'noteId': '2', 'title': 'Hybrid'},
+        ],
       );
       expect(updated.hybridResults.length, 1);
     });
@@ -77,7 +83,9 @@ void main() {
 
     test('copyWith preserves unchanged fields', () {
       final state = SearchState(
-        searchResults: [{'id': '1'}],
+        searchResults: [
+          {'id': '1'},
+        ],
         selectedTags: ['keep'],
       );
       final updated = state.copyWith(isSearching: true);
@@ -98,17 +106,20 @@ void main() {
       expect(state.selectedTags, isEmpty);
     });
 
-    test('search with empty query returns empty list and no state change', () async {
-      final container = createContainer('.');
-      addTearDown(container.dispose);
-      final notifier = container.read(searchServiceProvider.notifier);
-      final state = container.read(searchServiceProvider);
-      expect(state.isSearching, false);
+    test(
+      'search with empty query returns empty list and no state change',
+      () async {
+        final container = createContainer('.');
+        addTearDown(container.dispose);
+        final notifier = container.read(searchServiceProvider.notifier);
+        final state = container.read(searchServiceProvider);
+        expect(state.isSearching, false);
 
-      final results = await notifier.search('');
-      expect(results, isEmpty);
-      expect(container.read(searchServiceProvider).isSearching, false);
-    });
+        final results = await notifier.search('');
+        expect(results, isEmpty);
+        expect(container.read(searchServiceProvider).isSearching, false);
+      },
+    );
 
     group('toggleTag', () {
       test('adds tag to selectedTags', () {

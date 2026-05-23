@@ -19,12 +19,9 @@ class WebhookServer {
   final int port;
   bool _isRunning = false;
 
-  WebhookServer({
-    required Ref ref,
-    String? apiKey,
-    this.port = 18765,
-  })  : _ref = ref,
-        _apiKey = apiKey ?? _generateApiKey();
+  WebhookServer({required Ref ref, String? apiKey, this.port = 18765})
+    : _ref = ref,
+      _apiKey = apiKey ?? _generateApiKey();
 
   bool get isRunning => _isRunning;
   String get apiKey => _apiKey;
@@ -56,17 +53,25 @@ class WebhookServer {
     app.post('/api/agent/plan', _handleAgentPlan);
 
     final handler = const Pipeline()
-        .addMiddleware(logRequests(logger: (msg, isError) {
-          if (isError) {
-            debugPrint('WebhookServer: $msg');
-          }
-        }))
+        .addMiddleware(
+          logRequests(
+            logger: (msg, isError) {
+              if (isError) {
+                debugPrint('WebhookServer: $msg');
+              }
+            },
+          ),
+        )
         .addMiddleware(_corsMiddleware())
         .addMiddleware(_authMiddleware())
         .addHandler(app.call);
 
     try {
-      _server = await shelf_io.serve(handler, InternetAddress.loopbackIPv4, port);
+      _server = await shelf_io.serve(
+        handler,
+        InternetAddress.loopbackIPv4,
+        port,
+      );
       _isRunning = true;
       debugPrint('WebhookServer running on $baseUrl (API key: $_apiKey)');
     } catch (e) {
@@ -107,10 +112,10 @@ class WebhookServer {
   }
 
   Map<String, String> _corsHeaders() => {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-      };
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+  };
 
   Response _jsonResponse(dynamic data, {int status = 200}) {
     return Response(
@@ -129,7 +134,10 @@ class WebhookServer {
   }
 
   Future<Response> _handleListTools(Request request) async {
-    final tools = _ref.read(agentProvider.notifier).toolRegistry.allToolDefinitions();
+    final tools = _ref
+        .read(agentProvider.notifier)
+        .toolRegistry
+        .allToolDefinitions();
     return _jsonResponse({'tools': tools});
   }
 
@@ -145,11 +153,14 @@ class WebhookServer {
 
   Future<Response> _handleCreateNote(Request request) async {
     try {
-      final body = jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+      final body =
+          jsonDecode(await request.readAsString()) as Map<String, dynamic>;
       final title = body['title'] as String? ?? 'Untitled';
       final content = body['content'] as String? ?? '';
 
-      final note = await _ref.read(knowledgeProvider.notifier).createNote(title: title);
+      final note = await _ref
+          .read(knowledgeProvider.notifier)
+          .createNote(title: title);
       _ref.read(knowledgeProvider.notifier).updateActiveNoteContent(content);
       await _ref.read(knowledgeProvider.notifier).saveActiveNote();
 
@@ -158,7 +169,10 @@ class WebhookServer {
         'note': {'id': note.id, 'title': note.title, 'filePath': note.filePath},
       });
     } catch (e) {
-      return _jsonResponse({'success': false, 'error': e.toString()}, status: 500);
+      return _jsonResponse({
+        'success': false,
+        'error': e.toString(),
+      }, status: 500);
     }
   }
 
@@ -170,7 +184,8 @@ class WebhookServer {
 
   Future<Response> _handleBrowserNavigate(Request request) async {
     try {
-      final body = jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+      final body =
+          jsonDecode(await request.readAsString()) as Map<String, dynamic>;
       final url = body['url'] as String?;
       if (url == null) {
         return _jsonResponse({'error': 'url is required'}, status: 400);
@@ -178,19 +193,25 @@ class WebhookServer {
       _ref.read(browserProvider.notifier).createTab(url: url);
       return _jsonResponse({'success': true, 'url': url});
     } catch (e) {
-      return _jsonResponse({'success': false, 'error': e.toString()}, status: 500);
+      return _jsonResponse({
+        'success': false,
+        'error': e.toString(),
+      }, status: 500);
     }
   }
 
   Future<Response> _handleAiChat(Request request) async {
     try {
-      final body = jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+      final body =
+          jsonDecode(await request.readAsString()) as Map<String, dynamic>;
       final message = body['message'] as String?;
       if (message == null) {
         return _jsonResponse({'error': 'message is required'}, status: 400);
       }
       final systemPrompt = body['system_prompt'] as String?;
-      await _ref.read(aiProvider.notifier).sendMessage(message, systemPrompt: systemPrompt);
+      await _ref
+          .read(aiProvider.notifier)
+          .sendMessage(message, systemPrompt: systemPrompt);
       final messages = _ref.read(aiProvider).messages;
       final lastAssistant = messages.lastWhere(
         (m) => m.role == 'assistant' && !m.isStreaming,
@@ -203,20 +224,27 @@ class WebhookServer {
   }
 
   Response _handleListTasks(Request request) {
-    final tasks = _ref.read(agentProvider).tasks.map((t) => {
-      'id': t.id,
-      'name': t.name,
-      'status': t.status.name,
-      'mode': t.mode.name,
-      'steps': t.steps.length,
-      'created': t.created.toIso8601String(),
-    }).toList();
+    final tasks = _ref
+        .read(agentProvider)
+        .tasks
+        .map(
+          (t) => {
+            'id': t.id,
+            'name': t.name,
+            'status': t.status.name,
+            'mode': t.mode.name,
+            'steps': t.steps.length,
+            'created': t.created.toIso8601String(),
+          },
+        )
+        .toList();
     return _jsonResponse({'tasks': tasks});
   }
 
   Future<Response> _handleAgentExecute(Request request) async {
     try {
-      final body = jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+      final body =
+          jsonDecode(await request.readAsString()) as Map<String, dynamic>;
       final name = body['name'] as String? ?? 'API Task';
       final description = body['description'] as String? ?? '';
       final modeStr = body['mode'] as String? ?? 'manual';
@@ -224,8 +252,8 @@ class WebhookServer {
         (e) => e.name == modeStr,
         orElse: () => TaskMode.manual,
       );
-      final steps = (body['steps'] as List?)
-              ?.map((s) {
+      final steps =
+          (body['steps'] as List?)?.map((s) {
             if (s is Map<String, dynamic>) {
               return AgentStep(
                 description: s['description'] as String? ?? '',
@@ -234,8 +262,7 @@ class WebhookServer {
               );
             }
             return AgentStep(description: s.toString());
-          })
-              .toList() ??
+          }).toList() ??
           [];
 
       final task = AgentTask(
@@ -261,7 +288,8 @@ class WebhookServer {
 
   Future<Response> _handleAgentPlan(Request request) async {
     try {
-      final body = jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+      final body =
+          jsonDecode(await request.readAsString()) as Map<String, dynamic>;
       final goal = body['goal'] as String?;
       if (goal == null) {
         return _jsonResponse({'error': 'goal is required'}, status: 400);
@@ -279,12 +307,16 @@ class WebhookServer {
         'taskId': result.id,
         'status': result.status.name,
         'result': result.result,
-        'steps': result.steps.map((s) => {
-          'description': s.description,
-          'toolName': s.toolName,
-          'status': s.status.name,
-          'result': s.result,
-        }).toList(),
+        'steps': result.steps
+            .map(
+              (s) => {
+                'description': s.description,
+                'toolName': s.toolName,
+                'status': s.status.name,
+                'result': s.result,
+              },
+            )
+            .toList(),
       });
     } catch (e) {
       return _jsonResponse({'error': e.toString()}, status: 500);
@@ -354,5 +386,5 @@ class WebhookServerState {
 
 final webhookServerProvider =
     NotifierProvider<WebhookServerNotifier, WebhookServerState>(
-  WebhookServerNotifier.new,
-);
+      WebhookServerNotifier.new,
+    );

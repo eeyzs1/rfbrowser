@@ -19,10 +19,8 @@ void main() {
         ProviderScope(
           overrides: [
             vaultProvider.overrideWith(
-              () => _TestVaultNotifier(
-                recentVaults: recentVaults,
-                error: error,
-              ),
+              () =>
+                  _TestVaultNotifier(recentVaults: recentVaults, error: error),
             ),
           ],
           child: MaterialApp(
@@ -117,7 +115,9 @@ void main() {
       expect(find.byIcon(Icons.error_outline), findsNothing);
     });
 
-    testWidgets('delete vault button shows confirmation dialog (UX-3)', (tester) async {
+    testWidgets('delete vault button shows confirmation dialog (UX-3)', (
+      tester,
+    ) async {
       final vaults = [
         VaultConfig(
           path: '/path/to/vault1',
@@ -176,15 +176,10 @@ class _TestVaultNotifier extends VaultNotifier {
   final List<VaultConfig> _recentVaults;
   final String? _error;
 
-  _TestVaultNotifier({
-    List<VaultConfig>? recentVaults,
-    String? error,
-  })  : _recentVaults = recentVaults ?? [],
-        _error = error;
+  _TestVaultNotifier({List<VaultConfig>? recentVaults, String? error})
+    : _recentVaults = recentVaults ?? [],
+      _error = error;
 
   @override
-  VaultState build() => VaultState(
-        recentVaults: _recentVaults,
-        error: _error,
-      );
+  VaultState build() => VaultState(recentVaults: _recentVaults, error: _error);
 }

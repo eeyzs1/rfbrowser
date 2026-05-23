@@ -146,7 +146,8 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: Builder(
-              builder: (context) => plugin.buildPanel(context) ?? const SizedBox(),
+              builder: (context) =>
+                  plugin.buildPanel(context) ?? const SizedBox(),
             ),
           ),
         ),
@@ -244,8 +245,9 @@ void main() {
       }
 
       final allCommands = host.getAllCommands();
-      final pluginCommands =
-          allCommands.where((c) => c.pluginId == 'hello-world').toList();
+      final pluginCommands = allCommands
+          .where((c) => c.pluginId == 'hello-world')
+          .toList();
 
       expect(pluginCommands.length, 3);
       expect(
@@ -284,11 +286,9 @@ void main() {
       expect(sandbox, isNotNull);
 
       expect(
-        () => sandbox!.callApi(
-          'knowledge.getNote',
-          {'id': 'test.md'},
-          requiredPermission: Permission.aiChat,
-        ),
+        () => sandbox!.callApi('knowledge.getNote', {
+          'id': 'test.md',
+        }, requiredPermission: Permission.aiChat),
         throwsA(isA<PermissionDeniedError>()),
       );
     });

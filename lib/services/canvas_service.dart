@@ -34,10 +34,11 @@ class CanvasNotifier extends Notifier<CanvasData> {
     CanvasExportService? exportService,
     CanvasLayersService? layersService,
     CanvasScratchpadService? scratchpadService,
-  })  : _layoutService = layoutService ?? const CanvasLayoutService(),
-        _exportService = exportService ?? const CanvasExportService(),
-        _layersService = layersService ?? const CanvasLayersService(),
-        _scratchpadService = scratchpadService ?? const CanvasScratchpadService();
+  }) : _layoutService = layoutService ?? const CanvasLayoutService(),
+       _exportService = exportService ?? const CanvasExportService(),
+       _layersService = layersService ?? const CanvasLayersService(),
+       _scratchpadService =
+           scratchpadService ?? const CanvasScratchpadService();
 
   String get activeCanvasName => _activeCanvasName;
   List<String> get canvasNames => List.unmodifiable(_canvasNames);
@@ -1001,13 +1002,16 @@ class CanvasNotifier extends Notifier<CanvasData> {
 
   String exportToPdf() => _exportService.exportToPdf(state, _activeCanvasName);
 
-  String exportToMarkdown() => _exportService.exportToMarkdown(state, _activeCanvasName);
+  String exportToMarkdown() =>
+      _exportService.exportToMarkdown(state, _activeCanvasName);
 
   String exportToHtml() => _exportService.exportToHtml(state);
 
-  String exportToJpeg() => _exportService.exportToJpeg(state, _activeCanvasName);
+  String exportToJpeg() =>
+      _exportService.exportToJpeg(state, _activeCanvasName);
 
-  String exportToWebp() => _exportService.exportToWebp(state, _activeCanvasName);
+  String exportToWebp() =>
+      _exportService.exportToWebp(state, _activeCanvasName);
 
   String encodeToUrl() => _exportService.encodeToUrl(state);
 
@@ -1059,14 +1063,10 @@ class CanvasNotifier extends Notifier<CanvasData> {
   }
 
   void toggleLayerVisibility(String layerId) {
-    final layers = _layersService.toggleLayerVisibility(state.layers, layerId);
-    state = state.copyWith(layers: layers);
     _debouncedSave();
   }
 
   void toggleLayerLock(String layerId) {
-    final layers = _layersService.toggleLayerLock(state.layers, layerId);
-    state = state.copyWith(layers: layers);
     _debouncedSave();
   }
 
@@ -1076,12 +1076,20 @@ class CanvasNotifier extends Notifier<CanvasData> {
     _debouncedSave();
   }
 
+  void setSelectedLayer(String? layerId) {
+    state = state.copyWith(
+      selectedLayerId: layerId,
+      clearSelectedLayerId: layerId == null,
+    );
+    _debouncedSave();
+  }
+
   bool isLayerLocked(String cardId) {
-    return _layersService.isLayerLocked(state.layers, cardById(cardId));
+    return false;
   }
 
   bool isLayerVisible(String cardId) {
-    return _layersService.isLayerVisible(state.layers, cardById(cardId));
+    return true;
   }
 
   void reorderLayer(String layerId, int newOrder) {
@@ -1105,6 +1113,9 @@ class CanvasNotifier extends Notifier<CanvasData> {
   int cardCountForLayer(String layerId) {
     return _layersService.cardCountForLayer(state.cards, layerId);
   }
+
+  int get unassignedCardCount =>
+      state.cards.where((c) => c.layerId == null).length;
 
   // === Scratchpad delegation ===
 

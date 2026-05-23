@@ -61,7 +61,10 @@ class _BrowserUrlBarState extends ConsumerState<BrowserUrlBar> {
 
   void _updateSuggestions(String input) {
     if (input.length < 2) {
-      setState(() { _suggestions = []; _showSuggestions = false; });
+      setState(() {
+        _suggestions = [];
+        _showSuggestions = false;
+      });
       return;
     }
     final browserState = ref.read(browserProvider);
@@ -87,7 +90,9 @@ class _BrowserUrlBarState extends ConsumerState<BrowserUrlBar> {
   }
 
   bool _isValidUrl(String input) {
-    if (input.startsWith('http://') || input.startsWith('https://')) return true;
+    if (input.startsWith('http://') || input.startsWith('https://')) {
+      return true;
+    }
     if (input.contains('.') && !input.contains(' ')) {
       final parts = input.split('.');
       return parts.length >= 2 && parts.last.length >= 2;
@@ -98,7 +103,8 @@ class _BrowserUrlBarState extends ConsumerState<BrowserUrlBar> {
   void _onSubmitted(String input) {
     final isValid = _isValidUrl(input);
     setState(() {
-      _validationError = (!isValid && input.contains('.') && input.contains(' '))
+      _validationError =
+          (!isValid && input.contains('.') && input.contains(' '))
           ? widget.l.invalidUrl
           : null;
     });
@@ -127,8 +133,8 @@ class _BrowserUrlBarState extends ConsumerState<BrowserUrlBar> {
                 color: _validationError != null
                     ? DesignColors.semanticError
                     : widget.urlFocusNode.hasFocus
-                        ? theme.colorScheme.primary.withValues(alpha: 0.5)
-                        : Colors.transparent,
+                    ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                    : Colors.transparent,
                 width: 1,
               ),
               color: widget.urlFocusNode.hasFocus
@@ -159,7 +165,11 @@ class _BrowserUrlBarState extends ConsumerState<BrowserUrlBar> {
                               : DesignColors.semanticWarning,
                         ),
                       )
-                    : Icon(Icons.search_outlined, size: iconSize, color: theme.hintColor),
+                    : Icon(
+                        Icons.search_outlined,
+                        size: iconSize,
+                        color: theme.hintColor,
+                      ),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -194,32 +204,39 @@ class _BrowserUrlBarState extends ConsumerState<BrowserUrlBar> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: _suggestions
-                  .map((url) => InkWell(
-                        onTap: () {
-                          widget.urlController.text = url;
-                          setState(() => _showSuggestions = false);
-                          widget.onNavigate(url);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: DesignSpacing.md,
-                            vertical: DesignSpacing.sm,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.history_outlined,
-                                  size: iconSize, color: theme.hintColor),
-                              const SizedBox(width: DesignSpacing.sm),
-                              Expanded(
-                                child: Text(url,
-                                    style: theme.textTheme.bodySmall,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis),
-                              ),
-                            ],
-                          ),
+                  .map(
+                    (url) => InkWell(
+                      onTap: () {
+                        widget.urlController.text = url;
+                        setState(() => _showSuggestions = false);
+                        widget.onNavigate(url);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: DesignSpacing.md,
+                          vertical: DesignSpacing.sm,
                         ),
-                      ))
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.history_outlined,
+                              size: iconSize,
+                              color: theme.hintColor,
+                            ),
+                            const SizedBox(width: DesignSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                url,
+                                style: theme.textTheme.bodySmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
                   .toList(),
             ),
           ),

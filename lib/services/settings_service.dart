@@ -72,8 +72,8 @@ class AppSettings {
   bool get isDarkMode {
     final lum =
         (scaffoldBgColor.r * 0.299 +
-        scaffoldBgColor.g * 0.587 +
-        scaffoldBgColor.b * 0.114) *
+            scaffoldBgColor.g * 0.587 +
+            scaffoldBgColor.b * 0.114) *
         255;
     return lum < 128;
   }

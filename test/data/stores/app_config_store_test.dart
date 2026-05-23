@@ -21,9 +21,9 @@ void main() {
   Future<void> writeConfig(Map<String, dynamic> config) async {
     final dir = Directory(p.dirname(configPath));
     if (!await dir.exists()) await dir.create(recursive: true);
-    await File(configPath).writeAsString(
-      JsonEncoder.withIndent('  ').convert(config),
-    );
+    await File(
+      configPath,
+    ).writeAsString(JsonEncoder.withIndent('  ').convert(config));
   }
 
   Future<Map<String, dynamic>> readConfig() async {
@@ -39,18 +39,16 @@ void main() {
   }
 
   group('AppConfigStore JSON serialization', () {
-    test('loadConfig returns empty map when config file does not exist',
-        () async {
-      final config = await readConfig();
-      expect(config, isEmpty);
-    });
+    test(
+      'loadConfig returns empty map when config file does not exist',
+      () async {
+        final config = await readConfig();
+        expect(config, isEmpty);
+      },
+    );
 
     test('saveConfig writes JSON file with correct content', () async {
-      final config = {
-        'theme': 'dark',
-        'fontSize': 14,
-        'language': 'zh-CN',
-      };
+      final config = {'theme': 'dark', 'fontSize': 14, 'language': 'zh-CN'};
       await writeConfig(config);
 
       final file = File(configPath);

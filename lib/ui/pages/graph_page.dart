@@ -78,9 +78,9 @@ class _GraphViewState extends ConsumerState<GraphView> {
             const SizedBox(height: DesignSpacing.xl),
             FilledButton.icon(
               onPressed: () {
-                ref.read(knowledgeProvider.notifier).createNote(
-                  title: l.newNote,
-                );
+                ref
+                    .read(knowledgeProvider.notifier)
+                    .createNote(title: l.newNote);
               },
               icon: const Icon(Icons.add, size: 18),
               label: Text(l.newNote),
@@ -235,28 +235,29 @@ class _GraphViewState extends ConsumerState<GraphView> {
                   child: CustomPaint(
                     key: _graphKey,
                     painter: GraphPainter(
-                    notes: displayNotes,
-                    links: displayLinks,
-                    scale: _scale,
-                    offset: _offset,
-                    layout: _cachedLayout,
-                    hoveredNode: _hoveredNode,
-                    selectedNode: _selectedNode,
-                    bridgeIds: bridgeIds,
-                    primaryColor: theme.colorScheme.primary,
-                    secondaryColor: theme.colorScheme.secondary,
-                    surfaceColor: theme.colorScheme.surface,
-                    onSurfaceColor: theme.colorScheme.onSurface,
-                    hintColor: theme.hintColor,
-                    cardColor: theme.cardColor,
-                    errorColor: theme.colorScheme.error,
-                    baseFontSize: ref.watch(settingsProvider).editorFontSize * 0.75,
+                      notes: displayNotes,
+                      links: displayLinks,
+                      scale: _scale,
+                      offset: _offset,
+                      layout: _cachedLayout,
+                      hoveredNode: _hoveredNode,
+                      selectedNode: _selectedNode,
+                      bridgeIds: bridgeIds,
+                      primaryColor: theme.colorScheme.primary,
+                      secondaryColor: theme.colorScheme.secondary,
+                      surfaceColor: theme.colorScheme.surface,
+                      onSurfaceColor: theme.colorScheme.onSurface,
+                      hintColor: theme.hintColor,
+                      cardColor: theme.cardColor,
+                      errorColor: theme.colorScheme.error,
+                      baseFontSize:
+                          ref.watch(settingsProvider).editorFontSize * 0.75,
+                    ),
+                    size: Size.infinite,
                   ),
-                  size: Size.infinite,
                 ),
               ),
             ),
-          ),
           ),
           Positioned(
             top: DesignSpacing.md,
@@ -343,7 +344,9 @@ class _GraphViewState extends ConsumerState<GraphView> {
                   ),
                   IconButton(
                     icon: Icon(
-                      _showLegend ? Icons.legend_toggle : Icons.legend_toggle_outlined,
+                      _showLegend
+                          ? Icons.legend_toggle
+                          : Icons.legend_toggle_outlined,
                       size: 16,
                     ),
                     onPressed: () => setState(() => _showLegend = !_showLegend),
@@ -391,7 +394,8 @@ class _GraphViewState extends ConsumerState<GraphView> {
                       minWidth: DesignTouchTarget.iconButtonSize,
                       minHeight: DesignTouchTarget.iconButtonSize,
                     ),
-                    onSelected: (value) => _handleGraphExport(value, displayNotes, displayLinks),
+                    onSelected: (value) =>
+                        _handleGraphExport(value, displayNotes, displayLinks),
                     itemBuilder: (ctx) => [
                       PopupMenuItem(
                         value: 'png',
@@ -417,7 +421,11 @@ class _GraphViewState extends ConsumerState<GraphView> {
                         value: 'json',
                         child: Row(
                           children: [
-                            Icon(Icons.data_object, size: 14, color: theme.hintColor),
+                            Icon(
+                              Icons.data_object,
+                              size: 14,
+                              color: theme.hintColor,
+                            ),
                             const SizedBox(width: 8),
                             Text(l.exportGraphJson),
                           ],
@@ -579,13 +587,14 @@ class _GraphViewState extends ConsumerState<GraphView> {
   Future<void> _exportGraphToPng() async {
     final l = AppLocalizations.of(context)!;
     try {
-      final boundary = _graphPaintKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _graphPaintKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l.exportFailedNotRendered)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l.exportFailedNotRendered)));
         }
         return;
       }
@@ -593,9 +602,9 @@ class _GraphViewState extends ConsumerState<GraphView> {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l.exportFailedPng)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l.exportFailedPng)));
         }
         return;
       }
@@ -603,7 +612,9 @@ class _GraphViewState extends ConsumerState<GraphView> {
       if (vaultPath == null) return;
       final dir = Directory('$vaultPath/attachments');
       if (!await dir.exists()) await dir.create(recursive: true);
-      final file = File('${dir.path}/graph_${DateTime.now().millisecondsSinceEpoch}.png');
+      final file = File(
+        '${dir.path}/graph_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
       await file.writeAsBytes(byteData.buffer.asUint8List());
       image.dispose();
       if (mounted) {
@@ -616,14 +627,17 @@ class _GraphViewState extends ConsumerState<GraphView> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.pngExportFailed('$e'))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.pngExportFailed('$e'))));
       }
     }
   }
 
-  void _exportGraphToSvg(List<Note> displayNotes, List<GraphLink> displayLinks) {
+  void _exportGraphToSvg(
+    List<Note> displayNotes,
+    List<GraphLink> displayLinks,
+  ) {
     final l = AppLocalizations.of(context)!;
     final layout = _cachedLayout;
     if (layout == null || displayNotes.isEmpty) return;
@@ -641,55 +655,81 @@ class _GraphViewState extends ConsumerState<GraphView> {
       if (pos.dx + 30 > maxX) maxX = pos.dx + 30;
       if (pos.dy + 30 > maxY) maxY = pos.dy + 30;
     }
-    if (minX == double.infinity) { minX = 0; minY = 0; maxX = 400; maxY = 400; }
+    if (minX == double.infinity) {
+      minX = 0;
+      minY = 0;
+      maxX = 400;
+      maxY = 400;
+    }
     final padding = 20.0;
     final width = maxX - minX + padding * 2;
     final height = maxY - minY + padding * 2;
 
     final svgBuffer = StringBuffer();
     svgBuffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
-    svgBuffer.writeln('<svg xmlns="http://www.w3.org/2000/svg" width="$width" height="$height" viewBox="${minX - padding} ${minY - padding} $width $height">');
-    svgBuffer.writeln('  <rect x="${minX - padding}" y="${minY - padding}" width="$width" height="$height" fill="${_colorToHex(surfaceColor)}" />');
+    svgBuffer.writeln(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="$width" height="$height" viewBox="${minX - padding} ${minY - padding} $width $height">',
+    );
+    svgBuffer.writeln(
+      '  <rect x="${minX - padding}" y="${minY - padding}" width="$width" height="$height" fill="${_colorToHex(surfaceColor)}" />',
+    );
 
     for (final link in displayLinks) {
       final fromPos = layout[link.sourceId];
       final toPos = layout[link.targetId];
       if (fromPos == null || toPos == null) continue;
-      svgBuffer.writeln('  <line x1="${fromPos.dx}" y1="${fromPos.dy}" x2="${toPos.dx}" y2="${toPos.dy}" stroke="${_colorToHex(hintColor)}" stroke-width="1" opacity="0.4" />');
+      svgBuffer.writeln(
+        '  <line x1="${fromPos.dx}" y1="${fromPos.dy}" x2="${toPos.dx}" y2="${toPos.dy}" stroke="${_colorToHex(hintColor)}" stroke-width="1" opacity="0.4" />',
+      );
     }
 
     for (final note in displayNotes) {
       final pos = layout[note.id];
       if (pos == null) continue;
       final r = 8.0;
-      svgBuffer.writeln('  <circle cx="${pos.dx}" cy="${pos.dy}" r="$r" fill="${_colorToHex(primaryColor)}" />');
-      final escapedTitle = note.title.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-      svgBuffer.writeln('  <text x="${pos.dx}" y="${pos.dy + r + 12}" text-anchor="middle" font-size="10" fill="${_colorToHex(hintColor)}">$escapedTitle</text>');
+      svgBuffer.writeln(
+        '  <circle cx="${pos.dx}" cy="${pos.dy}" r="$r" fill="${_colorToHex(primaryColor)}" />',
+      );
+      final escapedTitle = note.title
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      svgBuffer.writeln(
+        '  <text x="${pos.dx}" y="${pos.dy + r + 12}" text-anchor="middle" font-size="10" fill="${_colorToHex(hintColor)}">$escapedTitle</text>',
+      );
     }
 
     svgBuffer.writeln('</svg>');
 
-    _saveGraphExportFile('graph_${DateTime.now().millisecondsSinceEpoch}.svg', svgBuffer.toString(), l);
+    _saveGraphExportFile(
+      'graph_${DateTime.now().millisecondsSinceEpoch}.svg',
+      svgBuffer.toString(),
+      l,
+    );
   }
 
-  void _exportGraphToJson(List<Note> displayNotes, List<GraphLink> displayLinks) {
+  void _exportGraphToJson(
+    List<Note> displayNotes,
+    List<GraphLink> displayLinks,
+  ) {
     final l = AppLocalizations.of(context)!;
     final layout = _cachedLayout;
 
-    final nodes = displayNotes.map((n) => {
-      'id': n.id,
-      'title': n.title,
-      'tags': n.tags,
-      if (layout != null && layout.containsKey(n.id)) 'position': {
-        'x': layout[n.id]!.dx,
-        'y': layout[n.id]!.dy,
-      },
-    }).toList();
+    final nodes = displayNotes
+        .map(
+          (n) => {
+            'id': n.id,
+            'title': n.title,
+            'tags': n.tags,
+            if (layout != null && layout.containsKey(n.id))
+              'position': {'x': layout[n.id]!.dx, 'y': layout[n.id]!.dy},
+          },
+        )
+        .toList();
 
-    final edges = displayLinks.map((e) => {
-      'source': e.sourceId,
-      'target': e.targetId,
-    }).toList();
+    final edges = displayLinks
+        .map((e) => {'source': e.sourceId, 'target': e.targetId})
+        .toList();
 
     final data = JsonEncoder.withIndent('  ').convert({
       'nodes': nodes,
@@ -697,10 +737,18 @@ class _GraphViewState extends ConsumerState<GraphView> {
       'exportedAt': DateTime.now().toIso8601String(),
     });
 
-    _saveGraphExportFile('graph_${DateTime.now().millisecondsSinceEpoch}.json', data, l);
+    _saveGraphExportFile(
+      'graph_${DateTime.now().millisecondsSinceEpoch}.json',
+      data,
+      l,
+    );
   }
 
-  void _saveGraphExportFile(String filename, String content, AppLocalizations l) async {
+  void _saveGraphExportFile(
+    String filename,
+    String content,
+    AppLocalizations l,
+  ) async {
     try {
       final vaultPath = ref.read(vaultProvider).currentVault?.path;
       if (vaultPath == null) return;
@@ -718,9 +766,9 @@ class _GraphViewState extends ConsumerState<GraphView> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -1016,7 +1064,11 @@ class GraphPainter extends CustomPainter {
         final hoverPaint = Paint()
           ..color = secondaryColor.withValues(alpha: 0.1)
           ..style = PaintingStyle.fill;
-        canvas.drawCircle(pos, _GraphViewState._nodeHitRadius * scale, hoverPaint);
+        canvas.drawCircle(
+          pos,
+          _GraphViewState._nodeHitRadius * scale,
+          hoverPaint,
+        );
       }
 
       if (isBridge) {

@@ -82,7 +82,10 @@ class _BrowserReadingModeState extends State<BrowserReadingMode> {
             const SizedBox(height: 16),
             Text(l.noOtherTabs, style: theme.textTheme.bodyMedium),
             const SizedBox(height: 16),
-            FilledButton(onPressed: widget.onExit, child: Text(l.exitReadingMode)),
+            FilledButton(
+              onPressed: widget.onExit,
+              child: Text(l.exitReadingMode),
+            ),
           ],
         ),
       );
@@ -108,10 +111,7 @@ class _BrowserReadingModeState extends State<BrowserReadingMode> {
               ),
               const SizedBox(width: DesignSpacing.sm),
               Expanded(
-                child: Text(
-                  l.readingMode,
-                  style: theme.textTheme.labelMedium,
-                ),
+                child: Text(l.readingMode, style: theme.textTheme.labelMedium),
               ),
               IconButton(
                 icon: const Icon(Icons.text_decrease_outlined, size: 16),

@@ -48,7 +48,9 @@ void main() {
       expect(folder.parentId, isEmpty);
     });
 
-    testWidgets('createBookmarkFolder prevents self-referencing (C-6)', (tester) async {
+    testWidgets('createBookmarkFolder prevents self-referencing (C-6)', (
+      tester,
+    ) async {
       await pumpBrowserHarness(tester);
 
       final element = tester.element(find.byType(Scaffold));
@@ -61,28 +63,52 @@ void main() {
       expect(folder.parentId, isNot(equals(folderId)));
     });
 
-    testWidgets('deleteBookmarkFolder handles cycles safely (C-6)', (tester) async {
+    testWidgets('deleteBookmarkFolder handles cycles safely (C-6)', (
+      tester,
+    ) async {
       await pumpBrowserHarness(tester);
 
       final element = tester.element(find.byType(Scaffold));
       final container = ProviderScope.containerOf(element);
       final browserNotifier = container.read(browserProvider.notifier);
 
-      final folderId1 = browserNotifier.createBookmarkFolder('Folder1', parentId: 'bookmarks-bar');
-      final folderId2 = browserNotifier.createBookmarkFolder('Folder2', parentId: 'bookmarks-bar');
+      final folderId1 = browserNotifier.createBookmarkFolder(
+        'Folder1',
+        parentId: 'bookmarks-bar',
+      );
+      final folderId2 = browserNotifier.createBookmarkFolder(
+        'Folder2',
+        parentId: 'bookmarks-bar',
+      );
 
       final countBeforeDelete = browserNotifier.state.bookmarkFolders.length;
-      debugPrint('BEFORE DELETE: count=$countBeforeDelete, folders=${browserNotifier.state.bookmarkFolders.map((f) => '${f.id}:${f.parentId}')}');
+      debugPrint(
+        'BEFORE DELETE: count=$countBeforeDelete, folders=${browserNotifier.state.bookmarkFolders.map((f) => '${f.id}:${f.parentId}')}',
+      );
 
       browserNotifier.deleteBookmarkFolder(folderId1);
       await tester.pumpAndSettle();
 
       final countAfterDelete = browserNotifier.state.bookmarkFolders.length;
-      debugPrint('AFTER DELETE: count=$countAfterDelete, folders=${browserNotifier.state.bookmarkFolders.map((f) => '${f.id}:${f.parentId}')}');
+      debugPrint(
+        'AFTER DELETE: count=$countAfterDelete, folders=${browserNotifier.state.bookmarkFolders.map((f) => '${f.id}:${f.parentId}')}',
+      );
 
-      expect(countAfterDelete, equals(countBeforeDelete - 1), reason: 'Should delete only Folder1');
-      expect(browserNotifier.state.bookmarkFolders.any((f) => f.id == folderId1), isFalse, reason: 'Folder1 should be deleted');
-      expect(browserNotifier.state.bookmarkFolders.any((f) => f.id == folderId2), isTrue, reason: 'Folder2 should still exist');
+      expect(
+        countAfterDelete,
+        equals(countBeforeDelete - 1),
+        reason: 'Should delete only Folder1',
+      );
+      expect(
+        browserNotifier.state.bookmarkFolders.any((f) => f.id == folderId1),
+        isFalse,
+        reason: 'Folder1 should be deleted',
+      );
+      expect(
+        browserNotifier.state.bookmarkFolders.any((f) => f.id == folderId2),
+        isTrue,
+        reason: 'Folder2 should still exist',
+      );
     });
   });
 
@@ -96,38 +122,61 @@ void main() {
       });
 
       test('blocks javascript: scheme', () {
-        expect(agentWebView.shouldOverrideUrlLoading('javascript:alert(1)'), isTrue);
+        expect(
+          agentWebView.shouldOverrideUrlLoading('javascript:alert(1)'),
+          isTrue,
+        );
       });
 
       test('blocks file: scheme', () {
-        expect(agentWebView.shouldOverrideUrlLoading('file:///etc/passwd'), isTrue);
+        expect(
+          agentWebView.shouldOverrideUrlLoading('file:///etc/passwd'),
+          isTrue,
+        );
       });
 
       test('blocks data: scheme', () {
         expect(
-          agentWebView.shouldOverrideUrlLoading('data:text/html,<script>alert(1)</script>'),
+          agentWebView.shouldOverrideUrlLoading(
+            'data:text/html,<script>alert(1)</script>',
+          ),
           isTrue,
         );
       });
 
       test('blocks ftp: scheme', () {
-        expect(agentWebView.shouldOverrideUrlLoading('ftp://malicious.com/file'), isTrue);
+        expect(
+          agentWebView.shouldOverrideUrlLoading('ftp://malicious.com/file'),
+          isTrue,
+        );
       });
 
       test('blocks chrome: scheme', () {
-        expect(agentWebView.shouldOverrideUrlLoading('chrome://settings'), isTrue);
+        expect(
+          agentWebView.shouldOverrideUrlLoading('chrome://settings'),
+          isTrue,
+        );
       });
 
       test('blocks vbscript: scheme', () {
-        expect(agentWebView.shouldOverrideUrlLoading('vbscript:msgbox("hi")'), isTrue);
+        expect(
+          agentWebView.shouldOverrideUrlLoading('vbscript:msgbox("hi")'),
+          isTrue,
+        );
       });
 
       test('allows http: scheme', () {
-        expect(agentWebView.shouldOverrideUrlLoading('http://example.com'), isFalse);
+        expect(
+          agentWebView.shouldOverrideUrlLoading('http://example.com'),
+          isFalse,
+        );
       });
 
       test('allows https: scheme', () {
-        expect(agentWebView.shouldOverrideUrlLoading('https://secure.example.com'), isFalse);
+        expect(
+          agentWebView.shouldOverrideUrlLoading('https://secure.example.com'),
+          isFalse,
+        );
       });
 
       test('allows about:blank', () {
@@ -145,9 +194,18 @@ void main() {
         final webView = HeadlessWebView(id: 'test-s1');
         await webView.run();
 
-        expect(() => webView.loadUrl('javascript:alert(1)'), throwsArgumentError);
-        expect(() => webView.loadUrl('file:///etc/passwd'), throwsArgumentError);
-        expect(() => webView.loadUrl('data:text/html,test'), throwsArgumentError);
+        expect(
+          () => webView.loadUrl('javascript:alert(1)'),
+          throwsArgumentError,
+        );
+        expect(
+          () => webView.loadUrl('file:///etc/passwd'),
+          throwsArgumentError,
+        );
+        expect(
+          () => webView.loadUrl('data:text/html,test'),
+          throwsArgumentError,
+        );
       });
 
       test('loadUrl allows HTTP schemes', () async {

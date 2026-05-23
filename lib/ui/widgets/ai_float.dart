@@ -112,11 +112,15 @@ class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
                             right: DesignSpacing.xs,
                             child: Semantics(
                               button: true,
-                              label: MaterialLocalizations.of(context).closeButtonLabel,
+                              label: MaterialLocalizations.of(
+                                context,
+                              ).closeButtonLabel,
                               child: IconButton(
                                 icon: const Icon(Icons.close, size: 16),
                                 onPressed: _collapse,
-                                tooltip: MaterialLocalizations.of(context).closeButtonLabel,
+                                tooltip: MaterialLocalizations.of(
+                                  context,
+                                ).closeButtonLabel,
                                 constraints: const BoxConstraints(
                                   minWidth: DesignTouchTarget.iconButtonSize,
                                   minHeight: DesignTouchTarget.iconButtonSize,

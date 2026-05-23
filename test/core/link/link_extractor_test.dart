@@ -96,8 +96,12 @@ void main() {
       });
 
       test('wikilink 和 embed 混合', () {
-        final links = extractor.extractLinks('[[笔记A]] 和 ![[图片.png]] 以及 [[笔记B]]');
-        final wikilinks = links.where((l) => l.type == LinkType.wikilink).toList();
+        final links = extractor.extractLinks(
+          '[[笔记A]] 和 ![[图片.png]] 以及 [[笔记B]]',
+        );
+        final wikilinks = links
+            .where((l) => l.type == LinkType.wikilink)
+            .toList();
         final embeds = links.where((l) => l.type == LinkType.embed).toList();
         expect(wikilinks.length, 3);
         expect(embeds.length, 1);
@@ -115,7 +119,9 @@ void main() {
       });
 
       test('@web[URL]', () {
-        final refs = extractor.extractContextRefs('查看 @web[https://example.com]');
+        final refs = extractor.extractContextRefs(
+          '查看 @web[https://example.com]',
+        );
         expect(refs.length, 1);
         expect(refs[0].type, 'web');
         expect(refs[0].target, 'https://example.com');
@@ -151,7 +157,8 @@ void main() {
 
       test('多个上下文引用', () {
         final refs = extractor.extractContextRefs(
-            '参考 @note[A] 和 @web[https://b.com] 以及 @file[c.pdf]');
+          '参考 @note[A] 和 @web[https://b.com] 以及 @file[c.pdf]',
+        );
         expect(refs.length, 3);
       });
 
@@ -210,43 +217,35 @@ void main() {
 
     group('findUnlinkedMentions', () {
       test('找到未链接提及', () {
-        final mentions = extractor.findUnlinkedMentions(
-          '今天学习了量子计算的相关知识',
-          ['量子计算'],
-        );
+        final mentions = extractor.findUnlinkedMentions('今天学习了量子计算的相关知识', [
+          '量子计算',
+        ]);
         expect(mentions.length, 1);
         expect(mentions[0].targetTitle, '量子计算');
       });
 
       test('已链接的不标记为未链接', () {
-        final mentions = extractor.findUnlinkedMentions(
-          '今天学习了[[量子计算]]的相关知识',
-          ['量子计算'],
-        );
+        final mentions = extractor.findUnlinkedMentions('今天学习了[[量子计算]]的相关知识', [
+          '量子计算',
+        ]);
         expect(mentions, isEmpty);
       });
 
       test('短标题跳过', () {
-        final mentions = extractor.findUnlinkedMentions(
-          'AB 是一个概念',
-          ['AB'],
-        );
+        final mentions = extractor.findUnlinkedMentions('AB 是一个概念', ['AB']);
         expect(mentions, isEmpty);
       });
 
       test('多个标题多个提及', () {
-        final mentions = extractor.findUnlinkedMentions(
-          'Flutter和Dart是很好的组合',
-          ['Flutter', 'Dart'],
-        );
+        final mentions = extractor.findUnlinkedMentions('Flutter和Dart是很好的组合', [
+          'Flutter',
+          'Dart',
+        ]);
         expect(mentions.length, 2);
       });
 
       test('不存在标题返回空', () {
-        final mentions = extractor.findUnlinkedMentions(
-          '这是一段普通文本',
-          ['不存在的标题'],
-        );
+        final mentions = extractor.findUnlinkedMentions('这是一段普通文本', ['不存在的标题']);
         expect(mentions, isEmpty);
       });
     });
@@ -261,7 +260,10 @@ void main() {
         final longPrefix = 'A' * 200;
         final longSuffix = 'B' * 200;
         final links = extractor.extractLinks('$longPrefix[[目标]]$longSuffix');
-        expect(links[0].context.length, lessThan(longPrefix.length + longSuffix.length + 20));
+        expect(
+          links[0].context.length,
+          lessThan(longPrefix.length + longSuffix.length + 20),
+        );
       });
     });
   });

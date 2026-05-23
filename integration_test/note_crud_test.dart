@@ -61,15 +61,18 @@ void main() {
       expect(find.byIcon(Icons.edit_note), findsOneWidget);
     });
 
-    testWidgets('shows create note button when vault connected but no active note',
-        (tester) async {
-      await pumpEditorPage(tester, currentVault: testVault);
+    testWidgets(
+      'shows create note button when vault connected but no active note',
+      (tester) async {
+        await pumpEditorPage(tester, currentVault: testVault);
 
-      expect(find.byIcon(Icons.add), findsOneWidget);
-    });
+        expect(find.byIcon(Icons.add), findsOneWidget);
+      },
+    );
 
-    testWidgets('shows note title and format toolbar when active note exists',
-        (tester) async {
+    testWidgets('shows note title and format toolbar when active note exists', (
+      tester,
+    ) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -81,8 +84,7 @@ void main() {
       expect(find.byIcon(Icons.format_bold), findsOneWidget);
     });
 
-    testWidgets('shows Edit, Preview, Split segmented buttons',
-        (tester) async {
+    testWidgets('shows Edit, Preview, Split segmented buttons', (tester) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -95,8 +97,7 @@ void main() {
       expect(find.text('Split'), findsOneWidget);
     });
 
-    testWidgets('shows save button with check icon when saved',
-        (tester) async {
+    testWidgets('shows save button with check icon when saved', (tester) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -108,8 +109,9 @@ void main() {
       expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
     });
 
-    testWidgets('format toolbar contains bold, italic, heading buttons',
-        (tester) async {
+    testWidgets('format toolbar contains bold, italic, heading buttons', (
+      tester,
+    ) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -122,8 +124,9 @@ void main() {
       expect(find.byIcon(Icons.title), findsOneWidget);
     });
 
-    testWidgets('format toolbar contains list, link, quote, code buttons',
-        (tester) async {
+    testWidgets('format toolbar contains list, link, quote, code buttons', (
+      tester,
+    ) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -138,23 +141,25 @@ void main() {
     });
 
     testWidgets(
-        'format toolbar contains strikethrough, checklist, table, hr buttons',
-        (tester) async {
-      await pumpEditorPage(
-        tester,
-        notes: [testNote],
-        activeNoteId: testNote.id,
-        currentVault: testVault,
-      );
+      'format toolbar contains strikethrough, checklist, table, hr buttons',
+      (tester) async {
+        await pumpEditorPage(
+          tester,
+          notes: [testNote],
+          activeNoteId: testNote.id,
+          currentVault: testVault,
+        );
 
-      expect(find.byIcon(Icons.strikethrough_s), findsOneWidget);
-      expect(find.byIcon(Icons.checklist), findsOneWidget);
-      expect(find.byIcon(Icons.table_chart), findsOneWidget);
-      expect(find.byIcon(Icons.horizontal_rule), findsOneWidget);
-    });
+        expect(find.byIcon(Icons.strikethrough_s), findsOneWidget);
+        expect(find.byIcon(Icons.checklist), findsOneWidget);
+        expect(find.byIcon(Icons.table_chart), findsOneWidget);
+        expect(find.byIcon(Icons.horizontal_rule), findsOneWidget);
+      },
+    );
 
-    testWidgets('shows status bar with file path and word count icons',
-        (tester) async {
+    testWidgets('shows status bar with file path and word count icons', (
+      tester,
+    ) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -201,8 +206,9 @@ void main() {
       }
     });
 
-    testWidgets('tapping edit shows toolbar again after preview',
-        (tester) async {
+    testWidgets('tapping edit shows toolbar again after preview', (
+      tester,
+    ) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -233,17 +239,13 @@ class _TestKnowledgeNotifier extends KnowledgeNotifier {
   final List<Note> _notes;
   final String? _activeNoteId;
 
-  _TestKnowledgeNotifier({
-    List<Note>? notes,
-    String? activeNoteId,
-  })  : _notes = notes ?? [],
-        _activeNoteId = activeNoteId;
+  _TestKnowledgeNotifier({List<Note>? notes, String? activeNoteId})
+    : _notes = notes ?? [],
+      _activeNoteId = activeNoteId;
 
   @override
-  KnowledgeState build() => KnowledgeState(
-        notes: _notes,
-        activeNoteId: _activeNoteId,
-      );
+  KnowledgeState build() =>
+      KnowledgeState(notes: _notes, activeNoteId: _activeNoteId);
 }
 
 class _TestSettingsNotifier extends SettingsNotifier {
@@ -255,7 +257,7 @@ class _TestVaultNotifier extends VaultNotifier {
   final VaultConfig? _currentVault;
 
   _TestVaultNotifier({VaultConfig? currentVault})
-      : _currentVault = currentVault;
+    : _currentVault = currentVault;
 
   @override
   VaultState build() => VaultState(currentVault: _currentVault);

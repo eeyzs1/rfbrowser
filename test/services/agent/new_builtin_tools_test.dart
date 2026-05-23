@@ -17,10 +17,7 @@ void main() {
     });
 
     test('成功更新笔记', () async {
-      final result = await tool.execute({
-        'title': '测试笔记',
-        'content': '新内容',
-      });
+      final result = await tool.execute({'title': '测试笔记', 'content': '新内容'});
       expect(result.success, true);
       expect(result.output, contains('测试笔记'));
     });
@@ -132,8 +129,9 @@ void main() {
     late RenameNoteTool tool;
 
     setUp(() {
-      tool = RenameNoteTool((oldTitle, newTitle) async =>
-          'Renamed "$oldTitle" to "$newTitle"');
+      tool = RenameNoteTool(
+        (oldTitle, newTitle) async => 'Renamed "$oldTitle" to "$newTitle"',
+      );
     });
 
     test('名称和描述', () {
@@ -209,13 +207,16 @@ void main() {
 
       final definitions = registry.allToolDefinitions();
       final names = definitions.map((d) => d['name'] as String).toList();
-      expect(names, containsAll([
-        'update_note',
-        'list_notes',
-        'get_tags',
-        'move_note',
-        'rename_note',
-      ]));
+      expect(
+        names,
+        containsAll([
+          'update_note',
+          'list_notes',
+          'get_tags',
+          'move_note',
+          'rename_note',
+        ]),
+      );
     });
 
     test('toolsPrompt 包含所有 5 个新工具描述', () {

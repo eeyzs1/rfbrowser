@@ -262,7 +262,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
 
   Widget _buildHeader(ThemeData theme, dynamic note, AppLocalizations l) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.md, vertical: DesignSpacing.xs + 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignSpacing.md,
+        vertical: DesignSpacing.xs + 2,
+      ),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
@@ -318,7 +321,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
             Padding(
               padding: const EdgeInsets.only(right: DesignSpacing.sm),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DesignSpacing.sm,
+                  vertical: DesignSpacing.xs,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
@@ -448,7 +454,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
               visualDensity: VisualDensity.compact,
               textStyle: WidgetStatePropertyAll(theme.textTheme.labelSmall),
               padding: WidgetStatePropertyAll(
-                const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs),
+                const EdgeInsets.symmetric(
+                  horizontal: DesignSpacing.sm,
+                  vertical: DesignSpacing.xs,
+                ),
               ),
             ),
           ),
@@ -562,7 +571,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
       return Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.md, vertical: DesignSpacing.xs + 2),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignSpacing.md,
+              vertical: DesignSpacing.xs + 2,
+            ),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               border: Border(bottom: BorderSide(color: theme.dividerColor)),
@@ -682,7 +694,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
 
   Widget _buildFormatToolbar(ThemeData theme, AppLocalizations l) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignSpacing.sm,
+        vertical: DesignSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
@@ -816,7 +831,10 @@ class _EditorViewState extends ConsumerState<EditorView> {
 
   Widget _buildStatusBar(ThemeData theme, dynamic note, AppLocalizations l) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.md, vertical: DesignSpacing.xs - 1),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignSpacing.md,
+        vertical: DesignSpacing.xs - 1,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(top: BorderSide(color: theme.dividerColor)),
@@ -889,36 +907,36 @@ class _EditorViewState extends ConsumerState<EditorView> {
         return Material(
           color: Colors.transparent,
           child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: DesignTypography.maxContentWidth,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(DesignSpacing.lg),
-                  child: _buildHighlightedEditor(theme, settings, bgColor, l),
+            fit: StackFit.expand,
+            children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: DesignTypography.maxContentWidth,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(DesignSpacing.lg),
+                    child: _buildHighlightedEditor(theme, settings, bgColor, l),
+                  ),
                 ),
               ),
-            ),
-            if (_isDragOver)
-              Positioned.fill(
-                child: Container(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                  child: Center(
-                    child: Text(
-                      l.dropHere,
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w500,
+              if (_isDragOver)
+                Positioned.fill(
+                  child: Container(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                    child: Center(
+                      child: Text(
+                        l.dropHere,
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
-        ),
+            ],
+          ),
         );
       },
     );
@@ -1159,7 +1177,10 @@ class _WikiLinkBuilder extends MarkdownElementBuilder {
           }
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.xs, vertical: 1),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DesignSpacing.xs,
+            vertical: 1,
+          ),
           decoration: BoxDecoration(
             color: theme.colorScheme.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(3),

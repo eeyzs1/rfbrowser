@@ -48,9 +48,7 @@ class _AgentSettingsSectionState extends ConsumerState<AgentSettingsSection> {
           onChanged: (val) async {
             if (val) {
               final port = int.tryParse(_portController.text) ?? 18765;
-              await ref
-                  .read(webhookServerProvider.notifier)
-                  .start(port: port);
+              await ref.read(webhookServerProvider.notifier).start(port: port);
             } else {
               await ref.read(webhookServerProvider.notifier).stop();
             }
@@ -92,9 +90,7 @@ class _AgentSettingsSectionState extends ConsumerState<AgentSettingsSection> {
               icon: const Icon(Icons.copy, size: 16),
               tooltip: l10n.webhookServerCopyKey,
               onPressed: () {
-                Clipboard.setData(
-                  ClipboardData(text: webhookState.apiKey!),
-                );
+                Clipboard.setData(ClipboardData(text: webhookState.apiKey!));
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(l10n.webhookServerApiKeyCopied),
@@ -119,9 +115,7 @@ class _AgentSettingsSectionState extends ConsumerState<AgentSettingsSection> {
             trailing: IconButton(
               icon: const Icon(Icons.copy, size: 16),
               onPressed: () {
-                Clipboard.setData(
-                  ClipboardData(text: webhookState.baseUrl!),
-                );
+                Clipboard.setData(ClipboardData(text: webhookState.baseUrl!));
               },
             ),
           ),

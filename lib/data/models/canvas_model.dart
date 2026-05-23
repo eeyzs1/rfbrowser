@@ -801,44 +801,18 @@ enum AlignmentGuideType {
 class CanvasLayer {
   final String id;
   final String name;
-  final bool visible;
-  final bool locked;
   final int order;
 
-  const CanvasLayer({
-    required this.id,
-    required this.name,
-    this.visible = true,
-    this.locked = false,
-    this.order = 0,
-  });
+  const CanvasLayer({required this.id, required this.name, this.order = 0});
 
-  CanvasLayer copyWith({
-    String? name,
-    bool? visible,
-    bool? locked,
-    int? order,
-  }) => CanvasLayer(
-    id: id,
-    name: name ?? this.name,
-    visible: visible ?? this.visible,
-    locked: locked ?? this.locked,
-    order: order ?? this.order,
-  );
+  CanvasLayer copyWith({String? name, int? order}) =>
+      CanvasLayer(id: id, name: name ?? this.name, order: order ?? this.order);
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'visible': visible,
-    'locked': locked,
-    'order': order,
-  };
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'order': order};
 
   factory CanvasLayer.fromJson(Map<String, dynamic> json) => CanvasLayer(
     id: json['id'] as String,
     name: json['name'] as String? ?? '',
-    visible: json['visible'] as bool? ?? true,
-    locked: json['locked'] as bool? ?? false,
     order: json['order'] as int? ?? 0,
   );
 }
@@ -1029,6 +1003,8 @@ class CanvasSearchState {
 }
 
 class CanvasData {
+  static const unassignedSentinel = '__unassigned__';
+
   final List<CanvasCard> cards;
   final List<CanvasConnection> connections;
   final List<CanvasGroup> groups;
@@ -1037,6 +1013,7 @@ class CanvasData {
   final List<String> selectedCardIds;
   final String? inlineEditingCardId;
   final String? selectedConnectionId;
+  final String? selectedLayerId;
 
   CanvasData({
     this.cards = const [],
@@ -1047,6 +1024,7 @@ class CanvasData {
     this.selectedCardIds = const [],
     this.inlineEditingCardId,
     this.selectedConnectionId,
+    this.selectedLayerId,
   }) : settings = settings ?? CanvasSettings();
 
   CanvasData copyWith({
@@ -1061,6 +1039,8 @@ class CanvasData {
     bool clearSelectedCardIds = false,
     bool clearInlineEditingCardId = false,
     bool clearSelectedConnectionId = false,
+    String? selectedLayerId,
+    bool clearSelectedLayerId = false,
   }) {
     return CanvasData(
       cards: cards ?? this.cards,
@@ -1077,6 +1057,9 @@ class CanvasData {
       selectedConnectionId: clearSelectedConnectionId
           ? null
           : (selectedConnectionId ?? this.selectedConnectionId),
+      selectedLayerId: clearSelectedLayerId
+          ? null
+          : (selectedLayerId ?? this.selectedLayerId),
     );
   }
 
@@ -1086,6 +1069,7 @@ class CanvasData {
     'groups': groups.map((g) => g.toJson()).toList(),
     'layers': layers.map((l) => l.toJson()).toList(),
     'settings': settings.toJson(),
+    if (selectedLayerId != null) 'selectedLayerId': selectedLayerId,
   });
 
   factory CanvasData.fromJsonString(String json) {
@@ -1117,6 +1101,7 @@ class CanvasData {
         settings: data['settings'] != null
             ? CanvasSettings.fromJson(data['settings'] as Map<String, dynamic>)
             : CanvasSettings(),
+        selectedLayerId: data['selectedLayerId'] as String?,
       );
     } catch (_) {
       debugPrint('CanvasData: failed to parse JSON');

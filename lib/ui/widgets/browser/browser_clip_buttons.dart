@@ -23,8 +23,7 @@ class BrowserClipButtons extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final hasPage =
-        activeTab.url.isNotEmpty && activeTab.url != 'about:blank';
+    final hasPage = activeTab.url.isNotEmpty && activeTab.url != 'about:blank';
     final iconSize = ref.watch(settingsProvider).iconSize.toDouble();
 
     if (isClipping) {
@@ -55,7 +54,10 @@ class BrowserClipButtons extends ConsumerWidget {
               ),
               onPressed: hasPage ? onClipPage : null,
               padding: const EdgeInsets.all(4),
-              constraints: BoxConstraints(minWidth: iconSize + 16, minHeight: iconSize + 16),
+              constraints: BoxConstraints(
+                minWidth: iconSize + 16,
+                minHeight: iconSize + 16,
+              ),
             ),
           ),
         ),
@@ -73,7 +75,10 @@ class BrowserClipButtons extends ConsumerWidget {
               ),
               onPressed: hasPage ? onClipSelection : null,
               padding: const EdgeInsets.all(4),
-              constraints: BoxConstraints(minWidth: iconSize + 16, minHeight: iconSize + 16),
+              constraints: BoxConstraints(
+                minWidth: iconSize + 16,
+                minHeight: iconSize + 16,
+              ),
             ),
           ),
         ),

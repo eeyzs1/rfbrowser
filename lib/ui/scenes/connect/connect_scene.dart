@@ -11,6 +11,7 @@ import '../../widgets/filter_panel.dart';
 import '../../widgets/node_detail_panel.dart';
 import '../../widgets/card_properties_panel.dart';
 import '../../widgets/connection_properties_panel.dart';
+import '../../widgets/canvas_tag_filter.dart';
 import '../../widgets/resizable_panel.dart';
 import '../../pages/graph_page.dart';
 import '../../pages/canvas_page.dart';
@@ -167,7 +168,7 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
     if (canvasData.selectedCardIds.isNotEmpty) {
       return CardPropertiesPanel(onClose: widget.onToggleRightPanel ?? () {});
     }
-    return const SizedBox.shrink();
+    return const CanvasTagFilterPanel();
   }
 
   void _addNoteToCanvas(Note note) {
@@ -208,8 +209,10 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
   Widget _buildViewModeSwitcher(ThemeData theme) {
     final l = AppLocalizations.of(context)!;
     final shortcutService = ref.read(shortcutServiceProvider);
-    final canvasShortcut = shortcutService.getShortcut('connect_canvas') ?? 'Ctrl+4';
-    final graphShortcut = shortcutService.getShortcut('connect_graph') ?? 'Ctrl+5';
+    final canvasShortcut =
+        shortcutService.getShortcut('connect_canvas') ?? 'Ctrl+4';
+    final graphShortcut =
+        shortcutService.getShortcut('connect_graph') ?? 'Ctrl+5';
     return Container(
       height: 36,
       decoration: BoxDecoration(
@@ -269,7 +272,9 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
                   Icon(
                     icon,
                     size: 14,
-                    color: isActive ? theme.colorScheme.primary : theme.hintColor,
+                    color: isActive
+                        ? theme.colorScheme.primary
+                        : theme.hintColor,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -287,7 +292,9 @@ class _ConnectSceneState extends ConsumerState<ConnectScene> {
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: isActive
                           ? theme.colorScheme.primary.withValues(alpha: 0.5)
-                          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                          : theme.colorScheme.onSurfaceVariant.withValues(
+                              alpha: 0.4,
+                            ),
                     ),
                   ),
                 ],

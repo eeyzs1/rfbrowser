@@ -67,29 +67,25 @@ void main() {
     });
 
     test('flowchart template has cards and connections', () {
-      final flowchart =
-          CanvasTemplatesService.builtInTemplates['flowchart']!;
+      final flowchart = CanvasTemplatesService.builtInTemplates['flowchart']!;
       expect(flowchart.cards, isNotEmpty);
       expect(flowchart.connections, isNotEmpty);
     });
 
     test('flowchart template has Start and End cards', () {
-      final flowchart =
-          CanvasTemplatesService.builtInTemplates['flowchart']!;
+      final flowchart = CanvasTemplatesService.builtInTemplates['flowchart']!;
       final titles = flowchart.cards.map((c) => c.title).toSet();
       expect(titles, containsAll(['Start', 'End']));
     });
 
     test('mindmap template has Central Topic card', () {
-      final mindmap =
-          CanvasTemplatesService.builtInTemplates['mindmap']!;
+      final mindmap = CanvasTemplatesService.builtInTemplates['mindmap']!;
       final titles = mindmap.cards.map((c) => c.title).toSet();
       expect(titles, contains('Central Topic'));
     });
 
     test('network template has Cloud/Internet card', () {
-      final network =
-          CanvasTemplatesService.builtInTemplates['network']!;
+      final network = CanvasTemplatesService.builtInTemplates['network']!;
       final titles = network.cards.map((c) => c.title).toSet();
       expect(titles, contains('Cloud / Internet'));
     });
@@ -125,8 +121,7 @@ void main() {
     });
 
     test('kanban template has swimlaneV type cards', () {
-      final kanban =
-          CanvasTemplatesService.builtInTemplates['kanban']!;
+      final kanban = CanvasTemplatesService.builtInTemplates['kanban']!;
       final hasSwimlaneV = kanban.cards.any(
         (c) => c.type == CanvasCardType.swimlaneV,
       );

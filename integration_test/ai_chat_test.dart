@@ -23,9 +23,7 @@ void main() {
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const Scaffold(
-              body: AIChatPanel(),
-            ),
+            home: const Scaffold(body: AIChatPanel()),
           ),
         ),
       );
@@ -129,27 +127,27 @@ class _TestAINotifier extends AINotifier {
 class _TestAIConfigNotifier extends AIConfigNotifier {
   @override
   AIConfigState build() => AIConfigState(
-        providers: [
-          AIProvider(
-            id: 'test-provider',
-            name: 'Test Provider',
-            protocol: ApiProtocol.openaiCompatible,
-            baseUrl: 'https://api.test.com',
-            isEnabled: true,
-          ),
-        ],
-        models: [
-          AIModel(
-            id: 'test-model',
-            providerId: 'test-provider',
-            displayName: 'Test Model',
-          ),
-        ],
-        activeConfig: ActiveAIConfig(
-          providerId: 'test-provider',
-          modelId: 'test-model',
-        ),
-      );
+    providers: [
+      AIProvider(
+        id: 'test-provider',
+        name: 'Test Provider',
+        protocol: ApiProtocol.openaiCompatible,
+        baseUrl: 'https://api.test.com',
+        isEnabled: true,
+      ),
+    ],
+    models: [
+      AIModel(
+        id: 'test-model',
+        providerId: 'test-provider',
+        displayName: 'Test Model',
+      ),
+    ],
+    activeConfig: ActiveAIConfig(
+      providerId: 'test-provider',
+      modelId: 'test-model',
+    ),
+  );
 }
 
 class _TestSettingsNotifier extends SettingsNotifier {

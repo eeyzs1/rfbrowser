@@ -215,9 +215,12 @@ void main() {
     for (final entry in defaultShortcuts.entries) {
       test('${entry.key}: ${entry.value} parses successfully', () {
         final result = parseShortcut(entry.value);
-        expect(result, isNotNull,
-            reason:
-                'Default shortcut "${entry.value}" for "${entry.key}" must parse to a valid SingleActivator');
+        expect(
+          result,
+          isNotNull,
+          reason:
+              'Default shortcut "${entry.value}" for "${entry.key}" must parse to a valid SingleActivator',
+        );
       });
     }
   });

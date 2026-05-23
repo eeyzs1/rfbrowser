@@ -57,7 +57,11 @@ class _SceneSwitcherState extends ConsumerState<SceneSwitcher> {
               scene: SceneType.capture,
               icon: Icons.explore,
               label: l.capture,
-              shortcut: ref.read(shortcutServiceProvider).getShortcut('switch_capture') ?? 'Ctrl+1',
+              shortcut:
+                  ref
+                      .read(shortcutServiceProvider)
+                      .getShortcut('switch_capture') ??
+                  'Ctrl+1',
               tooltip: l.captureTooltip,
               isActive: widget.currentScene == SceneType.capture,
               onTap: () => widget.onSceneChanged(SceneType.capture),
@@ -69,7 +73,11 @@ class _SceneSwitcherState extends ConsumerState<SceneSwitcher> {
               scene: SceneType.think,
               icon: Icons.edit_note,
               label: l.think,
-              shortcut: ref.read(shortcutServiceProvider).getShortcut('switch_think') ?? 'Ctrl+2',
+              shortcut:
+                  ref
+                      .read(shortcutServiceProvider)
+                      .getShortcut('switch_think') ??
+                  'Ctrl+2',
               tooltip: l.thinkTooltip,
               isActive: widget.currentScene == SceneType.think,
               onTap: () => widget.onSceneChanged(SceneType.think),
@@ -81,7 +89,11 @@ class _SceneSwitcherState extends ConsumerState<SceneSwitcher> {
               scene: SceneType.connect,
               icon: Icons.hub,
               label: l.connect,
-              shortcut: ref.read(shortcutServiceProvider).getShortcut('switch_connect') ?? 'Ctrl+3',
+              shortcut:
+                  ref
+                      .read(shortcutServiceProvider)
+                      .getShortcut('switch_connect') ??
+                  'Ctrl+3',
               tooltip: l.connectTooltip,
               isActive: widget.currentScene == SceneType.connect,
               onTap: () => widget.onSceneChanged(SceneType.connect),
@@ -112,7 +124,9 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
     final l = AppLocalizations.of(context);
     return Semantics(
       button: true,
-      label: l != null ? '${l.openVault}: ${widget.vaultName}' : 'Vault: ${widget.vaultName}',
+      label: l != null
+          ? '${l.openVault}: ${widget.vaultName}'
+          : 'Vault: ${widget.vaultName}',
       child: Material(
         color: _isHovered
             ? DesignColors.primaryHover
@@ -127,7 +141,9 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
               horizontal: DesignSpacing.sm,
               vertical: DesignSpacing.sm,
             ),
-            constraints: const BoxConstraints(minHeight: DesignTouchTarget.minSize),
+            constraints: const BoxConstraints(
+              minHeight: DesignTouchTarget.minSize,
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -284,9 +300,7 @@ class _SettingsButtonState extends State<_SettingsButton> {
       button: true,
       label: 'Settings',
       child: Material(
-        color: _isHovered
-            ? DesignColors.primaryHover
-            : Colors.transparent,
+        color: _isHovered ? DesignColors.primaryHover : Colors.transparent,
         borderRadius: BorderRadius.circular(DesignRadius.sm),
         child: InkWell(
           borderRadius: BorderRadius.circular(DesignRadius.sm),
@@ -376,7 +390,9 @@ class _SceneButtonState extends State<_SceneButton> {
                 horizontal: DesignSpacing.md,
                 vertical: DesignSpacing.sm,
               ),
-              constraints: const BoxConstraints(minHeight: DesignTouchTarget.minSize),
+              constraints: const BoxConstraints(
+                minHeight: DesignTouchTarget.minSize,
+              ),
               decoration: BoxDecoration(
                 border: _isFocused && !active
                     ? Border.all(color: primary, width: 2)
@@ -390,7 +406,9 @@ class _SceneButtonState extends State<_SceneButton> {
                   Icon(
                     widget.icon,
                     size: 18,
-                    color: active ? primary : theme.colorScheme.onSurfaceVariant,
+                    color: active
+                        ? primary
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: DesignSpacing.xs),
                   Flexible(

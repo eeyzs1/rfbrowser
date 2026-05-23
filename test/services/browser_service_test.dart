@@ -23,15 +23,19 @@ ProviderContainer createContainer({String? vaultPath}) {
       lastOpened: DateTime.now(),
     ),
   );
-  return ProviderContainer(overrides: [
-    vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-  ]);
+  return ProviderContainer(
+    overrides: [
+      vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+    ],
+  );
 }
 
 ProviderContainer createContainerNoVault() {
-  return ProviderContainer(overrides: [
-    vaultProvider.overrideWith(() => TestVaultNotifier(VaultState())),
-  ]);
+  return ProviderContainer(
+    overrides: [
+      vaultProvider.overrideWith(() => TestVaultNotifier(VaultState())),
+    ],
+  );
 }
 
 void main() {
@@ -382,7 +386,9 @@ void main() {
 
         final folderId = notifier.createBookmarkFolder('Work');
         final state = container.read(browserProvider);
-        final folder = state.bookmarkFolders.firstWhere((f) => f.id == folderId);
+        final folder = state.bookmarkFolders.firstWhere(
+          (f) => f.id == folderId,
+        );
         expect(folder.name, 'Work');
         expect(folder.parentId, 'bookmarks-bar');
       });
@@ -394,7 +400,10 @@ void main() {
 
         final parentId = notifier.createBookmarkFolder('Parent');
         await Future.delayed(const Duration(milliseconds: 2));
-        final childId = notifier.createBookmarkFolder('Child', parentId: parentId);
+        final childId = notifier.createBookmarkFolder(
+          'Child',
+          parentId: parentId,
+        );
         final state = container.read(browserProvider);
         final child = state.bookmarkFolders.firstWhere((f) => f.id == childId);
         expect(child.parentId, parentId);
@@ -488,7 +497,10 @@ void main() {
         expect(container.read(browserProvider).groups.first.isExpanded, isTrue);
 
         notifier.toggleGroupExpanded(groupId);
-        expect(container.read(browserProvider).groups.first.isExpanded, isFalse);
+        expect(
+          container.read(browserProvider).groups.first.isExpanded,
+          isFalse,
+        );
       });
     });
 
@@ -610,7 +622,10 @@ void main() {
         final notifier = container.read(browserProvider.notifier);
 
         final parentId = notifier.createBookmarkFolder('Parent');
-        final childId = notifier.createBookmarkFolder('Child', parentId: parentId);
+        final childId = notifier.createBookmarkFolder(
+          'Child',
+          parentId: parentId,
+        );
 
         notifier.deleteBookmarkFolder(parentId);
 
@@ -703,7 +718,9 @@ void main() {
         notifier.createTab(url: 'https://standalone.com/page');
 
         final proposal = notifier.generateGroupProposal({});
-        final otherGroup = proposal.groups.where((g) => g.name == 'Other').firstOrNull;
+        final otherGroup = proposal.groups
+            .where((g) => g.name == 'Other')
+            .firstOrNull;
         expect(otherGroup, isNotNull);
       });
 
@@ -729,18 +746,12 @@ void main() {
         final tab1 = notifier.createTab(url: 'https://flutter.dev');
         final tab2 = notifier.createTab(url: 'https://dart.dev');
 
-        final proposal = TabGroupProposal(groups: [
-          ProposedGroup(
-            name: 'Flutter',
-            tabIds: [tab1],
-            color: 0xFF2196F3,
-          ),
-          ProposedGroup(
-            name: 'Dart',
-            tabIds: [tab2],
-            color: 0xFF4CAF50,
-          ),
-        ]);
+        final proposal = TabGroupProposal(
+          groups: [
+            ProposedGroup(name: 'Flutter', tabIds: [tab1], color: 0xFF2196F3),
+            ProposedGroup(name: 'Dart', tabIds: [tab2], color: 0xFF4CAF50),
+          ],
+        );
 
         notifier.applyGroupProposal(proposal);
 
@@ -759,7 +770,10 @@ void main() {
 
         final folderId = notifier.createBookmarkFolder('Folder');
         final state = container.read(browserProvider);
-        expect(state.bookmarkFolders.where((f) => f.id == folderId).first.parentId, 'bookmarks-bar');
+        expect(
+          state.bookmarkFolders.where((f) => f.id == folderId).first.parentId,
+          'bookmarks-bar',
+        );
       });
     });
   });

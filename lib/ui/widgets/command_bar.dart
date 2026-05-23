@@ -302,9 +302,7 @@ class _CommandBarState extends ConsumerState<CommandBar> {
         decoration: BoxDecoration(
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(DesignRadius.lg),
-          boxShadow: [
-            DesignShadow.lg,
-          ],
+          boxShadow: [DesignShadow.lg],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -576,7 +574,11 @@ class _StaggeredListItem extends StatefulWidget {
   final int index;
   final Widget child;
 
-  const _StaggeredListItem({super.key, required this.index, required this.child});
+  const _StaggeredListItem({
+    super.key,
+    required this.index,
+    required this.child,
+  });
 
   @override
   State<_StaggeredListItem> createState() => _StaggeredListItemState();
@@ -602,10 +604,7 @@ class _StaggeredListItemState extends State<_StaggeredListItem>
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.15),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     final delay = Duration(
       milliseconds: widget.index * DesignDuration.staggerItem.inMilliseconds,
@@ -625,10 +624,7 @@ class _StaggeredListItemState extends State<_StaggeredListItem>
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: widget.child,
-      ),
+      child: SlideTransition(position: _slideAnimation, child: widget.child),
     );
   }
 }

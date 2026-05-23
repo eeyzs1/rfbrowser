@@ -20,64 +20,100 @@ void main() {
   });
 
   group('Plugin Lifecycle Integration', () {
-    test('AC-PL-1: full lifecycle — register, enable, commands, disable', () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    test(
+      'AC-PL-1: full lifecycle — register, enable, commands, disable',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      final host = container.read(pluginHostProvider.notifier);
-      final manifest = HelloWorldPlugin().manifest;
+        final host = container.read(pluginHostProvider.notifier);
+        final manifest = HelloWorldPlugin().manifest;
 
-      await host.registerManifest(manifest);
-      expect(container.read(pluginHostProvider).manifests['hello-world'], isNotNull);
+        await host.registerManifest(manifest);
+        expect(
+          container.read(pluginHostProvider).manifests['hello-world'],
+          isNotNull,
+        );
 
-      await host.setPluginEnabled('hello-world', true);
-      expect(container.read(pluginHostProvider).running['hello-world'], true);
-      expect(container.read(pluginHostProvider).enabled['hello-world'], true);
+        await host.setPluginEnabled('hello-world', true);
+        expect(container.read(pluginHostProvider).running['hello-world'], true);
+        expect(container.read(pluginHostProvider).enabled['hello-world'], true);
 
-      final plugin = HelloWorldPlugin();
-      for (final cmd in plugin.commands) {
-        host.registerCommand(cmd);
-      }
-      expect(host.getPluginCommands('hello-world').length, 3);
+        final plugin = HelloWorldPlugin();
+        for (final cmd in plugin.commands) {
+          host.registerCommand(cmd);
+        }
+        expect(host.getPluginCommands('hello-world').length, 3);
 
-      await host.setPluginEnabled('hello-world', false);
-      expect(container.read(pluginHostProvider).running['hello-world'], isNull);
-      expect(container.read(pluginHostProvider).enabled['hello-world'], false);
-    });
+        await host.setPluginEnabled('hello-world', false);
+        expect(
+          container.read(pluginHostProvider).running['hello-world'],
+          isNull,
+        );
+        expect(
+          container.read(pluginHostProvider).enabled['hello-world'],
+          false,
+        );
+      },
+    );
 
-    test('AC-PL-2: registerManifestAndEnable with enabledByDefault=true', () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    test(
+      'AC-PL-2: registerManifestAndEnable with enabledByDefault=true',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      final host = container.read(pluginHostProvider.notifier);
-      final manifest = PluginManifest(
-        id: 'auto-enable-test',
-        name: 'Auto Enable',
-        permissions: [Permission.knowledgeRead],
-      );
+        final host = container.read(pluginHostProvider.notifier);
+        final manifest = PluginManifest(
+          id: 'auto-enable-test',
+          name: 'Auto Enable',
+          permissions: [Permission.knowledgeRead],
+        );
 
-      await host.registerManifestAndEnable(manifest, enabledByDefault: true);
-      expect(container.read(pluginHostProvider).manifests['auto-enable-test'], isNotNull);
-      expect(container.read(pluginHostProvider).running['auto-enable-test'], true);
-      expect(container.read(pluginHostProvider).enabled['auto-enable-test'], true);
-    });
+        await host.registerManifestAndEnable(manifest, enabledByDefault: true);
+        expect(
+          container.read(pluginHostProvider).manifests['auto-enable-test'],
+          isNotNull,
+        );
+        expect(
+          container.read(pluginHostProvider).running['auto-enable-test'],
+          true,
+        );
+        expect(
+          container.read(pluginHostProvider).enabled['auto-enable-test'],
+          true,
+        );
+      },
+    );
 
-    test('AC-PL-3: registerManifestAndEnable with enabledByDefault=false', () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    test(
+      'AC-PL-3: registerManifestAndEnable with enabledByDefault=false',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      final host = container.read(pluginHostProvider.notifier);
-      final manifest = PluginManifest(
-        id: 'no-auto-enable',
-        name: 'No Auto Enable',
-        permissions: [Permission.knowledgeRead],
-      );
+        final host = container.read(pluginHostProvider.notifier);
+        final manifest = PluginManifest(
+          id: 'no-auto-enable',
+          name: 'No Auto Enable',
+          permissions: [Permission.knowledgeRead],
+        );
 
-      await host.registerManifestAndEnable(manifest, enabledByDefault: false);
-      expect(container.read(pluginHostProvider).manifests['no-auto-enable'], isNotNull);
-      expect(container.read(pluginHostProvider).running['no-auto-enable'], isNull);
-      expect(container.read(pluginHostProvider).enabled['no-auto-enable'], isNot(equals(true)));
-    });
+        await host.registerManifestAndEnable(manifest, enabledByDefault: false);
+        expect(
+          container.read(pluginHostProvider).manifests['no-auto-enable'],
+          isNotNull,
+        );
+        expect(
+          container.read(pluginHostProvider).running['no-auto-enable'],
+          isNull,
+        );
+        expect(
+          container.read(pluginHostProvider).enabled['no-auto-enable'],
+          isNot(equals(true)),
+        );
+      },
+    );
 
     test('AC-PL-4: registerManifest skips duplicate id', () async {
       final container = ProviderContainer();
@@ -105,8 +141,12 @@ void main() {
       await host.registerManifestAndEnable(m1);
       await host.registerManifestAndEnable(m2);
 
-      host.registerCommand(PluginCommand(id: 'c1', label: 'C1', pluginId: 'p1'));
-      host.registerCommand(PluginCommand(id: 'c2', label: 'C2', pluginId: 'p2'));
+      host.registerCommand(
+        PluginCommand(id: 'c1', label: 'C1', pluginId: 'p1'),
+      );
+      host.registerCommand(
+        PluginCommand(id: 'c2', label: 'C2', pluginId: 'p2'),
+      );
 
       final all = host.getAllCommands();
       expect(all.length, 2);
@@ -142,48 +182,54 @@ void main() {
       expect(receivedData?['noteId'], 'test.md');
     });
 
-    test('AC-PL-7: dispatchHook does not call handler for stopped plugin', () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    test(
+      'AC-PL-7: dispatchHook does not call handler for stopped plugin',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      final host = container.read(pluginHostProvider.notifier);
-      final manifest = PluginManifest(
-        id: 'stopped-hook-test',
-        name: 'Stopped Hook',
-        permissions: [Permission.knowledgeRead],
-      );
+        final host = container.read(pluginHostProvider.notifier);
+        final manifest = PluginManifest(
+          id: 'stopped-hook-test',
+          name: 'Stopped Hook',
+          permissions: [Permission.knowledgeRead],
+        );
 
-      await host.registerManifestAndEnable(manifest);
-      await host.disablePlugin('stopped-hook-test');
+        await host.registerManifestAndEnable(manifest);
+        await host.disablePlugin('stopped-hook-test');
 
-      String? receivedEvent;
-      host.registerHookHandler('stopped-hook-test', (event, data) {
-        receivedEvent = event;
-      });
+        String? receivedEvent;
+        host.registerHookHandler('stopped-hook-test', (event, data) {
+          receivedEvent = event;
+        });
 
-      host.dispatchHook('note.saved', {'noteId': 'other.md'});
-      expect(receivedEvent, isNull);
-    });
+        host.dispatchHook('note.saved', {'noteId': 'other.md'});
+        expect(receivedEvent, isNull);
+      },
+    );
 
-    test('AC-PL-8: dispatchHook handles handler exceptions gracefully', () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    test(
+      'AC-PL-8: dispatchHook handles handler exceptions gracefully',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      final host = container.read(pluginHostProvider.notifier);
-      final manifest = PluginManifest(
-        id: 'crash-hook-test',
-        name: 'Crash Hook',
-        permissions: [Permission.knowledgeRead],
-      );
+        final host = container.read(pluginHostProvider.notifier);
+        final manifest = PluginManifest(
+          id: 'crash-hook-test',
+          name: 'Crash Hook',
+          permissions: [Permission.knowledgeRead],
+        );
 
-      await host.registerManifestAndEnable(manifest);
+        await host.registerManifestAndEnable(manifest);
 
-      host.registerHookHandler('crash-hook-test', (event, data) {
-        throw Exception('Handler crashed');
-      });
+        host.registerHookHandler('crash-hook-test', (event, data) {
+          throw Exception('Handler crashed');
+        });
 
-      host.dispatchHook('note.opened', {'noteId': 'test.md'});
-    });
+        host.dispatchHook('note.opened', {'noteId': 'test.md'});
+      },
+    );
 
     test('AC-PL-9: multiple hook handlers all receive event', () async {
       final container = ProviderContainer();
@@ -191,8 +237,16 @@ void main() {
 
       final host = container.read(pluginHostProvider.notifier);
 
-      final m1 = PluginManifest(id: 'hook-a', name: 'Hook A', permissions: [Permission.knowledgeRead]);
-      final m2 = PluginManifest(id: 'hook-b', name: 'Hook B', permissions: [Permission.knowledgeRead]);
+      final m1 = PluginManifest(
+        id: 'hook-a',
+        name: 'Hook A',
+        permissions: [Permission.knowledgeRead],
+      );
+      final m2 = PluginManifest(
+        id: 'hook-b',
+        name: 'Hook B',
+        permissions: [Permission.knowledgeRead],
+      );
 
       await host.registerManifestAndEnable(m1);
       await host.registerManifestAndEnable(m2);
@@ -231,7 +285,9 @@ void main() {
 
       await host.registerManifestAndEnable(manifest);
 
-      final configDir = Directory('${tempDir.path}${Platform.pathSeparator}.rfbrowser');
+      final configDir = Directory(
+        '${tempDir.path}${Platform.pathSeparator}.rfbrowser',
+      );
       if (!await configDir.exists()) {
         await configDir.create(recursive: true);
       }
@@ -309,19 +365,30 @@ void main() {
       final browser = container.read(browserProvider.notifier);
       browser.createTab(url: 'https://plugin-test.com');
 
-      final result = await _testHandleApiCall(container, 'browser.getCurrentUrl', {});
+      final result = await _testHandleApiCall(
+        container,
+        'browser.getCurrentUrl',
+        {},
+      );
 
       expect(result['url'], 'https://plugin-test.com');
     });
 
-    test('AC-PL-14: browser.getCurrentUrl with no tabs returns empty', () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    test(
+      'AC-PL-14: browser.getCurrentUrl with no tabs returns empty',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      final result = await _testHandleApiCall(container, 'browser.getCurrentUrl', {});
+        final result = await _testHandleApiCall(
+          container,
+          'browser.getCurrentUrl',
+          {},
+        );
 
-      expect(result['url'], '');
-    });
+        expect(result['url'], '');
+      },
+    );
 
     test('AC-PL-15: unknown API throws UnimplementedError', () async {
       final container = ProviderContainer();
@@ -356,7 +423,9 @@ void main() {
     });
 
     test('AC-PL-17: unloadAllBuiltinPlugins disables all', () async {
-      final tempDir = Directory.systemTemp.createTempSync('rfb_registry_unload_');
+      final tempDir = Directory.systemTemp.createTempSync(
+        'rfb_registry_unload_',
+      );
       addTearDown(() => tempDir.deleteSync(recursive: true));
 
       final repo = NoteRepository(tempDir.path);
@@ -392,8 +461,9 @@ author: Tester
 description: An external test plugin
 permissions: [knowledgeRead, browserRead]
 ''';
-      File('${pluginsDir.path}${Platform.pathSeparator}manifest.yaml')
-          .writeAsStringSync(yamlContent);
+      File(
+        '${pluginsDir.path}${Platform.pathSeparator}manifest.yaml',
+      ).writeAsStringSync(yamlContent);
 
       final manifests = await PluginRegistry.scanExternalPlugins(tempDir.path);
       expect(manifests.length, 1);
@@ -404,13 +474,18 @@ permissions: [knowledgeRead, browserRead]
       expect(manifests.first.permissions, contains(Permission.browserRead));
     });
 
-    test('AC-PL-19: scanExternalPlugins returns empty for no plugins dir', () async {
-      final tempDir = Directory.systemTemp.createTempSync('rfb_ext_empty_');
-      addTearDown(() => tempDir.deleteSync(recursive: true));
+    test(
+      'AC-PL-19: scanExternalPlugins returns empty for no plugins dir',
+      () async {
+        final tempDir = Directory.systemTemp.createTempSync('rfb_ext_empty_');
+        addTearDown(() => tempDir.deleteSync(recursive: true));
 
-      final manifests = await PluginRegistry.scanExternalPlugins(tempDir.path);
-      expect(manifests, isEmpty);
-    });
+        final manifests = await PluginRegistry.scanExternalPlugins(
+          tempDir.path,
+        );
+        expect(manifests, isEmpty);
+      },
+    );
 
     test('AC-PL-20: scanExternalPlugins skips invalid manifest', () async {
       final tempDir = Directory.systemTemp.createTempSync('rfb_ext_invalid_');
@@ -421,26 +496,30 @@ permissions: [knowledgeRead, browserRead]
       );
       await pluginsDir.create(recursive: true);
 
-      File('${pluginsDir.path}${Platform.pathSeparator}manifest.yaml')
-          .writeAsStringSync('not: valid\nyaml: [');
+      File(
+        '${pluginsDir.path}${Platform.pathSeparator}manifest.yaml',
+      ).writeAsStringSync('not: valid\nyaml: [');
 
       final manifests = await PluginRegistry.scanExternalPlugins(tempDir.path);
       expect(manifests, isEmpty);
     });
 
-    test('AC-PL-21: getAllPluginSkills returns skills from all builtin plugins', () {
-      final skills = PluginRegistry.getAllPluginSkills();
-      expect(skills, isNotEmpty);
+    test(
+      'AC-PL-21: getAllPluginSkills returns skills from all builtin plugins',
+      () {
+        final skills = PluginRegistry.getAllPluginSkills();
+        expect(skills, isNotEmpty);
 
-      final ids = skills.map((s) => s.id).toList();
-      expect(ids, contains('hello-world.greeting'));
-      expect(ids, contains('hello-world.note-stats'));
+        final ids = skills.map((s) => s.id).toList();
+        expect(ids, contains('hello-world.greeting'));
+        expect(ids, contains('hello-world.note-stats'));
 
-      for (final skill in skills) {
-        expect(skill.pluginId, isNotNull);
-        expect(skill.pluginId, isNotEmpty);
-      }
-    });
+        for (final skill in skills) {
+          expect(skill.pluginId, isNotNull);
+          expect(skill.pluginId, isNotEmpty);
+        }
+      },
+    );
 
     test('AC-PL-22: loadExternalPlugins registers but does not enable', () async {
       final tempDir = Directory.systemTemp.createTempSync('rfb_ext_load_');
@@ -457,8 +536,9 @@ name: Ext Load Test
 version: 0.1.0
 permissions: [knowledgeRead]
 ''';
-      File('${pluginsDir.path}${Platform.pathSeparator}manifest.yaml')
-          .writeAsStringSync(yamlContent);
+      File(
+        '${pluginsDir.path}${Platform.pathSeparator}manifest.yaml',
+      ).writeAsStringSync(yamlContent);
 
       final repo = NoteRepository(tempDir.path);
       final container = ProviderContainer(
@@ -515,36 +595,35 @@ permissions: [knowledgeRead]
       addTearDown(sandbox.stop);
 
       expect(
-        () => sandbox.callApi(
-          'knowledge.getNote',
-          {'id': '1'},
-          requiredPermission: Permission.knowledgeRead,
-        ),
+        () => sandbox.callApi('knowledge.getNote', {
+          'id': '1',
+        }, requiredPermission: Permission.knowledgeRead),
         throwsA(isA<PermissionDeniedError>()),
       );
     });
 
-    test('AC-PL-25: sandbox callApi on stopped sandbox throws StateError', () async {
-      final manifest = PluginManifest(
-        id: 'stopped-sandbox',
-        name: 'Stopped',
-        permissions: [Permission.knowledgeRead],
-      );
-      final sandbox = Sandbox(
-        pluginId: manifest.id,
-        manifest: manifest,
-        apiHandler: (apiName, args) async => {'ok': true},
-      );
+    test(
+      'AC-PL-25: sandbox callApi on stopped sandbox throws StateError',
+      () async {
+        final manifest = PluginManifest(
+          id: 'stopped-sandbox',
+          name: 'Stopped',
+          permissions: [Permission.knowledgeRead],
+        );
+        final sandbox = Sandbox(
+          pluginId: manifest.id,
+          manifest: manifest,
+          apiHandler: (apiName, args) async => {'ok': true},
+        );
 
-      expect(
-        () => sandbox.callApi(
-          'knowledge.getNote',
-          {'id': '1'},
-          requiredPermission: Permission.knowledgeRead,
-        ),
-        throwsA(isA<StateError>()),
-      );
-    });
+        expect(
+          () => sandbox.callApi('knowledge.getNote', {
+            'id': '1',
+          }, requiredPermission: Permission.knowledgeRead),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
   });
 
   group('PluginManifest Serialization', () {
@@ -554,8 +633,13 @@ permissions: [knowledgeRead]
         'name': 'All Perms',
         'version': '1.0.0',
         'permissions': [
-          'knowledgeRead', 'knowledgeWrite', 'browserRead',
-          'browserWrite', 'aiChat', 'uiCommand', 'uiPanel',
+          'knowledgeRead',
+          'knowledgeWrite',
+          'browserRead',
+          'browserWrite',
+          'aiChat',
+          'uiCommand',
+          'uiPanel',
         ],
       };
 
@@ -631,7 +715,8 @@ Future<Map<String, dynamic>> _testHandleApiCall(
 }
 
 Future<void> _testSaveConfig(PluginHostNotifier host, String vaultPath) async {
-  final configPath = '$vaultPath${Platform.pathSeparator}.rfbrowser${Platform.pathSeparator}plugin-config.json';
+  final configPath =
+      '$vaultPath${Platform.pathSeparator}.rfbrowser${Platform.pathSeparator}plugin-config.json';
   final file = File(configPath);
   final dir = file.parent;
   if (!await dir.exists()) {
@@ -641,7 +726,8 @@ Future<void> _testSaveConfig(PluginHostNotifier host, String vaultPath) async {
 }
 
 Future<void> _testLoadConfig(PluginHostNotifier host, String vaultPath) async {
-  final configPath = '$vaultPath${Platform.pathSeparator}.rfbrowser${Platform.pathSeparator}plugin-config.json';
+  final configPath =
+      '$vaultPath${Platform.pathSeparator}.rfbrowser${Platform.pathSeparator}plugin-config.json';
   final file = File(configPath);
   if (!await file.exists()) return;
 

@@ -64,10 +64,7 @@ void main() {
   group('WebhookServer 单元测试', () {
     test('默认 API Key 以 rfb_ 开头', () {
       final container = ProviderContainer();
-      final server = WebhookServer(
-        ref: _createTestRef(container),
-        port: 19876,
-      );
+      final server = WebhookServer(ref: _createTestRef(container), port: 19876);
       expect(server.apiKey, startsWith('rfb_'));
       container.dispose();
     });
@@ -98,28 +95,24 @@ void main() {
 
     test('baseUrl 根据端口生成', () {
       final container = ProviderContainer();
-      final server = WebhookServer(
-        ref: _createTestRef(container),
-        port: 9999,
-      );
+      final server = WebhookServer(ref: _createTestRef(container), port: 9999);
       expect(server.baseUrl, 'http://localhost:9999');
       container.dispose();
     });
 
     test('初始状态 isRunning 为 false', () {
       final container = ProviderContainer();
-      final server = WebhookServer(
-        ref: _createTestRef(container),
-        port: 19877,
-      );
+      final server = WebhookServer(ref: _createTestRef(container), port: 19877);
       expect(server.isRunning, false);
       container.dispose();
     });
 
     test('重复启动不会报错', () async {
-      final container = ProviderContainer(overrides: [
-        agentProvider.overrideWith(() => _MockAgentNotifier(AgentState())),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          agentProvider.overrideWith(() => _MockAgentNotifier(AgentState())),
+        ],
+      );
       final server = WebhookServer(
         ref: _createTestRef(container),
         apiKey: 'test',
@@ -135,10 +128,7 @@ void main() {
 
     test('stop 在未启动时不报错', () async {
       final container = ProviderContainer();
-      final server = WebhookServer(
-        ref: _createTestRef(container),
-        port: 19879,
-      );
+      final server = WebhookServer(ref: _createTestRef(container), port: 19879);
       await server.stop();
       expect(server.isRunning, false);
       container.dispose();
@@ -151,14 +141,18 @@ void main() {
 
     setUp(() async {
       final registry = AgentToolRegistry();
-      registry.register(CreateNoteTool((title, content) async => 'Created: $title'));
+      registry.register(
+        CreateNoteTool((title, content) async => 'Created: $title'),
+      );
       registry.register(SearchNotesTool((query) async => []));
 
       final agentState = AgentState(toolRegistry: registry);
 
-      container = ProviderContainer(overrides: [
-        agentProvider.overrideWith(() => _MockAgentNotifier(agentState)),
-      ]);
+      container = ProviderContainer(
+        overrides: [
+          agentProvider.overrideWith(() => _MockAgentNotifier(agentState)),
+        ],
+      );
 
       server = WebhookServer(
         ref: _createTestRef(container),
@@ -200,11 +194,16 @@ void main() {
       final client = HttpClient();
       try {
         final request = await client.openUrl(
-            'OPTIONS', Uri.parse('http://localhost:19876/api/status'));
+          'OPTIONS',
+          Uri.parse('http://localhost:19876/api/status'),
+        );
         final response = await request.close();
         expect(response.statusCode, 200);
         expect(response.headers.value('Access-Control-Allow-Origin'), '*');
-        expect(response.headers.value('Access-Control-Allow-Methods'), isNotNull);
+        expect(
+          response.headers.value('Access-Control-Allow-Methods'),
+          isNotNull,
+        );
       } finally {
         client.close();
       }
@@ -230,8 +229,9 @@ void main() {
     test('POST /api/agent/plan — 缺少 goal 返回错误', () async {
       final client = HttpClient();
       try {
-        final request = await client
-            .postUrl(Uri.parse('http://localhost:19876/api/agent/plan'));
+        final request = await client.postUrl(
+          Uri.parse('http://localhost:19876/api/agent/plan'),
+        );
         request.headers.set('Authorization', 'Bearer test_key_123');
         request.headers.contentType = ContentType.json;
         request.write(jsonEncode({}));
@@ -255,8 +255,9 @@ Ref _createTestRef(ProviderContainer container) {
 Future<HttpClientResponse> _httpGet(String path, String? apiKey) async {
   final client = HttpClient();
   try {
-    final request =
-        await client.getUrl(Uri.parse('http://localhost:19876$path'));
+    final request = await client.getUrl(
+      Uri.parse('http://localhost:19876$path'),
+    );
     if (apiKey != null) {
       request.headers.set('Authorization', 'Bearer $apiKey');
     }

@@ -96,7 +96,8 @@ class ModelDiscovery {
   }
 
   @visibleForTesting
-  Set<ModelCapability> inferCapabilities(String modelId) => _inferCapabilities(modelId);
+  Set<ModelCapability> inferCapabilities(String modelId) =>
+      _inferCapabilities(modelId);
 
   @visibleForTesting
   String humanizeModelId(String id) => _humanizeModelId(id);

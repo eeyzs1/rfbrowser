@@ -51,10 +51,7 @@ void main() {
     });
 
     test('blocks blob: and filesystem: schemes', () {
-      expect(
-        shouldBlockUrl('blob:https://example.com/uuid'),
-        isTrue,
-      );
+      expect(shouldBlockUrl('blob:https://example.com/uuid'), isTrue);
       expect(
         shouldBlockUrl('filesystem:https://example.com/temporary/'),
         isTrue,

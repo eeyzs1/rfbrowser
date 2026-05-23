@@ -53,39 +53,38 @@ class AgentStep {
     );
   }
 
-  bool get needsConfirmation =>
-      onFailure == 'abort' || retryCount > 0;
+  bool get needsConfirmation => onFailure == 'abort' || retryCount > 0;
 
   Map<String, dynamic> toJson() => {
-        'description': description,
-        if (toolName != null) 'toolName': toolName,
-        'args': args,
-        if (condition != null) 'condition': condition,
-        if (retryCount > 0) 'retryCount': retryCount,
-        if (onFailure != null) 'onFailure': onFailure,
-        'status': status.name,
-        if (result != null) 'result': result,
-        if (completedAt != null) 'completedAt': completedAt!.toIso8601String(),
-        'retryAttempt': retryAttempt,
-      };
+    'description': description,
+    if (toolName != null) 'toolName': toolName,
+    'args': args,
+    if (condition != null) 'condition': condition,
+    if (retryCount > 0) 'retryCount': retryCount,
+    if (onFailure != null) 'onFailure': onFailure,
+    'status': status.name,
+    if (result != null) 'result': result,
+    if (completedAt != null) 'completedAt': completedAt!.toIso8601String(),
+    'retryAttempt': retryAttempt,
+  };
 
   factory AgentStep.fromJson(Map<String, dynamic> json) => AgentStep(
-        description: json['description'] as String? ?? '',
-        toolName: json['toolName'] as String?,
-        args: (json['args'] as Map<String, dynamic>?) ?? {},
-        condition: json['condition'] as String?,
-        retryCount: json['retryCount'] as int? ?? 0,
-        onFailure: json['onFailure'] as String?,
-        status: TaskStatus.values.firstWhere(
-          (e) => e.name == json['status'],
-          orElse: () => TaskStatus.pending,
-        ),
-        result: json['result'] as String?,
-        completedAt: json['completedAt'] != null
-            ? DateTime.parse(json['completedAt'] as String)
-            : null,
-        retryAttempt: json['retryAttempt'] as int? ?? 0,
-      );
+    description: json['description'] as String? ?? '',
+    toolName: json['toolName'] as String?,
+    args: (json['args'] as Map<String, dynamic>?) ?? {},
+    condition: json['condition'] as String?,
+    retryCount: json['retryCount'] as int? ?? 0,
+    onFailure: json['onFailure'] as String?,
+    status: TaskStatus.values.firstWhere(
+      (e) => e.name == json['status'],
+      orElse: () => TaskStatus.pending,
+    ),
+    result: json['result'] as String?,
+    completedAt: json['completedAt'] != null
+        ? DateTime.parse(json['completedAt'] as String)
+        : null,
+    retryAttempt: json['retryAttempt'] as int? ?? 0,
+  );
 }
 
 class AgentTask {
@@ -143,43 +142,44 @@ class AgentTask {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'status': status.name,
-        'mode': mode.name,
-        'steps': steps.map((s) => s.toJson()).toList(),
-        'context': context,
-        'created': created.toIso8601String(),
-        if (completed != null) 'completed': completed!.toIso8601String(),
-        if (result != null) 'result': result,
-        'maxIterations': maxIterations,
-      };
+    'id': id,
+    'name': name,
+    'description': description,
+    'status': status.name,
+    'mode': mode.name,
+    'steps': steps.map((s) => s.toJson()).toList(),
+    'context': context,
+    'created': created.toIso8601String(),
+    if (completed != null) 'completed': completed!.toIso8601String(),
+    if (result != null) 'result': result,
+    'maxIterations': maxIterations,
+  };
 
   factory AgentTask.fromJson(Map<String, dynamic> json) => AgentTask(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        description: json['description'] as String,
-        status: TaskStatus.values.firstWhere(
-          (e) => e.name == json['status'],
-          orElse: () => TaskStatus.pending,
-        ),
-        mode: TaskMode.values.firstWhere(
-          (e) => e.name == json['mode'],
-          orElse: () => TaskMode.manual,
-        ),
-        steps: (json['steps'] as List?)
-                ?.map((s) => AgentStep.fromJson(s as Map<String, dynamic>))
-                .toList() ??
-            [],
-        context: (json['context'] as Map<String, dynamic>?) ?? {},
-        created: json['created'] != null
-            ? DateTime.parse(json['created'] as String)
-            : DateTime.now(),
-        completed: json['completed'] != null
-            ? DateTime.parse(json['completed'] as String)
-            : null,
-        result: json['result'] as String?,
-        maxIterations: json['maxIterations'] as int? ?? 50,
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    description: json['description'] as String,
+    status: TaskStatus.values.firstWhere(
+      (e) => e.name == json['status'],
+      orElse: () => TaskStatus.pending,
+    ),
+    mode: TaskMode.values.firstWhere(
+      (e) => e.name == json['mode'],
+      orElse: () => TaskMode.manual,
+    ),
+    steps:
+        (json['steps'] as List?)
+            ?.map((s) => AgentStep.fromJson(s as Map<String, dynamic>))
+            .toList() ??
+        [],
+    context: (json['context'] as Map<String, dynamic>?) ?? {},
+    created: json['created'] != null
+        ? DateTime.parse(json['created'] as String)
+        : DateTime.now(),
+    completed: json['completed'] != null
+        ? DateTime.parse(json['completed'] as String)
+        : null,
+    result: json['result'] as String?,
+    maxIterations: json['maxIterations'] as int? ?? 50,
+  );
 }

@@ -34,8 +34,14 @@ void main() {
       });
 
       test('humanizes Claude models', () {
-        expect(discovery.humanizeModelId('claude-3-5-sonnet'), 'Claude 3.5 Sonnet');
-        expect(discovery.humanizeModelId('claude-3-5-haiku'), 'Claude 3.5 Haiku');
+        expect(
+          discovery.humanizeModelId('claude-3-5-sonnet'),
+          'Claude 3.5 Sonnet',
+        );
+        expect(
+          discovery.humanizeModelId('claude-3-5-haiku'),
+          'Claude 3.5 Haiku',
+        );
         expect(discovery.humanizeModelId('claude-3-opus'), 'Claude 3 Opus');
         expect(discovery.humanizeModelId('claude-3-sonnet'), 'Claude 3 Sonnet');
         expect(discovery.humanizeModelId('claude-3-haiku'), 'Claude 3 Haiku');
@@ -43,7 +49,10 @@ void main() {
       });
 
       test('humanizes DeepSeek models', () {
-        expect(discovery.humanizeModelId('deepseek-reasoner'), 'DeepSeek Reasoner');
+        expect(
+          discovery.humanizeModelId('deepseek-reasoner'),
+          'DeepSeek Reasoner',
+        );
         expect(discovery.humanizeModelId('deepseek-chat'), 'DeepSeek Chat');
         expect(discovery.humanizeModelId('deepseek-v2'), 'DeepSeek');
       });

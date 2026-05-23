@@ -73,7 +73,9 @@ class _CaptureSceneState extends ConsumerState<CaptureScene> {
                                 .read(browserProvider.notifier)
                                 .setActiveTab(existingTab.id);
                           } else {
-                            ref.read(browserProvider.notifier).createTab(url: url);
+                            ref
+                                .read(browserProvider.notifier)
+                                .createTab(url: url);
                           }
                         },
                       ),
@@ -156,15 +158,15 @@ class _PanelCollapseButtonState extends State<_PanelCollapseButton> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Material(
-      color: _isHovered
-          ? DesignColors.primaryHover
-          : theme.colorScheme.surface,
+      color: _isHovered ? DesignColors.primaryHover : theme.colorScheme.surface,
       child: InkWell(
         onTap: widget.onTap,
         onHover: (hovered) => setState(() => _isHovered = hovered),
         child: Container(
           width: DesignTouchTarget.panelCollapseWidth,
-          constraints: const BoxConstraints(minHeight: DesignTouchTarget.minSize),
+          constraints: const BoxConstraints(
+            minHeight: DesignTouchTarget.minSize,
+          ),
           alignment: widget.alignment,
           decoration: BoxDecoration(
             border: Border(

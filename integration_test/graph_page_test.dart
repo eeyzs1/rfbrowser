@@ -58,7 +58,11 @@ void main() {
         Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
       ];
       final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
+        Link(
+          sourceId: notes[0].id,
+          targetId: notes[1].id,
+          type: LinkType.wikilink,
+        ),
       ];
 
       await pumpGraphPage(
@@ -77,7 +81,11 @@ void main() {
         Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
       ];
       final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
+        Link(
+          sourceId: notes[0].id,
+          targetId: notes[1].id,
+          type: LinkType.wikilink,
+        ),
       ];
 
       await pumpGraphPage(
@@ -97,32 +105,45 @@ void main() {
       expect(find.byIcon(Icons.file_download), findsOneWidget);
     });
 
-    testWidgets('default layout mode is force directed showing scatter_plot icon', (tester) async {
+    testWidgets(
+      'default layout mode is force directed showing scatter_plot icon',
+      (tester) async {
+        final notes = [
+          Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
+          Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
+        ];
+        final links = [
+          Link(
+            sourceId: notes[0].id,
+            targetId: notes[1].id,
+            type: LinkType.wikilink,
+          ),
+        ];
+
+        await pumpGraphPage(
+          tester,
+          notes: notes,
+          links: links,
+          activeNoteId: notes[0].id,
+        );
+
+        expect(find.byIcon(Icons.scatter_plot), findsOneWidget);
+      },
+    );
+
+    testWidgets('default view mode is full showing account_tree icon', (
+      tester,
+    ) async {
       final notes = [
         Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
         Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
       ];
       final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
-      ];
-
-      await pumpGraphPage(
-        tester,
-        notes: notes,
-        links: links,
-        activeNoteId: notes[0].id,
-      );
-
-      expect(find.byIcon(Icons.scatter_plot), findsOneWidget);
-    });
-
-    testWidgets('default view mode is full showing account_tree icon', (tester) async {
-      final notes = [
-        Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
-        Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
-      ];
-      final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
+        Link(
+          sourceId: notes[0].id,
+          targetId: notes[1].id,
+          type: LinkType.wikilink,
+        ),
       ];
 
       await pumpGraphPage(
@@ -135,38 +156,51 @@ void main() {
       expect(find.byIcon(Icons.account_tree), findsOneWidget);
     });
 
-    testWidgets('toggling layout mode switches icon from scatter_plot to circle', (tester) async {
+    testWidgets(
+      'toggling layout mode switches icon from scatter_plot to circle',
+      (tester) async {
+        final notes = [
+          Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
+          Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
+        ];
+        final links = [
+          Link(
+            sourceId: notes[0].id,
+            targetId: notes[1].id,
+            type: LinkType.wikilink,
+          ),
+        ];
+
+        await pumpGraphPage(
+          tester,
+          notes: notes,
+          links: links,
+          activeNoteId: notes[0].id,
+        );
+
+        expect(find.byIcon(Icons.scatter_plot), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.scatter_plot));
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.circle), findsOneWidget);
+        expect(find.byIcon(Icons.scatter_plot), findsNothing);
+      },
+    );
+
+    testWidgets('toggling view mode switches icon from account_tree to hub', (
+      tester,
+    ) async {
       final notes = [
         Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
         Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
       ];
       final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
-      ];
-
-      await pumpGraphPage(
-        tester,
-        notes: notes,
-        links: links,
-        activeNoteId: notes[0].id,
-      );
-
-      expect(find.byIcon(Icons.scatter_plot), findsOneWidget);
-
-      await tester.tap(find.byIcon(Icons.scatter_plot));
-      await tester.pumpAndSettle();
-
-      expect(find.byIcon(Icons.circle), findsOneWidget);
-      expect(find.byIcon(Icons.scatter_plot), findsNothing);
-    });
-
-    testWidgets('toggling view mode switches icon from account_tree to hub', (tester) async {
-      final notes = [
-        Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
-        Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
-      ];
-      final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
+        Link(
+          sourceId: notes[0].id,
+          targetId: notes[1].id,
+          type: LinkType.wikilink,
+        ),
       ];
 
       await pumpGraphPage(
@@ -190,7 +224,11 @@ void main() {
         Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
       ];
       final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
+        Link(
+          sourceId: notes[0].id,
+          targetId: notes[1].id,
+          type: LinkType.wikilink,
+        ),
       ];
 
       await pumpGraphPage(
@@ -212,7 +250,11 @@ void main() {
         Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
       ];
       final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
+        Link(
+          sourceId: notes[0].id,
+          targetId: notes[1].id,
+          type: LinkType.wikilink,
+        ),
       ];
 
       await pumpGraphPage(
@@ -228,13 +270,19 @@ void main() {
       expect(find.byIcon(Icons.zoom_out), findsOneWidget);
     });
 
-    testWidgets('reset view button uses center_focus_strong icon', (tester) async {
+    testWidgets('reset view button uses center_focus_strong icon', (
+      tester,
+    ) async {
       final notes = [
         Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
         Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
       ];
       final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
+        Link(
+          sourceId: notes[0].id,
+          targetId: notes[1].id,
+          type: LinkType.wikilink,
+        ),
       ];
 
       await pumpGraphPage(
@@ -248,13 +296,19 @@ void main() {
       expect(find.byIcon(Icons.refresh), findsNothing);
     });
 
-    testWidgets('export uses PopupMenuButton with file_download icon', (tester) async {
+    testWidgets('export uses PopupMenuButton with file_download icon', (
+      tester,
+    ) async {
       final notes = [
         Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
         Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
       ];
       final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
+        Link(
+          sourceId: notes[0].id,
+          targetId: notes[1].id,
+          type: LinkType.wikilink,
+        ),
       ];
 
       await pumpGraphPage(
@@ -269,53 +323,67 @@ void main() {
       expect(find.byType(PopupMenuButton<String>), findsOneWidget);
     });
 
-    testWidgets('stats toggle switches between analytics and analytics_outlined', (tester) async {
-      final notes = [
-        Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
-        Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
-      ];
-      final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
-      ];
+    testWidgets(
+      'stats toggle switches between analytics and analytics_outlined',
+      (tester) async {
+        final notes = [
+          Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
+          Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
+        ];
+        final links = [
+          Link(
+            sourceId: notes[0].id,
+            targetId: notes[1].id,
+            type: LinkType.wikilink,
+          ),
+        ];
 
-      await pumpGraphPage(
-        tester,
-        notes: notes,
-        links: links,
-        activeNoteId: notes[0].id,
-      );
+        await pumpGraphPage(
+          tester,
+          notes: notes,
+          links: links,
+          activeNoteId: notes[0].id,
+        );
 
-      expect(find.byIcon(Icons.analytics_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.analytics_outlined), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.analytics_outlined));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.analytics_outlined));
+        await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.analytics), findsAtLeast(1));
-    });
+        expect(find.byIcon(Icons.analytics), findsAtLeast(1));
+      },
+    );
 
-    testWidgets('legend toggle switches between legend_toggle and legend_toggle_outlined', (tester) async {
-      final notes = [
-        Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
-        Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
-      ];
-      final links = [
-        Link(sourceId: notes[0].id, targetId: notes[1].id, type: LinkType.wikilink),
-      ];
+    testWidgets(
+      'legend toggle switches between legend_toggle and legend_toggle_outlined',
+      (tester) async {
+        final notes = [
+          Note(title: 'Note A', filePath: 'a.md', content: 'Content A'),
+          Note(title: 'Note B', filePath: 'b.md', content: 'Content B'),
+        ];
+        final links = [
+          Link(
+            sourceId: notes[0].id,
+            targetId: notes[1].id,
+            type: LinkType.wikilink,
+          ),
+        ];
 
-      await pumpGraphPage(
-        tester,
-        notes: notes,
-        links: links,
-        activeNoteId: notes[0].id,
-      );
+        await pumpGraphPage(
+          tester,
+          notes: notes,
+          links: links,
+          activeNoteId: notes[0].id,
+        );
 
-      expect(find.byIcon(Icons.legend_toggle_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.legend_toggle_outlined), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.legend_toggle_outlined));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.legend_toggle_outlined));
+        await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.legend_toggle), findsOneWidget);
-    });
+        expect(find.byIcon(Icons.legend_toggle), findsOneWidget);
+      },
+    );
   });
 }
 
@@ -328,16 +396,13 @@ class _TestKnowledgeNotifier extends KnowledgeNotifier {
     List<Note>? notes,
     List<Link>? links,
     String? activeNoteId,
-  })  : _notes = notes ?? [],
-        _links = links ?? [],
-        _activeNoteId = activeNoteId;
+  }) : _notes = notes ?? [],
+       _links = links ?? [],
+       _activeNoteId = activeNoteId;
 
   @override
-  KnowledgeState build() => KnowledgeState(
-        notes: _notes,
-        links: _links,
-        activeNoteId: _activeNoteId,
-      );
+  KnowledgeState build() =>
+      KnowledgeState(notes: _notes, links: _links, activeNoteId: _activeNoteId);
 }
 
 class _TestSettingsNotifier extends SettingsNotifier {

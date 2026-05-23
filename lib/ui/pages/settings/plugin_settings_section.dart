@@ -192,8 +192,9 @@ class _PluginCardState extends ConsumerState<_PluginCard> {
                             Text(
                               'v${widget.manifest.version}',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.5),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
                             if (widget.isBuiltin) ...[
@@ -208,8 +209,9 @@ class _PluginCardState extends ConsumerState<_PluginCard> {
                               ? widget.manifest.description
                               : widget.manifest.id,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -241,8 +243,11 @@ class _PluginCardState extends ConsumerState<_PluginCard> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline,
-                          size: 14, color: theme.colorScheme.error),
+                      Icon(
+                        Icons.error_outline,
+                        size: 14,
+                        color: theme.colorScheme.error,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(

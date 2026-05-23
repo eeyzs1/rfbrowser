@@ -4,7 +4,7 @@ class CanvasTemplatesService {
   const CanvasTemplatesService();
 
   static final Map<String, Map<String, List<CanvasCardType>>>
-      shapeLibraryCategories = {
+  shapeLibraryCategories = {
     'General': {
       'Basic': [
         CanvasCardType.rectangle,

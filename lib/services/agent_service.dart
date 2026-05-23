@@ -22,8 +22,8 @@ class AgentState {
     this.tasks = const [],
     HeadlessManager? headlessManager,
     AgentToolRegistry? toolRegistry,
-  })  : headlessManager = headlessManager ?? HeadlessManager(),
-        toolRegistry = toolRegistry ?? AgentToolRegistry();
+  }) : headlessManager = headlessManager ?? HeadlessManager(),
+       toolRegistry = toolRegistry ?? AgentToolRegistry();
 
   AgentState copyWith({List<AgentTask>? tasks}) {
     return AgentState(
@@ -53,7 +53,10 @@ class AgentNotifier extends Notifier<AgentState> {
     if (tasks.isNotEmpty) {
       final updatedTasks = tasks.map((t) {
         if (t.status == TaskStatus.running || t.status == TaskStatus.paused) {
-          return t.copyWith(status: TaskStatus.failed, result: 'Interrupted by app restart');
+          return t.copyWith(
+            status: TaskStatus.failed,
+            result: 'Interrupted by app restart',
+          );
         }
         return t;
       }).toList();
@@ -66,118 +69,153 @@ class AgentNotifier extends Notifier<AgentState> {
   }
 
   void _registerBuiltinTools(AgentToolRegistry registry) {
-    registry.register(NavigateTool((url) async {
-      final webView = state.headlessManager.create();
-      await webView.run();
-      await webView.loadUrl(url);
-      return 'Navigated to $url';
-    }));
+    registry.register(
+      NavigateTool((url) async {
+        final webView = state.headlessManager.create();
+        await webView.run();
+        await webView.loadUrl(url);
+        return 'Navigated to $url';
+      }),
+    );
 
-    registry.register(ExtractTextTool((url) async {
-      final webView = state.headlessManager.create();
-      await webView.run();
-      await webView.loadUrl(url);
-      final text = await webView.extractText();
-      return text;
-    }));
+    registry.register(
+      ExtractTextTool((url) async {
+        final webView = state.headlessManager.create();
+        await webView.run();
+        await webView.loadUrl(url);
+        final text = await webView.extractText();
+        return text;
+      }),
+    );
 
-    registry.register(CreateNoteTool((title, content) async {
-      try {
-        final note = await ref
-            .read(knowledgeProvider.notifier)
-            .createNote(title: title);
-        ref.read(knowledgeProvider.notifier).updateActiveNoteContent(content);
-        await ref.read(knowledgeProvider.notifier).saveActiveNote();
-        return 'Note created: $title (${note.filePath})';
-      } catch (e) {
-        return 'Failed to create note "$title": $e';
-      }
-    }));
+    registry.register(
+      CreateNoteTool((title, content) async {
+        try {
+          final note = await ref
+              .read(knowledgeProvider.notifier)
+              .createNote(title: title);
+          ref.read(knowledgeProvider.notifier).updateActiveNoteContent(content);
+          await ref.read(knowledgeProvider.notifier).saveActiveNote();
+          return 'Note created: $title (${note.filePath})';
+        } catch (e) {
+          return 'Failed to create note "$title": $e';
+        }
+      }),
+    );
 
-    registry.register(SearchNotesTool((query) async {
-      final indexStore = ref.read(indexStoreProvider);
-      return await indexStore.searchNotes(query);
-    }));
+    registry.register(
+      SearchNotesTool((query) async {
+        final indexStore = ref.read(indexStoreProvider);
+        return await indexStore.searchNotes(query);
+      }),
+    );
 
-    registry.register(AIReasonTool((prompt, systemPrompt) async {
-      final aiNotifier = ref.read(aiProvider.notifier);
-      await aiNotifier.sendMessage(prompt, systemPrompt: systemPrompt);
-      final messages = ref.read(aiProvider).messages;
-      final lastAssistant = messages.lastWhere(
-        (m) => m.role == 'assistant' && !m.isStreaming,
-        orElse: () => ChatMessage(role: 'assistant', content: ''),
-      );
-      return lastAssistant.content;
-    }));
+    registry.register(
+      AIReasonTool((prompt, systemPrompt) async {
+        final aiNotifier = ref.read(aiProvider.notifier);
+        await aiNotifier.sendMessage(prompt, systemPrompt: systemPrompt);
+        final messages = ref.read(aiProvider).messages;
+        final lastAssistant = messages.lastWhere(
+          (m) => m.role == 'assistant' && !m.isStreaming,
+          orElse: () => ChatMessage(role: 'assistant', content: ''),
+        );
+        return lastAssistant.content;
+      }),
+    );
 
-    registry.register(WebClipTool((url, format) async {
-      try {
-        final title = Uri.parse(url).host;
+    registry.register(
+      WebClipTool((url, format) async {
+        try {
+          final title = Uri.parse(url).host;
+          final knowledge = ref.read(knowledgeProvider.notifier);
+          await knowledge.createNote(title: 'Clip: $title');
+          knowledge.updateActiveNoteContent(
+            'Source: $url\n\nClipped from $url in $format format.',
+          );
+          await knowledge.saveActiveNote();
+          return 'Clipped $url as $format';
+        } catch (e) {
+          return 'Clip failed: $e';
+        }
+      }),
+    );
+
+    registry.register(
+      DeleteNoteTool((title) async {
+        try {
+          final knowledge = ref.read(knowledgeProvider.notifier);
+          final notes = knowledge.state.notes;
+          final note = notes.where((n) => n.title == title).firstOrNull;
+          if (note == null) return false;
+          await knowledge.deleteNote(note.id);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }),
+    );
+
+    registry.register(
+      UpdateNoteTool((title, content) async {
         final knowledge = ref.read(knowledgeProvider.notifier);
-        await knowledge.createNote(title: 'Clip: $title');
-        knowledge.updateActiveNoteContent('Source: $url\n\nClipped from $url in $format format.');
+        final note = knowledge.state.notes
+            .where((n) => n.title == title)
+            .firstOrNull;
+        if (note == null) return 'Note "$title" not found';
+        knowledge.updateActiveNoteContent(content);
         await knowledge.saveActiveNote();
-        return 'Clipped $url as $format';
-      } catch (e) {
-        return 'Clip failed: $e';
-      }
-    }));
+        return 'Note "$title" updated';
+      }),
+    );
 
-    registry.register(DeleteNoteTool((title) async {
-      try {
+    registry.register(
+      ListNotesTool((tag, limit) async {
         final knowledge = ref.read(knowledgeProvider.notifier);
-        final notes = knowledge.state.notes;
-        final note = notes.where((n) => n.title == title).firstOrNull;
-        if (note == null) return false;
-        await knowledge.deleteNote(note.id);
-        return true;
-      } catch (e) {
-        return false;
-      }
-    }));
+        List<Note> notes;
+        if (tag != null && tag.isNotEmpty) {
+          notes = knowledge.getNotesByTag(tag);
+        } else {
+          notes = knowledge.state.notes;
+        }
+        final result = notes
+            .take(limit)
+            .map((n) => '- ${n.title} (${n.filePath})')
+            .join('\n');
+        return 'Found ${notes.length} notes:\n$result';
+      }),
+    );
 
-    registry.register(UpdateNoteTool((title, content) async {
-      final knowledge = ref.read(knowledgeProvider.notifier);
-      final note = knowledge.state.notes.where((n) => n.title == title).firstOrNull;
-      if (note == null) return 'Note "$title" not found';
-      knowledge.updateActiveNoteContent(content);
-      await knowledge.saveActiveNote();
-      return 'Note "$title" updated';
-    }));
+    registry.register(
+      GetTagsTool(() async {
+        final knowledge = ref.read(knowledgeProvider.notifier);
+        final tags = knowledge.getAllTags();
+        return 'Tags: ${tags.join(", ")}';
+      }),
+    );
 
-    registry.register(ListNotesTool((tag, limit) async {
-      final knowledge = ref.read(knowledgeProvider.notifier);
-      List<Note> notes;
-      if (tag != null && tag.isNotEmpty) {
-        notes = knowledge.getNotesByTag(tag);
-      } else {
-        notes = knowledge.state.notes;
-      }
-      final result = notes.take(limit).map((n) => '- ${n.title} (${n.filePath})').join('\n');
-      return 'Found ${notes.length} notes:\n$result';
-    }));
+    registry.register(
+      MoveNoteTool((title, folder) async {
+        final knowledge = ref.read(knowledgeProvider.notifier);
+        final note = knowledge.state.notes
+            .where((n) => n.title == title)
+            .firstOrNull;
+        if (note == null) return 'Note "$title" not found';
+        await knowledge.moveNote(note.id, folder);
+        return 'Note "$title" moved to $folder';
+      }),
+    );
 
-    registry.register(GetTagsTool(() async {
-      final knowledge = ref.read(knowledgeProvider.notifier);
-      final tags = knowledge.getAllTags();
-      return 'Tags: ${tags.join(", ")}';
-    }));
-
-    registry.register(MoveNoteTool((title, folder) async {
-      final knowledge = ref.read(knowledgeProvider.notifier);
-      final note = knowledge.state.notes.where((n) => n.title == title).firstOrNull;
-      if (note == null) return 'Note "$title" not found';
-      await knowledge.moveNote(note.id, folder);
-      return 'Note "$title" moved to $folder';
-    }));
-
-    registry.register(RenameNoteTool((oldTitle, newTitle) async {
-      final knowledge = ref.read(knowledgeProvider.notifier);
-      final note = knowledge.state.notes.where((n) => n.title == oldTitle).firstOrNull;
-      if (note == null) return 'Note "$oldTitle" not found';
-      await knowledge.renameNote(note.filePath, newTitle);
-      return 'Note renamed from "$oldTitle" to "$newTitle"';
-    }));
+    registry.register(
+      RenameNoteTool((oldTitle, newTitle) async {
+        final knowledge = ref.read(knowledgeProvider.notifier);
+        final note = knowledge.state.notes
+            .where((n) => n.title == oldTitle)
+            .firstOrNull;
+        if (note == null) return 'Note "$oldTitle" not found';
+        await knowledge.renameNote(note.filePath, newTitle);
+        return 'Note renamed from "$oldTitle" to "$newTitle"';
+      }),
+    );
   }
 
   void registerPluginTool(AgentTool tool) {
@@ -248,7 +286,8 @@ class AgentNotifier extends Notifier<AgentState> {
 
       final step = current.steps[i];
 
-      if (step.condition != null && !_evaluateCondition(step.condition!, stepResults)) {
+      if (step.condition != null &&
+          !_evaluateCondition(step.condition!, stepResults)) {
         final skippedSteps = List<AgentStep>.from(current.steps);
         skippedSteps[i] = skippedSteps[i].copyWith(
           status: TaskStatus.completed,
@@ -344,14 +383,18 @@ class AgentNotifier extends Notifier<AgentState> {
       return current;
     }
 
-    final steps = planSteps.map((ps) => AgentStep(
-          description: ps.description ?? 'Use ${ps.toolName}',
-          toolName: ps.toolName,
-          args: ps.args,
-          condition: ps.condition,
-          retryCount: ps.retryCount,
-          onFailure: ps.onFailure,
-        )).toList();
+    final steps = planSteps
+        .map(
+          (ps) => AgentStep(
+            description: ps.description ?? 'Use ${ps.toolName}',
+            toolName: ps.toolName,
+            args: ps.args,
+            condition: ps.condition,
+            retryCount: ps.retryCount,
+            onFailure: ps.onFailure,
+          ),
+        )
+        .toList();
 
     current = current.copyWith(steps: steps);
     _updateTask(current);
@@ -401,7 +444,9 @@ class AgentNotifier extends Notifier<AgentState> {
         orElse: () => ChatMessage(role: 'assistant', content: ''),
       );
 
-      final reactAction = planGenerator.parseReactResponse(lastResponse.content);
+      final reactAction = planGenerator.parseReactResponse(
+        lastResponse.content,
+      );
       if (reactAction == null) {
         iteration++;
         stepResults.add('Failed to parse AI response, retrying...');
@@ -415,14 +460,16 @@ class AgentNotifier extends Notifier<AgentState> {
 
       if (isDone || toolName == 'final_answer') {
         final answer = args['answer'] as String? ?? stepResults.join('\n');
-        dynamicSteps.add(AgentStep(
-          description: thought.isNotEmpty ? thought : 'Final answer',
-          toolName: 'final_answer',
-          args: args,
-          status: TaskStatus.completed,
-          result: answer,
-          completedAt: DateTime.now(),
-        ));
+        dynamicSteps.add(
+          AgentStep(
+            description: thought.isNotEmpty ? thought : 'Final answer',
+            toolName: 'final_answer',
+            args: args,
+            status: TaskStatus.completed,
+            result: answer,
+            completedAt: DateTime.now(),
+          ),
+        );
         current = current.copyWith(
           steps: dynamicSteps,
           status: TaskStatus.completed,
@@ -434,7 +481,9 @@ class AgentNotifier extends Notifier<AgentState> {
       }
 
       if (!state.toolRegistry.hasTool(toolName)) {
-        stepResults.add('Unknown tool: $toolName. Available: ${state.toolRegistry.tools.keys.join(", ")}');
+        stepResults.add(
+          'Unknown tool: $toolName. Available: ${state.toolRegistry.tools.keys.join(", ")}',
+        );
         iteration++;
         continue;
       }
@@ -445,7 +494,8 @@ class AgentNotifier extends Notifier<AgentState> {
         args: args,
       );
 
-      final updatedSteps = List<AgentStep>.from(dynamicSteps)..add(step.copyWith(status: TaskStatus.running));
+      final updatedSteps = List<AgentStep>.from(dynamicSteps)
+        ..add(step.copyWith(status: TaskStatus.running));
       current = current.copyWith(steps: updatedSteps);
       _updateTask(current);
 
@@ -453,17 +503,18 @@ class AgentNotifier extends Notifier<AgentState> {
 
       if (result.success) {
         stepResults.add(result.output);
-        dynamicSteps.add(step.copyWith(
-          status: TaskStatus.completed,
-          result: result.output,
-          completedAt: DateTime.now(),
-        ));
+        dynamicSteps.add(
+          step.copyWith(
+            status: TaskStatus.completed,
+            result: result.output,
+            completedAt: DateTime.now(),
+          ),
+        );
       } else {
         stepResults.add('Error: ${result.error}');
-        dynamicSteps.add(step.copyWith(
-          status: TaskStatus.failed,
-          result: result.error,
-        ));
+        dynamicSteps.add(
+          step.copyWith(status: TaskStatus.failed, result: result.error),
+        );
       }
 
       current = current.copyWith(steps: dynamicSteps);
@@ -556,8 +607,10 @@ class AgentNotifier extends Notifier<AgentState> {
         return ToolResult.failure('No content to summarize');
       }
       return state.toolRegistry.execute('ai_reason', {
-        'prompt': 'Summarize the following content:\n\n${previousResults.join('\n\n')}',
-        'system_prompt': 'You are a helpful assistant that creates concise summaries.',
+        'prompt':
+            'Summarize the following content:\n\n${previousResults.join('\n\n')}',
+        'system_prompt':
+            'You are a helpful assistant that creates concise summaries.',
       });
     }
 
@@ -567,15 +620,21 @@ class AgentNotifier extends Notifier<AgentState> {
         return ToolResult.failure('No content to extract data from');
       }
       return state.toolRegistry.execute('ai_reason', {
-        'prompt': 'Extract data from the following content using this schema: $schema\n\nContent:\n${previousResults.last}',
-        'system_prompt': 'You are a data extraction assistant. Output structured data matching the given schema.',
+        'prompt':
+            'Extract data from the following content using this schema: $schema\n\nContent:\n${previousResults.last}',
+        'system_prompt':
+            'You are a data extraction assistant. Output structured data matching the given schema.',
       });
     }
 
-    if (desc.contains('Searching') || desc.contains('Analyzing') || desc.contains('Suggesting') || desc.contains('Creating organization')) {
+    if (desc.contains('Searching') ||
+        desc.contains('Analyzing') ||
+        desc.contains('Suggesting') ||
+        desc.contains('Creating organization')) {
       return state.toolRegistry.execute('ai_reason', {
         'prompt': desc,
-        'system_prompt': 'You are a knowledge management assistant. Help with the described task.',
+        'system_prompt':
+            'You are a knowledge management assistant. Help with the described task.',
       });
     }
 
@@ -599,7 +658,8 @@ class AgentNotifier extends Notifier<AgentState> {
               return result.isNotEmpty;
             }
             if (check.startsWith('success')) {
-              return !result.startsWith('Error') && !result.startsWith('Failed');
+              return !result.startsWith('Error') &&
+                  !result.startsWith('Failed');
             }
           }
         }
@@ -641,7 +701,8 @@ class AgentNotifier extends Notifier<AgentState> {
     final task = AgentTask(
       id: 'research-${DateTime.now().millisecondsSinceEpoch}',
       name: 'Research: $topic',
-      description: 'Research the topic: $topic. Search for information, analyze findings, and create a summary note.',
+      description:
+          'Research the topic: $topic. Search for information, analyze findings, and create a summary note.',
       mode: TaskMode.reactLoop,
       maxIterations: depth * 5,
     );
@@ -651,20 +712,26 @@ class AgentNotifier extends Notifier<AgentState> {
   Future<AgentTask> summarizeUrls(List<String> urls) async {
     final steps = <AgentStep>[];
     for (final url in urls) {
-      steps.add(AgentStep(
-        description: 'Extract text from $url',
-        toolName: 'extract_text',
-        args: {'url': url},
-      ));
+      steps.add(
+        AgentStep(
+          description: 'Extract text from $url',
+          toolName: 'extract_text',
+          args: {'url': url},
+        ),
+      );
     }
-    steps.add(AgentStep(
-      description: 'Summarize extracted content',
-      toolName: 'ai_reason',
-      args: {
-        'prompt': 'Summarize the following content:\n\n{{step_${steps.length - 1}}}',
-        'system_prompt': 'You are a helpful assistant that creates concise summaries.',
-      },
-    ));
+    steps.add(
+      AgentStep(
+        description: 'Summarize extracted content',
+        toolName: 'ai_reason',
+        args: {
+          'prompt':
+              'Summarize the following content:\n\n{{step_${steps.length - 1}}}',
+          'system_prompt':
+              'You are a helpful assistant that creates concise summaries.',
+        },
+      ),
+    );
 
     final task = AgentTask(
       id: 'summarize-${DateTime.now().millisecondsSinceEpoch}',
@@ -697,8 +764,10 @@ class AgentNotifier extends Notifier<AgentState> {
           description: 'Extract data using schema: $schema',
           toolName: 'ai_reason',
           args: {
-            'prompt': 'Extract data from the following content using this schema: $schema\n\nContent:\n{{step_1}}',
-            'system_prompt': 'You are a data extraction assistant. Output structured data matching the given schema.',
+            'prompt':
+                'Extract data from the following content using this schema: $schema\n\nContent:\n{{step_1}}',
+            'system_prompt':
+                'You are a data extraction assistant. Output structured data matching the given schema.',
           },
         ),
       ],
@@ -710,13 +779,17 @@ class AgentNotifier extends Notifier<AgentState> {
     final task = AgentTask(
       id: 'organize-${DateTime.now().millisecondsSinceEpoch}',
       name: 'Auto Organize',
-      description: 'Analyze these notes and suggest tags, links, and organization: ${noteTitles.join(", ")}',
+      description:
+          'Analyze these notes and suggest tags, links, and organization: ${noteTitles.join(", ")}',
       mode: TaskMode.aiPlanned,
     );
     return executeTask(task);
   }
 
-  Future<AgentTask> aiPlanAndExecute(String goal, {TaskMode mode = TaskMode.aiPlanned}) async {
+  Future<AgentTask> aiPlanAndExecute(
+    String goal, {
+    TaskMode mode = TaskMode.aiPlanned,
+  }) async {
     final task = AgentTask(
       id: 'ai-${DateTime.now().millisecondsSinceEpoch}',
       name: goal,

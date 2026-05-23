@@ -832,6 +832,8 @@
   "editingHint": "Editing · Esc to finish",
   "connectCardHint": "Click a card to connect · Esc to cancel",
   "addLayersToOrganize": "Add layers to organize your cards",
+  "tagActiveFilter": "Active",
+  "tagFilterUnassigned": "Unassigned",
   "scratchpadEmptyHint": "Right-click a card → Save to Scratchpad",
   "add": "Add",
   "layerNameWithNumber": "Layer {number}",

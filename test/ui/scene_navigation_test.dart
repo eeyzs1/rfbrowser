@@ -24,9 +24,7 @@ void main() {
     testWidgets('renders scene content and switcher', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            vaultProvider.overrideWith(() => _TestVaultNotifier()),
-          ],
+          overrides: [vaultProvider.overrideWith(() => _TestVaultNotifier())],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -50,9 +48,7 @@ void main() {
     testWidgets('scene icons are rendered', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            vaultProvider.overrideWith(() => _TestVaultNotifier()),
-          ],
+          overrides: [vaultProvider.overrideWith(() => _TestVaultNotifier())],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

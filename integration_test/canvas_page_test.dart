@@ -57,13 +57,17 @@ void main() {
       expect(find.byIcon(Icons.auto_fix_high), findsOneWidget);
     });
 
-    testWidgets('canvas renders CustomPaint for card rendering', (tester) async {
+    testWidgets('canvas renders CustomPaint for card rendering', (
+      tester,
+    ) async {
       await pumpCanvasView(tester);
 
       expect(find.byType(CustomPaint), findsWidgets);
     });
 
-    testWidgets('tapping add card calls canvasNotifier.addCard', (tester) async {
+    testWidgets('tapping add card calls canvasNotifier.addCard', (
+      tester,
+    ) async {
       final notifier = _TestCanvasNotifier();
       await tester.pumpWidget(
         ProviderScope(
@@ -90,33 +94,42 @@ void main() {
       expect(notifier.state.cards.length, 1);
     });
 
-    testWidgets('canvasNotifier.addCard creates a card with text type', (tester) async {
+    testWidgets('canvasNotifier.addCard creates a card with text type', (
+      tester,
+    ) async {
       final container = ProviderContainer(
-        overrides: [
-          vaultProvider.overrideWith(() => _TestVaultNotifier()),
-        ],
+        overrides: [vaultProvider.overrideWith(() => _TestVaultNotifier())],
       );
       addTearDown(container.dispose);
 
       final notifier = container.read(canvasProvider.notifier);
-      final card = notifier.createCard(CanvasCardType.text, const Offset(100, 100));
+      final card = notifier.createCard(
+        CanvasCardType.text,
+        const Offset(100, 100),
+      );
       await notifier.addCard(card);
 
       expect(notifier.state.cards.length, 1);
       expect(notifier.state.cards.first.type, CanvasCardType.text);
     });
 
-    testWidgets('canvasNotifier.addConnection creates a connection', (tester) async {
+    testWidgets('canvasNotifier.addConnection creates a connection', (
+      tester,
+    ) async {
       final container = ProviderContainer(
-        overrides: [
-          vaultProvider.overrideWith(() => _TestVaultNotifier()),
-        ],
+        overrides: [vaultProvider.overrideWith(() => _TestVaultNotifier())],
       );
       addTearDown(container.dispose);
 
       final notifier = container.read(canvasProvider.notifier);
-      final card1 = notifier.createCard(CanvasCardType.note, const Offset(0, 0));
-      final card2 = notifier.createCard(CanvasCardType.note, const Offset(200, 0));
+      final card1 = notifier.createCard(
+        CanvasCardType.note,
+        const Offset(0, 0),
+      );
+      final card2 = notifier.createCard(
+        CanvasCardType.note,
+        const Offset(200, 0),
+      );
       await notifier.addCard(card1);
       await notifier.addCard(card2);
 
@@ -130,14 +143,15 @@ void main() {
 
     testWidgets('canvasNotifier.undo reverts last action', (tester) async {
       final container = ProviderContainer(
-        overrides: [
-          vaultProvider.overrideWith(() => _TestVaultNotifier()),
-        ],
+        overrides: [vaultProvider.overrideWith(() => _TestVaultNotifier())],
       );
       addTearDown(container.dispose);
 
       final notifier = container.read(canvasProvider.notifier);
-      final card = notifier.createCard(CanvasCardType.text, const Offset(100, 100));
+      final card = notifier.createCard(
+        CanvasCardType.text,
+        const Offset(100, 100),
+      );
       await notifier.addCard(card);
 
       expect(notifier.state.cards.length, 1);
@@ -147,7 +161,9 @@ void main() {
       expect(notifier.state.cards.length, 0);
     });
 
-    testWidgets('canvasWithCards renders both cards and connections', (tester) async {
+    testWidgets('canvasWithCards renders both cards and connections', (
+      tester,
+    ) async {
       final card1 = CanvasCard(
         id: 'card_1',
         type: CanvasCardType.note,

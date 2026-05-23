@@ -17,15 +17,11 @@ void main() {
       testNotifier = _TestSettingsNotifier();
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            settingsProvider.overrideWith(() => testNotifier),
-          ],
+          overrides: [settingsProvider.overrideWith(() => testNotifier)],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const Scaffold(
-              body: EditorSettingsSection(),
-            ),
+            home: const Scaffold(body: EditorSettingsSection()),
           ),
         ),
       );
@@ -67,7 +63,9 @@ void main() {
       expect(switchWidget.value, isTrue);
     });
 
-    testWidgets('font size slider updates state and display text', (tester) async {
+    testWidgets('font size slider updates state and display text', (
+      tester,
+    ) async {
       await pumpEditorSettings(tester);
 
       expect(find.text('14px'), findsOneWidget);

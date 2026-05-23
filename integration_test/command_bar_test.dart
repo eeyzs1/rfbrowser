@@ -89,7 +89,9 @@ void main() {
       expect(hint, findsOneWidget);
     });
 
-    testWidgets('onCommand callback works when a command is selected', (tester) async {
+    testWidgets('onCommand callback works when a command is selected', (
+      tester,
+    ) async {
       await pumpCommandBar(tester);
 
       final commandTile = find.text('New Note');
@@ -134,7 +136,10 @@ class _TestHybridSearch extends HybridSearch {
   _TestHybridSearch() : super(_TestSemanticSearch());
 
   @override
-  Future<List<HybridSearchResult>> search(String query, {int topK = 20}) async => [];
+  Future<List<HybridSearchResult>> search(
+    String query, {
+    int topK = 20,
+  }) async => [];
 }
 
 class _TestSemanticSearch extends SemanticSearch {
@@ -146,6 +151,10 @@ class _TestSemanticSearch extends SemanticSearch {
 
 class _TestEmbeddingService extends EmbeddingService {
   @override
-  Future<List<double>> embed(String text, {AIProvider? provider, String? apiKey, String? modelId}) async =>
-      List.filled(128, 0.0);
+  Future<List<double>> embed(
+    String text, {
+    AIProvider? provider,
+    String? apiKey,
+    String? modelId,
+  }) async => List.filled(128, 0.0);
 }

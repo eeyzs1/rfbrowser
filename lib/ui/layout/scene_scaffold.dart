@@ -53,7 +53,8 @@ class _SceneScaffoldState extends State<SceneScaffold> {
       switchInCurve: Curves.easeOut,
       switchOutCurve: Curves.easeIn,
       transitionBuilder: (child, animation) {
-        final isNew = child.key is ValueKey<SceneType> &&
+        final isNew =
+            child.key is ValueKey<SceneType> &&
             (child.key as ValueKey<SceneType>).value == _currentScene;
 
         if (isNew) {
@@ -61,13 +62,10 @@ class _SceneScaffoldState extends State<SceneScaffold> {
               ? const Offset(0, 0.15)
               : const Offset(0.15, 0);
           return SlideTransition(
-            position: Tween<Offset>(
-              begin: slideOffset,
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOut,
-            )),
+            position: Tween<Offset>(begin: slideOffset, end: Offset.zero)
+                .animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                ),
             child: FadeTransition(opacity: animation, child: child),
           );
         } else {
@@ -78,10 +76,7 @@ class _SceneScaffoldState extends State<SceneScaffold> {
             position: Tween<Offset>(
               begin: Offset.zero,
               end: slideOffset,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeIn,
-            )),
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeIn)),
             child: FadeTransition(opacity: animation, child: child),
           );
         }

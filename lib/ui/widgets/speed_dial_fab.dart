@@ -48,8 +48,7 @@ class _SpeedDialFABState extends ConsumerState<SpeedDialFAB>
     super.dispose();
   }
 
-  bool get _isAnythingOpen =>
-      _speedDialOpen || _activePanel != _PanelType.none;
+  bool get _isAnythingOpen => _speedDialOpen || _activePanel != _PanelType.none;
 
   void _toggleSpeedDial() {
     setState(() {
@@ -127,13 +126,15 @@ class _SpeedDialFABState extends ConsumerState<SpeedDialFAB>
                             right: DesignSpacing.xs,
                             child: Semantics(
                               button: true,
-                              label: MaterialLocalizations.of(context)
-                                  .closeButtonLabel,
+                              label: MaterialLocalizations.of(
+                                context,
+                              ).closeButtonLabel,
                               child: IconButton(
                                 icon: const Icon(Icons.close, size: 16),
                                 onPressed: _closeAll,
-                                tooltip: MaterialLocalizations.of(context)
-                                    .closeButtonLabel,
+                                tooltip: MaterialLocalizations.of(
+                                  context,
+                                ).closeButtonLabel,
                                 constraints: const BoxConstraints(
                                   minWidth: DesignTouchTarget.iconButtonSize,
                                   minHeight: DesignTouchTarget.iconButtonSize,
@@ -183,13 +184,15 @@ class _SpeedDialFABState extends ConsumerState<SpeedDialFAB>
                             right: DesignSpacing.xs,
                             child: Semantics(
                               button: true,
-                              label: MaterialLocalizations.of(context)
-                                  .closeButtonLabel,
+                              label: MaterialLocalizations.of(
+                                context,
+                              ).closeButtonLabel,
                               child: IconButton(
                                 icon: const Icon(Icons.close, size: 16),
                                 onPressed: _closeAll,
-                                tooltip: MaterialLocalizations.of(context)
-                                    .closeButtonLabel,
+                                tooltip: MaterialLocalizations.of(
+                                  context,
+                                ).closeButtonLabel,
                                 constraints: const BoxConstraints(
                                   minWidth: DesignTouchTarget.iconButtonSize,
                                   minHeight: DesignTouchTarget.iconButtonSize,
@@ -280,17 +283,16 @@ class _SpeedDialFABState extends ConsumerState<SpeedDialFAB>
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(DesignRadius.sm),
                   boxShadow: const [DesignShadow.sm],
                 ),
-                child: Text(
-                  label,
-                  style: theme.textTheme.labelMedium,
-                ),
+                child: Text(label, style: theme.textTheme.labelMedium),
               ),
               const SizedBox(width: 8),
               FloatingActionButton.small(
@@ -315,8 +317,7 @@ class _AgentPanelContent extends ConsumerStatefulWidget {
   const _AgentPanelContent();
 
   @override
-  ConsumerState<_AgentPanelContent> createState() =>
-      _AgentPanelContentState();
+  ConsumerState<_AgentPanelContent> createState() => _AgentPanelContentState();
 }
 
 class _AgentPanelContentState extends ConsumerState<_AgentPanelContent> {
@@ -384,8 +385,7 @@ class _AgentPanelContentState extends ConsumerState<_AgentPanelContent> {
                           vertical: 8,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(DesignRadius.sm),
+                          borderRadius: BorderRadius.circular(DesignRadius.sm),
                         ),
                       ),
                       onSubmitted: (_) => _executeGoal(),
@@ -444,20 +444,26 @@ class _AgentPanelContentState extends ConsumerState<_AgentPanelContent> {
             ButtonSegment(
               value: TaskMode.manual,
               icon: const Icon(Icons.list_alt, size: 14),
-              label: Text(l10n.agentModeManual,
-                  style: const TextStyle(fontSize: 10)),
+              label: Text(
+                l10n.agentModeManual,
+                style: const TextStyle(fontSize: 10),
+              ),
             ),
             ButtonSegment(
               value: TaskMode.aiPlanned,
               icon: const Icon(Icons.psychology, size: 14),
-              label: Text(l10n.agentModeAiPlanned,
-                  style: const TextStyle(fontSize: 10)),
+              label: Text(
+                l10n.agentModeAiPlanned,
+                style: const TextStyle(fontSize: 10),
+              ),
             ),
             ButtonSegment(
               value: TaskMode.reactLoop,
               icon: const Icon(Icons.autorenew, size: 14),
-              label: Text(l10n.agentModeReact,
-                  style: const TextStyle(fontSize: 10)),
+              label: Text(
+                l10n.agentModeReact,
+                style: const TextStyle(fontSize: 10),
+              ),
             ),
           ],
           selected: {_selectedMode},
@@ -495,10 +501,7 @@ class _AgentPanelContentState extends ConsumerState<_AgentPanelContent> {
           children: [
             Icon(Icons.smart_toy, size: 40, color: theme.hintColor),
             const SizedBox(height: 12),
-            Text(
-              l10n.agentNoTasks,
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text(l10n.agentNoTasks, style: theme.textTheme.bodyMedium),
             const SizedBox(height: 4),
             Text(
               l10n.agentNoTasksHint,
@@ -610,8 +613,9 @@ class _TaskCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final statusColor = _statusColor(task.status, theme);
     final statusIcon = _statusIcon(task.status);
-    final completedSteps =
-        task.steps.where((s) => s.status == TaskStatus.completed).length;
+    final completedSteps = task.steps
+        .where((s) => s.status == TaskStatus.completed)
+        .length;
     final totalSteps = task.steps.length;
     final progress = totalSteps > 0 ? completedSteps / totalSteps : 0.0;
 
@@ -643,16 +647,20 @@ class _TaskCard extends ConsumerWidget {
                     onPressed: () =>
                         ref.read(agentProvider.notifier).pauseTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 20, minHeight: 20),
+                    constraints: const BoxConstraints(
+                      minWidth: 20,
+                      minHeight: 20,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.stop, size: 14),
                     onPressed: () =>
                         ref.read(agentProvider.notifier).cancelTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 20, minHeight: 20),
+                    constraints: const BoxConstraints(
+                      minWidth: 20,
+                      minHeight: 20,
+                    ),
                   ),
                 ],
                 if (task.status == TaskStatus.paused)
@@ -661,8 +669,10 @@ class _TaskCard extends ConsumerWidget {
                     onPressed: () =>
                         ref.read(agentProvider.notifier).resumeTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 20, minHeight: 20),
+                    constraints: const BoxConstraints(
+                      minWidth: 20,
+                      minHeight: 20,
+                    ),
                   ),
                 if (task.status == TaskStatus.completed ||
                     task.status == TaskStatus.failed)
@@ -671,8 +681,10 @@ class _TaskCard extends ConsumerWidget {
                     onPressed: () =>
                         ref.read(agentProvider.notifier).removeTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 20, minHeight: 20),
+                    constraints: const BoxConstraints(
+                      minWidth: 20,
+                      minHeight: 20,
+                    ),
                   ),
               ],
             ),
@@ -696,9 +708,7 @@ class _TaskCard extends ConsumerWidget {
             ],
             if (task.steps.isNotEmpty) ...[
               const SizedBox(height: 4),
-              ...task.steps.take(5).map(
-                    (step) => _StepRow(step: step),
-                  ),
+              ...task.steps.take(5).map((step) => _StepRow(step: step)),
               if (task.steps.length > 5)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
@@ -748,10 +758,11 @@ class _ModeBadge extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final (label, color) = switch (mode) {
       TaskMode.manual => (l10n.agentModeManual, theme.hintColor),
-      TaskMode.aiPlanned =>
-        (l10n.agentModeAiPlanned, theme.colorScheme.primary),
-      TaskMode.reactLoop =>
-        (l10n.agentModeReact, theme.colorScheme.tertiary),
+      TaskMode.aiPlanned => (
+        l10n.agentModeAiPlanned,
+        theme.colorScheme.primary,
+      ),
+      TaskMode.reactLoop => (l10n.agentModeReact, theme.colorScheme.tertiary),
     };
 
     return Container(
@@ -763,11 +774,7 @@ class _ModeBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 9,
-          color: color,
-          fontFamily: 'monospace',
-        ),
+        style: TextStyle(fontSize: 9, color: color, fontFamily: 'monospace'),
       ),
     );
   }

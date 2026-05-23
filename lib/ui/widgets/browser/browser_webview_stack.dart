@@ -74,9 +74,7 @@ class _BrowserWebViewStackState extends ConsumerState<BrowserWebViewStack> {
                 widget.controllers[tab.id] = controller;
               },
               onLoadStart: (controller, url) {
-                ref
-                    .read(browserProvider.notifier)
-                    .setTabLoading(tab.id, true);
+                ref.read(browserProvider.notifier).setTabLoading(tab.id, true);
                 if (url != null) {
                   ref
                       .read(browserProvider.notifier)
@@ -85,9 +83,7 @@ class _BrowserWebViewStackState extends ConsumerState<BrowserWebViewStack> {
                 }
               },
               onLoadStop: (controller, url) async {
-                ref
-                    .read(browserProvider.notifier)
-                    .setTabLoading(tab.id, false);
+                ref.read(browserProvider.notifier).setTabLoading(tab.id, false);
                 if (url != null) {
                   ref
                       .read(browserProvider.notifier)
@@ -104,8 +100,7 @@ class _BrowserWebViewStackState extends ConsumerState<BrowserWebViewStack> {
                   widget.onNavStateChanged(controller);
                 }
               },
-              shouldOverrideUrlLoading:
-                  (controller, navigationAction) async {
+              shouldOverrideUrlLoading: (controller, navigationAction) async {
                 final url = navigationAction.request.url?.toString() ?? '';
                 final uri = Uri.tryParse(url);
                 if (uri == null) return NavigationActionPolicy.CANCEL;

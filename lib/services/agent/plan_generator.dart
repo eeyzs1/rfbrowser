@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'agent_tool_registry.dart';
 
 class PlanStep {
@@ -19,13 +20,13 @@ class PlanStep {
   });
 
   Map<String, dynamic> toJson() => {
-        'tool': toolName,
-        'args': args,
-        if (description != null) 'description': description,
-        if (condition != null) 'condition': condition,
-        if (retryCount > 0) 'retryCount': retryCount,
-        if (onFailure != null) 'onFailure': onFailure,
-      };
+    'tool': toolName,
+    'args': args,
+    if (description != null) 'description': description,
+    if (condition != null) 'condition': condition,
+    if (retryCount > 0) 'retryCount': retryCount,
+    if (onFailure != null) 'onFailure': onFailure,
+  };
 }
 
 class PlanGenerator {
@@ -175,7 +176,9 @@ What should I do next?''';
       if (argsMatch != null) {
         try {
           args = jsonDecode(argsMatch.group(1)!) as Map<String, dynamic>;
-        } catch (_) {}
+        } catch (ex) {
+          debugPrint('PlanGenerator: failed to parse tool args: $ex');
+        }
       }
 
       steps.add(PlanStep(toolName: toolName, args: args));

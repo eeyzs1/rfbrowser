@@ -61,7 +61,9 @@ void main() {
       expect(find.byIcon(Icons.edit_note), findsOneWidget);
     });
 
-    testWidgets('shows no note selected when vault exists but no active note', (tester) async {
+    testWidgets('shows no note selected when vault exists but no active note', (
+      tester,
+    ) async {
       await pumpEditorPage(tester, currentVault: testVault);
 
       expect(find.byIcon(Icons.edit_note), findsOneWidget);
@@ -73,7 +75,9 @@ void main() {
       expect(find.byIcon(Icons.add), findsOneWidget);
     });
 
-    testWidgets('shows note title in header when active note exists', (tester) async {
+    testWidgets('shows note title in header when active note exists', (
+      tester,
+    ) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -97,7 +101,9 @@ void main() {
       expect(find.byIcon(Icons.title), findsOneWidget);
     });
 
-    testWidgets('format toolbar contains all formatting buttons', (tester) async {
+    testWidgets('format toolbar contains all formatting buttons', (
+      tester,
+    ) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -144,18 +150,21 @@ void main() {
       expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
     });
 
-    testWidgets('shows view mode SegmentedButton with edit and preview labels', (tester) async {
-      await pumpEditorPage(
-        tester,
-        notes: [testNote],
-        activeNoteId: testNote.id,
-        currentVault: testVault,
-      );
+    testWidgets(
+      'shows view mode SegmentedButton with edit and preview labels',
+      (tester) async {
+        await pumpEditorPage(
+          tester,
+          notes: [testNote],
+          activeNoteId: testNote.id,
+          currentVault: testVault,
+        );
 
-      expect(find.text('Edit'), findsOneWidget);
-      expect(find.text('Preview'), findsOneWidget);
-      expect(find.text('Split'), findsOneWidget);
-    });
+        expect(find.text('Edit'), findsOneWidget);
+        expect(find.text('Preview'), findsOneWidget);
+        expect(find.text('Split'), findsOneWidget);
+      },
+    );
 
     testWidgets('shows save button in header', (tester) async {
       await pumpEditorPage(
@@ -168,7 +177,9 @@ void main() {
       expect(find.byIcon(Icons.save), findsOneWidget);
     });
 
-    testWidgets('switching to preview mode hides format toolbar', (tester) async {
+    testWidgets('switching to preview mode hides format toolbar', (
+      tester,
+    ) async {
       await pumpEditorPage(
         tester,
         notes: [testNote],
@@ -193,17 +204,13 @@ class _TestKnowledgeNotifier extends KnowledgeNotifier {
   final List<Note> _notes;
   final String? _activeNoteId;
 
-  _TestKnowledgeNotifier({
-    List<Note>? notes,
-    String? activeNoteId,
-  })  : _notes = notes ?? [],
-        _activeNoteId = activeNoteId;
+  _TestKnowledgeNotifier({List<Note>? notes, String? activeNoteId})
+    : _notes = notes ?? [],
+      _activeNoteId = activeNoteId;
 
   @override
-  KnowledgeState build() => KnowledgeState(
-        notes: _notes,
-        activeNoteId: _activeNoteId,
-      );
+  KnowledgeState build() =>
+      KnowledgeState(notes: _notes, activeNoteId: _activeNoteId);
 }
 
 class _TestSettingsNotifier extends SettingsNotifier {
@@ -215,7 +222,7 @@ class _TestVaultNotifier extends VaultNotifier {
   final VaultConfig? _currentVault;
 
   _TestVaultNotifier({VaultConfig? currentVault})
-      : _currentVault = currentVault;
+    : _currentVault = currentVault;
 
   @override
   VaultState build() => VaultState(currentVault: _currentVault);

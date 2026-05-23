@@ -24,88 +24,95 @@ void main() {
   });
 
   group('Note Lifecycle Integration', () {
-    test('createNote creates file on disk and returns Note with correct title',
-        () async {
-      final tempDir = Directory.systemTemp.createTempSync('rfb_nl_');
-      addTearDown(() {
-        try {
-          tempDir.deleteSync(recursive: true);
-        } catch (_) {}
-      });
+    test(
+      'createNote creates file on disk and returns Note with correct title',
+      () async {
+        final tempDir = Directory.systemTemp.createTempSync('rfb_nl_');
+        addTearDown(() {
+          try {
+            tempDir.deleteSync(recursive: true);
+          } catch (_) {}
+        });
 
-      final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
-      if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+        final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+        if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
 
-      final vaultState = VaultState(
-        currentVault: VaultConfig(
-          path: tempDir.path,
-          name: 'test',
-          lastOpened: DateTime.now(),
-        ),
-      );
-      final container = ProviderContainer(overrides: [
-        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-      ]);
-      addTearDown(container.dispose);
+        final vaultState = VaultState(
+          currentVault: VaultConfig(
+            path: tempDir.path,
+            name: 'test',
+            lastOpened: DateTime.now(),
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      container.read(knowledgeProvider);
-      await Future.delayed(const Duration(milliseconds: 150));
+        container.read(knowledgeProvider);
+        await Future.delayed(const Duration(milliseconds: 150));
 
-      final kn = container.read(knowledgeProvider.notifier);
-      final note = await kn.createNote(title: '测试笔记');
+        final kn = container.read(knowledgeProvider.notifier);
+        final note = await kn.createNote(title: '测试笔记');
 
-      expect(note.title, '测试笔记');
-      expect(note.filePath, endsWith('.md'));
+        expect(note.title, '测试笔记');
+        expect(note.filePath, endsWith('.md'));
 
-      final repo = container.read(noteRepositoryProvider);
-      final onDisk = await repo?.getNoteByPath(note.filePath);
-      expect(onDisk, isNotNull);
-      expect(onDisk!.title, '测试笔记');
+        final repo = container.read(noteRepositoryProvider);
+        final onDisk = await repo?.getNoteByPath(note.filePath);
+        expect(onDisk, isNotNull);
+        expect(onDisk!.title, '测试笔记');
 
-      final file = File(p.join(tempDir.path, note.filePath));
-      expect(file.existsSync(), isTrue);
-    });
+        final file = File(p.join(tempDir.path, note.filePath));
+        expect(file.existsSync(), isTrue);
+      },
+    );
 
-    test('updateActiveNoteContent + saveActiveNote persists content to disk',
-        () async {
-      final tempDir = Directory.systemTemp.createTempSync('rfb_nl_');
-      addTearDown(() {
-        try {
-          tempDir.deleteSync(recursive: true);
-        } catch (_) {}
-      });
+    test(
+      'updateActiveNoteContent + saveActiveNote persists content to disk',
+      () async {
+        final tempDir = Directory.systemTemp.createTempSync('rfb_nl_');
+        addTearDown(() {
+          try {
+            tempDir.deleteSync(recursive: true);
+          } catch (_) {}
+        });
 
-      final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
-      if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+        final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+        if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
 
-      final vaultState = VaultState(
-        currentVault: VaultConfig(
-          path: tempDir.path,
-          name: 'test',
-          lastOpened: DateTime.now(),
-        ),
-      );
-      final container = ProviderContainer(overrides: [
-        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-      ]);
-      addTearDown(container.dispose);
+        final vaultState = VaultState(
+          currentVault: VaultConfig(
+            path: tempDir.path,
+            name: 'test',
+            lastOpened: DateTime.now(),
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      container.read(knowledgeProvider);
-      await Future.delayed(const Duration(milliseconds: 150));
+        container.read(knowledgeProvider);
+        await Future.delayed(const Duration(milliseconds: 150));
 
-      final kn = container.read(knowledgeProvider.notifier);
-      final note = await kn.createNote(title: '内容更新测试');
+        final kn = container.read(knowledgeProvider.notifier);
+        final note = await kn.createNote(title: '内容更新测试');
 
-      kn.updateActiveNoteContent(
-          '# 内容更新测试\n\n## 详情\n\n这是更新后的内容');
-      await kn.saveActiveNote();
+        kn.updateActiveNoteContent('# 内容更新测试\n\n## 详情\n\n这是更新后的内容');
+        await kn.saveActiveNote();
 
-      final repo = container.read(noteRepositoryProvider);
-      final onDisk = await repo?.getNoteByPath(note.filePath);
-      expect(onDisk, isNotNull);
-      expect(onDisk!.content, contains('这是更新后的内容'));
-      expect(onDisk.content, contains('## 详情'));
-    });
+        final repo = container.read(noteRepositoryProvider);
+        final onDisk = await repo?.getNoteByPath(note.filePath);
+        expect(onDisk, isNotNull);
+        expect(onDisk!.content, contains('这是更新后的内容'));
+        expect(onDisk.content, contains('## 详情'));
+      },
+    );
 
     test('created note is searchable via IndexStore', () async {
       final tempDir = Directory.systemTemp.createTempSync('rfb_nl_');
@@ -125,9 +132,11 @@ void main() {
           lastOpened: DateTime.now(),
         ),
       );
-      final container = ProviderContainer(overrides: [
-        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ],
+      );
       addTearDown(container.dispose);
 
       container.read(knowledgeProvider);
@@ -160,9 +169,11 @@ void main() {
           lastOpened: DateTime.now(),
         ),
       );
-      final container = ProviderContainer(overrides: [
-        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ],
+      );
       addTearDown(container.dispose);
 
       container.read(knowledgeProvider);
@@ -194,14 +205,17 @@ void main() {
       final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
       if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
 
-      File(p.join(tempDir.path, 'note-a.md'))
-          .writeAsStringSync('# Note A\n\nContent A');
-      File(p.join(tempDir.path, 'note-b.md'))
-          .writeAsStringSync('# Note B\n\nContent B');
+      File(
+        p.join(tempDir.path, 'note-a.md'),
+      ).writeAsStringSync('# Note A\n\nContent A');
+      File(
+        p.join(tempDir.path, 'note-b.md'),
+      ).writeAsStringSync('# Note B\n\nContent B');
       final subDir = Directory(p.join(tempDir.path, 'subfolder'));
       subDir.createSync();
-      File(p.join(subDir.path, 'note-c.md'))
-          .writeAsStringSync('# Note C\n\nContent C');
+      File(
+        p.join(subDir.path, 'note-c.md'),
+      ).writeAsStringSync('# Note C\n\nContent C');
 
       final vaultState = VaultState(
         currentVault: VaultConfig(
@@ -210,9 +224,11 @@ void main() {
           lastOpened: DateTime.now(),
         ),
       );
-      final container = ProviderContainer(overrides: [
-        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ],
+      );
       addTearDown(container.dispose);
 
       container.read(knowledgeProvider);
@@ -237,14 +253,15 @@ void main() {
 
       final repo = NoteRepository(tempDir.path);
       final note = await repo.createNote(
-          title: '子文件夹笔记', folder: 'research/quantum');
+        title: '子文件夹笔记',
+        folder: 'research/quantum',
+      );
 
       expect(note.filePath, contains('research'));
       expect(note.filePath, contains('quantum'));
       expect(note.title, '子文件夹笔记');
 
-      final nestedDir =
-          Directory(p.join(tempDir.path, 'research', 'quantum'));
+      final nestedDir = Directory(p.join(tempDir.path, 'research', 'quantum'));
       expect(nestedDir.existsSync(), isTrue);
 
       final file = File(p.join(tempDir.path, note.filePath));
@@ -293,9 +310,11 @@ Some content here.''';
           lastOpened: DateTime.now(),
         ),
       );
-      final container = ProviderContainer(overrides: [
-        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ],
+      );
       addTearDown(container.dispose);
 
       container.read(knowledgeProvider);
@@ -325,9 +344,11 @@ Some content here.''';
           lastOpened: DateTime.now(),
         ),
       );
-      final container = ProviderContainer(overrides: [
-        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ],
+      );
       addTearDown(container.dispose);
 
       container.read(knowledgeProvider);
@@ -374,9 +395,11 @@ Some content here.''';
           lastOpened: DateTime.now(),
         ),
       );
-      final container = ProviderContainer(overrides: [
-        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ],
+      );
       addTearDown(container.dispose);
 
       container.read(knowledgeProvider);

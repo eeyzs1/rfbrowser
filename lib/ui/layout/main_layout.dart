@@ -128,10 +128,11 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     'save' => () => ref.read(knowledgeProvider.notifier).saveActiveNote(),
     'search' || 'find' => () => setState(() => _showCommandBar = true),
     'toggle_editor' || 'switch_think' => () => _switchScene(SceneType.think),
-    'toggle_browser' || 'switch_capture' => () =>
-        _switchScene(SceneType.capture),
-    'toggle_graph' || 'toggle_canvas' || 'switch_connect' => () =>
-        _switchScene(SceneType.connect),
+    'toggle_browser' ||
+    'switch_capture' => () => _switchScene(SceneType.capture),
+    'toggle_graph' ||
+    'toggle_canvas' ||
+    'switch_connect' => () => _switchScene(SceneType.connect),
     'connect_canvas' => () {
       _switchScene(SceneType.connect);
       _connectViewMode = ConnectViewMode.canvas;

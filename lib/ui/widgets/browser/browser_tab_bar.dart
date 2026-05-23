@@ -54,10 +54,12 @@ class _BrowserTabBarState extends ConsumerState<BrowserTabBar> {
               itemCount: visibleTabs.length + 1,
               onReorder: (oldIndex, newIndex) {
                 if (newIndex > visibleTabs.length) return;
-                final adjustedOld =
-                    oldIndex < visibleTabs.length ? oldIndex : oldIndex - 1;
-                final adjustedNew =
-                    newIndex > adjustedOld ? newIndex - 1 : newIndex;
+                final adjustedOld = oldIndex < visibleTabs.length
+                    ? oldIndex
+                    : oldIndex - 1;
+                final adjustedNew = newIndex > adjustedOld
+                    ? newIndex - 1
+                    : newIndex;
                 if (adjustedOld != adjustedNew) {
                   ref
                       .read(browserProvider.notifier)
@@ -139,8 +141,7 @@ class _BrowserTabBarState extends ConsumerState<BrowserTabBar> {
         button: true,
         selected: isActive,
         child: InkWell(
-          onTap: () =>
-              ref.read(browserProvider.notifier).setActiveTab(tab.id),
+          onTap: () => ref.read(browserProvider.notifier).setActiveTab(tab.id),
           onSecondaryTapDown: (_) => widget.onShowContextMenu(tab),
           onLongPress: () => widget.onShowContextMenu(tab),
           hoverColor: theme.colorScheme.primary.withValues(alpha: 0.04),
@@ -156,8 +157,7 @@ class _BrowserTabBarState extends ConsumerState<BrowserTabBar> {
               border: Border(
                 right: BorderSide(color: theme.dividerColor, width: 0.5),
                 bottom: isActive
-                    ? BorderSide(
-                        color: theme.colorScheme.primary, width: 2)
+                    ? BorderSide(color: theme.colorScheme.primary, width: 2)
                     : BorderSide.none,
               ),
             ),
@@ -177,7 +177,9 @@ class _BrowserTabBarState extends ConsumerState<BrowserTabBar> {
                           ),
                         )
                       : Icon(
-                          tab.isPinned ? Icons.push_pin_outlined : Icons.language_outlined,
+                          tab.isPinned
+                              ? Icons.push_pin_outlined
+                              : Icons.language_outlined,
                           key: ValueKey(tab.isPinned ? 'pinned' : 'idle'),
                           size: 12,
                           color: isActive
@@ -191,8 +193,7 @@ class _BrowserTabBarState extends ConsumerState<BrowserTabBar> {
                     tab.title.isNotEmpty ? tab.title : tab.url,
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: isActive ? theme.colorScheme.primary : null,
-                      fontWeight:
-                          isActive ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

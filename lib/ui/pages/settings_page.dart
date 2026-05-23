@@ -107,8 +107,11 @@ class _SkillsSettingsTile extends ConsumerWidget {
       leading: CircleAvatar(
         radius: 16,
         backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-        child: Icon(Icons.auto_awesome,
-            size: 18, color: theme.colorScheme.primary),
+        child: Icon(
+          Icons.auto_awesome,
+          size: 18,
+          color: theme.colorScheme.primary,
+        ),
       ),
       title: Text(l.skills),
       subtitle: Text(
@@ -122,8 +125,7 @@ class _SkillsSettingsTile extends ConsumerWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (_) => const SkillsManagementPage()),
+          MaterialPageRoute(builder: (_) => const SkillsManagementPage()),
         );
       },
     );

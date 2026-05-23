@@ -11,7 +11,8 @@ import 'package:rfbrowser/ui/pages/settings/plugin_settings_section.dart';
 class _TestVaultNotifier extends VaultNotifier {
   final VaultConfig? _currentVault;
 
-  _TestVaultNotifier({VaultConfig? currentVault}) : _currentVault = currentVault;
+  _TestVaultNotifier({VaultConfig? currentVault})
+    : _currentVault = currentVault;
 
   @override
   VaultState build() => VaultState(currentVault: _currentVault);
@@ -40,7 +41,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            pluginHostProvider.overrideWith(() => _TestPluginHostNotifier(state)),
+            pluginHostProvider.overrideWith(
+              () => _TestPluginHostNotifier(state),
+            ),
             vaultProvider.overrideWith(
               () => _TestVaultNotifier(currentVault: vaultConfig),
             ),
@@ -49,9 +52,7 @@ void main() {
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const Scaffold(
-              body: SingleChildScrollView(
-                child: PluginSettingsSection(),
-              ),
+              body: SingleChildScrollView(child: PluginSettingsSection()),
             ),
           ),
         ),
@@ -59,21 +60,23 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('AC-PS-1: shows empty state when no plugins registered', (tester) async {
+    testWidgets('AC-PS-1: shows empty state when no plugins registered', (
+      tester,
+    ) async {
       await pumpPluginSettings(tester);
 
       expect(find.byIcon(Icons.extension_off), findsOneWidget);
     });
 
-    testWidgets('AC-PS-2: shows plugin card for registered plugin', (tester) async {
+    testWidgets('AC-PS-2: shows plugin card for registered plugin', (
+      tester,
+    ) async {
       final manifest = HelloWorldPlugin().manifest;
       final state = PluginState(
         manifests: {manifest.id: manifest},
         enabled: {manifest.id: true},
         running: {manifest.id: true},
-        commands: {
-          manifest.id: HelloWorldPlugin().commands,
-        },
+        commands: {manifest.id: HelloWorldPlugin().commands},
       );
 
       await pumpPluginSettings(tester, pluginState: state);
@@ -82,15 +85,15 @@ void main() {
       expect(find.text('v1.0.0'), findsOneWidget);
     });
 
-    testWidgets('AC-PS-3: shows builtin badge for builtin plugin', (tester) async {
+    testWidgets('AC-PS-3: shows builtin badge for builtin plugin', (
+      tester,
+    ) async {
       final manifest = HelloWorldPlugin().manifest;
       final state = PluginState(
         manifests: {manifest.id: manifest},
         enabled: {manifest.id: true},
         running: {manifest.id: true},
-        commands: {
-          manifest.id: HelloWorldPlugin().commands,
-        },
+        commands: {manifest.id: HelloWorldPlugin().commands},
       );
 
       await pumpPluginSettings(tester, pluginState: state);
@@ -98,7 +101,9 @@ void main() {
       expect(find.text('Builtin'), findsOneWidget);
     });
 
-    testWidgets('AC-PS-4: no builtin badge for external plugin', (tester) async {
+    testWidgets('AC-PS-4: no builtin badge for external plugin', (
+      tester,
+    ) async {
       final manifest = PluginManifest(
         id: 'com.example.external',
         name: 'External Plugin',
@@ -125,9 +130,7 @@ void main() {
         manifests: {manifest.id: manifest},
         enabled: {manifest.id: true},
         running: {manifest.id: true},
-        commands: {
-          manifest.id: HelloWorldPlugin().commands,
-        },
+        commands: {manifest.id: HelloWorldPlugin().commands},
       );
 
       await pumpPluginSettings(tester, pluginState: state);
@@ -158,9 +161,7 @@ void main() {
         manifests: {manifest.id: manifest},
         enabled: {manifest.id: true},
         running: {manifest.id: true},
-        commands: {
-          manifest.id: plugin.commands,
-        },
+        commands: {manifest.id: plugin.commands},
       );
 
       await pumpPluginSettings(tester, pluginState: state);
@@ -172,16 +173,16 @@ void main() {
       expect(find.text('RFBrowser Team'), findsOneWidget);
     });
 
-    testWidgets('AC-PS-8: shows permission chips when expanded', (tester) async {
+    testWidgets('AC-PS-8: shows permission chips when expanded', (
+      tester,
+    ) async {
       final plugin = HelloWorldPlugin();
       final manifest = plugin.manifest;
       final state = PluginState(
         manifests: {manifest.id: manifest},
         enabled: {manifest.id: true},
         running: {manifest.id: true},
-        commands: {
-          manifest.id: plugin.commands,
-        },
+        commands: {manifest.id: plugin.commands},
       );
 
       await pumpPluginSettings(tester, pluginState: state);
@@ -203,9 +204,7 @@ void main() {
         manifests: {manifest.id: manifest},
         enabled: {manifest.id: true},
         running: {manifest.id: true},
-        commands: {
-          manifest.id: plugin.commands,
-        },
+        commands: {manifest.id: plugin.commands},
       );
 
       await pumpPluginSettings(tester, pluginState: state);
@@ -225,9 +224,7 @@ void main() {
         manifests: {manifest.id: manifest},
         enabled: {manifest.id: true},
         running: {manifest.id: true},
-        commands: {
-          manifest.id: plugin.commands,
-        },
+        commands: {manifest.id: plugin.commands},
       );
 
       await pumpPluginSettings(tester, pluginState: state);
@@ -239,15 +236,15 @@ void main() {
       expect(find.text('• Note Statistics'), findsOneWidget);
     });
 
-    testWidgets('AC-PS-11: shows error indicator when plugin has error', (tester) async {
+    testWidgets('AC-PS-11: shows error indicator when plugin has error', (
+      tester,
+    ) async {
       final manifest = HelloWorldPlugin().manifest;
       final state = PluginState(
         manifests: {manifest.id: manifest},
         enabled: {manifest.id: true},
         running: {manifest.id: true},
-        commands: {
-          manifest.id: HelloWorldPlugin().commands,
-        },
+        commands: {manifest.id: HelloWorldPlugin().commands},
         error: 'Something went wrong',
       );
 
@@ -256,7 +253,9 @@ void main() {
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
     });
 
-    testWidgets('AC-PS-12: shows install and marketplace buttons', (tester) async {
+    testWidgets('AC-PS-12: shows install and marketplace buttons', (
+      tester,
+    ) async {
       final vaultConfig = VaultConfig(
         path: '/tmp/test-vault',
         name: 'Test Vault',
@@ -279,18 +278,10 @@ void main() {
         permissions: [Permission.browserRead],
       );
       final state = PluginState(
-        manifests: {
-          hwManifest.id: hwManifest,
-          extManifest.id: extManifest,
-        },
-        enabled: {
-          hwManifest.id: true,
-          extManifest.id: false,
-        },
+        manifests: {hwManifest.id: hwManifest, extManifest.id: extManifest},
+        enabled: {hwManifest.id: true, extManifest.id: false},
         running: {hwManifest.id: true},
-        commands: {
-          hwManifest.id: HelloWorldPlugin().commands,
-        },
+        commands: {hwManifest.id: HelloWorldPlugin().commands},
       );
 
       await pumpPluginSettings(tester, pluginState: state);
@@ -299,7 +290,9 @@ void main() {
       expect(find.text('External Plugin'), findsOneWidget);
     });
 
-    testWidgets('AC-PS-14: plugin description shown when present', (tester) async {
+    testWidgets('AC-PS-14: plugin description shown when present', (
+      tester,
+    ) async {
       final manifest = PluginManifest(
         id: 'desc-test',
         name: 'Described Plugin',
@@ -319,7 +312,9 @@ void main() {
       expect(find.text('A plugin with a description'), findsOneWidget);
     });
 
-    testWidgets('AC-PS-15: plugin id shown when description is empty', (tester) async {
+    testWidgets('AC-PS-15: plugin id shown when description is empty', (
+      tester,
+    ) async {
       final manifest = PluginManifest(
         id: 'no-desc-test',
         name: 'No Desc Plugin',

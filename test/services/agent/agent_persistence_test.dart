@@ -12,7 +12,9 @@ void main() {
     late Directory tempDir;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('agent_persistence_test_');
+      tempDir = await Directory.systemTemp.createTemp(
+        'agent_persistence_test_',
+      );
       persistence = AgentPersistence(basePath: tempDir.path);
     });
 
@@ -141,7 +143,9 @@ void main() {
     });
 
     test('loadTasks — 畸形 JSON 返回空列表', () async {
-      final file = File('${tempDir.path}${Platform.pathSeparator}agent_tasks.json');
+      final file = File(
+        '${tempDir.path}${Platform.pathSeparator}agent_tasks.json',
+      );
       await file.writeAsString('not valid json {{{');
 
       final tasks = await persistence.loadTasks();
@@ -149,9 +153,12 @@ void main() {
     });
 
     test('loadTasks — JSON 数组包含无效元素', () async {
-      final file = File('${tempDir.path}${Platform.pathSeparator}agent_tasks.json');
+      final file = File(
+        '${tempDir.path}${Platform.pathSeparator}agent_tasks.json',
+      );
       await file.writeAsString(
-          '[{"id": "valid", "name": "ok", "description": "", "mode": "manual", "status": "pending", "steps": [], "created": "2026-01-01T00:00:00.000"}, 123, "string"]');
+        '[{"id": "valid", "name": "ok", "description": "", "mode": "manual", "status": "pending", "steps": [], "created": "2026-01-01T00:00:00.000"}, 123, "string"]',
+      );
 
       final tasks = await persistence.loadTasks();
       expect(tasks.length, greaterThanOrEqualTo(1));

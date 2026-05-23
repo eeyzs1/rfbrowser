@@ -5,7 +5,7 @@ import 'package:rfbrowser/services/agent/agent_tool.dart';
 
 class _TestTool extends AgentTool {
   _TestTool({required super.name, required super.description})
-      : super(parametersSchema: const {});
+    : super(parametersSchema: const {});
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async =>
@@ -18,11 +18,21 @@ void main() {
 
   setUp(() {
     registry = AgentToolRegistry();
-    registry.register(_TestTool(name: 'navigate', description: 'Navigate to URL'));
-    registry.register(_TestTool(name: 'extract_text', description: 'Extract text from page'));
-    registry.register(_TestTool(name: 'create_note', description: 'Create a note'));
-    registry.register(_TestTool(name: 'ai_reason', description: 'AI reasoning'));
-    registry.register(_TestTool(name: 'search_notes', description: 'Search notes'));
+    registry.register(
+      _TestTool(name: 'navigate', description: 'Navigate to URL'),
+    );
+    registry.register(
+      _TestTool(name: 'extract_text', description: 'Extract text from page'),
+    );
+    registry.register(
+      _TestTool(name: 'create_note', description: 'Create a note'),
+    );
+    registry.register(
+      _TestTool(name: 'ai_reason', description: 'AI reasoning'),
+    );
+    registry.register(
+      _TestTool(name: 'search_notes', description: 'Search notes'),
+    );
     generator = PlanGenerator(registry);
   });
 
@@ -59,7 +69,8 @@ void main() {
     });
 
     test('parsePlan handles markdown fences', () {
-      final json = '```json\n{"steps": [{"tool": "navigate", "args": {"url": "test"}}]}\n```';
+      final json =
+          '```json\n{"steps": [{"tool": "navigate", "args": {"url": "test"}}]}\n```';
       final steps = generator.parsePlan(json);
       expect(steps.length, 1);
       expect(steps[0].toolName, 'navigate');
@@ -87,7 +98,8 @@ void main() {
     });
 
     test('parseReactResponse parses valid JSON', () {
-      final json = '{"thought": "I should search", "tool": "search_notes", "args": {"query": "test"}, "done": false}';
+      final json =
+          '{"thought": "I should search", "tool": "search_notes", "args": {"query": "test"}, "done": false}';
       final result = generator.parseReactResponse(json);
       expect(result, isNotNull);
       expect(result!['thought'], 'I should search');
@@ -96,7 +108,8 @@ void main() {
     });
 
     test('parseReactResponse handles markdown fences', () {
-      final json = '```json\n{"thought": "done", "tool": "final_answer", "args": {"answer": "result"}, "done": true}\n```';
+      final json =
+          '```json\n{"thought": "done", "tool": "final_answer", "args": {"answer": "result"}, "done": true}\n```';
       final result = generator.parseReactResponse(json);
       expect(result, isNotNull);
       expect(result!['done'], true);
@@ -151,7 +164,8 @@ void main() {
     });
 
     test('fallbackParse extracts tools from malformed JSON', () {
-      final text = 'Here is my plan: "tool": "navigate", "args": {"url": "test"} and "tool": "create_note", "args": {"title": "hi"}';
+      final text =
+          'Here is my plan: "tool": "navigate", "args": {"url": "test"} and "tool": "create_note", "args": {"title": "hi"}';
       final steps = generator.parsePlan(text);
       expect(steps.length, 2);
       expect(steps[0].toolName, 'navigate');

@@ -75,7 +75,14 @@ void main() {
       test('skips connections with missing cards', () {
         final data = CanvasData(
           cards: [
-            CanvasCard(id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50),
+            CanvasCard(
+              id: 'c1',
+              type: CanvasCardType.rectangle,
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 50,
+            ),
           ],
           connections: [
             CanvasConnection(id: 'conn', fromCardId: 'c1', toCardId: 'missing'),
@@ -94,8 +101,12 @@ void main() {
         final data = CanvasData(
           cards: [
             CanvasCard(
-              id: 'c1', type: CanvasCardType.rectangle,
-              x: 0, y: 0, width: 100, height: 50,
+              id: 'c1',
+              type: CanvasCardType.rectangle,
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 50,
               title: 'A < B & C > "D"',
               content: '',
             ),
@@ -142,7 +153,16 @@ void main() {
       test('shows layer name when layerId is set', () {
         final data = CanvasData(
           cards: [
-            CanvasCard(id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, title: 'C1', layerId: 'l1'),
+            CanvasCard(
+              id: 'c1',
+              type: CanvasCardType.rectangle,
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 50,
+              title: 'C1',
+              layerId: 'l1',
+            ),
           ],
           layers: [CanvasLayer(id: 'l1', name: 'MyLayer', order: 0)],
         );
@@ -153,11 +173,30 @@ void main() {
       test('marks auto connections', () {
         final data = CanvasData(
           cards: [
-            CanvasCard(id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50),
-            CanvasCard(id: 'c2', type: CanvasCardType.rectangle, x: 100, y: 0, width: 100, height: 50),
+            CanvasCard(
+              id: 'c1',
+              type: CanvasCardType.rectangle,
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 50,
+            ),
+            CanvasCard(
+              id: 'c2',
+              type: CanvasCardType.rectangle,
+              x: 100,
+              y: 0,
+              width: 100,
+              height: 50,
+            ),
           ],
           connections: [
-            CanvasConnection(id: 'a1', fromCardId: 'c1', toCardId: 'c2', isAuto: true),
+            CanvasConnection(
+              id: 'a1',
+              fromCardId: 'c1',
+              toCardId: 'c2',
+              isAuto: true,
+            ),
           ],
         );
         final md = service.exportToMarkdown(data, 'T');
@@ -183,13 +222,19 @@ void main() {
       });
 
       test('decodeFromUrl returns null when data param missing', () {
-        expect(CanvasExportService.decodeFromUrl('rfbrowser://canvas?x=1'), isNull);
+        expect(
+          CanvasExportService.decodeFromUrl('rfbrowser://canvas?x=1'),
+          isNull,
+        );
       });
     });
 
     group('exportWithEmbeddedData', () {
       test('embeds metadata in SVG', () {
-        final (svg, json) = service.exportWithEmbeddedData(makeSampleData(), 'T');
+        final (svg, json) = service.exportWithEmbeddedData(
+          makeSampleData(),
+          'T',
+        );
         expect(svg, contains('<metadata>rfbrowser:'));
         expect(json, isNotEmpty);
       });
@@ -242,12 +287,15 @@ void main() {
         expect(result.cards[0].content, 'Description A');
       });
 
-      test('creates connections when current row references previous row title', () {
-        final csv = 'Item A, Item B\nItem C, Item A';
-        final result = CanvasExportService.importFromCsv(csv);
-        expect(result, isNotNull);
-        expect(result!.connections, isNotEmpty);
-      });
+      test(
+        'creates connections when current row references previous row title',
+        () {
+          final csv = 'Item A, Item B\nItem C, Item A';
+          final result = CanvasExportService.importFromCsv(csv);
+          expect(result, isNotNull);
+          expect(result!.connections, isNotEmpty);
+        },
+      );
 
       test('returns null for empty CSV', () {
         expect(CanvasExportService.importFromCsv(''), isNull);

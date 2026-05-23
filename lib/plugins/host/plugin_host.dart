@@ -487,7 +487,7 @@ class PermissionDeniedError implements Exception {
 class PluginHostNotifier extends Notifier<PluginState> {
   final Map<String, Sandbox> _sandboxes = {};
   final Map<String, void Function(String event, Map<String, dynamic> data)>
-      _hookHandlers = {};
+  _hookHandlers = {};
   String? _vaultPath;
 
   @override
@@ -552,10 +552,8 @@ class PluginHostNotifier extends Notifier<PluginState> {
   Future<void> setPluginEnabled(
     String pluginId,
     bool value, {
-    void Function(PluginManifest manifest, PluginHostNotifier host)?
-        onEnable,
-    void Function(PluginManifest manifest, PluginHostNotifier host)?
-        onDisable,
+    void Function(PluginManifest manifest, PluginHostNotifier host)? onEnable,
+    void Function(PluginManifest manifest, PluginHostNotifier host)? onDisable,
   }) async {
     final manifest = state.manifests[pluginId];
     if (manifest == null) return;
@@ -582,9 +580,7 @@ class PluginHostNotifier extends Notifier<PluginState> {
         running: {...state.running}..remove(pluginId),
       );
     } else {
-      state = state.copyWith(
-        enabled: {...state.enabled, pluginId: value},
-      );
+      state = state.copyWith(enabled: {...state.enabled, pluginId: value});
     }
 
     await _saveConfig();
@@ -594,8 +590,7 @@ class PluginHostNotifier extends Notifier<PluginState> {
     PluginManifest manifest, {
     bool enabledByDefault = true,
     void Function(PluginManifest manifest, PluginHostNotifier host)? onEnable,
-    void Function(PluginManifest manifest, PluginHostNotifier host)?
-        onDisable,
+    void Function(PluginManifest manifest, PluginHostNotifier host)? onDisable,
   }) async {
     await registerManifest(manifest);
 
@@ -636,13 +631,13 @@ class PluginHostNotifier extends Notifier<PluginState> {
   void _startPluginSafely(String pluginId) {
     final manifest = state.manifests[pluginId];
     if (manifest == null) return;
-    _startSandbox(manifest).then((_) {
-      state = state.copyWith(
-        running: {...state.running, pluginId: true},
-      );
-    }).catchError((e) {
-      state = state.copyWith(error: e.toString());
-    });
+    _startSandbox(manifest)
+        .then((_) {
+          state = state.copyWith(running: {...state.running, pluginId: true});
+        })
+        .catchError((e) {
+          state = state.copyWith(error: e.toString());
+        });
   }
 
   Future<void> enablePlugin(PluginManifest manifest) async {
@@ -710,8 +705,8 @@ class PluginHostNotifier extends Notifier<PluginState> {
           name: args['name'] as String? ?? 'Plugin Task',
           description: args['description'] as String? ?? '',
           mode: mode,
-          steps: (args['steps'] as List?)
-                  ?.map((s) {
+          steps:
+              (args['steps'] as List?)?.map((s) {
                 if (s is Map<String, dynamic>) {
                   return AgentStep(
                     description: s['description'] as String? ?? '',
@@ -720,8 +715,7 @@ class PluginHostNotifier extends Notifier<PluginState> {
                   );
                 }
                 return AgentStep(description: s.toString());
-              })
-                  .toList() ??
+              }).toList() ??
               [],
         );
         await agent.executeTask(task);
@@ -746,7 +740,8 @@ class PluginHostNotifier extends Notifier<PluginState> {
         final pluginTool = _PluginAgentTool(
           name: toolDef['name'] as String? ?? '',
           description: toolDef['description'] as String? ?? '',
-          parametersSchema: (toolDef['parameters'] as Map<String, dynamic>?) ?? {},
+          parametersSchema:
+              (toolDef['parameters'] as Map<String, dynamic>?) ?? {},
           isDestructive: toolDef['isDestructive'] as bool? ?? false,
           source: toolDef['source'] as String? ?? 'plugin',
           executeFn: (toolArgs) async {
@@ -772,12 +767,16 @@ class PluginHostNotifier extends Notifier<PluginState> {
         return {'unregistered': true};
       case 'agent.listTasks':
         final agent = ref.read(agentProvider.notifier);
-        final tasks = agent.state.tasks.map((t) => {
-          'id': t.id,
-          'name': t.name,
-          'status': t.status.name,
-          'mode': t.mode.name,
-        }).toList();
+        final tasks = agent.state.tasks
+            .map(
+              (t) => {
+                'id': t.id,
+                'name': t.name,
+                'status': t.status.name,
+                'mode': t.mode.name,
+              },
+            )
+            .toList();
         return {'tasks': tasks};
       default:
         throw UnimplementedError('Unknown API: $apiName');
@@ -837,9 +836,7 @@ class PluginHostNotifier extends Notifier<PluginState> {
         try {
           handler(event, data);
         } catch (e) {
-          debugPrint(
-            'PluginHost: hook $event for $pluginId failed: $e',
-          );
+          debugPrint('PluginHost: hook $event for $pluginId failed: $e');
         }
       }
     }

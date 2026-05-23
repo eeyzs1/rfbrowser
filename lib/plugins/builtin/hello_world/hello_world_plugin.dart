@@ -6,80 +6,80 @@ import '../../../data/models/skill.dart';
 class HelloWorldPlugin extends BuiltinPlugin {
   @override
   PluginManifest get manifest => PluginManifest(
-        id: 'hello-world',
-        name: 'Hello World',
-        version: '1.0.0',
-        author: 'RFBrowser Team',
-        description: 'A test plugin that demonstrates the plugin system',
-        permissions: [
-          Permission.knowledgeRead,
-          Permission.knowledgeWrite,
-          Permission.browserRead,
-          Permission.uiCommand,
-          Permission.uiPanel,
-        ],
-      );
+    id: 'hello-world',
+    name: 'Hello World',
+    version: '1.0.0',
+    author: 'RFBrowser Team',
+    description: 'A test plugin that demonstrates the plugin system',
+    permissions: [
+      Permission.knowledgeRead,
+      Permission.knowledgeWrite,
+      Permission.browserRead,
+      Permission.uiCommand,
+      Permission.uiPanel,
+    ],
+  );
 
   @override
   List<PluginCommand> get commands => [
-        PluginCommand(
-          id: 'hello-world.greet',
-          label: 'Say Hello',
-          pluginId: 'hello-world',
-        ),
-        PluginCommand(
-          id: 'hello-world.count-notes',
-          label: 'Count Notes',
-          pluginId: 'hello-world',
-        ),
-        PluginCommand(
-          id: 'hello-world.show-panel',
-          label: 'Show Hello Panel',
-          pluginId: 'hello-world',
-        ),
-      ];
+    PluginCommand(
+      id: 'hello-world.greet',
+      label: 'Say Hello',
+      pluginId: 'hello-world',
+    ),
+    PluginCommand(
+      id: 'hello-world.count-notes',
+      label: 'Count Notes',
+      pluginId: 'hello-world',
+    ),
+    PluginCommand(
+      id: 'hello-world.show-panel',
+      label: 'Show Hello Panel',
+      pluginId: 'hello-world',
+    ),
+  ];
 
   @override
   List<Skill> get skills => [
-        Skill(
-          id: 'hello-world.greeting',
-          name: 'Greeting Generator',
-          description: 'Generate a friendly greeting message',
-          prompt:
-              'Generate a warm and friendly greeting message. The tone should be: {{tone}}. The recipient is: {{recipient}}.',
-          params: {
-            'tone': SkillParam(
-              name: 'tone',
-              type: 'string',
-              description: 'Tone of the greeting (casual, formal, enthusiastic)',
-              defaultValue: 'casual',
-            ),
-            'recipient': SkillParam(
-              name: 'recipient',
-              type: 'string',
-              description: 'Who the greeting is for',
-              required: true,
-            ),
-          },
-          pluginId: 'hello-world',
+    Skill(
+      id: 'hello-world.greeting',
+      name: 'Greeting Generator',
+      description: 'Generate a friendly greeting message',
+      prompt:
+          'Generate a warm and friendly greeting message. The tone should be: {{tone}}. The recipient is: {{recipient}}.',
+      params: {
+        'tone': SkillParam(
+          name: 'tone',
+          type: 'string',
+          description: 'Tone of the greeting (casual, formal, enthusiastic)',
+          defaultValue: 'casual',
         ),
-        Skill(
-          id: 'hello-world.note-stats',
-          name: 'Note Statistics',
-          description: 'Generate statistics about your notes',
-          prompt:
-              'Analyze the following notes and provide statistics. Focus on: {{focus}}.\n\n@note[current]',
-          params: {
-            'focus': SkillParam(
-              name: 'focus',
-              type: 'string',
-              description: 'What aspect to focus on (tags, topics, length)',
-              defaultValue: 'tags',
-            ),
-          },
-          pluginId: 'hello-world',
+        'recipient': SkillParam(
+          name: 'recipient',
+          type: 'string',
+          description: 'Who the greeting is for',
+          required: true,
         ),
-      ];
+      },
+      pluginId: 'hello-world',
+    ),
+    Skill(
+      id: 'hello-world.note-stats',
+      name: 'Note Statistics',
+      description: 'Generate statistics about your notes',
+      prompt:
+          'Analyze the following notes and provide statistics. Focus on: {{focus}}.\n\n@note[current]',
+      params: {
+        'focus': SkillParam(
+          name: 'focus',
+          type: 'string',
+          description: 'What aspect to focus on (tags, topics, length)',
+          defaultValue: 'tags',
+        ),
+      },
+      pluginId: 'hello-world',
+    ),
+  ];
 
   @override
   Future<void> onEnable(PluginHostNotifier host) async {
@@ -130,12 +130,15 @@ class HelloWorldPlugin extends BuiltinPlugin {
     switch (apiName) {
       case 'hello-world.greet':
         final name = args['name'] as String? ?? 'World';
-        return {'message': 'Hello, $name!', 'timestamp': DateTime.now().toIso8601String()};
+        return {
+          'message': 'Hello, $name!',
+          'timestamp': DateTime.now().toIso8601String(),
+        };
       case 'hello-world.count-notes':
         final count = args['count'] as int? ?? 0;
         return {'count': count, 'message': 'Found $count notes in vault'};
       default:
-      throw UnimplementedError('HelloWorldPlugin: unknown API: $apiName');
+        throw UnimplementedError('HelloWorldPlugin: unknown API: $apiName');
     }
   }
 

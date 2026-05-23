@@ -24,22 +24,25 @@ void main() {
       expect(provider.isEnabled, isTrue);
     });
 
-    test('toProvider generates unique IDs when created at different times', () async {
-      const info = LocalServiceInfo(
-        name: 'Ollama',
-        baseUrl: 'http://localhost:11434/v1',
-        description: '',
-        icon: Icons.smart_toy,
-        defaultModel: '',
-      );
+    test(
+      'toProvider generates unique IDs when created at different times',
+      () async {
+        const info = LocalServiceInfo(
+          name: 'Ollama',
+          baseUrl: 'http://localhost:11434/v1',
+          description: '',
+          icon: Icons.smart_toy,
+          defaultModel: '',
+        );
 
-      final provider1 = info.toProvider();
-      await Future.delayed(const Duration(milliseconds: 2));
-      final provider2 = info.toProvider();
+        final provider1 = info.toProvider();
+        await Future.delayed(const Duration(milliseconds: 2));
+        final provider2 = info.toProvider();
 
-      expect(provider1.id, isNot(equals(provider2.id)));
-      expect(provider1.id, startsWith('local_ollama_'));
-    });
+        expect(provider1.id, isNot(equals(provider2.id)));
+        expect(provider1.id, startsWith('local_ollama_'));
+      },
+    );
 
     test('toProvider replaces spaces in name for ID', () {
       const info = LocalServiceInfo(
@@ -129,9 +132,7 @@ void main() {
 
     test('isServiceRunning returns false for unreachable URL', () async {
       final scanner = LocalServiceScanner();
-      final result = await scanner.isServiceRunning(
-        'http://localhost:59999',
-      );
+      final result = await scanner.isServiceRunning('http://localhost:59999');
       expect(result, isFalse);
     });
   });
@@ -141,34 +142,58 @@ void main() {
       for (final preset in LocalServiceScanner.presets) {
         final provider = preset.toProvider();
 
-        expect(provider.isLocal, isTrue,
-            reason: '${preset.name} provider should be local');
-        expect(provider.requiresApiKey, isFalse,
-            reason: '${preset.name} should not require API key');
-        expect(provider.protocol, ApiProtocol.openaiCompatible,
-            reason: '${preset.name} should use OpenAI compatible protocol');
-        expect(provider.chatEndpoint, contains('/v1/chat/completions'),
-            reason: '${preset.name} chat endpoint should be correct');
-        expect(provider.modelsEndpoint, contains('/v1/models'),
-            reason: '${preset.name} models endpoint should be correct');
-        expect(provider.embeddingEndpoint, contains('/v1/embeddings'),
-            reason: '${preset.name} embedding endpoint should be correct');
+        expect(
+          provider.isLocal,
+          isTrue,
+          reason: '${preset.name} provider should be local',
+        );
+        expect(
+          provider.requiresApiKey,
+          isFalse,
+          reason: '${preset.name} should not require API key',
+        );
+        expect(
+          provider.protocol,
+          ApiProtocol.openaiCompatible,
+          reason: '${preset.name} should use OpenAI compatible protocol',
+        );
+        expect(
+          provider.chatEndpoint,
+          contains('/v1/chat/completions'),
+          reason: '${preset.name} chat endpoint should be correct',
+        );
+        expect(
+          provider.modelsEndpoint,
+          contains('/v1/models'),
+          reason: '${preset.name} models endpoint should be correct',
+        );
+        expect(
+          provider.embeddingEndpoint,
+          contains('/v1/embeddings'),
+          reason: '${preset.name} embedding endpoint should be correct',
+        );
       }
     });
 
     test('preset provider authHeaders returns empty map', () {
       for (final preset in LocalServiceScanner.presets) {
         final provider = preset.toProvider();
-        expect(provider.authHeaders(), isEmpty,
-            reason: '${preset.name} should have no auth headers');
+        expect(
+          provider.authHeaders(),
+          isEmpty,
+          reason: '${preset.name} should have no auth headers',
+        );
       }
     });
 
     test('preset provider displayIcon is computer icon', () {
       for (final preset in LocalServiceScanner.presets) {
         final provider = preset.toProvider();
-        expect(provider.displayIcon, Icons.computer,
-            reason: '${preset.name} should show computer icon');
+        expect(
+          provider.displayIcon,
+          Icons.computer,
+          reason: '${preset.name} should show computer icon',
+        );
       }
     });
   });

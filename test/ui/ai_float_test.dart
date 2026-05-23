@@ -15,9 +15,7 @@ void main() {
     testWidgets('E2-AC1: AI Float collapsed button is visible', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            aiProvider.overrideWith(() => _TestAINotifier()),
-          ],
+          overrides: [aiProvider.overrideWith(() => _TestAINotifier())],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -35,9 +33,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            aiProvider.overrideWith(() => _TestAINotifier()),
-          ],
+          overrides: [aiProvider.overrideWith(() => _TestAINotifier())],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -56,9 +52,7 @@ void main() {
     testWidgets('E2-AC4b: clicking close collapses AI Float', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            aiProvider.overrideWith(() => _TestAINotifier()),
-          ],
+          overrides: [aiProvider.overrideWith(() => _TestAINotifier())],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -83,9 +77,7 @@ void main() {
     testWidgets('E2-AC2b: expanded panel has close button', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            aiProvider.overrideWith(() => _TestAINotifier()),
-          ],
+          overrides: [aiProvider.overrideWith(() => _TestAINotifier())],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

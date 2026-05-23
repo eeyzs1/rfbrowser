@@ -94,7 +94,9 @@ final localServiceScannerProvider = Provider<LocalServiceScanner>(
   (ref) => LocalServiceScanner(),
 );
 
-final detectedLocalServicesProvider = FutureProvider<List<LocalServiceInfo>>((ref) {
+final detectedLocalServicesProvider = FutureProvider<List<LocalServiceInfo>>((
+  ref,
+) {
   final scanner = ref.read(localServiceScannerProvider);
   return scanner.scan();
 });

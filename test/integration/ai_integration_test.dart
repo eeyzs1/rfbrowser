@@ -1,4 +1,4 @@
-﻿// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print
 
 import 'dart:convert';
 import 'dart:io' show Platform, HttpOverrides;
@@ -31,7 +31,8 @@ class TestAIConfigNotifier extends AIConfigNotifier {
       final key = await secureStorage.read(key: 'ai_key_$providerId');
       if (key != null && key.isNotEmpty) return key;
     } catch (_) {}
-    final envKey = Platform.environment['BAILIAN_API_KEY'] ??
+    final envKey =
+        Platform.environment['BAILIAN_API_KEY'] ??
         Platform.environment['DASHSCOPE_API_KEY'];
     return envKey;
   }
@@ -62,8 +63,7 @@ Future<String?> tryGetBailianApiKey() async {
   return (apiKey != null && apiKey.isNotEmpty) ? apiKey : null;
 }
 
-const _skipReason =
-    '未找到百炼 API Key，请设置环境变量 BAILIAN_API_KEY 或 DASHSCOPE_API_KEY';
+const _skipReason = '未找到百炼 API Key，请设置环境变量 BAILIAN_API_KEY 或 DASHSCOPE_API_KEY';
 
 String? _cachedApiKey;
 
@@ -85,10 +85,12 @@ void main() {
 
       final response = await dio.post(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_cachedApiKey',
-        }),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_cachedApiKey',
+          },
+        ),
         data: jsonEncode({
           'model': 'qwen-turbo',
           'messages': [
@@ -110,17 +112,16 @@ void main() {
 
       final response = await dio.post(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_cachedApiKey',
-        }),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_cachedApiKey',
+          },
+        ),
         data: jsonEncode({
           'model': 'qwen-turbo',
           'messages': [
-            {
-              'role': 'user',
-              'content': '我最近在学习Flutter开发，能给我推荐3个最佳实践吗？',
-            },
+            {'role': 'user', 'content': '我最近在学习Flutter开发，能给我推荐3个最佳实践吗？'},
           ],
           'temperature': 0.7,
           'max_tokens': 500,
@@ -150,10 +151,7 @@ void main() {
         data: jsonEncode({
           'model': 'qwen-turbo',
           'messages': [
-            {
-              'role': 'user',
-              'content': '用三句话描述AI的未来发展趋势。',
-            },
+            {'role': 'user', 'content': '用三句话描述AI的未来发展趋势。'},
           ],
           'stream': true,
         }),
@@ -192,14 +190,16 @@ void main() {
       try {
         await dio.post(
           'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-          options: Options(headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer invalid-key-12345',
-          }),
+          options: Options(
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer invalid-key-12345',
+            },
+          ),
           data: jsonEncode({
             'model': 'qwen-turbo',
             'messages': [
-              {'role': 'user', 'content': 'Hello'}
+              {'role': 'user', 'content': 'Hello'},
             ],
           }),
         );
@@ -215,21 +215,17 @@ void main() {
 
       final response = await dio.post(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_cachedApiKey',
-        }),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_cachedApiKey',
+          },
+        ),
         data: jsonEncode({
           'model': 'qwen-turbo',
           'messages': [
-            {
-              'role': 'system',
-              'content': '你是一个Flutter开发专家，回答要简洁，只给代码示例。',
-            },
-            {
-              'role': 'user',
-              'content': '如何在Flutter中创建一个带圆角的Container？',
-            },
+            {'role': 'system', 'content': '你是一个Flutter开发专家，回答要简洁，只给代码示例。'},
+            {'role': 'user', 'content': '如何在Flutter中创建一个带圆角的Container？'},
           ],
           'temperature': 0.3,
           'max_tokens': 200,
@@ -248,10 +244,12 @@ void main() {
 
       final response = await dio.post(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_cachedApiKey',
-        }),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_cachedApiKey',
+          },
+        ),
         data: jsonEncode({
           'model': 'qwen-turbo',
           'messages': [
@@ -285,14 +283,16 @@ void main() {
 
       final response = await dio.post(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_cachedApiKey',
-        }),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_cachedApiKey',
+          },
+        ),
         data: jsonEncode({
           'model': 'qwen-turbo',
           'messages': [
-            {'role': 'user', 'content': 'Hi'}
+            {'role': 'user', 'content': 'Hi'},
           ],
           'max_tokens': 10,
         }),
@@ -302,10 +302,12 @@ void main() {
       final data = response.data;
       final usage = data['usage'];
       if (usage != null) {
-        print('Token 用量: '
-            'prompt=${usage['prompt_tokens']}, '
-            'completion=${usage['completion_tokens']}, '
-            'total=${usage['total_tokens']}');
+        print(
+          'Token 用量: '
+          'prompt=${usage['prompt_tokens']}, '
+          'completion=${usage['completion_tokens']}, '
+          'total=${usage['total_tokens']}',
+        );
       }
       expect(data['choices'], isNotEmpty);
     }, skip: _cachedApiKey == null ? _skipReason : null);
@@ -315,9 +317,7 @@ void main() {
 
       final response = await dio.get(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/models',
-        options: Options(headers: {
-          'Authorization': 'Bearer $_cachedApiKey',
-        }),
+        options: Options(headers: {'Authorization': 'Bearer $_cachedApiKey'}),
       );
 
       expect(response.statusCode, 200);
@@ -367,14 +367,14 @@ void main() {
         models: const [bailianModel],
       );
 
-      container = ProviderContainer(overrides: [
-        connectivityProvider.overrideWith(
-          () => TestConnectivityNotifier(),
-        ),
-        aiConfigProvider.overrideWith(
-          () => TestAIConfigNotifier(configState),
-        ),
-      ]);
+      container = ProviderContainer(
+        overrides: [
+          connectivityProvider.overrideWith(() => TestConnectivityNotifier()),
+          aiConfigProvider.overrideWith(
+            () => TestAIConfigNotifier(configState),
+          ),
+        ],
+      );
 
       aiNotifier = container!.read(aiProvider.notifier);
       aiNotifier!.state = aiNotifier!.state.copyWith(

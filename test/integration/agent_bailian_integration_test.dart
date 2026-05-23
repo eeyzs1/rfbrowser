@@ -42,8 +42,9 @@ class TestAIConfigNotifier extends AIConfigNotifier {
   @override
   Future<String?> getApiKeyForProvider(String providerId) async {
     try {
-      final key = await const FlutterSecureStorage()
-          .read(key: 'ai_key_$providerId');
+      final key = await const FlutterSecureStorage().read(
+        key: 'ai_key_$providerId',
+      );
       if (key != null && key.isNotEmpty) return key;
     } catch (_) {}
     return _apiKey ??
@@ -95,7 +96,8 @@ Future<String?> _loadApiKey() async {
     print('读取 .env 文件失败: $e');
   }
 
-  final envKey = Platform.environment['BAILIAN_API_KEY'] ??
+  final envKey =
+      Platform.environment['BAILIAN_API_KEY'] ??
       Platform.environment['DASHSCOPE_API_KEY'];
   if (envKey != null && envKey.isNotEmpty) return envKey;
 
@@ -104,8 +106,7 @@ Future<String?> _loadApiKey() async {
 
 String? _cachedApiKey;
 String _bailianModel = 'qwen-turbo';
-String _bailianBaseUrl =
-    'https://dashscope.aliyuncs.com/compatible-mode';
+String _bailianBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode';
 
 const _skipReason =
     '未找到百炼 API Key。请在 .env 文件中设置 BAILIAN_API_KEY，'
@@ -120,268 +121,304 @@ Future<void> main() async {
   _cachedApiKey = await _loadApiKey();
   if (_cachedApiKey != null) {
     _bailianModel = _envVars['BAILIAN_MODEL'] ?? 'qwen-turbo';
-    _bailianBaseUrl = _envVars['BAILIAN_BASE_URL'] ??
+    _bailianBaseUrl =
+        _envVars['BAILIAN_BASE_URL'] ??
         'https://dashscope.aliyuncs.com/compatible-mode';
     print(
-        'API Key 已加载 (长度: ${_cachedApiKey!.length}), '
-        '模型: $_bailianModel, '
-        'Base URL: $_bailianBaseUrl');
+      'API Key 已加载 (长度: ${_cachedApiKey!.length}), '
+      '模型: $_bailianModel, '
+      'Base URL: $_bailianBaseUrl',
+    );
   } else {
     print(_skipReason);
   }
 
   group('Agent 集成测试 — 百炼 API', () {
+    test(
+      '3. PlanGenerator — AI 生成任务计划',
+      () async {
+        final registry = AgentToolRegistry();
+        registry.register(CreateNoteTool((title, content) async => 'ok'));
+        registry.register(
+          SearchNotesTool((query) async {
+            return [
+              {'title': '测试笔记', 'score': 0.9, 'snippet': '关于"$query"的内容'},
+            ];
+          }),
+        );
+        registry.register(
+          AIReasonTool((prompt, systemPrompt) async {
+            final dio = DioFactory.instance;
+            final response = await dio.post(
+              '$_bailianBaseUrl/v1/chat/completions',
+              options: Options(
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer $_cachedApiKey',
+                },
+              ),
+              data: jsonEncode({
+                'model': _bailianModel,
+                'messages': [
+                  {'role': 'system', 'content': systemPrompt},
+                  {'role': 'user', 'content': prompt},
+                ],
+                'temperature': 0.3,
+              }),
+            );
+            return response.data['choices'][0]['message']['content'] as String;
+          }),
+        );
 
-    test('3. PlanGenerator — AI 生成任务计划', () async {
-      final registry = AgentToolRegistry();
-      registry.register(CreateNoteTool((title, content) async => 'ok'));
-      registry.register(SearchNotesTool((query) async {
-        return [
-          {'title': '测试笔记', 'score': 0.9, 'snippet': '关于"$query"的内容'}
-        ];
-      }));
-      registry.register(AIReasonTool((prompt, systemPrompt) async {
+        final planGenerator = PlanGenerator(registry);
+        final systemPrompt = planGenerator.buildSystemPrompt();
+
         final dio = DioFactory.instance;
         final response = await dio.post(
           '$_bailianBaseUrl/v1/chat/completions',
-          options: Options(headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $_cachedApiKey',
-          }),
+          options: Options(
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $_cachedApiKey',
+            },
+          ),
           data: jsonEncode({
             'model': _bailianModel,
             'messages': [
               {'role': 'system', 'content': systemPrompt},
-              {'role': 'user', 'content': prompt},
+              {'role': 'user', 'content': '搜索关于"量子计算"的笔记，如果没找到就创建一个'},
             ],
             'temperature': 0.3,
           }),
         );
-        return response.data['choices'][0]['message']['content'] as String;
-      }));
 
-      final planGenerator = PlanGenerator(registry);
-      final systemPrompt = planGenerator.buildSystemPrompt();
+        final llmResponse =
+            response.data['choices'][0]['message']['content'] as String;
+        expect(llmResponse, isNotEmpty);
+        print('LLM 原始回复:\n$llmResponse');
 
-      final dio = DioFactory.instance;
-      final response = await dio.post(
-        '$_bailianBaseUrl/v1/chat/completions',
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_cachedApiKey',
-        }),
-        data: jsonEncode({
-          'model': _bailianModel,
-          'messages': [
-            {'role': 'system', 'content': systemPrompt},
-            {
-              'role': 'user',
-              'content': '搜索关于"量子计算"的笔记，如果没找到就创建一个',
-            },
-          ],
-          'temperature': 0.3,
-        }),
-      );
+        final steps = planGenerator.parsePlan(llmResponse);
+        expect(steps, isNotEmpty, reason: 'AI 应该生成至少一个步骤');
+        expect(
+          steps.every((s) => registry.hasTool(s.toolName)),
+          isTrue,
+          reason: '所有步骤的 toolName 应该在 registry 中',
+        );
 
-      final llmResponse =
-          response.data['choices'][0]['message']['content'] as String;
-      expect(llmResponse, isNotEmpty);
-      print('LLM 原始回复:\n$llmResponse');
+        for (final step in steps) {
+          print('  步骤: ${step.toolName}(${step.args}) — ${step.description}');
+        }
+      },
+      skip: _cachedApiKey == null ? _skipReason : null,
+    );
 
-      final steps = planGenerator.parsePlan(llmResponse);
-      expect(steps, isNotEmpty, reason: 'AI 应该生成至少一个步骤');
-      expect(steps.every((s) => registry.hasTool(s.toolName)), isTrue,
-          reason: '所有步骤的 toolName 应该在 registry 中');
+    test(
+      '4. AgentToolRegistry — 工具注册与执行',
+      () async {
+        final registry = AgentToolRegistry();
+        var searchCalled = false;
+        var reasonCalled = false;
 
-      for (final step in steps) {
-        print('  步骤: ${step.toolName}(${step.args}) — ${step.description}');
-      }
-    }, skip: _cachedApiKey == null ? _skipReason : null);
-
-    test('4. AgentToolRegistry — 工具注册与执行', () async {
-      final registry = AgentToolRegistry();
-      var searchCalled = false;
-      var reasonCalled = false;
-
-      registry.register(SearchNotesTool((query) async {
-        searchCalled = true;
-        return [
-          {'title': '量子计算入门', 'score': 0.95, 'snippet': '关于"$query"的内容'}
-        ];
-      }));
-      registry.register(AIReasonTool((prompt, systemPrompt) async {
-        reasonCalled = true;
-        final dio = DioFactory.instance;
-        final response = await dio.post(
-          '$_bailianBaseUrl/v1/chat/completions',
-          options: Options(headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $_cachedApiKey',
-          }),
-          data: jsonEncode({
-            'model': _bailianModel,
-            'messages': [
-              {'role': 'system', 'content': systemPrompt ?? ''},
-              {'role': 'user', 'content': prompt},
-            ],
-            'temperature': 0.3,
-            'max_tokens': 100,
+        registry.register(
+          SearchNotesTool((query) async {
+            searchCalled = true;
+            return [
+              {'title': '量子计算入门', 'score': 0.95, 'snippet': '关于"$query"的内容'},
+            ];
           }),
         );
-        return response.data['choices'][0]['message']['content'] as String;
-      }));
+        registry.register(
+          AIReasonTool((prompt, systemPrompt) async {
+            reasonCalled = true;
+            final dio = DioFactory.instance;
+            final response = await dio.post(
+              '$_bailianBaseUrl/v1/chat/completions',
+              options: Options(
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer $_cachedApiKey',
+                },
+              ),
+              data: jsonEncode({
+                'model': _bailianModel,
+                'messages': [
+                  {'role': 'system', 'content': systemPrompt ?? ''},
+                  {'role': 'user', 'content': prompt},
+                ],
+                'temperature': 0.3,
+                'max_tokens': 100,
+              }),
+            );
+            return response.data['choices'][0]['message']['content'] as String;
+          }),
+        );
 
-      final searchResult =
-          await registry.execute('search_notes', {'query': '量子计算'});
-      expect(searchResult.success, isTrue);
-      expect(searchCalled, isTrue);
-      expect(searchResult.output, contains('量子计算'));
-      print('搜索工具执行结果: ${searchResult.output}');
+        final searchResult = await registry.execute('search_notes', {
+          'query': '量子计算',
+        });
+        expect(searchResult.success, isTrue);
+        expect(searchCalled, isTrue);
+        expect(searchResult.output, contains('量子计算'));
+        print('搜索工具执行结果: ${searchResult.output}');
 
-      final reasonResult = await registry.execute('ai_reason', {
-        'prompt': '用一句话解释量子计算',
-        'system_prompt': '你是科学解释助手，回答要简洁。',
-      });
-      expect(reasonResult.success, isTrue);
-      expect(reasonCalled, isTrue);
-      expect(reasonResult.output, isNotEmpty);
-      print('AI推理工具执行结果: ${reasonResult.output}');
-    }, skip: _cachedApiKey == null ? _skipReason : null);
+        final reasonResult = await registry.execute('ai_reason', {
+          'prompt': '用一句话解释量子计算',
+          'system_prompt': '你是科学解释助手，回答要简洁。',
+        });
+        expect(reasonResult.success, isTrue);
+        expect(reasonCalled, isTrue);
+        expect(reasonResult.output, isNotEmpty);
+        print('AI推理工具执行结果: ${reasonResult.output}');
+      },
+      skip: _cachedApiKey == null ? _skipReason : null,
+    );
 
-    test('5. AINotifier + AgentService — 手动模式任务', () async {
-      final tempDir = Directory.systemTemp.createTempSync('rfb_agent_');
-      addTearDown(() {
-        try {
-          tempDir.deleteSync(recursive: true);
-        } catch (_) {}
-      });
+    test(
+      '5. AINotifier + AgentService — 手动模式任务',
+      () async {
+        final tempDir = Directory.systemTemp.createTempSync('rfb_agent_');
+        addTearDown(() {
+          try {
+            tempDir.deleteSync(recursive: true);
+          } catch (_) {}
+        });
 
-      final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
-      if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+        final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+        if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
 
-      final vaultState = VaultState(
-        currentVault: VaultConfig(
-          path: tempDir.path,
-          name: 'test',
-          lastOpened: DateTime.now(),
-        ),
-      );
+        final vaultState = VaultState(
+          currentVault: VaultConfig(
+            path: tempDir.path,
+            name: 'test',
+            lastOpened: DateTime.now(),
+          ),
+        );
 
-      final bailianProvider = AIProvider(
-        id: 'bailian',
-        name: '阿里百炼',
-        protocol: ApiProtocol.openaiCompatible,
-        baseUrl: _bailianBaseUrl,
-        apiKey: _cachedApiKey,
-      );
-      final bailianModel = AIModel(
-        id: _bailianModel,
-        providerId: 'bailian',
-        displayName: 'Qwen Turbo',
-      );
-
-      final configState = AIConfigState(
-        providers: [bailianProvider],
-        models: [bailianModel],
-        activeConfig: ActiveAIConfig(
+        final bailianProvider = AIProvider(
+          id: 'bailian',
+          name: '阿里百炼',
+          protocol: ApiProtocol.openaiCompatible,
+          baseUrl: _bailianBaseUrl,
+          apiKey: _cachedApiKey,
+        );
+        final bailianModel = AIModel(
+          id: _bailianModel,
           providerId: 'bailian',
-          modelId: _bailianModel,
-        ),
-      );
+          displayName: 'Qwen Turbo',
+        );
 
-      SharedPreferences.setMockInitialValues({});
-      final container = ProviderContainer(overrides: [
-        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-        connectivityProvider
-            .overrideWith(() => TestConnectivityNotifier()),
-        aiConfigProvider
-            .overrideWith(() => TestAIConfigNotifier(configState, _cachedApiKey)),
-      ]);
-      addTearDown(container.dispose);
+        final configState = AIConfigState(
+          providers: [bailianProvider],
+          models: [bailianModel],
+          activeConfig: ActiveAIConfig(
+            providerId: 'bailian',
+            modelId: _bailianModel,
+          ),
+        );
 
-      final aiNotifier = container.read(aiProvider.notifier);
-      aiNotifier.state = aiNotifier.state.copyWith(
-        activeProvider: bailianProvider,
-        activeModel: bailianModel,
-      );
+        SharedPreferences.setMockInitialValues({});
+        final container = ProviderContainer(
+          overrides: [
+            vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+            connectivityProvider.overrideWith(() => TestConnectivityNotifier()),
+            aiConfigProvider.overrideWith(
+              () => TestAIConfigNotifier(configState, _cachedApiKey),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      await aiNotifier.sendMessage('回复"Agent测试成功"四个字');
-      await Future.delayed(const Duration(seconds: 5));
+        final aiNotifier = container.read(aiProvider.notifier);
+        aiNotifier.state = aiNotifier.state.copyWith(
+          activeProvider: bailianProvider,
+          activeModel: bailianModel,
+        );
 
-      expect(aiNotifier.state.error, isNull,
-          reason: 'AI 不应报错: ${aiNotifier.state.error}');
-      final messages = aiNotifier.state.messages;
-      final assistantMsgs =
-          messages.where((m) => m.role == 'assistant' && !m.isStreaming);
-      expect(assistantMsgs, isNotEmpty, reason: '应有 AI 回复');
-      print('AI 回复: ${assistantMsgs.last.content}');
-    }, skip: _cachedApiKey == null ? _skipReason : null);
+        await aiNotifier.sendMessage('回复"Agent测试成功"四个字');
+        await Future.delayed(const Duration(seconds: 5));
 
-    test('6. PlanGenerator — ReAct 循环解析', () async {
-      final registry = AgentToolRegistry();
-      registry.register(SearchNotesTool((query) async {
-        return [];
-      }));
-      registry.register(CreateNoteTool((title, content) async => 'ok'));
+        expect(
+          aiNotifier.state.error,
+          isNull,
+          reason: 'AI 不应报错: ${aiNotifier.state.error}',
+        );
+        final messages = aiNotifier.state.messages;
+        final assistantMsgs = messages.where(
+          (m) => m.role == 'assistant' && !m.isStreaming,
+        );
+        expect(assistantMsgs, isNotEmpty, reason: '应有 AI 回复');
+        print('AI 回复: ${assistantMsgs.last.content}');
+      },
+      skip: _cachedApiKey == null ? _skipReason : null,
+    );
 
-      final planGenerator = PlanGenerator(registry);
+    test(
+      '6. PlanGenerator — ReAct 循环解析',
+      () async {
+        final registry = AgentToolRegistry();
+        registry.register(
+          SearchNotesTool((query) async {
+            return [];
+          }),
+        );
+        registry.register(CreateNoteTool((title, content) async => 'ok'));
 
-      final reactResponse = jsonEncode({
-        'thought': '需要先搜索笔记，看看有没有相关内容',
-        'tool': 'search_notes',
-        'args': {'query': '量子计算'},
-        'done': false,
-      });
+        final planGenerator = PlanGenerator(registry);
 
-      final parsed = planGenerator.parseReactResponse(reactResponse);
-      expect(parsed, isNotNull);
-      expect(parsed!['tool'], 'search_notes');
-      expect(parsed['done'], false);
-      expect(parsed['thought'], contains('搜索'));
+        final reactResponse = jsonEncode({
+          'thought': '需要先搜索笔记，看看有没有相关内容',
+          'tool': 'search_notes',
+          'args': {'query': '量子计算'},
+          'done': false,
+        });
 
-      final finalResponse = jsonEncode({
-        'thought': '任务完成',
-        'tool': 'final_answer',
-        'args': {'answer': '已搜索并创建笔记'},
-        'done': true,
-      });
+        final parsed = planGenerator.parseReactResponse(reactResponse);
+        expect(parsed, isNotNull);
+        expect(parsed!['tool'], 'search_notes');
+        expect(parsed['done'], false);
+        expect(parsed['thought'], contains('搜索'));
 
-      final finalParsed =
-          planGenerator.parseReactResponse(finalResponse);
-      expect(finalParsed!['done'], true);
-      expect(finalParsed['tool'], 'final_answer');
+        final finalResponse = jsonEncode({
+          'thought': '任务完成',
+          'tool': 'final_answer',
+          'args': {'answer': '已搜索并创建笔记'},
+          'done': true,
+        });
 
-      print('ReAct 循环解析测试通过');
-    }, skip: _cachedApiKey == null ? _skipReason : null);
+        final finalParsed = planGenerator.parseReactResponse(finalResponse);
+        expect(finalParsed!['done'], true);
+        expect(finalParsed['tool'], 'final_answer');
+
+        print('ReAct 循环解析测试通过');
+      },
+      skip: _cachedApiKey == null ? _skipReason : null,
+    );
 
     test('7. BuiltinTools — 所有内置工具参数验证', () async {
       final registry = AgentToolRegistry();
 
       registry.register(NavigateTool((url) async => 'Navigated'));
       registry.register(ExtractTextTool((url) async => 'Extracted'));
+      registry.register(CreateNoteTool((title, content) async => 'Created'));
       registry.register(
-          CreateNoteTool((title, content) async => 'Created'));
-      registry.register(SearchNotesTool((query) async {
-        return [];
-      }));
-      registry.register(
-          AIReasonTool((prompt, sys) async => 'Reasoned'));
+        SearchNotesTool((query) async {
+          return [];
+        }),
+      );
+      registry.register(AIReasonTool((prompt, sys) async => 'Reasoned'));
       registry.register(WebClipTool((url, fmt) async => 'Clipped'));
-      registry.register(
-          DeleteNoteTool((title) async => true));
-      registry.register(
-          UpdateNoteTool((title, content) async => 'Updated'));
+      registry.register(DeleteNoteTool((title) async => true));
+      registry.register(UpdateNoteTool((title, content) async => 'Updated'));
       registry.register(ListNotesTool((tag, limit) async => 'Listed'));
       registry.register(GetTagsTool(() async => 'tag1, tag2'));
-      registry.register(
-          MoveNoteTool((title, folder) async => 'Moved'));
-      registry.register(
-          RenameNoteTool((oldT, newT) async => 'Renamed'));
+      registry.register(MoveNoteTool((title, folder) async => 'Moved'));
+      registry.register(RenameNoteTool((oldT, newT) async => 'Renamed'));
 
       expect(registry.tools.length, 12, reason: '应有 12 个内置工具');
 
-      final navigateResult =
-          await registry.execute('navigate', {'url': 'https://example.com'});
+      final navigateResult = await registry.execute('navigate', {
+        'url': 'https://example.com',
+      });
       expect(navigateResult.success, isTrue);
 
       final createResult = await registry.execute('create_note', {
@@ -390,13 +427,13 @@ Future<void> main() async {
       });
       expect(createResult.success, isTrue);
 
-      final missingArgResult =
-          await registry.execute('create_note', {'content': 'no title'});
+      final missingArgResult = await registry.execute('create_note', {
+        'content': 'no title',
+      });
       expect(missingArgResult.success, isFalse);
       expect(missingArgResult.error, contains('title'));
 
-      final unknownResult =
-          await registry.execute('nonexistent_tool', {});
+      final unknownResult = await registry.execute('nonexistent_tool', {});
       expect(unknownResult.success, isFalse);
       expect(unknownResult.error, contains('Unknown'));
 
@@ -404,7 +441,8 @@ Future<void> main() async {
       for (final name in registry.tools.keys) {
         final tool = registry.tools[name]!;
         print(
-            '  ✓ $name — ${tool.description} (destructive: ${tool.isDestructive})');
+          '  ✓ $name — ${tool.description} (destructive: ${tool.isDestructive})',
+        );
       }
     });
 
@@ -454,55 +492,64 @@ Future<void> main() async {
       final registry = AgentToolRegistry();
       final executionLog = <String>[];
 
-      registry.register(SearchNotesTool((query) async {
-        executionLog.add('search_notes($query)');
-        return [];
-      }));
-      registry.register(CreateNoteTool((title, content) async {
-        executionLog.add('create_note($title)');
-        return '笔记已创建: $title';
-      }));
-      registry.register(AIReasonTool((prompt, systemPrompt) async {
-        executionLog.add('ai_reason(${prompt.substring(0, 20)}...)');
-        final dio = DioFactory.instance;
-        final response = await dio.post(
-          '$_bailianBaseUrl/v1/chat/completions',
-          options: Options(headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $_cachedApiKey',
-          }),
-          data: jsonEncode({
-            'model': _bailianModel,
-            'messages': [
-              {'role': 'system', 'content': systemPrompt ?? ''},
-              {'role': 'user', 'content': prompt},
-            ],
-            'temperature': 0.3,
-            'max_tokens': 200,
-          }),
-        );
-        return response.data['choices'][0]['message']['content'] as String;
-      }));
+      registry.register(
+        SearchNotesTool((query) async {
+          executionLog.add('search_notes($query)');
+          return [];
+        }),
+      );
+      registry.register(
+        CreateNoteTool((title, content) async {
+          executionLog.add('create_note($title)');
+          return '笔记已创建: $title';
+        }),
+      );
+      registry.register(
+        AIReasonTool((prompt, systemPrompt) async {
+          executionLog.add('ai_reason(${prompt.substring(0, 20)}...)');
+          final dio = DioFactory.instance;
+          final response = await dio.post(
+            '$_bailianBaseUrl/v1/chat/completions',
+            options: Options(
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $_cachedApiKey',
+              },
+            ),
+            data: jsonEncode({
+              'model': _bailianModel,
+              'messages': [
+                {'role': 'system', 'content': systemPrompt ?? ''},
+                {'role': 'user', 'content': prompt},
+              ],
+              'temperature': 0.3,
+              'max_tokens': 200,
+            }),
+          );
+          return response.data['choices'][0]['message']['content'] as String;
+        }),
+      );
 
       final planGenerator = PlanGenerator(registry);
       final reactPrompt = planGenerator.buildReactSystemPrompt();
 
       final dio = DioFactory.instance;
 
-      final observation =
-          planGenerator.buildReactObservation(
-            '帮我搜索"深度学习"的笔记，如果没有就创建一个',
-            [],
-            0,
-            3,
-          );
+      final observation = planGenerator.buildReactObservation(
+        '帮我搜索"深度学习"的笔记，如果没有就创建一个',
+        [],
+        0,
+        3,
+      );
 
       final response = await dio.post(
         '$_bailianBaseUrl/v1/chat/completions',
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_cachedApiKey',
-        }),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_cachedApiKey',
+          },
+        ),
         data: jsonEncode({
           'model': _bailianModel,
           'messages': [
@@ -524,12 +571,10 @@ Future<void> main() async {
       if (action != null) {
         final toolName = action['tool'] as String?;
         expect(toolName, isNotNull);
-        expect(toolName, isNot(equals('final_answer')),
-            reason: '第一轮不应直接结束');
+        expect(toolName, isNot(equals('final_answer')), reason: '第一轮不应直接结束');
 
         if (toolName != null && registry.hasTool(toolName)) {
-          final args =
-              (action['args'] as Map<String, dynamic>?) ?? {};
+          final args = (action['args'] as Map<String, dynamic>?) ?? {};
           final result = await registry.execute(toolName, args);
           expect(result.success, isTrue);
           print('工具执行结果: ${result.output}');
@@ -543,10 +588,12 @@ Future<void> main() async {
 
           final response2 = await dio.post(
             '$_bailianBaseUrl/v1/chat/completions',
-            options: Options(headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $_cachedApiKey',
-            }),
+            options: Options(
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $_cachedApiKey',
+              },
+            ),
             data: jsonEncode({
               'model': _bailianModel,
               'messages': [

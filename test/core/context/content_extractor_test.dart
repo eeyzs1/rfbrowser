@@ -13,7 +13,8 @@ void main() {
         id: 'note-1',
         title: 'Getting Started',
         filePath: 'getting-started.md',
-        content: '# Getting Started\n\nWelcome to the project.\n\n## Setup\n\nInstall dependencies.\n\n## Usage\n\nRun the app.\n\n## Advanced\n\nMore details here.',
+        content:
+            '# Getting Started\n\nWelcome to the project.\n\n## Setup\n\nInstall dependencies.\n\n## Usage\n\nRun the app.\n\n## Advanced\n\nMore details here.',
       ),
       Note(
         id: 'note-2',
@@ -163,29 +164,33 @@ void main() {
       expect(result!.content, 'Install dependencies.');
     });
 
-    test('stops at same-level or higher heading when extracting section', () async {
-      final notes = [
-        Note(
-          id: 'n1',
-          title: 'Doc',
-          filePath: 'doc.md',
-          content: '# Doc\n\nintro\n\n## Section A\n\ncontent A\n\n### Sub A1\n\nsub content\n\n## Section B\n\ncontent B',
-        ),
-      ];
-      final source = NoteContentSource(notes);
-      final ref = ParsedReference(
-        type: ContextRefType.note,
-        target: 'Doc',
-        selector: 'Section A',
-        position: 0,
-        rawText: '@note:Doc#Section A',
-      );
-      final result = await source.resolve(ref);
-      expect(result, isNotNull);
-      expect(result!.content, contains('content A'));
-      expect(result.content, contains('sub content'));
-      expect(result.content, isNot(contains('Section B')));
-    });
+    test(
+      'stops at same-level or higher heading when extracting section',
+      () async {
+        final notes = [
+          Note(
+            id: 'n1',
+            title: 'Doc',
+            filePath: 'doc.md',
+            content:
+                '# Doc\n\nintro\n\n## Section A\n\ncontent A\n\n### Sub A1\n\nsub content\n\n## Section B\n\ncontent B',
+          ),
+        ];
+        final source = NoteContentSource(notes);
+        final ref = ParsedReference(
+          type: ContextRefType.note,
+          target: 'Doc',
+          selector: 'Section A',
+          position: 0,
+          rawText: '@note:Doc#Section A',
+        );
+        final result = await source.resolve(ref);
+        expect(result, isNotNull);
+        expect(result!.content, contains('content A'));
+        expect(result.content, contains('sub content'));
+        expect(result.content, isNot(contains('Section B')));
+      },
+    );
   });
 
   group('WebContentSource', () {
@@ -277,9 +282,7 @@ void main() {
 
   group('ClipContentSource', () {
     test('resolves clip by id', () async {
-      final source = ClipContentSource(
-        clips: {'my-clip': 'clipped content'},
-      );
+      final source = ClipContentSource(clips: {'my-clip': 'clipped content'});
       final ref = ParsedReference(
         type: ContextRefType.clip,
         target: 'my-clip',

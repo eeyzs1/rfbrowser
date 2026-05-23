@@ -66,8 +66,8 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
     try {
       await _collectFolders(vaultPath, '', folders);
     } catch (_) {
-        debugPrint('NoteSidebar: failed to collect folders');
-      }
+      debugPrint('NoteSidebar: failed to collect folders');
+    }
     if (mounted) {
       setState(() => _diskFolders = folders);
     }
@@ -115,7 +115,8 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
           _buildNotesToolbar(theme, l)
         else
           _buildBookmarksToolbar(theme, l),
-        if (_activeTab == _SidebarTab.notes && knowledgeState.activeNote != null)
+        if (_activeTab == _SidebarTab.notes &&
+            knowledgeState.activeNote != null)
           _buildBreadcrumb(theme, knowledgeState.activeNote!, l),
         Expanded(
           child: _activeTab == _SidebarTab.notes
@@ -244,7 +245,9 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                 hintStyle: theme.textTheme.bodySmall,
                 prefixIcon: const Icon(Icons.search, size: 14),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: DesignSpacing.xs + 2),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: DesignSpacing.xs + 2,
+                ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.close, size: 12),
@@ -328,7 +331,11 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
                 padding: const EdgeInsets.symmetric(
                   horizontal: DesignSpacing.xs,
                 ),
-                child: Icon(Icons.chevron_right, size: 10, color: theme.hintColor),
+                child: Icon(
+                  Icons.chevron_right,
+                  size: 10,
+                  color: theme.hintColor,
+                ),
               ),
               InkWell(
                 onTap: () {
@@ -354,7 +361,11 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
             ],
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.xs),
-              child: Icon(Icons.chevron_right, size: 10, color: theme.hintColor),
+              child: Icon(
+                Icons.chevron_right,
+                size: 10,
+                color: theme.hintColor,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.xs),
@@ -375,7 +386,10 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
 
   Widget _buildBookmarksToolbar(ThemeData theme, AppLocalizations l) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs + 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignSpacing.sm,
+        vertical: DesignSpacing.xs + 2,
+      ),
       child: Row(
         children: [
           Icon(Icons.bookmark, size: 14, color: theme.hintColor),
@@ -680,7 +694,10 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         elevation: 4,
         borderRadius: BorderRadius.circular(4),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DesignSpacing.sm,
+            vertical: DesignSpacing.xs,
+          ),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(4),
@@ -727,7 +744,10 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
               }
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: DesignSpacing.xs, horizontal: DesignSpacing.xs),
+              padding: const EdgeInsets.symmetric(
+                vertical: DesignSpacing.xs,
+                horizontal: DesignSpacing.xs,
+              ),
               child: Row(
                 children: [
                   Icon(
@@ -1138,7 +1158,10 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         elevation: 4,
         borderRadius: BorderRadius.circular(4),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm, vertical: DesignSpacing.xs),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DesignSpacing.sm,
+            vertical: DesignSpacing.xs,
+          ),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(4),
@@ -1173,9 +1196,15 @@ class _NoteSidebarState extends ConsumerState<NoteSidebar> {
         child: InkWell(
           onTap: () => widget.onBookmarkOpened?.call(bookmark.url),
           child: Container(
-            padding: EdgeInsets.only(left: depth * 14.0 + 18.0, right: DesignSpacing.xs),
+            padding: EdgeInsets.only(
+              left: depth * 14.0 + 18.0,
+              right: DesignSpacing.xs,
+            ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: DesignSpacing.xs, horizontal: DesignSpacing.xs),
+              padding: const EdgeInsets.symmetric(
+                vertical: DesignSpacing.xs,
+                horizontal: DesignSpacing.xs,
+              ),
               child: Row(
                 children: [
                   _favicon(bookmark),

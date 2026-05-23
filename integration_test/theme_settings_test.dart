@@ -17,16 +17,12 @@ void main() {
       testNotifier = _TestSettingsNotifier();
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            settingsProvider.overrideWith(() => testNotifier),
-          ],
+          overrides: [settingsProvider.overrideWith(() => testNotifier)],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const Scaffold(
-              body: SingleChildScrollView(
-                child: ThemeSettingsSection(),
-              ),
+              body: SingleChildScrollView(child: ThemeSettingsSection()),
             ),
           ),
         ),
@@ -118,18 +114,26 @@ void main() {
       await tester.pumpAndSettle();
 
       final settings = testNotifier.state;
-      expect(settings.accentColorValue, equals(const Color(0xFF8B5CF6).toARGB32()));
+      expect(
+        settings.accentColorValue,
+        equals(const Color(0xFF8B5CF6).toARGB32()),
+      );
       expect(settings.themePreset, equals('custom'));
     });
 
-    testWidgets('tapping background preset updates scaffold bg color', (tester) async {
+    testWidgets('tapping background preset updates scaffold bg color', (
+      tester,
+    ) async {
       await pumpThemeSettings(tester);
 
       await tester.tap(find.text('Obsidian'));
       await tester.pumpAndSettle();
 
       final settings = testNotifier.state;
-      expect(settings.scaffoldBgColorValue, equals(const Color(0xFF000000).toARGB32()));
+      expect(
+        settings.scaffoldBgColorValue,
+        equals(const Color(0xFF000000).toARGB32()),
+      );
     });
 
     testWidgets('tapping surface preset updates surface color', (tester) async {
@@ -139,10 +143,15 @@ void main() {
       await tester.pumpAndSettle();
 
       final settings = testNotifier.state;
-      expect(settings.surfaceColorValue, equals(const Color(0xFFE8E0D0).toARGB32()));
+      expect(
+        settings.surfaceColorValue,
+        equals(const Color(0xFFE8E0D0).toARGB32()),
+      );
     });
 
-    testWidgets('isDarkMode computed from background luminance (A-11)', (tester) async {
+    testWidgets('isDarkMode computed from background luminance (A-11)', (
+      tester,
+    ) async {
       await pumpThemeSettings(tester);
 
       testNotifier.setScaffoldBgColor(const Color(0xFF0F172A));

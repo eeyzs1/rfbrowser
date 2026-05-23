@@ -30,9 +30,11 @@ void main() {
     late ProviderContainer container;
 
     setUp(() {
-      container = ProviderContainer(overrides: [
-        agentProvider.overrideWith(() => _MockAgentNotifier(AgentState())),
-      ]);
+      container = ProviderContainer(
+        overrides: [
+          agentProvider.overrideWith(() => _MockAgentNotifier(AgentState())),
+        ],
+      );
     });
 
     tearDown(() {
@@ -117,9 +119,11 @@ void main() {
         ],
       );
 
-      final taskContainer = ProviderContainer(overrides: [
-        agentProvider.overrideWith(() => _MockAgentNotifier(agentState)),
-      ]);
+      final taskContainer = ProviderContainer(
+        overrides: [
+          agentProvider.overrideWith(() => _MockAgentNotifier(agentState)),
+        ],
+      );
 
       await tester.pumpWidget(
         UncontrolledProviderScope(

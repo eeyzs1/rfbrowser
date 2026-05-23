@@ -35,23 +35,26 @@ void main() {
       expect(result.first.type, ContextType.selection);
     });
 
-    test('优先级顺序: selection > note > webPage > file > agentResult > screenshot', () {
-      final items = [
-        ContextItem(type: ContextType.screenshot, id: 'ss', content: 'c'),
-        ContextItem(type: ContextType.agentResult, id: 'ar', content: 'c'),
-        ContextItem(type: ContextType.file, id: 'fi', content: 'c'),
-        ContextItem(type: ContextType.webPage, id: 'wp', content: 'c'),
-        ContextItem(type: ContextType.note, id: 'no', content: 'c'),
-        ContextItem(type: ContextType.selection, id: 'se', content: 'c'),
-      ];
-      final result = ranker.rank(items);
-      expect(result[0].type, ContextType.selection);
-      expect(result[1].type, ContextType.note);
-      expect(result[2].type, ContextType.webPage);
-      expect(result[3].type, ContextType.file);
-      expect(result[4].type, ContextType.agentResult);
-      expect(result[5].type, ContextType.screenshot);
-    });
+    test(
+      '优先级顺序: selection > note > webPage > file > agentResult > screenshot',
+      () {
+        final items = [
+          ContextItem(type: ContextType.screenshot, id: 'ss', content: 'c'),
+          ContextItem(type: ContextType.agentResult, id: 'ar', content: 'c'),
+          ContextItem(type: ContextType.file, id: 'fi', content: 'c'),
+          ContextItem(type: ContextType.webPage, id: 'wp', content: 'c'),
+          ContextItem(type: ContextType.note, id: 'no', content: 'c'),
+          ContextItem(type: ContextType.selection, id: 'se', content: 'c'),
+        ];
+        final result = ranker.rank(items);
+        expect(result[0].type, ContextType.selection);
+        expect(result[1].type, ContextType.note);
+        expect(result[2].type, ContextType.webPage);
+        expect(result[3].type, ContextType.file);
+        expect(result[4].type, ContextType.agentResult);
+        expect(result[5].type, ContextType.screenshot);
+      },
+    );
 
     test('同优先级按 id 字母排序', () {
       final items = [

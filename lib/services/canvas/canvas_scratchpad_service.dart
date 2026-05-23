@@ -33,7 +33,10 @@ class CanvasScratchpadService {
     await _saveScratchpad(vaultPath, items);
   }
 
-  Future<void> _saveScratchpad(String vaultPath, List<ScratchpadItem> items) async {
+  Future<void> _saveScratchpad(
+    String vaultPath,
+    List<ScratchpadItem> items,
+  ) async {
     try {
       final dir = Directory(p.join(vaultPath, '.rf'));
       if (!await dir.exists()) await dir.create(recursive: true);

@@ -37,6 +37,7 @@ abstract class _CanvasPainterBase extends CustomPainter {
   late final List<CanvasLayer> layers;
   late final Rect? selectionRect;
   late final List<AlignmentGuide> alignmentGuides;
+  late final String? selectedLayerId;
   late final int? backgroundColorValue;
   late final bool rulersVisible;
   late final double animationValue;
@@ -78,13 +79,17 @@ abstract class _CanvasPainterBase extends CustomPainter {
     this.backgroundColorValue,
     this.rulersVisible = false,
     this.animationValue = 0,
+    this.selectedLayerId,
   });
 
-  bool _isCardLayerVisible(CanvasCard card) {
-    if (card.layerId == null) return true;
-    final layer = layers.where((l) => l.id == card.layerId).firstOrNull;
-    return layer?.visible ?? true;
+  bool _isCardInSelectedLayer(CanvasCard card) {
+    if (selectedLayerId == null) return true;
+    if (selectedLayerId == CanvasData.unassignedSentinel) {
+      return card.layerId == null;
+    }
+    return card.layerId == selectedLayerId;
   }
+
   Offset _w2s(double wx, double wy) => Offset(
     (wx - cameraX) * scale + viewW / 2,
     (wy - cameraY) * scale + viewH / 2,
@@ -114,29 +119,83 @@ abstract class _CanvasPainterBase extends CustomPainter {
 
   void _drawGrid(Canvas canvas);
   void _drawGroups(Canvas canvas);
-  void _drawDashedRRect(Canvas canvas, RRect rrect, Paint paint, double dashWidth, double dashGap);
+  void _drawDashedRRect(
+    Canvas canvas,
+    RRect rrect,
+    Paint paint,
+    double dashWidth,
+    double dashGap,
+  );
   void _drawConnections(Canvas canvas);
-  Path _buildOrthogonalPath(Offset fp, Offset tp, ConnectionSide fromSide, ConnectionSide toSide, [List<Offset> waypoints]);
-  void _drawDashedPath(Canvas canvas, Path path, Paint paint, double dash, double gap, [double offset]);
-  void _drawArrowHead(Canvas canvas, Offset from, Offset to, Color color, ArrowStyle style);
+  Path _buildOrthogonalPath(
+    Offset fp,
+    Offset tp,
+    ConnectionSide fromSide,
+    ConnectionSide toSide, [
+    List<Offset> waypoints,
+  ]);
+  void _drawDashedPath(
+    Canvas canvas,
+    Path path,
+    Paint paint,
+    double dash,
+    double gap, [
+    double offset,
+  ]);
+  void _drawArrowHead(
+    Canvas canvas,
+    Offset from,
+    Offset to,
+    Color color,
+    ArrowStyle style,
+  );
   void _drawCards(Canvas canvas);
-  void _drawContainerCard(Canvas canvas, CanvasCard card, Rect clipRect, Map<String, Note> noteMap);
+  void _drawContainerCard(
+    Canvas canvas,
+    CanvasCard card,
+    Map<String, Note> noteMap,
+  );
   void _drawAlignmentGuides(Canvas canvas);
   void _drawSelectionRect(Canvas canvas);
-  void _drawCardTypeIcon(Canvas canvas, CanvasCardType type, Offset pos, double size, Paint paint);
+  void _drawCardTypeIcon(
+    Canvas canvas,
+    CanvasCardType type,
+    Offset pos,
+    double size,
+    Paint paint,
+  );
   Path _buildGeometricPath(CanvasCard card, Rect cardRect);
-  void _drawGeometricCard(Canvas canvas, CanvasCard card, Rect clipRect);
-  void _drawSwimlaneCard(Canvas canvas, CanvasCard card, Rect clipRect, Map<String, Note> noteMap);
-  void _drawLineJumps(Canvas canvas, Path path, CanvasConnectionStyle style, String currentConnId);
-  void _drawTableCard(Canvas canvas, CanvasCard card, Rect clipRect);
-  void _drawFreehandCard(Canvas canvas, CanvasCard card, Rect clipRect);
+  void _drawGeometricCard(Canvas canvas, CanvasCard card);
+  void _drawSwimlaneCard(
+    Canvas canvas,
+    CanvasCard card,
+    Map<String, Note> noteMap,
+  );
+  void _drawLineJumps(
+    Canvas canvas,
+    Path path,
+    CanvasConnectionStyle style,
+    String currentConnId,
+  );
+  void _drawTableCard(Canvas canvas, CanvasCard card);
+  void _drawFreehandCard(Canvas canvas, CanvasCard card);
   void _drawConnectionPoints(Canvas canvas);
-  void _drawFlowAnimation(Canvas canvas, Path path, CanvasConnectionStyle style);
+  void _drawFlowAnimation(
+    Canvas canvas,
+    Path path,
+    CanvasConnectionStyle style,
+  );
   void _drawRulers(Canvas canvas);
 }
 
 class CanvasPainter extends _CanvasPainterBase
-    with _CanvasConnectionPainterMixin, _CanvasCardPainterMixin, _CanvasOverlayPainterMixin, _CanvasShapePainterMixin, _CanvasSpecialPainterMixin, _CanvasEffectsPainterMixin {
+    with
+        _CanvasConnectionPainterMixin,
+        _CanvasCardPainterMixin,
+        _CanvasOverlayPainterMixin,
+        _CanvasShapePainterMixin,
+        _CanvasSpecialPainterMixin,
+        _CanvasEffectsPainterMixin {
   CanvasPainter({
     required super.cards,
     required super.connections,
@@ -174,6 +233,7 @@ class CanvasPainter extends _CanvasPainterBase
     super.backgroundColorValue,
     super.rulersVisible,
     super.animationValue,
+    super.selectedLayerId,
   });
 
   @override
@@ -227,6 +287,7 @@ class CanvasPainter extends _CanvasPainterBase
         !identical(layers, old.layers) ||
         selectionRect != old.selectionRect ||
         !identical(alignmentGuides, old.alignmentGuides) ||
+        selectedLayerId != old.selectedLayerId ||
         backgroundColorValue != old.backgroundColorValue ||
         rulersVisible != old.rulersVisible ||
         animationValue != old.animationValue;

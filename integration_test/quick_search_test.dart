@@ -120,9 +120,7 @@ void main() {
     });
 
     testWidgets('shows result items with description icon', (tester) async {
-      final notes = [
-        Note(title: 'Search Me', filePath: 'search.md'),
-      ];
+      final notes = [Note(title: 'Search Me', filePath: 'search.md')];
 
       await tester.pumpWidget(
         ProviderScope(
@@ -148,9 +146,7 @@ void main() {
     });
 
     testWidgets('case insensitive search', (tester) async {
-      final notes = [
-        Note(title: 'UpperCase', filePath: 'upper.md'),
-      ];
+      final notes = [Note(title: 'UpperCase', filePath: 'upper.md')];
 
       await tester.pumpWidget(
         ProviderScope(
@@ -176,9 +172,7 @@ void main() {
 
     testWidgets('calls onNoteSelected when tapping a result', (tester) async {
       Note? selectedNote;
-      final notes = [
-        Note(title: 'Tap Target', filePath: 'tap.md'),
-      ];
+      final notes = [Note(title: 'Tap Target', filePath: 'tap.md')];
 
       await tester.pumpWidget(
         ProviderScope(
@@ -211,9 +205,7 @@ void main() {
     });
 
     testWidgets('clears input after tapping result', (tester) async {
-      final notes = [
-        Note(title: 'Clear Test', filePath: 'clear.md'),
-      ];
+      final notes = [Note(title: 'Clear Test', filePath: 'clear.md')];
 
       await tester.pumpWidget(
         ProviderScope(
@@ -243,9 +235,7 @@ void main() {
     });
 
     testWidgets('does not show results for no match', (tester) async {
-      final notes = [
-        Note(title: 'Only Note', filePath: 'only.md'),
-      ];
+      final notes = [Note(title: 'Only Note', filePath: 'only.md')];
 
       await tester.pumpWidget(
         ProviderScope(
@@ -273,11 +263,8 @@ void main() {
     testWidgets('limits results to 8 items', (tester) async {
       final notes = List.generate(
         15,
-        (i) => Note(
-          title: 'Note $i',
-          filePath: 'note-$i.md',
-          content: 'search',
-        ),
+        (i) =>
+            Note(title: 'Note $i', filePath: 'note-$i.md', content: 'search'),
       );
 
       await tester.pumpWidget(

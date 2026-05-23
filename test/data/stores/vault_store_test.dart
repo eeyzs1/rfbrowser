@@ -24,22 +24,22 @@ void main() {
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/path_provider'),
-      (MethodCall methodCall) async {
-        if (methodCall.method == 'getApplicationSupportDirectory') {
-          return supportDir;
-        }
-        return null;
-      },
-    );
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (MethodCall methodCall) async {
+            if (methodCall.method == 'getApplicationSupportDirectory') {
+              return supportDir;
+            }
+            return null;
+          },
+        );
   });
 
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/path_provider'),
-      null,
-    );
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          null,
+        );
     if (Directory(supportDir).existsSync()) {
       Directory(supportDir).deleteSync(recursive: true);
     }
@@ -124,10 +124,22 @@ void main() {
       expect(state.isLoading, isFalse);
       expect(state.error, isNull);
 
-      expect(Directory(p.join(tempVaultDir, '.rfbrowser')).existsSync(), isTrue);
-      expect(Directory(p.join(tempVaultDir, '.rfbrowser', 'cache')).existsSync(), isTrue);
-      expect(Directory(p.join(tempVaultDir, '.rfbrowser', 'plugins')).existsSync(), isTrue);
-      expect(Directory(p.join(tempVaultDir, '.rfbrowser', 'sync')).existsSync(), isTrue);
+      expect(
+        Directory(p.join(tempVaultDir, '.rfbrowser')).existsSync(),
+        isTrue,
+      );
+      expect(
+        Directory(p.join(tempVaultDir, '.rfbrowser', 'cache')).existsSync(),
+        isTrue,
+      );
+      expect(
+        Directory(p.join(tempVaultDir, '.rfbrowser', 'plugins')).existsSync(),
+        isTrue,
+      );
+      expect(
+        Directory(p.join(tempVaultDir, '.rfbrowser', 'sync')).existsSync(),
+        isTrue,
+      );
     });
 
     test('openVault updates recentVaults', () async {
@@ -140,9 +152,15 @@ void main() {
     test('createVault creates user subdirectories and opens vault', () async {
       await container.read(vaultProvider.notifier).createVault(tempVaultDir);
 
-      expect(Directory(p.join(tempVaultDir, 'daily-notes')).existsSync(), isTrue);
+      expect(
+        Directory(p.join(tempVaultDir, 'daily-notes')).existsSync(),
+        isTrue,
+      );
       expect(Directory(p.join(tempVaultDir, 'clippings')).existsSync(), isTrue);
-      expect(Directory(p.join(tempVaultDir, 'attachments')).existsSync(), isTrue);
+      expect(
+        Directory(p.join(tempVaultDir, 'attachments')).existsSync(),
+        isTrue,
+      );
 
       final state = container.read(vaultProvider);
       expect(state.currentVault, isNotNull);
@@ -159,19 +177,31 @@ void main() {
 
     test('removeFromRecent removes vault from list', () async {
       await container.read(vaultProvider.notifier).openVault(tempVaultDir);
-      await container.read(vaultProvider.notifier).removeFromRecent(tempVaultDir);
+      await container
+          .read(vaultProvider.notifier)
+          .removeFromRecent(tempVaultDir);
 
       final state = container.read(vaultProvider);
-      expect(state.recentVaults.where((v) => v.path == p.normalize(p.absolute(tempVaultDir))), isEmpty);
+      expect(
+        state.recentVaults.where(
+          (v) => v.path == p.normalize(p.absolute(tempVaultDir)),
+        ),
+        isEmpty,
+      );
     });
 
-    test('removeFromRecent clears currentVault when removing active vault', () async {
-      await container.read(vaultProvider.notifier).openVault(tempVaultDir);
-      await container.read(vaultProvider.notifier).removeFromRecent(tempVaultDir);
+    test(
+      'removeFromRecent clears currentVault when removing active vault',
+      () async {
+        await container.read(vaultProvider.notifier).openVault(tempVaultDir);
+        await container
+            .read(vaultProvider.notifier)
+            .removeFromRecent(tempVaultDir);
 
-      final state = container.read(vaultProvider);
-      expect(state.currentVault, isNull);
-    });
+        final state = container.read(vaultProvider);
+        expect(state.currentVault, isNull);
+      },
+    );
 
     test('loadRecentVaults loads persisted vaults', () async {
       await container.read(vaultProvider.notifier).openVault(tempVaultDir);

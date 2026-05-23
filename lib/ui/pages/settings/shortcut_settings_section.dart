@@ -71,7 +71,8 @@ class _ShortcutSettingsSectionState
       return KeyEventResult.handled;
     }
 
-    final isModifier = key == LogicalKeyboardKey.controlLeft ||
+    final isModifier =
+        key == LogicalKeyboardKey.controlLeft ||
         key == LogicalKeyboardKey.controlRight ||
         key == LogicalKeyboardKey.shiftLeft ||
         key == LogicalKeyboardKey.shiftRight ||
@@ -97,7 +98,9 @@ class _ShortcutSettingsSectionState
       final l = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l.shortcutConflictMsg(shortcut, _actionLabel(existing, l))),
+          content: Text(
+            l.shortcutConflictMsg(shortcut, _actionLabel(existing, l)),
+          ),
         ),
       );
       return KeyEventResult.handled;
@@ -251,8 +254,9 @@ class _ShortcutSettingsSectionState
         AnimatedCrossFade(
           firstChild: const SizedBox(width: double.infinity),
           secondChild: Column(children: _buildActionList(actions, l, theme)),
-          crossFadeState:
-              isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          crossFadeState: isExpanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
           duration: const Duration(milliseconds: 200),
           sizeCurve: Curves.easeInOut,
         ),

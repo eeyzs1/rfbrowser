@@ -361,7 +361,9 @@ class ConnectionPropertiesPanel extends ConsumerWidget {
             ),
             label: Text(
               l.deleteConnection,
-              style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.error),
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
             ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -438,9 +440,7 @@ class ConnectionPropertiesPanel extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.hintColor,
-          ),
+          style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
         ),
         const SizedBox(height: 2),
         child,
@@ -460,9 +460,7 @@ class ConnectionPropertiesPanel extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.hintColor,
-          ),
+          style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
         ),
         const SizedBox(height: 2),
         DropdownButtonFormField<T>(

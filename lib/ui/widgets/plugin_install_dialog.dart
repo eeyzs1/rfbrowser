@@ -76,8 +76,11 @@ class _PluginInstallDialogState extends ConsumerState<PluginInstallDialog> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.error_outline,
-                      size: 16, color: theme.colorScheme.error),
+                  Icon(
+                    Icons.error_outline,
+                    size: 16,
+                    color: theme.colorScheme.error,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(

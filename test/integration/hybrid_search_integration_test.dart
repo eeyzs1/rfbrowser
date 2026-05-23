@@ -65,10 +65,14 @@ void main() {
     final ftsIdxAll = await db.rawQuery("SELECT * FROM notes_fts_idx LIMIT 10");
     print('FTS idx all: $ftsIdxAll');
 
-    final matchTest = await db.rawQuery("SELECT * FROM notes_fts WHERE notes_fts MATCH 'kw1'");
+    final matchTest = await db.rawQuery(
+      "SELECT * FROM notes_fts WHERE notes_fts MATCH 'kw1'",
+    );
     print('MATCH kw1: $matchTest');
 
-    final matchDart = await db.rawQuery("SELECT * FROM notes_fts WHERE notes_fts MATCH '{title content}: dart'");
+    final matchDart = await db.rawQuery(
+      "SELECT * FROM notes_fts WHERE notes_fts MATCH '{title content}: dart'",
+    );
     print('MATCH explicit columns dart: $matchDart');
 
     final allResults = await indexStore.searchNotes('Dart');
@@ -76,12 +80,7 @@ void main() {
   });
 
   test('keyword search finds Chinese match via FTS', () async {
-    final note = makeNote(
-      'c1',
-      '量子计算',
-      '这是一份关于量子计算的基础教程',
-      '量子计算.md',
-    );
+    final note = makeNote('c1', '量子计算', '这是一份关于量子计算的基础教程', '量子计算.md');
 
     await indexStore.indexNote(note);
 
@@ -105,8 +104,16 @@ void main() {
     final embeddingService = EmbeddingService();
     final emb1 = await embeddingService.embed(note1.content);
     final emb2 = await embeddingService.embed(note2.content);
-    embeddingService.hnswIndex.insert(note1.id, emb1, metadata: {'title': note1.title});
-    embeddingService.hnswIndex.insert(note2.id, emb2, metadata: {'title': note2.title});
+    embeddingService.hnswIndex.insert(
+      note1.id,
+      emb1,
+      metadata: {'title': note1.title},
+    );
+    embeddingService.hnswIndex.insert(
+      note2.id,
+      emb2,
+      metadata: {'title': note2.title},
+    );
 
     final semanticSearch = SemanticSearch(embeddingService);
     final hybridSearch = HybridSearch(
@@ -125,7 +132,11 @@ void main() {
 
     final embeddingService = EmbeddingService();
     final emb = await embeddingService.embed(note.content);
-    embeddingService.hnswIndex.insert(note.id, emb, metadata: {'title': note.title});
+    embeddingService.hnswIndex.insert(
+      note.id,
+      emb,
+      metadata: {'title': note.title},
+    );
 
     final semanticSearch = SemanticSearch(embeddingService);
     final hybridSearchWithBrokenFts = HybridSearch(
@@ -151,7 +162,11 @@ void main() {
 
     final embeddingService = EmbeddingService();
     final emb = await embeddingService.embed(note.content);
-    embeddingService.hnswIndex.insert(note.id, emb, metadata: {'title': note.title});
+    embeddingService.hnswIndex.insert(
+      note.id,
+      emb,
+      metadata: {'title': note.title},
+    );
 
     final semanticSearch = SemanticSearch(embeddingService);
     final hybridSearch = HybridSearch(

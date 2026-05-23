@@ -261,10 +261,7 @@ class CardPropertiesPanel extends ConsumerWidget {
                     (bs) => Padding(
                       padding: const EdgeInsets.only(right: 4),
                       child: ChoiceChip(
-                        label: Text(
-                          bs.name,
-                          style: theme.textTheme.labelSmall,
-                        ),
+                        label: Text(bs.name, style: theme.textTheme.labelSmall),
                         selected: s.borderStyle == bs,
                         onSelected: (_) => ref
                             .read(canvasProvider.notifier)
@@ -471,7 +468,10 @@ class CardPropertiesPanel extends ConsumerWidget {
                   .read(canvasProvider.notifier)
                   .updateCard(card.copyWith(clearStyle: true)),
               icon: Icon(Icons.refresh, size: 12),
-              label: Text('Reset to Default', style: theme.textTheme.labelSmall),
+              label: Text(
+                'Reset to Default',
+                style: theme.textTheme.labelSmall,
+              ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 minimumSize: Size.zero,
@@ -551,7 +551,10 @@ class CardPropertiesPanel extends ConsumerWidget {
                   ref.read(canvasProvider.notifier).selectCard(newCard.id);
                 },
                 icon: Icon(Icons.content_copy, size: 14),
-                label: Text(l.duplicateCard, style: theme.textTheme.labelMedium),
+                label: Text(
+                  l.duplicateCard,
+                  style: theme.textTheme.labelMedium,
+                ),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -578,7 +581,9 @@ class CardPropertiesPanel extends ConsumerWidget {
             ),
             label: Text(
               l.deleteCard,
-              style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.error),
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
             ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -628,9 +633,7 @@ class CardPropertiesPanel extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.hintColor,
-          ),
+          style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
         ),
         const SizedBox(height: 2),
         child,

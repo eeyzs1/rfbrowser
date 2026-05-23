@@ -109,7 +109,10 @@ void main() {
         final note = await repo.createNote(title: 'Sub Note', folder: 'subdir');
         expect(note.filePath, p.join('subdir', 'Sub-Note.md'));
         expect(Directory(p.join(tempDir, 'subdir')).existsSync(), isTrue);
-        expect(File(p.join(tempDir, 'subdir', 'Sub-Note.md')).existsSync(), isTrue);
+        expect(
+          File(p.join(tempDir, 'subdir', 'Sub-Note.md')).existsSync(),
+          isTrue,
+        );
       });
     });
 

@@ -15,9 +15,11 @@ class TestVaultNotifier extends VaultNotifier {
 }
 
 ProviderContainer createContainer() {
-  return ProviderContainer(overrides: [
-    vaultProvider.overrideWith(() => TestVaultNotifier(VaultState())),
-  ]);
+  return ProviderContainer(
+    overrides: [
+      vaultProvider.overrideWith(() => TestVaultNotifier(VaultState())),
+    ],
+  );
 }
 
 void main() {
@@ -56,34 +58,36 @@ void main() {
     });
 
     test('copyWith clearSelectedCardIds sets empty list', () {
-      final data = CanvasData(selectedCardIds: ['c1', 'c2'])
-          .copyWith(clearSelectedCardIds: true);
+      final data = CanvasData(
+        selectedCardIds: ['c1', 'c2'],
+      ).copyWith(clearSelectedCardIds: true);
       expect(data.selectedCardIds, isEmpty);
     });
 
     test('copyWith clearSelectedCardIds overrides selectedCardIds', () {
-      final data = CanvasData(selectedCardIds: ['c1', 'c2'])
-          .copyWith(clearSelectedCardIds: true, selectedCardIds: ['c3']);
+      final data = CanvasData(
+        selectedCardIds: ['c1', 'c2'],
+      ).copyWith(clearSelectedCardIds: true, selectedCardIds: ['c3']);
       expect(data.selectedCardIds, []);
     });
 
     test('copyWith clearInlineEditingCardId sets null', () {
-      final data = CanvasData(inlineEditingCardId: 'c1')
-          .copyWith(clearInlineEditingCardId: true);
+      final data = CanvasData(
+        inlineEditingCardId: 'c1',
+      ).copyWith(clearInlineEditingCardId: true);
       expect(data.inlineEditingCardId, isNull);
     });
 
     test('copyWith clearSelectedConnectionId sets null', () {
-      final data = CanvasData(selectedConnectionId: 'conn1')
-          .copyWith(clearSelectedConnectionId: true);
+      final data = CanvasData(
+        selectedConnectionId: 'conn1',
+      ).copyWith(clearSelectedConnectionId: true);
       expect(data.selectedConnectionId, isNull);
     });
 
     test('toJsonString and fromJsonString roundtrip', () {
       final original = CanvasData(
-        cards: [
-          CanvasCard(id: 'c1', type: CanvasCardType.text, x: 10, y: 20),
-        ],
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text, x: 10, y: 20)],
         connections: [
           CanvasConnection(id: 'conn1', fromCardId: 'c1', toCardId: 'c2'),
         ],
@@ -213,7 +217,9 @@ void main() {
     test('setDefaultCardStyle(null) clears style', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.setDefaultCardStyle(const CanvasCardStyle(fillColor: 0xFFCCCCCC));
+      notifier.setDefaultCardStyle(
+        const CanvasCardStyle(fillColor: 0xFFCCCCCC),
+      );
       notifier.setDefaultCardStyle(null);
       expect(notifier.state.settings.defaultCardStyle, isNull);
     });
@@ -223,10 +229,7 @@ void main() {
       final notifier = container.read(canvasProvider.notifier);
       final style = const CanvasConnectionStyle(strokeWidth: 5.0);
       notifier.setDefaultConnectionStyle(style);
-      expect(
-        notifier.state.settings.defaultConnectionStyle?.strokeWidth,
-        5.0,
-      );
+      expect(notifier.state.settings.defaultConnectionStyle?.strokeWidth, 5.0);
     });
 
     test('setDefaultConnectionStyle(null) clears style', () {
@@ -316,11 +319,13 @@ void main() {
     test('selectAll selects all cards', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-        CanvasCard(id: 'c2', type: CanvasCardType.text),
-        CanvasCard(id: 'c3', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text),
+          CanvasCard(id: 'c2', type: CanvasCardType.text),
+          CanvasCard(id: 'c3', type: CanvasCardType.text),
+        ],
+      );
       notifier.selectAll();
       expect(notifier.state.selectedCardIds, containsAll(['c1', 'c2', 'c3']));
     });
@@ -414,10 +419,7 @@ void main() {
       final notifier = container.read(canvasProvider.notifier);
       final style = const CanvasCardStyle(fillColor: 0xFF123456);
       notifier.setDefaultCardStyle(style);
-      final card = notifier.createCard(
-        CanvasCardType.text,
-        const Offset(0, 0),
-      );
+      final card = notifier.createCard(CanvasCardType.text, const Offset(0, 0));
       expect(card.style?.fillColor, 0xFF123456);
     });
 
@@ -448,24 +450,26 @@ void main() {
     test('createConnection returns valid connection with existing cards', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100,
-        ),
-        CanvasCard(
-          id: 'c2',
-          type: CanvasCardType.text,
-          x: 200,
-          y: 0,
-          width: 100,
-          height: 100,
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100,
+          ),
+          CanvasCard(
+            id: 'c2',
+            type: CanvasCardType.text,
+            x: 200,
+            y: 0,
+            width: 100,
+            height: 100,
+          ),
+        ],
+      );
       final conn = notifier.createConnection('c1', 'c2', label: 'Test Label');
       expect(conn.id, isNotEmpty);
       expect(conn.fromCardId, 'c1');
@@ -477,24 +481,26 @@ void main() {
     test('createConnection respects default connection style', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100,
-        ),
-        CanvasCard(
-          id: 'c2',
-          type: CanvasCardType.text,
-          x: 200,
-          y: 0,
-          width: 100,
-          height: 100,
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100,
+          ),
+          CanvasCard(
+            id: 'c2',
+            type: CanvasCardType.text,
+            x: 200,
+            y: 0,
+            width: 100,
+            height: 100,
+          ),
+        ],
+      );
       final connStyle = const CanvasConnectionStyle(
         pathType: ConnectionPath.straight,
         arrowStyle: ArrowStyle.diamond,
@@ -510,9 +516,9 @@ void main() {
     test('cardById returns card if found', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'Test'),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'Test')],
+      );
       final card = notifier.cardById('c1');
       expect(card, isNotNull);
       expect(card!.title, 'Test');
@@ -574,10 +580,12 @@ void main() {
     test('searchCards with empty query returns all cards', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'Alpha'),
-        CanvasCard(id: 'c2', type: CanvasCardType.text, title: 'Beta'),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'Alpha'),
+          CanvasCard(id: 'c2', type: CanvasCardType.text, title: 'Beta'),
+        ],
+      );
       final results = notifier.searchCards('');
       expect(results, hasLength(2));
     });
@@ -585,11 +593,13 @@ void main() {
     test('searchCards matches title', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'Alpha'),
-        CanvasCard(id: 'c2', type: CanvasCardType.text, title: 'Beta'),
-        CanvasCard(id: 'c3', type: CanvasCardType.text, title: 'Gamma'),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'Alpha'),
+          CanvasCard(id: 'c2', type: CanvasCardType.text, title: 'Beta'),
+          CanvasCard(id: 'c3', type: CanvasCardType.text, title: 'Gamma'),
+        ],
+      );
       final results = notifier.searchCards('alpha');
       expect(results, hasLength(1));
       expect(results.first.id, 'c1');
@@ -598,20 +608,22 @@ void main() {
     test('searchCards matches content', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          title: 'X',
-          content: 'Hello World',
-        ),
-        CanvasCard(
-          id: 'c2',
-          type: CanvasCardType.text,
-          title: 'Y',
-          content: 'Goodbye',
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            title: 'X',
+            content: 'Hello World',
+          ),
+          CanvasCard(
+            id: 'c2',
+            type: CanvasCardType.text,
+            title: 'Y',
+            content: 'Goodbye',
+          ),
+        ],
+      );
       final results = notifier.searchCards('world');
       expect(results, hasLength(1));
       expect(results.first.id, 'c1');
@@ -620,9 +632,11 @@ void main() {
     test('searchCards is case insensitive', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'ALPHA'),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'ALPHA'),
+        ],
+      );
       expect(notifier.searchCards('alpha'), hasLength(1));
       expect(notifier.searchCards('ALPHA'), hasLength(1));
       expect(notifier.searchCards('AlPhA'), hasLength(1));
@@ -636,32 +650,34 @@ void main() {
     setUp(() {
       container = createContainer();
       notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          x: 10,
-          y: 10,
-          width: 100,
-          height: 100,
-        ),
-        CanvasCard(
-          id: 'c2',
-          type: CanvasCardType.text,
-          x: 200,
-          y: 50,
-          width: 100,
-          height: 100,
-        ),
-        CanvasCard(
-          id: 'c3',
-          type: CanvasCardType.text,
-          x: 350,
-          y: 80,
-          width: 100,
-          height: 100,
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            x: 10,
+            y: 10,
+            width: 100,
+            height: 100,
+          ),
+          CanvasCard(
+            id: 'c2',
+            type: CanvasCardType.text,
+            x: 200,
+            y: 50,
+            width: 100,
+            height: 100,
+          ),
+          CanvasCard(
+            id: 'c3',
+            type: CanvasCardType.text,
+            x: 350,
+            y: 80,
+            width: 100,
+            height: 100,
+          ),
+        ],
+      );
     });
 
     test('alignCards with <2 cards returns early', () {
@@ -728,8 +744,7 @@ void main() {
     });
 
     test('alignCards does not affect non-selected cards', () {
-      final originalX =
-          notifier.state.cards.firstWhere((c) => c.id == 'c3').x;
+      final originalX = notifier.state.cards.firstWhere((c) => c.id == 'c3').x;
       notifier.alignCards(['c1', 'c2'], AlignmentType.left);
       final card3 = notifier.state.cards.firstWhere((c) => c.id == 'c3');
       expect(card3.x, originalX);
@@ -740,24 +755,26 @@ void main() {
     test('distributeCards with <3 cards returns early', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100,
-        ),
-        CanvasCard(
-          id: 'c2',
-          type: CanvasCardType.text,
-          x: 200,
-          y: 0,
-          width: 100,
-          height: 100,
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100,
+          ),
+          CanvasCard(
+            id: 'c2',
+            type: CanvasCardType.text,
+            x: 200,
+            y: 0,
+            width: 100,
+            height: 100,
+          ),
+        ],
+      );
       notifier.distributeCards(['c1', 'c2'], DistributeType.horizontal);
       expect(notifier.state.cards.firstWhere((c) => c.id == 'c1').x, 0);
     });
@@ -765,32 +782,34 @@ void main() {
     test('distributeCards horizontal evenly spaces cards', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          x: 10,
-          y: 0,
-          width: 100,
-          height: 100,
-        ),
-        CanvasCard(
-          id: 'c2',
-          type: CanvasCardType.text,
-          x: 150,
-          y: 0,
-          width: 100,
-          height: 100,
-        ),
-        CanvasCard(
-          id: 'c3',
-          type: CanvasCardType.text,
-          x: 400,
-          y: 0,
-          width: 100,
-          height: 100,
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            x: 10,
+            y: 0,
+            width: 100,
+            height: 100,
+          ),
+          CanvasCard(
+            id: 'c2',
+            type: CanvasCardType.text,
+            x: 150,
+            y: 0,
+            width: 100,
+            height: 100,
+          ),
+          CanvasCard(
+            id: 'c3',
+            type: CanvasCardType.text,
+            x: 400,
+            y: 0,
+            width: 100,
+            height: 100,
+          ),
+        ],
+      );
       notifier.distributeCards(['c1', 'c2', 'c3'], DistributeType.horizontal);
       final cards = notifier.state.cards;
       final sorted = cards.toList()..sort((a, b) => a.x.compareTo(b.x));
@@ -804,32 +823,34 @@ void main() {
     test('distributeCards vertical evenly spaces cards', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          x: 0,
-          y: 10,
-          width: 100,
-          height: 100,
-        ),
-        CanvasCard(
-          id: 'c2',
-          type: CanvasCardType.text,
-          x: 0,
-          y: 150,
-          width: 100,
-          height: 100,
-        ),
-        CanvasCard(
-          id: 'c3',
-          type: CanvasCardType.text,
-          x: 0,
-          y: 400,
-          width: 100,
-          height: 100,
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            x: 0,
+            y: 10,
+            width: 100,
+            height: 100,
+          ),
+          CanvasCard(
+            id: 'c2',
+            type: CanvasCardType.text,
+            x: 0,
+            y: 150,
+            width: 100,
+            height: 100,
+          ),
+          CanvasCard(
+            id: 'c3',
+            type: CanvasCardType.text,
+            x: 0,
+            y: 400,
+            width: 100,
+            height: 100,
+          ),
+        ],
+      );
       notifier.distributeCards(['c1', 'c2', 'c3'], DistributeType.vertical);
       final cards = notifier.state.cards;
       final sorted = cards.toList()..sort((a, b) => a.y.compareTo(b.y));
@@ -845,23 +866,25 @@ void main() {
     test('batchUpdateCardColor updates selected cards', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          colorValue: 0xFFFFFFFF,
-        ),
-        CanvasCard(
-          id: 'c2',
-          type: CanvasCardType.text,
-          colorValue: 0xFFFFFFFF,
-        ),
-        CanvasCard(
-          id: 'c3',
-          type: CanvasCardType.text,
-          colorValue: 0xFFFFFFFF,
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            colorValue: 0xFFFFFFFF,
+          ),
+          CanvasCard(
+            id: 'c2',
+            type: CanvasCardType.text,
+            colorValue: 0xFFFFFFFF,
+          ),
+          CanvasCard(
+            id: 'c3',
+            type: CanvasCardType.text,
+            colorValue: 0xFFFFFFFF,
+          ),
+        ],
+      );
       notifier.batchUpdateCardColor(['c1', 'c3'], 0xFF333333);
       expect(
         notifier.state.cards.firstWhere((c) => c.id == 'c1').colorValue,
@@ -880,14 +903,13 @@ void main() {
     test('batchMoveCards moves selected cards', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, x: 0, y: 0),
-        CanvasCard(id: 'c2', type: CanvasCardType.text, x: 100, y: 100),
-      ]);
-      notifier.batchMoveCards({
-        'c1': (50.0, 60.0),
-        'c2': (150.0, 160.0),
-      });
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text, x: 0, y: 0),
+          CanvasCard(id: 'c2', type: CanvasCardType.text, x: 100, y: 100),
+        ],
+      );
+      notifier.batchMoveCards({'c1': (50.0, 60.0), 'c2': (150.0, 160.0)});
       final c1 = notifier.state.cards.firstWhere((c) => c.id == 'c1');
       final c2 = notifier.state.cards.firstWhere((c) => c.id == 'c2');
       expect(c1.x, 50);
@@ -901,9 +923,11 @@ void main() {
     test('addTag adds tag to card', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, tags: ['existing']),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text, tags: ['existing']),
+        ],
+      );
       notifier.addTag('c1', 'new-tag');
       expect(
         notifier.state.cards.firstWhere((c) => c.id == 'c1').tags,
@@ -914,14 +938,15 @@ void main() {
     test('addTag does not add duplicate tag', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, tags: ['tag1']),
-      ]);
-      notifier.addTag('c1', 'tag1');
-      expect(
-        notifier.state.cards.firstWhere((c) => c.id == 'c1').tags,
-        ['tag1'],
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text, tags: ['tag1']),
+        ],
       );
+      notifier.addTag('c1', 'tag1');
+      expect(notifier.state.cards.firstWhere((c) => c.id == 'c1').tags, [
+        'tag1',
+      ]);
     });
 
     test('addTag does nothing for non-existent card', () {
@@ -933,18 +958,19 @@ void main() {
     test('removeTag removes tag from card', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          tags: ['tag1', 'tag2'],
-        ),
-      ]);
-      notifier.removeTag('c1', 'tag1');
-      expect(
-        notifier.state.cards.firstWhere((c) => c.id == 'c1').tags,
-        ['tag2'],
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            tags: ['tag1', 'tag2'],
+          ),
+        ],
       );
+      notifier.removeTag('c1', 'tag1');
+      expect(notifier.state.cards.firstWhere((c) => c.id == 'c1').tags, [
+        'tag2',
+      ]);
     });
 
     test('removeTag does nothing for non-existent card', () {
@@ -958,12 +984,15 @@ void main() {
     test('setHyperlink sets hyperlink', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setHyperlink('c1', 'https://example.com');
       expect(
-        notifier.state.cards.firstWhere((c) => c.id == 'c1').metadata?.hyperlink,
+        notifier.state.cards
+            .firstWhere((c) => c.id == 'c1')
+            .metadata
+            ?.hyperlink,
         'https://example.com',
       );
     });
@@ -971,13 +1000,16 @@ void main() {
     test('setHyperlink(null) clears hyperlink', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setHyperlink('c1', 'https://example.com');
       notifier.setHyperlink('c1', null);
       expect(
-        notifier.state.cards.firstWhere((c) => c.id == 'c1').metadata?.hyperlink,
+        notifier.state.cards
+            .firstWhere((c) => c.id == 'c1')
+            .metadata
+            ?.hyperlink,
         isNull,
       );
     });
@@ -985,13 +1017,16 @@ void main() {
     test('setMetadata sets metadata', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       final meta = const CanvasCardMetadata(properties: {'key': 'value'});
       notifier.setMetadata('c1', meta);
       expect(
-        notifier.state.cards.firstWhere((c) => c.id == 'c1').metadata?.properties,
+        notifier.state.cards
+            .firstWhere((c) => c.id == 'c1')
+            .metadata
+            ?.properties,
         {'key': 'value'},
       );
     });
@@ -999,14 +1034,16 @@ void main() {
     test('setTextAlign sets alignment', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          textAlignH: TextAlignH.left,
-          textAlignV: TextAlignV.top,
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            textAlignH: TextAlignH.left,
+            textAlignV: TextAlignV.top,
+          ),
+        ],
+      );
       notifier.setTextAlign('c1', h: TextAlignH.center, v: TextAlignV.middle);
       final card = notifier.state.cards.firstWhere((c) => c.id == 'c1');
       expect(card.textAlignH, TextAlignH.center);
@@ -1016,14 +1053,16 @@ void main() {
     test('setTextAlign with partial params preserves existing', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          textAlignH: TextAlignH.left,
-          textAlignV: TextAlignV.top,
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            textAlignH: TextAlignH.left,
+            textAlignV: TextAlignV.top,
+          ),
+        ],
+      );
       notifier.setTextAlign('c1', h: TextAlignH.right);
       final card = notifier.state.cards.firstWhere((c) => c.id == 'c1');
       expect(card.textAlignH, TextAlignH.right);
@@ -1033,9 +1072,9 @@ void main() {
     test('setFontFamily sets font', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setFontFamily('c1', 'Courier New');
       expect(
         notifier.state.cards.firstWhere((c) => c.id == 'c1').fontFamily,
@@ -1046,9 +1085,9 @@ void main() {
     test('setTextColor sets text color', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setTextColor('c1', 0xFF123456);
       expect(
         notifier.state.cards.firstWhere((c) => c.id == 'c1').textColorValue,
@@ -1059,9 +1098,11 @@ void main() {
     test('toggleAutoNumber toggles', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, autoNumber: false),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text, autoNumber: false),
+        ],
+      );
       notifier.toggleAutoNumber('c1');
       expect(
         notifier.state.cards.firstWhere((c) => c.id == 'c1').autoNumber,
@@ -1077,9 +1118,9 @@ void main() {
     test('setLatexFormula sets formula', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setLatexFormula('c1', 'E=mc^2');
       expect(
         notifier.state.cards.firstWhere((c) => c.id == 'c1').latexFormula,
@@ -1090,9 +1131,9 @@ void main() {
     test('setLatexFormula(null) clears', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setLatexFormula('c1', 'E=mc^2');
       notifier.setLatexFormula('c1', null);
       expect(
@@ -1104,9 +1145,9 @@ void main() {
     test('setHtmlContent sets html', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setHtmlContent('c1', '<b>bold</b>');
       expect(
         notifier.state.cards.firstWhere((c) => c.id == 'c1').htmlContent,
@@ -1117,9 +1158,9 @@ void main() {
     test('setHtmlContent(null) clears', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setHtmlContent('c1', '<b>bold</b>');
       notifier.setHtmlContent('c1', null);
       expect(
@@ -1131,9 +1172,9 @@ void main() {
     test('setCustomSvg sets svg', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setCustomSvg('c1', '<svg></svg>');
       expect(
         notifier.state.cards.firstWhere((c) => c.id == 'c1').customSvgData,
@@ -1144,9 +1185,9 @@ void main() {
     test('setCustomSvg(null) clears', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setCustomSvg('c1', '<svg></svg>');
       notifier.setCustomSvg('c1', null);
       expect(
@@ -1158,9 +1199,9 @@ void main() {
     test('addSvgAsCustomShape sets svg', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.addSvgAsCustomShape('c1', '<svg>shape</svg>');
       expect(
         notifier.state.cards.firstWhere((c) => c.id == 'c1').customSvgData,
@@ -1173,9 +1214,9 @@ void main() {
     test('setFreehandPoints sets points', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.freehand),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.freehand)],
+      );
       final points = [const Offset(10, 20), const Offset(30, 40)];
       notifier.setFreehandPoints('c1', points);
       expect(
@@ -1187,9 +1228,9 @@ void main() {
     test('setTableSize resizes table', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.table),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.table)],
+      );
       notifier.setTableSize('c1', 5, 4);
       final card = notifier.state.cards.firstWhere((c) => c.id == 'c1');
       expect(card.tableRows, 5);
@@ -1200,20 +1241,22 @@ void main() {
     test('setTableSize preserves existing cells', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.table,
-          tableRows: 2,
-          tableCols: 2,
-          tableCells: const [
-            CanvasTableCell(text: 'A'),
-            CanvasTableCell(text: 'B'),
-            CanvasTableCell(text: 'C'),
-            CanvasTableCell(text: 'D'),
-          ],
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.table,
+            tableRows: 2,
+            tableCols: 2,
+            tableCells: const [
+              CanvasTableCell(text: 'A'),
+              CanvasTableCell(text: 'B'),
+              CanvasTableCell(text: 'C'),
+              CanvasTableCell(text: 'D'),
+            ],
+          ),
+        ],
+      );
       notifier.setTableSize('c1', 3, 3);
       final card = notifier.state.cards.firstWhere((c) => c.id == 'c1');
       expect(card.tableRows, 3);
@@ -1229,20 +1272,22 @@ void main() {
     test('setTableCell sets cell text', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.table,
-          tableRows: 2,
-          tableCols: 2,
-          tableCells: const [
-            CanvasTableCell(text: ''),
-            CanvasTableCell(text: ''),
-            CanvasTableCell(text: ''),
-            CanvasTableCell(text: ''),
-          ],
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.table,
+            tableRows: 2,
+            tableCols: 2,
+            tableCells: const [
+              CanvasTableCell(text: ''),
+              CanvasTableCell(text: ''),
+              CanvasTableCell(text: ''),
+              CanvasTableCell(text: ''),
+            ],
+          ),
+        ],
+      );
       notifier.setTableCell('c1', 0, 1, 'Hello');
       final card = notifier.state.cards.firstWhere((c) => c.id == 'c1');
       expect(card.tableCells[1].text, 'Hello');
@@ -1251,9 +1296,11 @@ void main() {
     test('toggleVerticalText toggles', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, verticalText: false),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text, verticalText: false),
+        ],
+      );
       notifier.toggleVerticalText('c1');
       expect(
         notifier.state.cards.firstWhere((c) => c.id == 'c1').verticalText,
@@ -1269,26 +1316,28 @@ void main() {
     test('enumerateAllCards numbers autoNumber cards', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(
-          id: 'c1',
-          type: CanvasCardType.text,
-          title: 'First',
-          autoNumber: true,
-        ),
-        CanvasCard(
-          id: 'c2',
-          type: CanvasCardType.text,
-          title: 'Second',
-          autoNumber: false,
-        ),
-        CanvasCard(
-          id: 'c3',
-          type: CanvasCardType.text,
-          title: 'Third',
-          autoNumber: true,
-        ),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.text,
+            title: 'First',
+            autoNumber: true,
+          ),
+          CanvasCard(
+            id: 'c2',
+            type: CanvasCardType.text,
+            title: 'Second',
+            autoNumber: false,
+          ),
+          CanvasCard(
+            id: 'c3',
+            type: CanvasCardType.text,
+            title: 'Third',
+            autoNumber: true,
+          ),
+        ],
+      );
       notifier.enumerateAllCards();
       final c1 = notifier.state.cards.firstWhere((c) => c.id == 'c1');
       final c2 = notifier.state.cards.firstWhere((c) => c.id == 'c2');
@@ -1301,9 +1350,9 @@ void main() {
     test('setRichContent sets segments', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       final segments = [
         const RichTextSegment(text: 'Hello', type: RichTextSegmentType.bold),
         const RichTextSegment(text: ' World'),
@@ -1318,9 +1367,9 @@ void main() {
     test('setConnectionPointOffset sets offsets clamped', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setConnectionPointOffset('c1', 0.7, 1.5);
       final card = notifier.state.cards.firstWhere((c) => c.id == 'c1');
       expect(card.connectionPointOffsetX, 0.7);
@@ -1330,9 +1379,9 @@ void main() {
     test('setConnectionPointOffset clamps to 0', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.setConnectionPointOffset('c1', -0.5, -0.2);
       final card = notifier.state.cards.firstWhere((c) => c.id == 'c1');
       expect(card.connectionPointOffsetX, 0.0);
@@ -1453,9 +1502,11 @@ void main() {
     test('updateConnection updates connection in memory', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(connections: [
-        CanvasConnection(id: 'conn1', fromCardId: 'c1', toCardId: 'c2'),
-      ]);
+      notifier.state = CanvasData(
+        connections: [
+          CanvasConnection(id: 'conn1', fromCardId: 'c1', toCardId: 'c2'),
+        ],
+      );
       notifier.updateConnection(
         CanvasConnection(
           id: 'conn1',
@@ -1472,9 +1523,11 @@ void main() {
     test('addWaypoint adds waypoint', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(connections: [
-        CanvasConnection(id: 'conn1', fromCardId: 'c1', toCardId: 'c2'),
-      ]);
+      notifier.state = CanvasData(
+        connections: [
+          CanvasConnection(id: 'conn1', fromCardId: 'c1', toCardId: 'c2'),
+        ],
+      );
       notifier.addWaypoint('conn1', const Offset(50, 100));
       expect(notifier.state.connections.first.waypoints, [
         const Offset(50, 100),
@@ -1484,12 +1537,16 @@ void main() {
     test('addWaypoint with insertIndex inserts at position', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(connections: [
-        CanvasConnection(id: 'conn1', fromCardId: 'c1', toCardId: 'c2', waypoints: [
-          const Offset(10, 20),
-          const Offset(30, 40),
-        ]),
-      ]);
+      notifier.state = CanvasData(
+        connections: [
+          CanvasConnection(
+            id: 'conn1',
+            fromCardId: 'c1',
+            toCardId: 'c2',
+            waypoints: [const Offset(10, 20), const Offset(30, 40)],
+          ),
+        ],
+      );
       notifier.addWaypoint('conn1', const Offset(50, 60), insertIndex: 1);
       expect(notifier.state.connections.first.waypoints, [
         const Offset(10, 20),
@@ -1501,12 +1558,16 @@ void main() {
     test('removeWaypoint removes waypoint at index', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(connections: [
-        CanvasConnection(id: 'conn1', fromCardId: 'c1', toCardId: 'c2', waypoints: [
-          const Offset(10, 20),
-          const Offset(30, 40),
-        ]),
-      ]);
+      notifier.state = CanvasData(
+        connections: [
+          CanvasConnection(
+            id: 'conn1',
+            fromCardId: 'c1',
+            toCardId: 'c2',
+            waypoints: [const Offset(10, 20), const Offset(30, 40)],
+          ),
+        ],
+      );
       notifier.removeWaypoint('conn1', 0);
       expect(notifier.state.connections.first.waypoints, [
         const Offset(30, 40),
@@ -1516,11 +1577,16 @@ void main() {
     test('removeWaypoint with invalid index does nothing', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(connections: [
-        CanvasConnection(id: 'conn1', fromCardId: 'c1', toCardId: 'c2', waypoints: [
-          const Offset(10, 20),
-        ]),
-      ]);
+      notifier.state = CanvasData(
+        connections: [
+          CanvasConnection(
+            id: 'conn1',
+            fromCardId: 'c1',
+            toCardId: 'c2',
+            waypoints: [const Offset(10, 20)],
+          ),
+        ],
+      );
       notifier.removeWaypoint('conn1', 5);
       expect(notifier.state.connections.first.waypoints, hasLength(1));
     });
@@ -1528,11 +1594,16 @@ void main() {
     test('moveWaypoint moves waypoint', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(connections: [
-        CanvasConnection(id: 'conn1', fromCardId: 'c1', toCardId: 'c2', waypoints: [
-          const Offset(10, 20),
-        ]),
-      ]);
+      notifier.state = CanvasData(
+        connections: [
+          CanvasConnection(
+            id: 'conn1',
+            fromCardId: 'c1',
+            toCardId: 'c2',
+            waypoints: [const Offset(10, 20)],
+          ),
+        ],
+      );
       notifier.moveWaypoint('conn1', 0, const Offset(99, 88));
       expect(notifier.state.connections.first.waypoints, [
         const Offset(99, 88),
@@ -1566,9 +1637,11 @@ void main() {
     test('ungroupCards removes group', () async {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(groups: [
-        CanvasGroup(id: 'g1', name: 'G1', cardIds: ['c1', 'c2']),
-      ]);
+      notifier.state = CanvasData(
+        groups: [
+          CanvasGroup(id: 'g1', name: 'G1', cardIds: ['c1', 'c2']),
+        ],
+      );
       await notifier.ungroupCards('g1');
       expect(notifier.state.groups, isEmpty);
     });
@@ -1576,9 +1649,11 @@ void main() {
     test('renameGroup renames group', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(groups: [
-        CanvasGroup(id: 'g1', name: 'Old Name', cardIds: ['c1']),
-      ]);
+      notifier.state = CanvasData(
+        groups: [
+          CanvasGroup(id: 'g1', name: 'Old Name', cardIds: ['c1']),
+        ],
+      );
       notifier.renameGroup('g1', 'New Name');
       expect(notifier.state.groups.first.name, 'New Name');
     });
@@ -1588,11 +1663,13 @@ void main() {
     test('batchDeleteCards removes cards', () async {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-        CanvasCard(id: 'c2', type: CanvasCardType.text),
-        CanvasCard(id: 'c3', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text),
+          CanvasCard(id: 'c2', type: CanvasCardType.text),
+          CanvasCard(id: 'c3', type: CanvasCardType.text),
+        ],
+      );
       await notifier.batchDeleteCards(['c1', 'c3']);
       expect(notifier.state.cards, hasLength(1));
       expect(notifier.state.cards.first.id, 'c2');
@@ -1635,9 +1712,7 @@ void main() {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
       notifier.state = CanvasData(
-        cards: [
-          CanvasCard(id: 'c1', type: CanvasCardType.text),
-        ],
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
         groups: [
           CanvasGroup(id: 'g1', name: 'G1', cardIds: ['c1']),
         ],
@@ -1649,9 +1724,7 @@ void main() {
     test('batchDeleteCards with empty list returns early', () async {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      final cards = [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ];
+      final cards = [CanvasCard(id: 'c1', type: CanvasCardType.text)];
       notifier.state = CanvasData(cards: cards);
       await notifier.batchDeleteCards([]);
       expect(notifier.state.cards, hasLength(1));
@@ -1662,9 +1735,9 @@ void main() {
     test('clearCanvas resets state', () async {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      notifier.state = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       await notifier.clearCanvas();
       expect(notifier.state.cards, isEmpty);
       expect(notifier.state.connections, isEmpty);
@@ -1690,41 +1763,105 @@ void main() {
     test('returns empty when fewer than 2 cards with noteId', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      notifier.state = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.note, noteId: 'note1'),
-      ]);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.note, noteId: 'note1'),
+        ],
+      );
       final result = notifier.deriveAutoConnections([], null);
       expect(result, isEmpty);
     });
   });
 
-  group('CanvasNotifier - layers', () {
-    test('isLayerLocked delegates to layers service', () {
+  group('CanvasNotifier - tag filter', () {
+    test('setSelectedLayer with null shows all', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
       notifier.state = CanvasData(
-        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
-        layers: [
-          CanvasLayer(id: 'l1', name: 'L1', locked: true),
-        ],
+        layers: [CanvasLayer(id: 'l1', name: 'Work', order: 0)],
       );
-      final card = notifier.state.cards.firstWhere((c) => c.id == 'c1');
-      final locked = notifier.isLayerLocked(card.id);
-      expect(locked, false);
+      notifier.setSelectedLayer(null);
+      expect(notifier.state.selectedLayerId, isNull);
     });
 
-    test('isLayerVisible delegates to layers service', () {
+    test('setSelectedLayer filters by layer id', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
       notifier.state = CanvasData(
-        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+        layers: [CanvasLayer(id: 'l1', name: 'Work', order: 0)],
+      );
+      notifier.setSelectedLayer('l1');
+      expect(notifier.state.selectedLayerId, 'l1');
+    });
+
+    test(
+      'setSelectedLayer with unassigned sentinel filters to null layerId cards',
+      () {
+        final container = createContainer();
+        final notifier = container.read(canvasProvider.notifier);
+        notifier.setSelectedLayer(CanvasData.unassignedSentinel);
+        expect(notifier.state.selectedLayerId, CanvasData.unassignedSentinel);
+      },
+    );
+
+    test('unassignedCardCount counts cards without layerId', () {
+      final container = createContainer();
+      final notifier = container.read(canvasProvider.notifier);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text),
+          CanvasCard(id: 'c2', type: CanvasCardType.text, layerId: 'l1'),
+          CanvasCard(id: 'c3', type: CanvasCardType.text),
+        ],
+        layers: [CanvasLayer(id: 'l1', name: 'L1', order: 0)],
+      );
+      expect(notifier.unassignedCardCount, 2);
+    });
+
+    test('unassignedCardCount returns 0 when all cards have layerId', () {
+      final container = createContainer();
+      final notifier = container.read(canvasProvider.notifier);
+      notifier.state = CanvasData(
+        cards: [
+          CanvasCard(id: 'c1', type: CanvasCardType.text, layerId: 'l1'),
+          CanvasCard(id: 'c2', type: CanvasCardType.text, layerId: 'l2'),
+        ],
         layers: [
-          CanvasLayer(id: 'l1', name: 'L1', visible: true),
+          CanvasLayer(id: 'l1', name: 'L1', order: 0),
+          CanvasLayer(id: 'l2', name: 'L2', order: 1),
         ],
       );
-      final card = notifier.state.cards.firstWhere((c) => c.id == 'c1');
-      final visible = notifier.isLayerVisible(card.id);
-      expect(visible, true);
+      expect(notifier.unassignedCardCount, 0);
+    });
+
+    test('selectedLayerId persisted in toJsonString and fromJsonString', () {
+      final data = CanvasData(
+        layers: [CanvasLayer(id: 'l1', name: 'Work', order: 0)],
+        selectedLayerId: 'l1',
+      );
+      final json = data.toJsonString();
+      final restored = CanvasData.fromJsonString(json);
+      expect(restored.selectedLayerId, 'l1');
+    });
+
+    test('selectedLayerId null not persisted in JSON', () {
+      final data = CanvasData(selectedLayerId: null);
+      final json = data.toJsonString();
+      expect(json.contains('selectedLayerId'), isFalse);
+    });
+
+    test('unassignedSentinel persisted and restored correctly', () {
+      final data = CanvasData(selectedLayerId: CanvasData.unassignedSentinel);
+      final json = data.toJsonString();
+      final restored = CanvasData.fromJsonString(json);
+      expect(restored.selectedLayerId, CanvasData.unassignedSentinel);
+    });
+
+    test('old JSON without selectedLayerId defaults to null', () {
+      final json =
+          '{"cards":[],"connections":[],"groups":[],"layers":[],"settings":{"autoConnectionsEnabled":true,"snapToGrid":true,"gridVisible":true,"lastModified":"2026-01-01T00:00:00.000"}}';
+      final data = CanvasData.fromJsonString(json);
+      expect(data.selectedLayerId, isNull);
     });
 
     test('cardCountForLayer delegates to layers service', () {
@@ -1737,12 +1874,24 @@ void main() {
           CanvasCard(id: 'c3', type: CanvasCardType.text, layerId: 'l2'),
         ],
         layers: [
-          CanvasLayer(id: 'l1', name: 'L1'),
-          CanvasLayer(id: 'l2', name: 'L2'),
+          CanvasLayer(id: 'l1', name: 'L1', order: 0),
+          CanvasLayer(id: 'l2', name: 'L2', order: 1),
         ],
       );
       expect(notifier.cardCountForLayer('l1'), 2);
       expect(notifier.cardCountForLayer('l2'), 1);
+    });
+
+    test('isLayerLocked returns false (always)', () {
+      final container = createContainer();
+      final notifier = container.read(canvasProvider.notifier);
+      expect(notifier.isLayerLocked('c1'), false);
+    });
+
+    test('isLayerVisible returns true (always)', () {
+      final container = createContainer();
+      final notifier = container.read(canvasProvider.notifier);
+      expect(notifier.isLayerVisible('c1'), true);
     });
   });
 
@@ -1750,9 +1899,9 @@ void main() {
     test('loadFromData replaces state', () {
       final container = createContainer();
       final notifier = container.read(canvasProvider.notifier);
-      final newData = CanvasData(cards: [
-        CanvasCard(id: 'c1', type: CanvasCardType.text),
-      ]);
+      final newData = CanvasData(
+        cards: [CanvasCard(id: 'c1', type: CanvasCardType.text)],
+      );
       notifier.loadFromData(newData);
       expect(notifier.state.cards, hasLength(1));
       expect(notifier.state.cards.first.id, 'c1');

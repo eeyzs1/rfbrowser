@@ -7,9 +7,7 @@ import 'builtin/hello_world/hello_world_plugin.dart';
 import 'host/plugin_host.dart';
 
 class PluginRegistry {
-  static final List<BuiltinPlugin> _builtinPlugins = [
-    HelloWorldPlugin(),
-  ];
+  static final List<BuiltinPlugin> _builtinPlugins = [HelloWorldPlugin()];
 
   static List<BuiltinPlugin> get builtinPlugins =>
       List.unmodifiable(_builtinPlugins);
@@ -30,9 +28,7 @@ class PluginRegistry {
     return allSkills;
   }
 
-  static Future<void> loadAllBuiltinPlugins(
-    PluginHostNotifier host,
-  ) async {
+  static Future<void> loadAllBuiltinPlugins(PluginHostNotifier host) async {
     for (final plugin in _builtinPlugins) {
       await host.registerManifestAndEnable(
         plugin.manifest,
@@ -40,12 +36,9 @@ class PluginRegistry {
         onEnable: (manifest, h) {
           plugin.onEnable(h);
           if (plugin.hooks.isNotEmpty) {
-            h.registerHookHandler(
-              manifest.id,
-              (event, data) {
-                plugin.onHookEvent(event, data);
-              },
-            );
+            h.registerHookHandler(manifest.id, (event, data) {
+              plugin.onHookEvent(event, data);
+            });
           }
         },
         onDisable: (manifest, h) {
@@ -55,9 +48,7 @@ class PluginRegistry {
     }
   }
 
-  static Future<void> unloadAllBuiltinPlugins(
-    PluginHostNotifier host,
-  ) async {
+  static Future<void> unloadAllBuiltinPlugins(PluginHostNotifier host) async {
     for (final plugin in _builtinPlugins) {
       await plugin.onDisable(host);
       await host.disablePlugin(plugin.manifest.id);
@@ -109,10 +100,7 @@ class PluginRegistry {
   ) async {
     final manifests = await scanExternalPlugins(vaultPath);
     for (final manifest in manifests) {
-      await host.registerManifestAndEnable(
-        manifest,
-        enabledByDefault: false,
-      );
+      await host.registerManifestAndEnable(manifest, enabledByDefault: false);
     }
   }
 
@@ -135,11 +123,13 @@ class PluginRegistry {
       throw Exception('Plugin directory already exists: $pluginName');
     }
 
-    final result = await Process.run(
-      'git',
-      ['clone', '--depth', '1', url, targetDir.path],
-      runInShell: true,
-    );
+    final result = await Process.run('git', [
+      'clone',
+      '--depth',
+      '1',
+      url,
+      targetDir.path,
+    ], runInShell: true);
 
     if (result.exitCode != 0) {
       final stderr = result.stderr.toString();

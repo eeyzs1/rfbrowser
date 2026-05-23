@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rfbrowser/data/models/note.dart';
@@ -63,9 +63,11 @@ void main() {
         lastOpened: DateTime.now(),
       ),
     );
-    return ProviderContainer(overrides: [
-      vaultProvider.overrideWith(() => _TestVaultNotifier(vaultState)),
-    ]);
+    return ProviderContainer(
+      overrides: [
+        vaultProvider.overrideWith(() => _TestVaultNotifier(vaultState)),
+      ],
+    );
   }
 
   group('NoteNotifier unit logic', () {
@@ -278,7 +280,11 @@ void main() {
     });
 
     test('saveNote adds note if not in state', () async {
-      final note = Note(title: 'External', filePath: 'external.md', content: 'Hello');
+      final note = Note(
+        title: 'External',
+        filePath: 'external.md',
+        content: 'Hello',
+      );
       await notifier().saveNote(note);
 
       final found = notifier().getNote(note.id);
@@ -516,4 +522,3 @@ class _TestVaultNotifier extends VaultNotifier {
   @override
   VaultState build() => _initialState;
 }
-

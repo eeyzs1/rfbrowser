@@ -13,7 +13,11 @@ class CanvasLayoutService {
   }) {
     switch (type) {
       case AutoLayoutType.forceDirected:
-        return _computeForceDirected(cards, connections, snapToGrid: snapToGrid);
+        return _computeForceDirected(
+          cards,
+          connections,
+          snapToGrid: snapToGrid,
+        );
       case AutoLayoutType.hierarchical:
         return _computeHierarchical(cards, connections, snapToGrid: snapToGrid);
       case AutoLayoutType.grid:
@@ -150,8 +154,12 @@ class CanvasLayoutService {
     for (int level = 0; level <= maxLevel; level++) {
       final ids = byLevel[level] ?? [];
       for (int i = 0; i < ids.length; i++) {
-        final x = snapToGrid ? this.snapToGrid(200.0 + i * 300.0) : 200.0 + i * 300.0;
-        final y = snapToGrid ? this.snapToGrid(200.0 + level * 200.0) : 200.0 + level * 200.0;
+        final x = snapToGrid
+            ? this.snapToGrid(200.0 + i * 300.0)
+            : 200.0 + i * 300.0;
+        final y = snapToGrid
+            ? this.snapToGrid(200.0 + level * 200.0)
+            : 200.0 + level * 200.0;
         result[ids[i]] = Offset(x, y);
       }
     }
@@ -169,8 +177,12 @@ class CanvasLayoutService {
     for (int i = 0; i < n; i++) {
       final row = i ~/ cols;
       final col = i % cols;
-      final x = snapToGrid ? this.snapToGrid(100.0 + col * 300.0) : 100.0 + col * 300.0;
-      final y = snapToGrid ? this.snapToGrid(100.0 + row * 220.0) : 100.0 + row * 220.0;
+      final x = snapToGrid
+          ? this.snapToGrid(100.0 + col * 300.0)
+          : 100.0 + col * 300.0;
+      final y = snapToGrid
+          ? this.snapToGrid(100.0 + row * 220.0)
+          : 100.0 + row * 220.0;
       result[cards[i].id] = Offset(x, y);
     }
     return result;

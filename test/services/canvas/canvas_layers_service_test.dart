@@ -16,8 +16,6 @@ void main() {
         expect(layer.name, 'Background');
         expect(layer.order, 0);
         expect(layer.id, startsWith('layer_'));
-        expect(layer.visible, isTrue);
-        expect(layer.locked, isFalse);
       });
 
       test('creates layers with unique ids', () {
@@ -70,54 +68,33 @@ void main() {
       });
     });
 
-    group('toggleLayerVisibility', () {
-      test('toggles visibility from true to false', () {
-        final layers = [CanvasLayer(id: 'l1', name: 'A', order: 0, visible: true)];
-        final result = service.toggleLayerVisibility(layers, 'l1');
-        expect(result[0].visible, isFalse);
-      });
-
-      test('toggles visibility from false to true', () {
-        final layers = [CanvasLayer(id: 'l1', name: 'A', order: 0, visible: false)];
-        final result = service.toggleLayerVisibility(layers, 'l1');
-        expect(result[0].visible, isTrue);
-      });
-
-      test('does not affect other layers', () {
-        final layers = [
-          CanvasLayer(id: 'l1', name: 'A', order: 0, visible: true),
-          CanvasLayer(id: 'l2', name: 'B', order: 1, visible: true),
-        ];
-        final result = service.toggleLayerVisibility(layers, 'l1');
-        expect(result[0].visible, isFalse);
-        expect(result[1].visible, isTrue);
-      });
-    });
-
-    group('toggleLayerLock', () {
-      test('toggles lock from false to true', () {
-        final layers = [CanvasLayer(id: 'l1', name: 'A', order: 0, locked: false)];
-        final result = service.toggleLayerLock(layers, 'l1');
-        expect(result[0].locked, isTrue);
-      });
-
-      test('toggles lock from true to false', () {
-        final layers = [CanvasLayer(id: 'l1', name: 'A', order: 0, locked: true)];
-        final result = service.toggleLayerLock(layers, 'l1');
-        expect(result[0].locked, isFalse);
-      });
-    });
-
     group('moveCardToLayer', () {
       test('assigns card to a layer', () {
-        final cards = [CanvasCard(id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50)];
+        final cards = [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.rectangle,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+          ),
+        ];
         final result = service.moveCardToLayer(cards, 'c1', 'l1');
         expect(result[0].layerId, 'l1');
       });
 
       test('clears layerId when target is null', () {
         final cards = [
-          CanvasCard(id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, layerId: 'l1'),
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.rectangle,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+            layerId: 'l1',
+          ),
         ];
         final result = service.moveCardToLayer(cards, 'c1', null);
         expect(result[0].layerId, isNull);
@@ -125,82 +102,26 @@ void main() {
 
       test('does not affect other cards', () {
         final cards = [
-          CanvasCard(id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50),
-          CanvasCard(id: 'c2', type: CanvasCardType.rectangle, x: 100, y: 0, width: 100, height: 50),
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.rectangle,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+          ),
+          CanvasCard(
+            id: 'c2',
+            type: CanvasCardType.rectangle,
+            x: 100,
+            y: 0,
+            width: 100,
+            height: 50,
+          ),
         ];
         final result = service.moveCardToLayer(cards, 'c1', 'l1');
         expect(result[0].layerId, 'l1');
         expect(result[1].layerId, isNull);
-      });
-    });
-
-    group('isLayerLocked', () {
-      test('returns false when card is null', () {
-        expect(service.isLayerLocked([], null), isFalse);
-      });
-
-      test('returns false when card has no layerId', () {
-        final card = CanvasCard(id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50);
-        expect(service.isLayerLocked([], card), isFalse);
-      });
-
-      test('returns false when layer is not locked', () {
-        final layers = [CanvasLayer(id: 'l1', name: 'A', order: 0, locked: false)];
-        final card = CanvasCard(
-          id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, layerId: 'l1',
-        );
-        expect(service.isLayerLocked(layers, card), isFalse);
-      });
-
-      test('returns true when layer is locked', () {
-        final layers = [CanvasLayer(id: 'l1', name: 'A', order: 0, locked: true)];
-        final card = CanvasCard(
-          id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, layerId: 'l1',
-        );
-        expect(service.isLayerLocked(layers, card), isTrue);
-      });
-
-      test('returns false when layer not found', () {
-        final layers = [CanvasLayer(id: 'l1', name: 'A', order: 0, locked: true)];
-        final card = CanvasCard(
-          id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, layerId: 'l2',
-        );
-        expect(service.isLayerLocked(layers, card), isFalse);
-      });
-    });
-
-    group('isLayerVisible', () {
-      test('returns true when card is null', () {
-        expect(service.isLayerVisible([], null), isTrue);
-      });
-
-      test('returns true when card has no layerId', () {
-        final card = CanvasCard(id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50);
-        expect(service.isLayerVisible([], card), isTrue);
-      });
-
-      test('returns true when layer is visible', () {
-        final layers = [CanvasLayer(id: 'l1', name: 'A', order: 0, visible: true)];
-        final card = CanvasCard(
-          id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, layerId: 'l1',
-        );
-        expect(service.isLayerVisible(layers, card), isTrue);
-      });
-
-      test('returns false when layer is not visible', () {
-        final layers = [CanvasLayer(id: 'l1', name: 'A', order: 0, visible: false)];
-        final card = CanvasCard(
-          id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, layerId: 'l1',
-        );
-        expect(service.isLayerVisible(layers, card), isFalse);
-      });
-
-      test('returns true when layer not found', () {
-        final layers = [CanvasLayer(id: 'l1', name: 'A', order: 0, visible: false)];
-        final card = CanvasCard(
-          id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, layerId: 'l2',
-        );
-        expect(service.isLayerVisible(layers, card), isTrue);
       });
     });
 
@@ -296,21 +217,64 @@ void main() {
     group('cardCountForLayer', () {
       test('counts cards assigned to a layer', () {
         final cards = [
-          CanvasCard(id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, layerId: 'l1'),
-          CanvasCard(id: 'c2', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, layerId: 'l1'),
-          CanvasCard(id: 'c3', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, layerId: 'l2'),
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.rectangle,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+            layerId: 'l1',
+          ),
+          CanvasCard(
+            id: 'c2',
+            type: CanvasCardType.rectangle,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+            layerId: 'l1',
+          ),
+          CanvasCard(
+            id: 'c3',
+            type: CanvasCardType.rectangle,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+            layerId: 'l2',
+          ),
         ];
         expect(service.cardCountForLayer(cards, 'l1'), 2);
         expect(service.cardCountForLayer(cards, 'l2'), 1);
       });
 
       test('returns 0 when no cards in layer', () {
-        final cards = [CanvasCard(id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50, layerId: 'l1')];
+        final cards = [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.rectangle,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+            layerId: 'l1',
+          ),
+        ];
         expect(service.cardCountForLayer(cards, 'l2'), 0);
       });
 
       test('returns 0 when cards with null layerId present', () {
-        final cards = [CanvasCard(id: 'c1', type: CanvasCardType.rectangle, x: 0, y: 0, width: 100, height: 50)];
+        final cards = [
+          CanvasCard(
+            id: 'c1',
+            type: CanvasCardType.rectangle,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+          ),
+        ];
         expect(service.cardCountForLayer(cards, 'l1'), 0);
       });
     });

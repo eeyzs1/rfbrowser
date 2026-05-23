@@ -62,7 +62,8 @@ class AIProvider {
     this.apiKey,
     this.isEnabled = true,
     bool? requiresApiKey,
-  }) : requiresApiKey = requiresApiKey ?? _inferRequiresApiKey(protocol, baseUrl);
+  }) : requiresApiKey =
+           requiresApiKey ?? _inferRequiresApiKey(protocol, baseUrl);
 
   static bool _inferRequiresApiKey(ApiProtocol protocol, String baseUrl) {
     if (_isLocalUrl(baseUrl)) return false;

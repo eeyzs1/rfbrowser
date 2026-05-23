@@ -259,8 +259,9 @@ class _EntryCard extends StatelessWidget {
                       Text(
                         entry.author,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                     ],
@@ -307,8 +308,11 @@ class _EntryCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline,
-                        size: 14, color: theme.colorScheme.error),
+                    Icon(
+                      Icons.error_outline,
+                      size: 14,
+                      color: theme.colorScheme.error,
+                    ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -346,9 +350,7 @@ class _EntryCard extends StatelessWidget {
                       )
                     : const Icon(Icons.download, size: 16),
                 label: Text(isInstalling ? 'Installing...' : 'Install'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(100, 36),
-                ),
+                style: FilledButton.styleFrom(minimumSize: const Size(100, 36)),
               ),
             ),
           ],

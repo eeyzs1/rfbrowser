@@ -37,7 +37,6 @@ class _CameraNotifier extends ChangeNotifier {
   void notify() => notifyListeners();
 }
 
-
 class CanvasView extends ConsumerStatefulWidget {
   const CanvasView({super.key});
 
@@ -112,6 +111,7 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
   List<AlignmentGuide> _alignmentGuides = [];
   Map<String, (double, double)> _multiDragStarts = {};
   bool _altKeyPressed = false;
+  bool _hadFlowAnimation = false;
 
   final GlobalKey _canvasPaintKey = GlobalKey();
 
@@ -141,7 +141,6 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
     Color(0xFFEDE7F6),
   ];
 
-
   void _initCanvas();
   void _centerOrFitView();
   void _startInlineEditing(String cardId);
@@ -153,13 +152,27 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
   CanvasCard? _hitTestCard(Offset worldPos);
   (String, int)? _hitTestWaypoint(Offset worldPos);
   (String, double)? _hitTestConnectionLine(Offset worldPos);
-  List<Offset> _connectionPathPoints(Offset fromPoint, Offset toPoint, List<Offset> waypoints, ConnectionPath pathType);
-  Offset _cubicBezierPoint(Offset p0, Offset p1, Offset p2, Offset p3, double t);
+  List<Offset> _connectionPathPoints(
+    Offset fromPoint,
+    Offset toPoint,
+    List<Offset> waypoints,
+    ConnectionPath pathType,
+  );
+  Offset _cubicBezierPoint(
+    Offset p0,
+    Offset p1,
+    Offset p2,
+    Offset p3,
+    double t,
+  );
   (String, ConnectionSide, double)? _hitTestConnectionPoint(Offset worldPos);
   (Offset, int) _snapWaypointToConnection(String connId, Offset worldPos);
   Offset _projectPointOnSegment(Offset p, Offset a, Offset b);
   double _pointToSegmentDist(Offset p, Offset a, Offset b);
-  List<AlignmentGuide> _computeAlignmentGuides(CanvasCard draggedCard, List<CanvasCard> allCards);
+  List<AlignmentGuide> _computeAlignmentGuides(
+    CanvasCard draggedCard,
+    List<CanvasCard> allCards,
+  );
   double? _getSnapOffset(CanvasCard draggedCard, List<CanvasCard> allCards);
   double? _getSnapOffsetY(CanvasCard draggedCard, List<CanvasCard> allCards);
   void _onScaleStart(ScaleStartDetails details);
@@ -188,25 +201,58 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
   void _selectAll();
   void _groupSelected();
   void _ungroupSelected();
-  Widget _buildToolbar(ThemeData theme, CanvasData canvasData, bool autoEnabled, CanvasNotifier notifier, AppLocalizations l);
+  Widget _buildToolbar(
+    ThemeData theme,
+    CanvasData canvasData,
+    bool autoEnabled,
+    CanvasNotifier notifier,
+    AppLocalizations l,
+  );
   Widget _toolbarDivider(ThemeData theme);
   Widget _popupRow(IconData icon, String text, {String? tooltip});
-  Widget _toolbarButton(ThemeData theme, IconData icon, String tooltip, VoidCallback onTap, {bool enabled = true, bool highlight = false});
+  Widget _toolbarButton(
+    ThemeData theme,
+    IconData icon,
+    String tooltip,
+    VoidCallback onTap, {
+    bool enabled = true,
+    bool highlight = false,
+  });
   Widget _buildZoomControls(ThemeData theme);
   Widget _buildMinimap(ThemeData theme, CanvasData canvasData);
-  Widget _buildInlineEditor(ThemeData theme, CanvasData canvasData, AppSettings settings);
+  Widget _buildInlineEditor(
+    ThemeData theme,
+    CanvasData canvasData,
+    AppSettings settings,
+  );
   Offset _w2s(double wx, double wy);
   Widget _buildCanvasSwitcher(ThemeData theme);
   void _showCanvasSelector(BuildContext context, ThemeData theme);
   void _showCreateCanvasDialog();
   void _showRenameDialog(String oldName);
   void _confirmDeleteCanvas(String name);
-  void _showWaypointContextMenu(Offset position, String connId, int waypointIndex);
-  void _showContextMenu(BuildContext context, TapUpDetails details, CanvasData canvasData, Offset worldPos);
-  void _showConnectionContextMenu(Offset position, String connId, Offset worldPos);
+  void _showWaypointContextMenu(
+    Offset position,
+    String connId,
+    int waypointIndex,
+  );
+  void _showContextMenu(
+    BuildContext context,
+    TapUpDetails details,
+    CanvasData canvasData,
+    Offset worldPos,
+  );
+  void _showConnectionContextMenu(
+    Offset position,
+    String connId,
+    Offset worldPos,
+  );
   void _showCardContextMenu(Offset position, CanvasCard card);
   void _showColorPicker(CanvasCard card);
-  void _showConnectionListDialog(CanvasCard card, List<({CanvasConnection conn, bool isAuto})> allConns);
+  void _showConnectionListDialog(
+    CanvasCard card,
+    List<({CanvasConnection conn, bool isAuto})> allConns,
+  );
   void _showConnectionStyleDialog(CanvasConnection conn);
   void _duplicateCard(String cardId, Offset pos);
   void _addCardAt(Offset pos, {CanvasCardType type = CanvasCardType.note});
@@ -225,18 +271,32 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
   void _openCardContent(CanvasCard card);
   void _editCard(String cardId);
   void _createConnection(String fromId, String toId);
-  void _createConnectionWithSides(String fromId, String toId, ConnectionSide? fromSide, ConnectionSide? toSide, [double fromSideOffset, double toSideOffset]);
+  void _createConnectionWithSides(
+    String fromId,
+    String toId,
+    ConnectionSide? fromSide,
+    ConnectionSide? toSide, [
+    double fromSideOffset,
+    double toSideOffset,
+  ]);
   void _fitToContent();
   void _handleExport(String format);
   Future<void> _exportToPng();
   void _saveExportFile(String filename, String content);
   void _showLayerPanel();
   void _showScratchpad();
+  Widget _buildActiveFilterBanner(ThemeData theme, CanvasData canvasData);
 }
 
-
 class _CanvasViewState extends _CanvasViewStateBase
-    with _CanvasInputHandlersMixin, _CanvasToolbarMixin, _CanvasPanelsMixin, _CanvasCanvasMgmtMixin, _CanvasContextMenusMixin, _CanvasDialogsMixin, _CanvasExportPanelsMixin {
+    with
+        _CanvasInputHandlersMixin,
+        _CanvasToolbarMixin,
+        _CanvasPanelsMixin,
+        _CanvasCanvasMgmtMixin,
+        _CanvasContextMenusMixin,
+        _CanvasDialogsMixin,
+        _CanvasExportPanelsMixin {
   @override
   void initState() {
     super.initState();
@@ -245,15 +305,17 @@ class _CanvasViewState extends _CanvasViewStateBase
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
-    )..repeat();
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _initCanvas());
   }
+
   @override
   Future<void> _initCanvas() async {
     final notifier = ref.read(canvasProvider.notifier);
     await notifier.initialize();
     if (mounted) _centerOrFitView();
   }
+
   @override
   void _centerOrFitView() {
     final cards = ref.read(canvasProvider).cards;
@@ -266,6 +328,7 @@ class _CanvasViewState extends _CanvasViewStateBase
       _fitToContent();
     }
   }
+
   @override
   void dispose() {
     _animController.dispose();
@@ -278,6 +341,7 @@ class _CanvasViewState extends _CanvasViewStateBase
     _searchDebounceTimer?.cancel();
     super.dispose();
   }
+
   @override
   void _startInlineEditing(String cardId) {
     final card = ref.read(canvasProvider.notifier).cardById(cardId);
@@ -293,6 +357,7 @@ class _CanvasViewState extends _CanvasViewStateBase
       if (mounted) _inlineTitleFocus?.requestFocus();
     });
   }
+
   @override
   void _finishInlineEditing() {
     final editingId = _inlineEditingCardId;
@@ -337,20 +402,56 @@ class _CanvasViewState extends _CanvasViewStateBase
     }
     final autoConns = _cachedAutoConnections;
 
+    final hasFlowAnimation = canvasData.connections.any(
+      (c) =>
+          (c.style?.flowAnimation ?? FlowAnimationStyle.none) !=
+          FlowAnimationStyle.none,
+    );
+    if (hasFlowAnimation != _hadFlowAnimation) {
+      _hadFlowAnimation = hasFlowAnimation;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (hasFlowAnimation) {
+          if (!_animController.isAnimating) _animController.repeat();
+        } else {
+          _animController.stop();
+          _animController.reset();
+        }
+      });
+    }
+
     final shortcutSvc = ref.read(shortcutServiceProvider);
-    final undoActivator = parseShortcut(shortcutSvc.getShortcut('canvas_undo') ?? 'Ctrl+Z');
-    final redoActivator = parseShortcut(shortcutSvc.getShortcut('canvas_redo') ?? 'Ctrl+Y');
-    final deleteActivator = parseShortcut(shortcutSvc.getShortcut('canvas_delete') ?? 'Delete');
-    final selectAllActivator = parseShortcut(shortcutSvc.getShortcut('canvas_select_all') ?? 'Ctrl+A');
-    final groupActivator = parseShortcut(shortcutSvc.getShortcut('canvas_group') ?? 'Ctrl+G');
-    final ungroupActivator = parseShortcut(shortcutSvc.getShortcut('canvas_ungroup') ?? 'Ctrl+Shift+U');
+    final undoActivator = parseShortcut(
+      shortcutSvc.getShortcut('canvas_undo') ?? 'Ctrl+Z',
+    );
+    final redoActivator = parseShortcut(
+      shortcutSvc.getShortcut('canvas_redo') ?? 'Ctrl+Y',
+    );
+    final deleteActivator = parseShortcut(
+      shortcutSvc.getShortcut('canvas_delete') ?? 'Delete',
+    );
+    final selectAllActivator = parseShortcut(
+      shortcutSvc.getShortcut('canvas_select_all') ?? 'Ctrl+A',
+    );
+    final groupActivator = parseShortcut(
+      shortcutSvc.getShortcut('canvas_group') ?? 'Ctrl+G',
+    );
+    final ungroupActivator = parseShortcut(
+      shortcutSvc.getShortcut('canvas_ungroup') ?? 'Ctrl+Shift+U',
+    );
 
     final Map<ShortcutActivator, VoidCallback> canvasBindings = {};
     canvasBindings[const SingleActivator(LogicalKeyboardKey.f3)] = _searchNext;
-    canvasBindings[const SingleActivator(LogicalKeyboardKey.f3, shift: true)] = _searchPrev;
+    canvasBindings[const SingleActivator(LogicalKeyboardKey.f3, shift: true)] =
+        _searchPrev;
     if (undoActivator != null) canvasBindings[undoActivator] = _undo;
     if (redoActivator != null) canvasBindings[redoActivator] = _redo;
-    canvasBindings[const SingleActivator(LogicalKeyboardKey.keyZ, control: true, shift: true)] = _redo;
+    canvasBindings[const SingleActivator(
+          LogicalKeyboardKey.keyZ,
+          control: true,
+          shift: true,
+        )] =
+        _redo;
     canvasBindings[const SingleActivator(LogicalKeyboardKey.escape)] = () {
       if (_styleBrushMode) {
         setState(() {
@@ -375,10 +476,18 @@ class _CanvasViewState extends _CanvasViewStateBase
       }
       _finishInlineEditing();
     };
-    if (deleteActivator != null) canvasBindings[deleteActivator] = _deleteSelectedCards;
-    if (selectAllActivator != null) canvasBindings[selectAllActivator] = _selectAll;
-    if (groupActivator != null) canvasBindings[groupActivator] = _groupSelected;
-    if (ungroupActivator != null) canvasBindings[ungroupActivator] = _ungroupSelected;
+    if (deleteActivator != null) {
+      canvasBindings[deleteActivator] = _deleteSelectedCards;
+    }
+    if (selectAllActivator != null) {
+      canvasBindings[selectAllActivator] = _selectAll;
+    }
+    if (groupActivator != null) {
+      canvasBindings[groupActivator] = _groupSelected;
+    }
+    if (ungroupActivator != null) {
+      canvasBindings[ungroupActivator] = _ungroupSelected;
+    }
 
     return CallbackShortcuts(
       bindings: canvasBindings,
@@ -411,10 +520,16 @@ class _CanvasViewState extends _CanvasViewStateBase
                           _canvasH = constraints.maxHeight;
 
                           final visibleWorldRect = Rect.fromLTWH(
-                            _cameraX - _viewW / 2 / _scale - _CanvasViewStateBase._gridSize,
-                            _cameraY - _viewH / 2 / _scale - _CanvasViewStateBase._gridSize,
-                            _viewW / _scale + _CanvasViewStateBase._gridSize * 2,
-                            _viewH / _scale + _CanvasViewStateBase._gridSize * 2,
+                            _cameraX -
+                                _viewW / 2 / _scale -
+                                _CanvasViewStateBase._gridSize,
+                            _cameraY -
+                                _viewH / 2 / _scale -
+                                _CanvasViewStateBase._gridSize,
+                            _viewW / _scale +
+                                _CanvasViewStateBase._gridSize * 2,
+                            _viewH / _scale +
+                                _CanvasViewStateBase._gridSize * 2,
                           );
 
                           return Stack(
@@ -452,7 +567,8 @@ class _CanvasViewState extends _CanvasViewStateBase
                                                 scale: _scale,
                                                 viewW: _viewW,
                                                 viewH: _viewH,
-                                                gridSize: _CanvasViewStateBase._gridSize,
+                                                gridSize: _CanvasViewStateBase
+                                                    ._gridSize,
                                                 visibleWorldRect:
                                                     visibleWorldRect,
                                                 selectedCardIds:
@@ -505,6 +621,8 @@ class _CanvasViewState extends _CanvasViewStateBase
                                                     .rulersVisible,
                                                 animationValue:
                                                     _animController.value,
+                                                selectedLayerId:
+                                                    canvasData.selectedLayerId,
                                               ),
                                             ),
                                           ),
@@ -516,9 +634,14 @@ class _CanvasViewState extends _CanvasViewStateBase
                               ),
                               ListenableBuilder(
                                 listenable: _cameraNotifier,
-                                builder: (context, _) =>
-                                    _buildMinimap(theme, canvasData),
+                                builder: (context, _) => Consumer(
+                                  builder: (context, ref, _) {
+                                    final cd = ref.watch(canvasProvider);
+                                    return _buildMinimap(theme, cd);
+                                  },
+                                ),
                               ),
+                              _buildActiveFilterBanner(theme, canvasData),
                               ListenableBuilder(
                                 listenable: _cameraNotifier,
                                 builder: (context, _) =>
@@ -540,7 +663,6 @@ class _CanvasViewState extends _CanvasViewStateBase
       ),
     );
   }
-
 }
 
 class CanvasPage extends ConsumerWidget {

@@ -125,7 +125,10 @@ void main() {
           baseUrl: 'http://localhost:11434/v1',
           requiresApiKey: false,
         );
-        expect(provider.chatEndpoint, 'http://localhost:11434/v1/chat/completions');
+        expect(
+          provider.chatEndpoint,
+          'http://localhost:11434/v1/chat/completions',
+        );
       });
 
       test('chatEndpoint for local provider without /v1 suffix', () {
@@ -136,7 +139,10 @@ void main() {
           baseUrl: 'http://localhost:11434',
           requiresApiKey: false,
         );
-        expect(provider.chatEndpoint, 'http://localhost:11434/v1/chat/completions');
+        expect(
+          provider.chatEndpoint,
+          'http://localhost:11434/v1/chat/completions',
+        );
       });
 
       test('modelsEndpoint for local provider with /v1 suffix', () {
@@ -158,7 +164,10 @@ void main() {
           baseUrl: 'http://localhost:11434/v1',
           requiresApiKey: false,
         );
-        expect(provider.embeddingEndpoint, 'http://localhost:11434/v1/embeddings');
+        expect(
+          provider.embeddingEndpoint,
+          'http://localhost:11434/v1/embeddings',
+        );
       });
 
       test('embeddingEndpoint for local provider without /v1 suffix', () {
@@ -169,7 +178,10 @@ void main() {
           baseUrl: 'http://localhost:11434',
           requiresApiKey: false,
         );
-        expect(provider.embeddingEndpoint, 'http://localhost:11434/v1/embeddings');
+        expect(
+          provider.embeddingEndpoint,
+          'http://localhost:11434/v1/embeddings',
+        );
       });
 
       test('embeddingEndpoint for LM Studio', () {
@@ -180,7 +192,10 @@ void main() {
           baseUrl: 'http://localhost:1234/v1',
           requiresApiKey: false,
         );
-        expect(provider.embeddingEndpoint, 'http://localhost:1234/v1/embeddings');
+        expect(
+          provider.embeddingEndpoint,
+          'http://localhost:1234/v1/embeddings',
+        );
       });
 
       test('embeddingEndpoint for llama.cpp server', () {
@@ -191,7 +206,10 @@ void main() {
           baseUrl: 'http://localhost:8080/v1',
           requiresApiKey: false,
         );
-        expect(provider.embeddingEndpoint, 'http://localhost:8080/v1/embeddings');
+        expect(
+          provider.embeddingEndpoint,
+          'http://localhost:8080/v1/embeddings',
+        );
       });
     });
 
@@ -266,9 +284,15 @@ void main() {
       expect(provider.isLocal, isTrue);
       expect(provider.requiresApiKey, isFalse);
       expect(provider.protocol, ApiProtocol.openaiCompatible);
-      expect(provider.chatEndpoint, 'http://localhost:11434/v1/chat/completions');
+      expect(
+        provider.chatEndpoint,
+        'http://localhost:11434/v1/chat/completions',
+      );
       expect(provider.modelsEndpoint, 'http://localhost:11434/v1/models');
-      expect(provider.embeddingEndpoint, 'http://localhost:11434/v1/embeddings');
+      expect(
+        provider.embeddingEndpoint,
+        'http://localhost:11434/v1/embeddings',
+      );
       expect(provider.authHeaders(), isEmpty);
       expect(provider.displayIcon, Icons.computer);
       expect(provider.isEnabled, isTrue);
@@ -282,7 +306,10 @@ void main() {
 
       expect(provider.isLocal, isTrue);
       expect(provider.requiresApiKey, isFalse);
-      expect(provider.chatEndpoint, 'http://localhost:1234/v1/chat/completions');
+      expect(
+        provider.chatEndpoint,
+        'http://localhost:1234/v1/chat/completions',
+      );
       expect(provider.modelsEndpoint, 'http://localhost:1234/v1/models');
       expect(provider.embeddingEndpoint, 'http://localhost:1234/v1/embeddings');
     });
@@ -295,13 +322,18 @@ void main() {
 
       expect(provider.isLocal, isTrue);
       expect(provider.requiresApiKey, isFalse);
-      expect(provider.chatEndpoint, 'http://localhost:8080/v1/chat/completions');
+      expect(
+        provider.chatEndpoint,
+        'http://localhost:8080/v1/chat/completions',
+      );
       expect(provider.modelsEndpoint, 'http://localhost:8080/v1/models');
       expect(provider.embeddingEndpoint, 'http://localhost:8080/v1/embeddings');
     });
 
     test('all presets produce distinct provider IDs', () {
-      final providers = LocalServiceScanner.presets.map((p) => p.toProvider()).toList();
+      final providers = LocalServiceScanner.presets
+          .map((p) => p.toProvider())
+          .toList();
       final ids = providers.map((p) => p.id).toList();
       expect(ids.toSet().length, ids.length);
     });
@@ -371,18 +403,21 @@ void main() {
       expect(restored.isLocal, isTrue);
     });
 
-    test('fromJson with old protocol index 2 (was ollama) falls back to openaiCompatible', () {
-      final json = {
-        'id': 'p1',
-        'name': 'Old Ollama',
-        'protocol': 2,
-        'baseUrl': 'http://localhost:11434/v1',
-        'isEnabled': true,
-      };
-      final restored = AIProvider.fromJson(json);
-      expect(restored.protocol, ApiProtocol.openaiCompatible);
-      expect(restored.isLocal, isTrue);
-    });
+    test(
+      'fromJson with old protocol index 2 (was ollama) falls back to openaiCompatible',
+      () {
+        final json = {
+          'id': 'p1',
+          'name': 'Old Ollama',
+          'protocol': 2,
+          'baseUrl': 'http://localhost:11434/v1',
+          'isEnabled': true,
+        };
+        final restored = AIProvider.fromJson(json);
+        expect(restored.protocol, ApiProtocol.openaiCompatible);
+        expect(restored.isLocal, isTrue);
+      },
+    );
 
     test('round-trip preserves all local provider properties', () {
       final original = AIProvider(
@@ -459,18 +494,24 @@ void main() {
       final discovery = ModelDiscovery();
 
       expect(provider.modelsEndpoint, 'http://localhost:11434/v1/models');
-      expect(discovery.inferCapabilities('llama3'), contains(ModelCapability.text));
+      expect(
+        discovery.inferCapabilities('llama3'),
+        contains(ModelCapability.text),
+      );
       expect(discovery.humanizeModelId('llama3'), 'llama3');
     });
 
-    test('LM Studio preset provider has correct modelsEndpoint for discovery', () {
-      final lmStudioPreset = LocalServiceScanner.presets.firstWhere(
-        (p) => p.name == 'LM Studio',
-      );
-      final provider = lmStudioPreset.toProvider();
+    test(
+      'LM Studio preset provider has correct modelsEndpoint for discovery',
+      () {
+        final lmStudioPreset = LocalServiceScanner.presets.firstWhere(
+          (p) => p.name == 'LM Studio',
+        );
+        final provider = lmStudioPreset.toProvider();
 
-      expect(provider.modelsEndpoint, 'http://localhost:1234/v1/models');
-    });
+        expect(provider.modelsEndpoint, 'http://localhost:1234/v1/models');
+      },
+    );
 
     test('embedding endpoint matches EmbeddingService expectations', () {
       for (final preset in LocalServiceScanner.presets) {

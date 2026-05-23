@@ -75,10 +75,7 @@ void main() {
         lastSynced: now,
         localModified: now,
       );
-      final copied = meta.copyWith(
-        etag: '"def456"',
-        lastSynced: later,
-      );
+      final copied = meta.copyWith(etag: '"def456"', lastSynced: later);
 
       expect(copied.relativePath, 'notes/test.md');
       expect(copied.etag, '"def456"');
@@ -99,24 +96,15 @@ void main() {
     });
 
     test('setMeta stores and retrieves meta', () async {
-      final meta = SyncMeta(
-        relativePath: 'notes/test.md',
-        etag: '"abc123"',
-      );
+      final meta = SyncMeta(relativePath: 'notes/test.md', etag: '"abc123"');
       await store.setMeta(meta);
 
       expect(store.getMeta('notes/test.md'), meta);
     });
 
     test('setMeta overwrites existing meta', () async {
-      final meta1 = SyncMeta(
-        relativePath: 'notes/test.md',
-        etag: '"v1"',
-      );
-      final meta2 = SyncMeta(
-        relativePath: 'notes/test.md',
-        etag: '"v2"',
-      );
+      final meta1 = SyncMeta(relativePath: 'notes/test.md', etag: '"v1"');
+      final meta2 = SyncMeta(relativePath: 'notes/test.md', etag: '"v2"');
       await store.setMeta(meta1);
       await store.setMeta(meta2);
 
@@ -124,10 +112,7 @@ void main() {
     });
 
     test('removeMeta deletes stored meta', () async {
-      final meta = SyncMeta(
-        relativePath: 'notes/test.md',
-        etag: '"abc123"',
-      );
+      final meta = SyncMeta(relativePath: 'notes/test.md', etag: '"abc123"');
       await store.setMeta(meta);
       await store.removeMeta('notes/test.md');
 
@@ -135,10 +120,7 @@ void main() {
     });
 
     test('getEtag returns etag for stored path', () async {
-      final meta = SyncMeta(
-        relativePath: 'notes/test.md',
-        etag: '"abc123"',
-      );
+      final meta = SyncMeta(relativePath: 'notes/test.md', etag: '"abc123"');
       await store.setMeta(meta);
 
       expect(store.getEtag('notes/test.md'), '"abc123"');
@@ -146,10 +128,7 @@ void main() {
 
     test('getLastSynced returns lastSynced for stored path', () async {
       final now = DateTime(2025, 5, 22, 10, 30);
-      final meta = SyncMeta(
-        relativePath: 'notes/test.md',
-        lastSynced: now,
-      );
+      final meta = SyncMeta(relativePath: 'notes/test.md', lastSynced: now);
       await store.setMeta(meta);
 
       expect(store.getLastSynced('notes/test.md'), now);
@@ -157,10 +136,7 @@ void main() {
 
     test('getLocalModified returns localModified for stored path', () async {
       final now = DateTime(2025, 5, 22, 10, 30);
-      final meta = SyncMeta(
-        relativePath: 'notes/test.md',
-        localModified: now,
-      );
+      final meta = SyncMeta(relativePath: 'notes/test.md', localModified: now);
       await store.setMeta(meta);
 
       expect(store.getLocalModified('notes/test.md'), now);

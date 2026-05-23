@@ -55,7 +55,8 @@ class Skill {
       name: json['name'] ?? '',
       description: json['description'] ?? '',
       prompt: json['prompt'] ?? '',
-      params: (json['params'] as Map<String, dynamic>?)?.map(
+      params:
+          (json['params'] as Map<String, dynamic>?)?.map(
             (k, v) => MapEntry(k, SkillParam.fromJson(v)),
           ) ??
           {},

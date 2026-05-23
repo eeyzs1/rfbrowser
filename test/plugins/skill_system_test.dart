@@ -34,7 +34,9 @@ void main() {
       expect(ids, contains('hello-world.note-stats'));
       expect(pluginSkills.length, 2);
 
-      final greeting = pluginSkills.firstWhere((s) => s.id == 'hello-world.greeting');
+      final greeting = pluginSkills.firstWhere(
+        (s) => s.id == 'hello-world.greeting',
+      );
       expect(greeting.params['tone'], isNotNull);
       expect(greeting.params['recipient'], isNotNull);
       expect(greeting.pluginId, 'hello-world');
@@ -56,7 +58,9 @@ prompt: |
   @note[current]
 ''';
 
-      File('${skillsDir.path}/custom-translate.yaml').writeAsStringSync(yamlContent);
+      File(
+        '${skillsDir.path}/custom-translate.yaml',
+      ).writeAsStringSync(yamlContent);
 
       final repo = NoteRepository(tempDir.path);
 
@@ -66,9 +70,7 @@ prompt: |
       addTearDown(container.dispose);
 
       final vaultContainer = ProviderContainer(
-        overrides: [
-          noteRepositoryProvider.overrideWith((ref) => repo),
-        ],
+        overrides: [noteRepositoryProvider.overrideWith((ref) => repo)],
       );
       addTearDown(vaultContainer.dispose);
 
@@ -85,8 +87,13 @@ prompt: |
     });
 
     test('plugin + builtin + custom YAML skills all coexist', () {
-      final builtinIds = _TestNoteService().testGetBuiltinSkills().map((s) => s.id).toSet();
-      final pluginIds = PluginRegistry.getAllPluginSkills().map((s) => s.id).toSet();
+      final builtinIds = _TestNoteService()
+          .testGetBuiltinSkills()
+          .map((s) => s.id)
+          .toSet();
+      final pluginIds = PluginRegistry.getAllPluginSkills()
+          .map((s) => s.id)
+          .toSet();
 
       final allIds = {...builtinIds, ...pluginIds};
       expect(allIds, contains('summarize-page'));
@@ -177,7 +184,8 @@ class _TestNoteService {
         id: 'summarize-page',
         name: 'Summarize Page',
         description: 'Summarize the current web page',
-        prompt: 'Please summarize the following web page content:\n\n@web[current]',
+        prompt:
+            'Please summarize the following web page content:\n\n@web[current]',
         isBuiltin: true,
       ),
       Skill(
@@ -191,9 +199,15 @@ class _TestNoteService {
         id: 'research-topic',
         name: 'Research Topic',
         description: 'Deep research on a topic',
-        prompt: 'Conduct thorough research on the following topic:\n\n{{topic}}',
+        prompt:
+            'Conduct thorough research on the following topic:\n\n{{topic}}',
         params: {
-          'topic': SkillParam(name: 'topic', type: 'string', description: 'Topic to research', required: true),
+          'topic': SkillParam(
+            name: 'topic',
+            type: 'string',
+            description: 'Topic to research',
+            required: true,
+          ),
         },
         isBuiltin: true,
       ),
@@ -210,7 +224,12 @@ class _TestNoteService {
         description: 'Generate an outline for a topic',
         prompt: 'Generate a detailed outline for:\n\n{{topic}}',
         params: {
-          'topic': SkillParam(name: 'topic', type: 'string', description: 'Topic for the outline', required: true),
+          'topic': SkillParam(
+            name: 'topic',
+            type: 'string',
+            description: 'Topic for the outline',
+            required: true,
+          ),
         },
         isBuiltin: true,
       ),
@@ -270,13 +289,15 @@ Future<List<Skill>> _loadYamlSkills(Directory skillsDir) async {
           prompt = promptLines.join('\n');
         }
 
-        skills.add(Skill(
-          id: id.isNotEmpty ? id : entity.path,
-          name: name.isNotEmpty ? name : 'Unnamed',
-          description: description,
-          prompt: prompt,
-          isBuiltin: false,
-        ));
+        skills.add(
+          Skill(
+            id: id.isNotEmpty ? id : entity.path,
+            name: name.isNotEmpty ? name : 'Unnamed',
+            description: description,
+            prompt: prompt,
+            isBuiltin: false,
+          ),
+        );
       } catch (e) {
         // skip malformed files
       }

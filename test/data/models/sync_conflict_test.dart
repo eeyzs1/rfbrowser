@@ -6,7 +6,10 @@ void main() {
     test('has all three values', () {
       expect(ConflictResolution.values, hasLength(3));
       expect(ConflictResolution.values, contains(ConflictResolution.keepLocal));
-      expect(ConflictResolution.values, contains(ConflictResolution.keepRemote));
+      expect(
+        ConflictResolution.values,
+        contains(ConflictResolution.keepRemote),
+      );
       expect(ConflictResolution.values, contains(ConflictResolution.keepBoth));
     });
   });

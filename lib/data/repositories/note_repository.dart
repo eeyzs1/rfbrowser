@@ -178,8 +178,15 @@ class NoteRepository {
     sanitized = sanitized
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
         .replaceAll(RegExp(r'\s+'), '-');
-    if (sanitized.isEmpty || sanitized == '.' || sanitized == '..' || sanitized == '...') sanitized = 'untitled';
-    if (sanitized.length > 100) sanitized = sanitized.substring(0, 100);
+    if (sanitized.isEmpty ||
+        sanitized == '.' ||
+        sanitized == '..' ||
+        sanitized == '...') {
+      sanitized = 'untitled';
+    }
+    if (sanitized.length > 100) {
+      sanitized = sanitized.substring(0, 100);
+    }
     return sanitized;
   }
 
@@ -187,7 +194,8 @@ class NoteRepository {
   String sanitizeFileName(String name) => _sanitizeFileName(name);
 
   @visibleForTesting
-  String normalizeRelativePath(String relativePath) => _normalizeRelativePath(relativePath);
+  String normalizeRelativePath(String relativePath) =>
+      _normalizeRelativePath(relativePath);
 
   @visibleForTesting
   void validatePath(String relativePath) => _validatePath(relativePath);

@@ -27,9 +27,11 @@ void main() {
           lastOpened: DateTime.now(),
         ),
       );
-      container = ProviderContainer(overrides: [
-        vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
-      ]);
+      container = ProviderContainer(
+        overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ],
+      );
       notifier = container.read(browserProvider.notifier);
     });
 
@@ -119,14 +121,8 @@ void main() {
 
       expect(state.activeTabId, tab1);
       expect(state.activeTab!.isActive, isTrue);
-      expect(
-        state.tabs.firstWhere((t) => t.id == tab2).isActive,
-        isFalse,
-      );
-      expect(
-        state.tabs.firstWhere((t) => t.id == tab3).isActive,
-        isFalse,
-      );
+      expect(state.tabs.firstWhere((t) => t.id == tab2).isActive, isFalse);
+      expect(state.tabs.firstWhere((t) => t.id == tab3).isActive, isFalse);
     });
 
     test('updateTabUrl changes URL of specified tab', () {
@@ -149,10 +145,7 @@ void main() {
         state.tabs.firstWhere((t) => t.id == tab1).url,
         'https://updated.com',
       );
-      expect(
-        state.tabs.firstWhere((t) => t.id == tab2).url,
-        'https://b.com',
-      );
+      expect(state.tabs.firstWhere((t) => t.id == tab2).url, 'https://b.com');
     });
 
     test('activeTab returns current active tab', () {

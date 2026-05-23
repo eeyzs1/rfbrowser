@@ -55,8 +55,9 @@ class _TaskCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final statusColor = _statusColor(task.status, theme);
     final statusIcon = _statusIcon(task.status);
-    final completedSteps =
-        task.steps.where((s) => s.status == TaskStatus.completed).length;
+    final completedSteps = task.steps
+        .where((s) => s.status == TaskStatus.completed)
+        .length;
     final totalSteps = task.steps.length;
     final progress = totalSteps > 0 ? completedSteps / totalSteps : 0.0;
 
@@ -87,8 +88,10 @@ class _TaskCard extends ConsumerWidget {
                     onPressed: () =>
                         ref.read(agentProvider.notifier).pauseTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     tooltip: l10n.agentPause,
                   ),
                   IconButton(
@@ -96,8 +99,10 @@ class _TaskCard extends ConsumerWidget {
                     onPressed: () =>
                         ref.read(agentProvider.notifier).cancelTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     tooltip: l10n.agentCancel,
                   ),
                 ],
@@ -107,8 +112,10 @@ class _TaskCard extends ConsumerWidget {
                     onPressed: () =>
                         ref.read(agentProvider.notifier).resumeTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     tooltip: l10n.agentResume,
                   ),
                 if (task.status == TaskStatus.completed ||
@@ -118,8 +125,10 @@ class _TaskCard extends ConsumerWidget {
                     onPressed: () =>
                         ref.read(agentProvider.notifier).removeTask(task.id),
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     tooltip: l10n.remove,
                   ),
               ],
@@ -192,7 +201,10 @@ class _ModeBadge extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final (label, color) = switch (mode) {
       TaskMode.manual => (l10n.agentModeManual, theme.hintColor),
-      TaskMode.aiPlanned => (l10n.agentModeAiPlanned, theme.colorScheme.primary),
+      TaskMode.aiPlanned => (
+        l10n.agentModeAiPlanned,
+        theme.colorScheme.primary,
+      ),
       TaskMode.reactLoop => (l10n.agentModeReact, theme.colorScheme.tertiary),
     };
 
@@ -242,9 +254,13 @@ class _StepRow extends StatelessWidget {
                     if (step.toolName != null) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 1),
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: Text(

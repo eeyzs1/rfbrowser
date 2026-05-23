@@ -43,7 +43,9 @@ class ModelDownloader {
     return file.existsSync() && file.lengthSync() > 10000;
   }
 
-  Future<String> downloadModel({void Function(double progress)? onProgress}) async {
+  Future<String> downloadModel({
+    void Function(double progress)? onProgress,
+  }) async {
     final path = await getModelPath();
     if (await isModelDownloaded()) return path;
 
@@ -53,7 +55,9 @@ class ModelDownloader {
     return path;
   }
 
-  Future<String> downloadVocab({void Function(double progress)? onProgress}) async {
+  Future<String> downloadVocab({
+    void Function(double progress)? onProgress,
+  }) async {
     final path = await getVocabPath();
     if (await isVocabDownloaded()) return path;
 
@@ -63,13 +67,21 @@ class ModelDownloader {
     return path;
   }
 
-  Future<void> _download(String url, String filePath, {void Function(double progress)? onProgress}) async {
+  Future<void> _download(
+    String url,
+    String filePath, {
+    void Function(double progress)? onProgress,
+  }) async {
     try {
-      await _dio.download(url, filePath, onReceiveProgress: (count, total) {
-        if (total > 0) {
-          onProgress?.call(count / total);
-        }
-      });
+      await _dio.download(
+        url,
+        filePath,
+        onReceiveProgress: (count, total) {
+          if (total > 0) {
+            onProgress?.call(count / total);
+          }
+        },
+      );
     } catch (e) {
       debugPrint('OnnxEmbedding: download failed: $e');
       rethrow;
@@ -161,7 +173,8 @@ class BertTokenizer {
 
     for (var i = 0; i < chars.length; i++) {
       final char = chars[i];
-      final isCJK = char.codeUnitAt(0) >= 0x4E00 && char.codeUnitAt(0) <= 0x9FFF;
+      final isCJK =
+          char.codeUnitAt(0) >= 0x4E00 && char.codeUnitAt(0) <= 0x9FFF;
 
       if (isCJK) {
         if (current.isNotEmpty) {
@@ -290,13 +303,22 @@ class OnnxEmbeddingService {
     final inputMap = <String, OrtValue>{};
     try {
       if (_inputNames.contains('input_ids')) {
-        inputMap['input_ids'] = await OrtValue.fromList(tokenized.inputIds, [1, BertTokenizer._maxSeqLen]);
+        inputMap['input_ids'] = await OrtValue.fromList(tokenized.inputIds, [
+          1,
+          BertTokenizer._maxSeqLen,
+        ]);
       }
       if (_inputNames.contains('attention_mask')) {
-        inputMap['attention_mask'] = await OrtValue.fromList(tokenized.attentionMask, [1, BertTokenizer._maxSeqLen]);
+        inputMap['attention_mask'] = await OrtValue.fromList(
+          tokenized.attentionMask,
+          [1, BertTokenizer._maxSeqLen],
+        );
       }
       if (_inputNames.contains('token_type_ids')) {
-        inputMap['token_type_ids'] = await OrtValue.fromList(tokenized.tokenTypeIds, [1, BertTokenizer._maxSeqLen]);
+        inputMap['token_type_ids'] = await OrtValue.fromList(
+          tokenized.tokenTypeIds,
+          [1, BertTokenizer._maxSeqLen],
+        );
       }
 
       final outputs = await _session!.run(inputMap);
@@ -344,7 +366,11 @@ class OnnxEmbeddingService {
     }
   }
 
-  List<double> _meanPool(List<double> hiddenStates, int hiddenSize, int seqLen) {
+  List<double> _meanPool(
+    List<double> hiddenStates,
+    int hiddenSize,
+    int seqLen,
+  ) {
     if (seqLen <= 0) seqLen = 1;
     final pooled = List<double>.filled(hiddenSize, 0.0);
     for (var i = 0; i < seqLen; i++) {

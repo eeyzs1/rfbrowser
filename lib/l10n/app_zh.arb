@@ -832,6 +832,8 @@
   "editingHint": "编辑中 · Esc 完成",
   "connectCardHint": "点击卡片连接 · Esc 取消",
   "addLayersToOrganize": "添加图层来组织你的卡片",
+  "tagActiveFilter": "已筛选",
+  "tagFilterUnassigned": "未分配",
   "scratchpadEmptyHint": "右键点击卡片 → 保存到便签本",
   "add": "添加",
   "layerNameWithNumber": "图层 {number}",

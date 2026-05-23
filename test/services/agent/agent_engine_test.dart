@@ -8,11 +8,11 @@ import 'package:rfbrowser/services/agent_service.dart';
 
 class _FailingTool extends AgentTool {
   _FailingTool()
-      : super(
-          name: 'failing_tool',
-          description: 'Always fails',
-          parametersSchema: const {},
-        );
+    : super(
+        name: 'failing_tool',
+        description: 'Always fails',
+        parametersSchema: const {},
+      );
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
@@ -22,11 +22,11 @@ class _FailingTool extends AgentTool {
 
 class _SlowTool extends AgentTool {
   _SlowTool()
-      : super(
-          name: 'slow_tool',
-          description: 'Takes time',
-          parametersSchema: const {},
-        );
+    : super(
+        name: 'slow_tool',
+        description: 'Takes time',
+        parametersSchema: const {},
+      );
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
@@ -37,16 +37,16 @@ class _SlowTool extends AgentTool {
 
 class _EchoTool extends AgentTool {
   _EchoTool()
-      : super(
-          name: 'echo_tool',
-          description: 'Echoes input',
-          parametersSchema: const {
-            'properties': {
-              'message': {'type': 'string', 'description': 'Message to echo'}
-            },
-            'required': ['message'],
+    : super(
+        name: 'echo_tool',
+        description: 'Echoes input',
+        parametersSchema: const {
+          'properties': {
+            'message': {'type': 'string', 'description': 'Message to echo'},
           },
-        );
+          'required': ['message'],
+        },
+      );
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
@@ -77,9 +77,11 @@ void main() {
 
       final agentState = AgentState(toolRegistry: registry);
 
-      container = ProviderContainer(overrides: [
-        agentProvider.overrideWith(() => _MockAgentNotifier(agentState)),
-      ]);
+      container = ProviderContainer(
+        overrides: [
+          agentProvider.overrideWith(() => _MockAgentNotifier(agentState)),
+        ],
+      );
       agent = container.read(agentProvider.notifier);
     });
 

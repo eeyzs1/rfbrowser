@@ -16,28 +16,22 @@ class CanvasLayersService {
     return layers.where((l) => l.id != layerId).toList();
   }
 
-  List<CanvasLayer> renameLayer(List<CanvasLayer> layers, String layerId, String name) {
+  List<CanvasLayer> renameLayer(
+    List<CanvasLayer> layers,
+    String layerId,
+    String name,
+  ) {
     return layers.map((l) {
       if (l.id == layerId) return l.copyWith(name: name);
       return l;
     }).toList();
   }
 
-  List<CanvasLayer> toggleLayerVisibility(List<CanvasLayer> layers, String layerId) {
-    return layers.map((l) {
-      if (l.id == layerId) return l.copyWith(visible: !l.visible);
-      return l;
-    }).toList();
-  }
-
-  List<CanvasLayer> toggleLayerLock(List<CanvasLayer> layers, String layerId) {
-    return layers.map((l) {
-      if (l.id == layerId) return l.copyWith(locked: !l.locked);
-      return l;
-    }).toList();
-  }
-
-  List<CanvasCard> moveCardToLayer(List<CanvasCard> cards, String cardId, String? layerId) {
+  List<CanvasCard> moveCardToLayer(
+    List<CanvasCard> cards,
+    String cardId,
+    String? layerId,
+  ) {
     return cards.map((c) {
       if (c.id == cardId) {
         return layerId != null
@@ -48,19 +42,11 @@ class CanvasLayersService {
     }).toList();
   }
 
-  bool isLayerLocked(List<CanvasLayer> layers, CanvasCard? card) {
-    if (card == null || card.layerId == null) return false;
-    final layer = layers.where((l) => l.id == card.layerId).firstOrNull;
-    return layer?.locked ?? false;
-  }
-
-  bool isLayerVisible(List<CanvasLayer> layers, CanvasCard? card) {
-    if (card == null || card.layerId == null) return true;
-    final layer = layers.where((l) => l.id == card.layerId).firstOrNull;
-    return layer?.visible ?? true;
-  }
-
-  List<CanvasLayer> reorderLayer(List<CanvasLayer> layers, String layerId, int newOrder) {
+  List<CanvasLayer> reorderLayer(
+    List<CanvasLayer> layers,
+    String layerId,
+    int newOrder,
+  ) {
     final sortedLayers = List<CanvasLayer>.from(layers)
       ..sort((a, b) => a.order.compareTo(b.order));
     sortedLayers.removeWhere((l) => l.id == layerId);

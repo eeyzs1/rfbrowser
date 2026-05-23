@@ -52,18 +52,18 @@ class AppTheme {
     final onSurface = highContrast
         ? const Color(0xFFFFFFFF)
         : (surfaceIsLight
-            ? DesignColors.lightSurfaceText
-            : DesignColors.darkSurfaceText);
+              ? DesignColors.lightSurfaceText
+              : DesignColors.darkSurfaceText);
     final onSurfaceVariant = highContrast
         ? const Color(0xFFE0E0E0)
         : (surfaceIsLight
-            ? DesignColors.lightSurfaceTextSecondary
-            : DesignColors.darkSurfaceTextSecondary);
+              ? DesignColors.lightSurfaceTextSecondary
+              : DesignColors.darkSurfaceTextSecondary);
     final muted = highContrast
         ? const Color(0xFFBDBDBD)
         : (surfaceIsLight
-            ? DesignColors.lightSurfaceTextSecondary
-            : DesignColors.textMuted);
+              ? DesignColors.lightSurfaceTextSecondary
+              : DesignColors.textMuted);
     final divider = highContrast
         ? const Color(0xFF444444)
         : (surfaceIsLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B));
@@ -150,11 +150,7 @@ class AppTheme {
           height: 1.5,
           fontSize: fs,
         ),
-        bodySmall: TextStyle(
-          color: muted,
-          height: 1.4,
-          fontSize: fs * 0.875,
-        ),
+        bodySmall: TextStyle(color: muted, height: 1.4, fontSize: fs * 0.875),
         labelLarge: TextStyle(
           color: onSurface,
           fontWeight: FontWeight.w500,
@@ -342,10 +338,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           fontSize: fs * 0.875,
         ),
-        unselectedLabelTextStyle: TextStyle(
-          color: muted,
-          fontSize: fs * 0.875,
-        ),
+        unselectedLabelTextStyle: TextStyle(color: muted, fontSize: fs * 0.875),
       ),
       popupMenuTheme: PopupMenuThemeData(
         color: surfaceC,

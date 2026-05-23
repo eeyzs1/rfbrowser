@@ -111,7 +111,8 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   String _buildSearchUrl(String query) {
     final engine = ref.read(settingsProvider).searchEngine;
     return switch (engine) {
-      'google' => 'https://www.google.com/search?q=${Uri.encodeComponent(query)}',
+      'google' =>
+        'https://www.google.com/search?q=${Uri.encodeComponent(query)}',
       'duckduckgo' => 'https://duckduckgo.com/?q=${Uri.encodeComponent(query)}',
       _ => 'https://www.bing.com/search?q=${Uri.encodeComponent(query)}',
     };
@@ -136,9 +137,13 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
         baseOffset: 0,
         extentOffset: _urlController.text.length,
       );
-    } else if (isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.tab) {
+    } else if (isCtrl &&
+        !isShift &&
+        event.logicalKey == LogicalKeyboardKey.tab) {
       _cycleTab(browserState, forward: true);
-    } else if (isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.tab) {
+    } else if (isCtrl &&
+        isShift &&
+        event.logicalKey == LogicalKeyboardKey.tab) {
       _cycleTab(browserState, forward: false);
     } else if (event.logicalKey == LogicalKeyboardKey.f5 ||
         (isCtrl && event.logicalKey == LogicalKeyboardKey.keyR)) {
@@ -169,8 +174,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   void _cycleTab(BrowserState browserState, {required bool forward}) {
     final tabs = browserState.tabs;
     if (tabs.length < 2) return;
-    final activeIdx =
-        tabs.indexWhere((t) => t.id == browserState.activeTabId);
+    final activeIdx = tabs.indexWhere((t) => t.id == browserState.activeTabId);
     if (activeIdx < 0) return;
     final newIdx = forward
         ? (activeIdx + 1) % tabs.length
@@ -187,12 +191,14 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   }
 
   void _closeTabWithUndo(BrowserTab tab, AppLocalizations l) {
-    _recentlyClosed.add(_ClosedTabInfo(
-      id: tab.id,
-      url: tab.url,
-      title: tab.title,
-      groupId: tab.groupId,
-    ));
+    _recentlyClosed.add(
+      _ClosedTabInfo(
+        id: tab.id,
+        url: tab.url,
+        title: tab.title,
+        groupId: tab.groupId,
+      ),
+    );
     if (_recentlyClosed.length > 10) _recentlyClosed.removeAt(0);
     ref.read(browserProvider.notifier).closeTab(tab.id);
     final scaffold = ScaffoldMessenger.of(context);
@@ -207,10 +213,9 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
           onPressed: () {
             if (_recentlyClosed.isNotEmpty) {
               final info = _recentlyClosed.removeLast();
-              ref.read(browserProvider.notifier).createTab(
-                url: info.url,
-                groupId: info.groupId,
-              );
+              ref
+                  .read(browserProvider.notifier)
+                  .createTab(url: info.url, groupId: info.groupId);
               scaffold.hideCurrentSnackBar();
               scaffold.showSnackBar(
                 SnackBar(
@@ -266,8 +271,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     if (activeTab == null) return _buildEmptyState(theme, l, browserState);
 
     if (_lastActiveTabId != activeTab.id) {
-      _urlController.text =
-          activeTab.url == 'about:blank' ? '' : activeTab.url;
+      _urlController.text = activeTab.url == 'about:blank' ? '' : activeTab.url;
       _lastActiveTabId = activeTab.id;
       _readingMode = false;
     }
@@ -336,8 +340,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
           if (activeTab.isLoading)
             LinearProgressIndicator(
               minHeight: 2,
-              backgroundColor:
-                  theme.colorScheme.primary.withValues(alpha: 0.1),
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
             ),
           Expanded(
             child: Stack(
@@ -345,8 +348,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                 Platform.isLinux
                     ? _LinuxBrowserPlaceholder(
                         tab: activeTab,
-                        onOpenExternal: () =>
-                            _openExternal(activeTab.url),
+                        onOpenExternal: () => _openExternal(activeTab.url),
                         onNavigate: (url) => _navigateToUrl(url),
                         onClip: () => _clipPage(activeTab),
                       )
@@ -357,10 +359,10 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                         initializedTabs: _initializedTabs,
                         onUrlChanged: (tabId, url) {
                           if (mounted &&
-                              tabId ==
-                                  ref.read(browserProvider).activeTabId) {
-                            _urlController.text =
-                                url == 'about:blank' ? '' : url;
+                              tabId == ref.read(browserProvider).activeTabId) {
+                            _urlController.text = url == 'about:blank'
+                                ? ''
+                                : url;
                           }
                         },
                         onNavStateChanged: _updateNavState,
@@ -404,16 +406,22 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
                 color: theme.colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: Icon(Icons.language_outlined,
-                  size: 32, color: theme.colorScheme.primary),
+              child: Icon(
+                Icons.language_outlined,
+                size: 32,
+                color: theme.colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 20),
             Text(l.startBrowsing, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 6),
-            Text(l.emptyStateSubtitle,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.hintColor),
-                textAlign: TextAlign.center),
+            Text(
+              l.emptyStateSubtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.hintColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () => ref
@@ -426,27 +434,34 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
               const SizedBox(height: 32),
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(l.recentlyVisited,
-                    style: theme.textTheme.labelMedium
-                        ?.copyWith(color: theme.hintColor)),
+                child: Text(
+                  l.recentlyVisited,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: DesignSpacing.sm,
                 runSpacing: DesignSpacing.sm,
                 children: recentBookmarks
-                    .map((bm) => ActionChip(
-                          label: Text(
-                            bm.title.isNotEmpty ? bm.title : bm.url,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          avatar:
-                              const Icon(Icons.bookmark_outline_outlined, size: 14),
-                          onPressed: () => ref
-                              .read(browserProvider.notifier)
-                              .createTab(url: bm.url),
-                        ))
+                    .map(
+                      (bm) => ActionChip(
+                        label: Text(
+                          bm.title.isNotEmpty ? bm.title : bm.url,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        avatar: const Icon(
+                          Icons.bookmark_outline_outlined,
+                          size: 14,
+                        ),
+                        onPressed: () => ref
+                            .read(browserProvider.notifier)
+                            .createTab(url: bm.url),
+                      ),
+                    )
                     .toList(),
               ),
             ],
@@ -462,8 +477,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
     BrowserState browserState,
     AppLocalizations l,
   ) {
-    final otherTabs =
-        browserState.tabs.where((t) => t.id != tab.id).toList();
+    final otherTabs = browserState.tabs.where((t) => t.id != tab.id).toList();
     final tabIndex = browserState.tabs.indexOf(tab);
     final rightTabs = browserState.tabs.skip(tabIndex + 1).toList();
 
@@ -551,7 +565,10 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
         ref
             .read(browserProvider.notifier)
             .addBookmark(
-                activeTab.url, result.editedTitle, result.selectedFolderId);
+              activeTab.url,
+              result.editedTitle,
+              result.selectedFolderId,
+            );
       }
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -572,7 +589,9 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
         source: 'window.getSelection().toString()',
       );
       if (selectedText is String && selectedText.isNotEmpty) {
-        final note = await ref.read(knowledgeProvider.notifier).clipSelection(
+        final note = await ref
+            .read(knowledgeProvider.notifier)
+            .clipSelection(
               url: tab.url,
               title: tab.title,
               selectedText: selectedText,
@@ -652,7 +671,8 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
             '# ${result.editedTitle}\n\n> Source: [${tab.title}](${tab.url})\n';
       } else {
         final html = await controller.getHtml() ?? '';
-        final text = await controller.evaluateJavascript(
+        final text =
+            await controller.evaluateJavascript(
               source: 'document.body.innerText',
             ) ??
             '';
@@ -666,7 +686,9 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
             '# ${result.editedTitle}\n\n> Source: [${tab.title}](${tab.url})\n\n$content';
       }
 
-      await ref.read(knowledgeProvider.notifier).clipToNote(
+      await ref
+          .read(knowledgeProvider.notifier)
+          .clipToNote(
             url: tab.url,
             title: result.editedTitle,
             content: content,
@@ -720,21 +742,23 @@ class _ClosedTabInfo {
   final String url;
   final String title;
   final String? groupId;
-  _ClosedTabInfo(
-      {required this.id,
-      required this.url,
-      required this.title,
-      this.groupId});
+  _ClosedTabInfo({
+    required this.id,
+    required this.url,
+    required this.title,
+    this.groupId,
+  });
 }
 
 class _BookmarkDialogResult {
   final String selectedFolderId;
   final String editedTitle;
   final String? newFolderName;
-  _BookmarkDialogResult(
-      {required this.selectedFolderId,
-      required this.editedTitle,
-      this.newFolderName});
+  _BookmarkDialogResult({
+    required this.selectedFolderId,
+    required this.editedTitle,
+    this.newFolderName,
+  });
 }
 
 class _ClipDialogResult {
@@ -786,8 +810,10 @@ class _ClipDialogState extends State<_ClipDialog> {
             decoration: InputDecoration(
               isDense: true,
               border: const OutlineInputBorder(),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 6,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -811,13 +837,14 @@ class _ClipDialogState extends State<_ClipDialog> {
         ),
         FilledButton(
           onPressed: () => Navigator.pop(
-              context,
-              _ClipDialogResult(
-                format: _format,
-                editedTitle: _titleController.text.isNotEmpty
-                    ? _titleController.text
-                    : widget.tab.title,
-              )),
+            context,
+            _ClipDialogResult(
+              format: _format,
+              editedTitle: _titleController.text.isNotEmpty
+                  ? _titleController.text
+                  : widget.tab.title,
+            ),
+          ),
           child: Text(l.clipPage),
         ),
       ],
@@ -876,11 +903,14 @@ class _LinuxBrowserPlaceholderState extends State<_LinuxBrowserPlaceholder> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.open_in_browser_outlined, size: 48, color: theme.hintColor),
+          Icon(
+            Icons.open_in_browser_outlined,
+            size: 48,
+            color: theme.hintColor,
+          ),
           const SizedBox(height: 16),
           Text(
-            l?.searchEngineBing ??
-                'Embedded browser is not available on Linux',
+            l?.searchEngineBing ?? 'Embedded browser is not available on Linux',
             style: theme.textTheme.titleMedium,
             textAlign: TextAlign.center,
           ),
@@ -977,8 +1007,10 @@ class _AddBookmarkDialogState extends State<_AddBookmarkDialog> {
             decoration: InputDecoration(
               isDense: true,
               border: const OutlineInputBorder(),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 6,
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -999,21 +1031,22 @@ class _AddBookmarkDialogState extends State<_AddBookmarkDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: widget.folders
-                  .map((f) => ListTile(
-                        leading: Icon(
-                          f.isExpanded
-                              ? Icons.folder_open_outlined
-                              : Icons.folder_outlined,
-                          size: 18,
-                          color: theme.colorScheme.primary,
-                        ),
-                        title: Text(f.name),
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        trailing: Radio<String>(value: f.id),
-                        onTap: () =>
-                            setState(() => _selectedFolderId = f.id),
-                      ))
+                  .map(
+                    (f) => ListTile(
+                      leading: Icon(
+                        f.isExpanded
+                            ? Icons.folder_open_outlined
+                            : Icons.folder_outlined,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
+                      title: Text(f.name),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      trailing: Radio<String>(value: f.id),
+                      onTap: () => setState(() => _selectedFolderId = f.id),
+                    ),
+                  )
                   .toList(),
             ),
           ),
@@ -1035,7 +1068,9 @@ class _AddBookmarkDialogState extends State<_AddBookmarkDialog> {
                       isDense: true,
                       border: const OutlineInputBorder(),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 6),
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
                     ),
                     autofocus: true,
                   ),
@@ -1045,15 +1080,15 @@ class _AddBookmarkDialogState extends State<_AddBookmarkDialog> {
                   onPressed: () {
                     if (_newFolderController.text.isNotEmpty) {
                       Navigator.pop(
-                          context,
-                          _BookmarkDialogResult(
-                            selectedFolderId: '',
-                            editedTitle:
-                                _titleController.text.isNotEmpty
-                                    ? _titleController.text
-                                    : widget.pageTitle,
-                            newFolderName: _newFolderController.text,
-                          ));
+                        context,
+                        _BookmarkDialogResult(
+                          selectedFolderId: '',
+                          editedTitle: _titleController.text.isNotEmpty
+                              ? _titleController.text
+                              : widget.pageTitle,
+                          newFolderName: _newFolderController.text,
+                        ),
+                      );
                     }
                   },
                 ),
@@ -1068,13 +1103,14 @@ class _AddBookmarkDialogState extends State<_AddBookmarkDialog> {
         ),
         FilledButton(
           onPressed: () => Navigator.pop(
-              context,
-              _BookmarkDialogResult(
-                selectedFolderId: _selectedFolderId,
-                editedTitle: _titleController.text.isNotEmpty
-                    ? _titleController.text
-                    : widget.pageTitle,
-              )),
+            context,
+            _BookmarkDialogResult(
+              selectedFolderId: _selectedFolderId,
+              editedTitle: _titleController.text.isNotEmpty
+                  ? _titleController.text
+                  : widget.pageTitle,
+            ),
+          ),
           child: Text(l.bookmark),
         ),
       ],

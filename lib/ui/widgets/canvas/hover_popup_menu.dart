@@ -37,8 +37,7 @@ class _HoverPopupMenuButtonState<T> extends State<HoverPopupMenuButton<T>> {
     _closeTimer?.cancel();
 
     final box = context.findRenderObject() as RenderBox;
-    final overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final offset = box.localToGlobal(Offset.zero, ancestor: overlay);
     final overlaySize = overlay.size;
 

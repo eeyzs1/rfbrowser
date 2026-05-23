@@ -46,11 +46,7 @@ void main() {
 
     test('copyWith preserves unchanged fields', () {
       final now = DateTime.now();
-      final msg = ChatMessage(
-        role: 'user',
-        content: 'Hello',
-        timestamp: now,
-      );
+      final msg = ChatMessage(role: 'user', content: 'Hello', timestamp: now);
       final updated = msg.copyWith(content: 'Hi');
       expect(updated.timestamp, now);
       expect(updated.role, 'user');
@@ -126,13 +122,21 @@ void main() {
 
     test('copyWith updates activeModel', () {
       final state = AIState();
-      final model = AIModel(id: 'm1', providerId: 'p1', displayName: 'Test Model');
+      final model = AIModel(
+        id: 'm1',
+        providerId: 'p1',
+        displayName: 'Test Model',
+      );
       final updated = state.copyWith(activeModel: model);
       expect(updated.activeModel!.id, 'm1');
     });
 
     test('copyWith clearModel sets activeModel to null', () {
-      final model = AIModel(id: 'm1', providerId: 'p1', displayName: 'Test Model');
+      final model = AIModel(
+        id: 'm1',
+        providerId: 'p1',
+        displayName: 'Test Model',
+      );
       final state = AIState(activeModel: model);
       final updated = state.copyWith(clearModel: true);
       expect(updated.activeModel, isNull);
