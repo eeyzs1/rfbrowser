@@ -200,7 +200,7 @@ Future<void> main() async {
         final steps = planGenerator.parsePlan(llmResponse);
         expect(steps, isNotEmpty, reason: 'AI 应该生成至少一个步骤');
         expect(
-          steps.every((s) => registry.hasTool(s.toolName)),
+          steps.every((s) => registry.hasTool(s.toolName ?? '')),
           isTrue,
           reason: '所有步骤的 toolName 应该在 registry 中',
         );

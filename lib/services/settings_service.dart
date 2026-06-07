@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../data/models/ai_provider.dart';
+import '../core/color_extensions.dart';
+import '../core/shared_prefs_aware.dart';
 
 enum AppButtonStyle { rounded, sharp, pill }
 
@@ -69,14 +71,7 @@ class AppSettings {
 
   Color get surfaceColor => Color(surfaceColorValue);
 
-  bool get isDarkMode {
-    final lum =
-        (scaffoldBgColor.r * 0.299 +
-            scaffoldBgColor.g * 0.587 +
-            scaffoldBgColor.b * 0.114) *
-        255;
-    return lum < 128;
-  }
+  bool get isDarkMode => scaffoldBgColor.isDark;
 
   double get effectiveBorderRadius {
     switch (buttonStyle) {
@@ -142,19 +137,13 @@ class AppSettings {
   }
 }
 
-class SettingsNotifier extends Notifier<AppSettings> {
-  SharedPreferences? _prefs;
-
-  Future<SharedPreferences> get _ensurePrefs async {
-    _prefs ??= await SharedPreferences.getInstance();
-    return _prefs!;
-  }
+class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   @override
   AppSettings build() => AppSettings();
 
   Future<void> loadSettings() async {
-    final prefs = await _ensurePrefs;
+    final prefs = await ensurePrefs;
     final preset = prefs.getString('themePreset') ?? 'sky';
     final savedColor = prefs.getInt('accentColorValue');
     final colorValue = savedColor ?? getPresetColor(preset).toARGB32();
@@ -179,21 +168,36 @@ class SettingsNotifier extends Notifier<AppSettings> {
     );
   }
 
+  Future<void> _updateSetting<T>({
+    required String key,
+    required T value,
+    required Future<void> Function(SharedPreferences, String, T) persist,
+    required AppSettings Function(AppSettings, T) update,
+  }) async {
+    final prefs = await ensurePrefs;
+    await persist(prefs, key, value);
+    state = update(state, value);
+  }
+
   Future<void> setLocale(String locale) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setString('locale', locale);
-    state = state.copyWith(locale: locale);
+    await _updateSetting(
+      key: 'locale', value: locale,
+      persist: (p, k, v) => p.setString(k, v),
+      update: (s, v) => s.copyWith(locale: v),
+    );
   }
 
   Future<void> setEditorFontSize(double size) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setDouble('editorFontSize', size);
-    state = state.copyWith(editorFontSize: size);
+    await _updateSetting(
+      key: 'editorFontSize', value: size,
+      persist: (p, k, v) => p.setDouble(k, v),
+      update: (s, v) => s.copyWith(editorFontSize: v),
+    );
   }
 
   Future<void> setThemePreset(String preset) async {
     final color = getPresetColor(preset);
-    final prefs = await _ensurePrefs;
+    final prefs = await ensurePrefs;
     await prefs.setString('themePreset', preset);
     await prefs.setInt('accentColorValue', color.toARGB32());
     state = state.copyWith(
@@ -203,7 +207,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
   }
 
   Future<void> setAccentColor(Color color) async {
-    final prefs = await _ensurePrefs;
+    final prefs = await ensurePrefs;
     await prefs.setString('themePreset', 'custom');
     await prefs.setInt('accentColorValue', color.toARGB32());
     state = state.copyWith(
@@ -213,75 +217,99 @@ class SettingsNotifier extends Notifier<AppSettings> {
   }
 
   Future<void> setScaffoldBgColor(Color color) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setInt('scaffoldBgColorValue', color.toARGB32());
-    state = state.copyWith(scaffoldBgColorValue: color.toARGB32());
+    await _updateSetting(
+      key: 'scaffoldBgColorValue', value: color.toARGB32(),
+      persist: (p, k, v) => p.setInt(k, v),
+      update: (s, v) => s.copyWith(scaffoldBgColorValue: v),
+    );
   }
 
   Future<void> setSurfaceColor(Color color) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setInt('surfaceColorValue', color.toARGB32());
-    state = state.copyWith(surfaceColorValue: color.toARGB32());
+    await _updateSetting(
+      key: 'surfaceColorValue', value: color.toARGB32(),
+      persist: (p, k, v) => p.setInt(k, v),
+      update: (s, v) => s.copyWith(surfaceColorValue: v),
+    );
   }
 
   Future<void> setButtonStyle(AppButtonStyle style) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setInt('buttonStyle', style.index);
-    state = state.copyWith(buttonStyle: style);
+    await _updateSetting(
+      key: 'buttonStyle', value: style.index,
+      persist: (p, k, v) => p.setInt(k, v),
+      update: (s, v) => s.copyWith(buttonStyle: style),
+    );
   }
 
   Future<void> setDensity(ComponentDensity d) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setInt('density', d.index);
-    state = state.copyWith(density: d);
+    await _updateSetting(
+      key: 'density', value: d.index,
+      persist: (p, k, v) => p.setInt(k, v),
+      update: (s, v) => s.copyWith(density: d),
+    );
   }
 
   Future<void> setIconSize(int size) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setInt('iconSize', size);
-    state = state.copyWith(iconSize: size);
+    await _updateSetting(
+      key: 'iconSize', value: size,
+      persist: (p, k, v) => p.setInt(k, v),
+      update: (s, v) => s.copyWith(iconSize: v),
+    );
   }
 
   Future<void> setBorderRadius(double r) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setDouble('borderRadius', r);
-    state = state.copyWith(borderRadius: r);
+    await _updateSetting(
+      key: 'borderRadius', value: r,
+      persist: (p, k, v) => p.setDouble(k, v),
+      update: (s, v) => s.copyWith(borderRadius: v),
+    );
   }
 
   Future<void> setAlwaysShowWelcomePage(bool value) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setBool('alwaysShowWelcomePage', value);
-    state = state.copyWith(alwaysShowWelcomePage: value);
+    await _updateSetting(
+      key: 'alwaysShowWelcomePage', value: value,
+      persist: (p, k, v) => p.setBool(k, v),
+      update: (s, v) => s.copyWith(alwaysShowWelcomePage: v),
+    );
   }
 
   Future<void> setHighContrastMode(bool value) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setBool('highContrastMode', value);
-    state = state.copyWith(highContrastMode: value);
+    await _updateSetting(
+      key: 'highContrastMode', value: value,
+      persist: (p, k, v) => p.setBool(k, v),
+      update: (s, v) => s.copyWith(highContrastMode: v),
+    );
   }
 
   Future<void> setThemeTintOpacity(double value) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setDouble('themeTintOpacity', value);
-    state = state.copyWith(themeTintOpacity: value);
+    await _updateSetting(
+      key: 'themeTintOpacity', value: value,
+      persist: (p, k, v) => p.setDouble(k, v),
+      update: (s, v) => s.copyWith(themeTintOpacity: v),
+    );
   }
 
   Future<void> setSurfaceOpacity(double value) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setDouble('surfaceOpacity', value);
-    state = state.copyWith(surfaceOpacity: value);
+    await _updateSetting(
+      key: 'surfaceOpacity', value: value,
+      persist: (p, k, v) => p.setDouble(k, v),
+      update: (s, v) => s.copyWith(surfaceOpacity: v),
+    );
   }
 
   Future<void> setBackgroundOpacity(double value) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setDouble('backgroundOpacity', value);
-    state = state.copyWith(backgroundOpacity: value);
+    await _updateSetting(
+      key: 'backgroundOpacity', value: value,
+      persist: (p, k, v) => p.setDouble(k, v),
+      update: (s, v) => s.copyWith(backgroundOpacity: v),
+    );
   }
 
   Future<void> setSearchEngine(String engine) async {
-    final prefs = await _ensurePrefs;
-    await prefs.setString('searchEngine', engine);
-    state = state.copyWith(searchEngine: engine);
+    await _updateSetting(
+      key: 'searchEngine', value: engine,
+      persist: (p, k, v) => p.setString(k, v),
+      update: (s, v) => s.copyWith(searchEngine: v),
+    );
   }
 }
 
@@ -349,20 +377,14 @@ class AIConfigState {
   }
 }
 
-class AIConfigNotifier extends Notifier<AIConfigState> {
+class AIConfigNotifier extends Notifier<AIConfigState> with SharedPrefsAware {
   final _secureStorage = const FlutterSecureStorage();
-  SharedPreferences? _prefs;
-
-  Future<SharedPreferences> get _ensurePrefs async {
-    _prefs ??= await SharedPreferences.getInstance();
-    return _prefs!;
-  }
 
   @override
   AIConfigState build() => AIConfigState();
 
   Future<void> loadConfig() async {
-    final prefs = await _ensurePrefs;
+    final prefs = await ensurePrefs;
     await _loadProviders(prefs);
     await _loadModels(prefs);
     await _loadActiveConfig(prefs);
@@ -427,19 +449,19 @@ class AIConfigNotifier extends Notifier<AIConfigState> {
   }
 
   Future<void> _saveProviders() async {
-    final prefs = await _ensurePrefs;
+    final prefs = await ensurePrefs;
     final json = jsonEncode(state.providers.map((p) => p.toJson()).toList());
     await prefs.setString('ai_providers', json);
   }
 
   Future<void> _saveModels() async {
-    final prefs = await _ensurePrefs;
+    final prefs = await ensurePrefs;
     final json = jsonEncode(state.models.map((m) => m.toJson()).toList());
     await prefs.setString('ai_models', json);
   }
 
   Future<void> _saveActiveConfig() async {
-    final prefs = await _ensurePrefs;
+    final prefs = await ensurePrefs;
     if (state.activeConfig != null) {
       await prefs.setString(
         'ai_active_config',

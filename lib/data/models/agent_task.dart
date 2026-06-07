@@ -122,8 +122,8 @@ class AgentTask {
     TaskMode? mode,
     List<AgentStep>? steps,
     Map<String, dynamic>? context,
-    DateTime? completed,
-    String? result,
+    Object? completed = _sentinel,
+    Object? result = _sentinel,
     int? maxIterations,
   }) {
     return AgentTask(
@@ -135,11 +135,13 @@ class AgentTask {
       steps: steps ?? this.steps,
       context: context ?? this.context,
       created: created,
-      completed: completed ?? this.completed,
-      result: result ?? this.result,
+      completed: identical(completed, _sentinel) ? this.completed : completed as DateTime?,
+      result: identical(result, _sentinel) ? this.result : result as String?,
       maxIterations: maxIterations ?? this.maxIterations,
     );
   }
+
+  static const _sentinel = Object();
 
   Map<String, dynamic> toJson() => {
     'id': id,

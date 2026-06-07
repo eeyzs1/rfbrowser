@@ -1,33 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import '../../data/models/agent_task.dart';
 import 'agent_tool_registry.dart';
-
-class PlanStep {
-  final String toolName;
-  final Map<String, dynamic> args;
-  final String? description;
-  final String? condition;
-  final int retryCount;
-  final String? onFailure;
-
-  const PlanStep({
-    required this.toolName,
-    this.args = const {},
-    this.description,
-    this.condition,
-    this.retryCount = 0,
-    this.onFailure,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'tool': toolName,
-    'args': args,
-    if (description != null) 'description': description,
-    if (condition != null) 'condition': condition,
-    if (retryCount > 0) 'retryCount': retryCount,
-    if (onFailure != null) 'onFailure': onFailure,
-  };
-}
 
 class PlanGenerator {
   final AgentToolRegistry _registry;
@@ -92,17 +66,17 @@ Output format:
 When you have completed the task and have a final answer, set "done": true and put the result in "tool": "final_answer", "args": {"answer": "your final answer"}.''';
   }
 
-  List<PlanStep> parsePlan(String llmResponse) {
+  List<AgentStep> parsePlan(String llmResponse) {
     final cleaned = _cleanJsonResponse(llmResponse);
     try {
       final json = jsonDecode(cleaned) as Map<String, dynamic>;
       final steps = json['steps'] as List<dynamic>? ?? [];
       return steps.map((s) {
         final step = s as Map<String, dynamic>;
-        return PlanStep(
+        return AgentStep(
+          description: step['description'] as String? ?? 'Use ${step['tool'] ?? 'unknown'}',
           toolName: step['tool'] as String? ?? '',
           args: (step['args'] as Map<String, dynamic>?) ?? {},
-          description: step['description'] as String?,
           condition: step['condition'] as String?,
           retryCount: step['retryCount'] as int? ?? 0,
           onFailure: step['onFailure'] as String?,
@@ -162,8 +136,8 @@ ${history.isEmpty ? '(none yet)' : history.join('\n')}
 What should I do next?''';
   }
 
-  List<PlanStep> _fallbackParse(String text) {
-    final steps = <PlanStep>[];
+  List<AgentStep> _fallbackParse(String text) {
+    final steps = <AgentStep>[];
     final toolPattern = RegExp(r'"tool"\s*:\s*"(\w+)"');
     final argsPattern = RegExp(r'"args"\s*:\s*(\{[^}]*\})');
 
@@ -181,7 +155,11 @@ What should I do next?''';
         }
       }
 
-      steps.add(PlanStep(toolName: toolName, args: args));
+      steps.add(AgentStep(
+        description: 'Use $toolName',
+        toolName: toolName,
+        args: args,
+      ));
     }
 
     return steps;

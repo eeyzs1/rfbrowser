@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../../core/color_extensions.dart';
 
 class ColorPickerDialog extends StatefulWidget {
   final Color initialColor;
@@ -125,9 +126,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                   child: Text(
                     'RGB($_r, $_g, $_b)',
                     style: TextStyle(
-                      color: (_r * 0.299 + _g * 0.587 + _b * 0.114) > 128
-                          ? Colors.black
-                          : Colors.white,
+                      color: Color.fromARGB(255, _r, _g, _b).contrastText,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

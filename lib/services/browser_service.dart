@@ -204,25 +204,23 @@ class BrowserNotifier extends Notifier<BrowserState> {
     state = state.copyWith(tabs: tabs, activeTabId: tabId);
   }
 
-  void updateTabUrl(String tabId, String url) {
+  void _updateTab<T>(String tabId, T value, BrowserTab Function(BrowserTab, T) updater) {
     final tabs = state.tabs
-        .map((t) => t.id == tabId ? t.copyWith(url: url) : t)
+        .map((t) => t.id == tabId ? updater(t, value) : t)
         .toList();
     state = state.copyWith(tabs: tabs);
+  }
+
+  void updateTabUrl(String tabId, String url) {
+    _updateTab(tabId, url, (t, v) => t.copyWith(url: v));
   }
 
   void updateTabTitle(String tabId, String title) {
-    final tabs = state.tabs
-        .map((t) => t.id == tabId ? t.copyWith(title: title) : t)
-        .toList();
-    state = state.copyWith(tabs: tabs);
+    _updateTab(tabId, title, (t, v) => t.copyWith(title: v));
   }
 
   void setTabLoading(String tabId, bool loading) {
-    final tabs = state.tabs
-        .map((t) => t.id == tabId ? t.copyWith(isLoading: loading) : t)
-        .toList();
-    state = state.copyWith(tabs: tabs);
+    _updateTab(tabId, loading, (t, v) => t.copyWith(isLoading: v));
   }
 
   void reorderTab(int oldIndex, int newIndex) {

@@ -18,16 +18,11 @@ class NavigateTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    final url = args['url'] as String?;
-    if (url == null || url.isEmpty) {
-      return ToolResult.failure('url is required');
-    }
-    try {
-      final result = await _navigate(url);
-      return ToolResult.success(result);
-    } catch (e) {
-      return ToolResult.failure('Navigation failed: $e');
-    }
+    final url = getStringArg(args, 'url');
+    if (url == null) return ToolResult.failure('url is required');
+    return wrapExecution(
+      () async => ToolResult.success(await _navigate(url)),
+    );
   }
 }
 
@@ -52,16 +47,11 @@ class ExtractTextTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    final url = args['url'] as String?;
-    if (url == null || url.isEmpty) {
-      return ToolResult.failure('url is required');
-    }
-    try {
-      final text = await _extractText(url);
-      return ToolResult.success(text);
-    } catch (e) {
-      return ToolResult.failure('Text extraction failed: $e');
-    }
+    final url = getStringArg(args, 'url');
+    if (url == null) return ToolResult.failure('url is required');
+    return wrapExecution(
+      () async => ToolResult.success(await _extractText(url)),
+    );
   }
 }
 
@@ -92,17 +82,12 @@ class CreateNoteTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    final title = args['title'] as String?;
-    if (title == null || title.isEmpty) {
-      return ToolResult.failure('title is required');
-    }
+    final title = getStringArg(args, 'title');
+    if (title == null) return ToolResult.failure('title is required');
     final content = args['content'] as String? ?? '';
-    try {
-      final result = await _createNote(title, content);
-      return ToolResult.success(result);
-    } catch (e) {
-      return ToolResult.failure('Note creation failed: $e');
-    }
+    return wrapExecution(
+      () async => ToolResult.success(await _createNote(title, content)),
+    );
   }
 }
 
@@ -127,11 +112,9 @@ class SearchNotesTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    final query = args['query'] as String?;
-    if (query == null || query.isEmpty) {
-      return ToolResult.failure('query is required');
-    }
-    try {
+    final query = getStringArg(args, 'query');
+    if (query == null) return ToolResult.failure('query is required');
+    return wrapExecution(() async {
       final results = await _search(query);
       if (results.isEmpty) {
         return ToolResult.success('No notes found matching "$query"');
@@ -151,9 +134,7 @@ class SearchNotesTool extends AgentTool {
           'results': results.take(10).toList(),
         },
       );
-    } catch (e) {
-      return ToolResult.failure('Search failed: $e');
-    }
+    });
   }
 }
 
@@ -185,17 +166,12 @@ class AIReasonTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    final prompt = args['prompt'] as String?;
-    if (prompt == null || prompt.isEmpty) {
-      return ToolResult.failure('prompt is required');
-    }
+    final prompt = getStringArg(args, 'prompt');
+    if (prompt == null) return ToolResult.failure('prompt is required');
     final systemPrompt = args['system_prompt'] as String?;
-    try {
-      final response = await _chat(prompt, systemPrompt);
-      return ToolResult.success(response);
-    } catch (e) {
-      return ToolResult.failure('AI reasoning failed: $e');
-    }
+    return wrapExecution(
+      () async => ToolResult.success(await _chat(prompt, systemPrompt)),
+    );
   }
 }
 
@@ -226,17 +202,12 @@ class WebClipTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    final url = args['url'] as String?;
-    if (url == null || url.isEmpty) {
-      return ToolResult.failure('url is required');
-    }
+    final url = getStringArg(args, 'url');
+    if (url == null) return ToolResult.failure('url is required');
     final format = args['format'] as String? ?? 'markdown';
-    try {
-      final result = await _clip(url, format);
-      return ToolResult.success(result);
-    } catch (e) {
-      return ToolResult.failure('Web clip failed: $e');
-    }
+    return wrapExecution(
+      () async => ToolResult.success(await _clip(url, format)),
+    );
   }
 }
 
@@ -262,19 +233,15 @@ class DeleteNoteTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    final title = args['title'] as String?;
-    if (title == null || title.isEmpty) {
-      return ToolResult.failure('title is required');
-    }
-    try {
+    final title = getStringArg(args, 'title');
+    if (title == null) return ToolResult.failure('title is required');
+    return wrapExecution(() async {
       final deleted = await _deleteNote(title);
       if (deleted) {
         return ToolResult.success('Note "$title" deleted');
       }
       return ToolResult.failure('Note "$title" not found');
-    } catch (e) {
-      return ToolResult.failure('Delete failed: $e');
-    }
+    });
   }
 }
 
@@ -303,20 +270,13 @@ class UpdateNoteTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    final title = args['title'] as String?;
-    final content = args['content'] as String?;
-    if (title == null || title.isEmpty) {
-      return ToolResult.failure('title is required');
-    }
-    if (content == null) {
-      return ToolResult.failure('content is required');
-    }
-    try {
-      final result = await _updateNote(title, content);
-      return ToolResult.success(result);
-    } catch (e) {
-      return ToolResult.failure('Update failed: $e');
-    }
+    final title = getStringArg(args, 'title');
+    if (title == null) return ToolResult.failure('title is required');
+    final content = getStringArg(args, 'content');
+    if (content == null) return ToolResult.failure('content is required');
+    return wrapExecution(
+      () async => ToolResult.success(await _updateNote(title, content)),
+    );
   }
 }
 
@@ -347,12 +307,9 @@ class ListNotesTool extends AgentTool {
   Future<ToolResult> execute(Map<String, dynamic> args) async {
     final tag = args['tag'] as String?;
     final limit = (args['limit'] as int?) ?? 20;
-    try {
-      final result = await _listNotes(tag, limit);
-      return ToolResult.success(result);
-    } catch (e) {
-      return ToolResult.failure('List notes failed: $e');
-    }
+    return wrapExecution(
+      () async => ToolResult.success(await _listNotes(tag, limit)),
+    );
   }
 }
 
@@ -368,12 +325,9 @@ class GetTagsTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    try {
-      final result = await _getTags();
-      return ToolResult.success(result);
-    } catch (e) {
-      return ToolResult.failure('Get tags failed: $e');
-    }
+    return wrapExecution(
+      () async => ToolResult.success(await _getTags()),
+    );
   }
 }
 
@@ -402,20 +356,13 @@ class MoveNoteTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    final title = args['title'] as String?;
-    final folder = args['folder'] as String?;
-    if (title == null || title.isEmpty) {
-      return ToolResult.failure('title is required');
-    }
-    if (folder == null || folder.isEmpty) {
-      return ToolResult.failure('folder is required');
-    }
-    try {
-      final result = await _moveNote(title, folder);
-      return ToolResult.success(result);
-    } catch (e) {
-      return ToolResult.failure('Move failed: $e');
-    }
+    final title = getStringArg(args, 'title');
+    if (title == null) return ToolResult.failure('title is required');
+    final folder = getStringArg(args, 'folder');
+    if (folder == null) return ToolResult.failure('folder is required');
+    return wrapExecution(
+      () async => ToolResult.success(await _moveNote(title, folder)),
+    );
   }
 }
 
@@ -444,19 +391,12 @@ class RenameNoteTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    final oldTitle = args['old_title'] as String?;
-    final newTitle = args['new_title'] as String?;
-    if (oldTitle == null || oldTitle.isEmpty) {
-      return ToolResult.failure('old_title is required');
-    }
-    if (newTitle == null || newTitle.isEmpty) {
-      return ToolResult.failure('new_title is required');
-    }
-    try {
-      final result = await _renameNote(oldTitle, newTitle);
-      return ToolResult.success(result);
-    } catch (e) {
-      return ToolResult.failure('Rename failed: $e');
-    }
+    final oldTitle = getStringArg(args, 'old_title');
+    if (oldTitle == null) return ToolResult.failure('old_title is required');
+    final newTitle = getStringArg(args, 'new_title');
+    if (newTitle == null) return ToolResult.failure('new_title is required');
+    return wrapExecution(
+      () async => ToolResult.success(await _renameNote(oldTitle, newTitle)),
+    );
   }
 }

@@ -4,25 +4,24 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../data/models/canvas_model.dart';
 import '../data/models/note.dart';
 import '../data/stores/vault_store.dart';
 import '../core/link/link_resolver.dart';
+import '../core/shared_prefs_aware.dart';
 import 'canvas/canvas_layout_service.dart';
 import 'canvas/canvas_export_service.dart';
 import 'canvas/canvas_layers_service.dart';
 import 'canvas/canvas_scratchpad_service.dart';
 import 'canvas/canvas_templates_service.dart';
 
-class CanvasNotifier extends Notifier<CanvasData> {
+class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
   final CanvasLayoutService _layoutService;
   final CanvasExportService _exportService;
   final CanvasLayersService _layersService;
   final CanvasScratchpadService _scratchpadService;
 
   Timer? _debounceTimer;
-  SharedPreferences? _prefs;
   List<String> _canvasNames = ['default'];
   String _activeCanvasName = 'default';
   final List<CanvasData> _undoStack = [];
@@ -44,11 +43,6 @@ class CanvasNotifier extends Notifier<CanvasData> {
   List<String> get canvasNames => List.unmodifiable(_canvasNames);
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
-
-  Future<SharedPreferences> get _ensurePrefs async {
-    _prefs ??= await SharedPreferences.getInstance();
-    return _prefs!;
-  }
 
   @override
   CanvasData build() => CanvasData();
@@ -223,9 +217,8 @@ class CanvasNotifier extends Notifier<CanvasData> {
 
   Future<void> batchDeleteCards(List<String> cardIds) async {
     if (cardIds.isEmpty) return;
-    _pushUndo();
     final cardIdSet = cardIds.toSet();
-    state = state.copyWith(
+    await _mutateAndPersist(() => state.copyWith(
       cards: state.cards.where((c) => !cardIdSet.contains(c.id)).toList(),
       connections: state.connections
           .where(
@@ -244,21 +237,20 @@ class CanvasNotifier extends Notifier<CanvasData> {
           .where((g) => g.cardIds.isNotEmpty)
           .toList(),
       clearSelectedCardIds: true,
-    );
-    await _save();
+    ));
   }
 
   void batchUpdateCardColor(List<String> cardIds, int colorValue) {
-    _pushUndo();
     final cardIdSet = cardIds.toSet();
-    final newCards = state.cards.map((c) {
-      if (cardIdSet.contains(c.id)) {
-        return c.copyWith(colorValue: colorValue);
-      }
-      return c;
-    }).toList();
-    state = state.copyWith(cards: newCards);
-    _debouncedSave();
+    _mutateAndDebounce(() {
+      final newCards = state.cards.map((c) {
+        if (cardIdSet.contains(c.id)) {
+          return c.copyWith(colorValue: colorValue);
+        }
+        return c;
+      }).toList();
+      return state.copyWith(cards: newCards);
+    });
   }
 
   void batchMoveCards(Map<String, (double, double)> moves) {
@@ -275,36 +267,32 @@ class CanvasNotifier extends Notifier<CanvasData> {
 
   Future<void> groupCards(List<String> cardIds, {String? name}) async {
     if (cardIds.length < 2) return;
-    _pushUndo();
     final group = CanvasGroup(
       id: 'group_${DateTime.now().millisecondsSinceEpoch}',
       name: name ?? 'Group ${state.groups.length + 1}',
       cardIds: cardIds,
     );
-    state = state.copyWith(groups: [...state.groups, group]);
-    await _save();
+    await _mutateAndPersist(() => state.copyWith(groups: [...state.groups, group]));
   }
 
   Future<void> ungroupCards(String groupId) async {
-    _pushUndo();
-    state = state.copyWith(
+    await _mutateAndPersist(() => state.copyWith(
       groups: state.groups.where((g) => g.id != groupId).toList(),
-    );
-    await _save();
+    ));
   }
 
   Future<void> renameGroup(String groupId, String name) async {
-    final groups = state.groups.map((g) {
-      if (g.id == groupId) return g.copyWith(name: name);
-      return g;
-    }).toList();
-    state = state.copyWith(groups: groups);
-    _debouncedSave();
+    _mutateAndDebounce(() {
+      final groups = state.groups.map((g) {
+        if (g.id == groupId) return g.copyWith(name: name);
+        return g;
+      }).toList();
+      return state.copyWith(groups: groups);
+    });
   }
 
   void alignCards(List<String> cardIds, AlignmentType type) {
     if (cardIds.length < 2) return;
-    _pushUndo();
     final selectedCards = state.cards
         .where((c) => cardIds.contains(c.id))
         .toList();
@@ -373,13 +361,11 @@ class CanvasNotifier extends Notifier<CanvasData> {
           }
         }
     }
-    state = state.copyWith(cards: newCards);
-    _debouncedSave();
+    _mutateAndDebounce(() => state.copyWith(cards: newCards));
   }
 
   void distributeCards(List<String> cardIds, DistributeType type) {
     if (cardIds.length < 3) return;
-    _pushUndo();
     final selectedCards = state.cards
         .where((c) => cardIds.contains(c.id))
         .toList();
@@ -422,8 +408,7 @@ class CanvasNotifier extends Notifier<CanvasData> {
           }
         }
     }
-    state = state.copyWith(cards: newCards);
-    _debouncedSave();
+    _mutateAndDebounce(() => state.copyWith(cards: newCards));
   }
 
   List<CanvasConnection> deriveAutoConnections(
@@ -537,7 +522,7 @@ class CanvasNotifier extends Notifier<CanvasData> {
   }
 
   Future<void> _saveToSharedPrefs() async {
-    final prefs = await _ensurePrefs;
+    final prefs = await ensurePrefs;
     await prefs.setString('canvas_data', state.toJsonString());
   }
 
@@ -563,7 +548,7 @@ class CanvasNotifier extends Notifier<CanvasData> {
   }
 
   Future<void> _migrateFromSharedPrefs() async {
-    final prefs = await _ensurePrefs;
+    final prefs = await ensurePrefs;
     final json = prefs.getString('canvas_data');
     if (json != null) {
       state = CanvasData.fromJsonString(json);
@@ -587,22 +572,30 @@ class CanvasNotifier extends Notifier<CanvasData> {
     await _save();
   }
 
-  Future<void> addCard(CanvasCard card) async {
+  Future<void> _mutateAndPersist(CanvasData Function() mutation) async {
     _pushUndo();
-    state = state.copyWith(cards: [...state.cards, card]);
+    state = mutation();
     await _save();
+  }
+
+  void _mutateAndDebounce(CanvasData Function() mutation) {
+    state = mutation();
+    _debouncedSave();
+  }
+
+  Future<void> addCard(CanvasCard card) async {
+    await _mutateAndPersist(() => state.copyWith(cards: [...state.cards, card]));
   }
 
   Future<void> updateCard(CanvasCard card) async {
-    _pushUndo();
-    final cards = state.cards.map((c) => c.id == card.id ? card : c).toList();
-    state = state.copyWith(cards: cards);
-    await _save();
+    await _mutateAndPersist(() {
+      final cards = state.cards.map((c) => c.id == card.id ? card : c).toList();
+      return state.copyWith(cards: cards);
+    });
   }
 
   Future<void> removeCard(String cardId) async {
-    _pushUndo();
-    state = state.copyWith(
+    await _mutateAndPersist(() => state.copyWith(
       cards: state.cards.where((c) => c.id != cardId).toList(),
       connections: state.connections
           .where((c) => c.fromCardId != cardId && c.toCardId != cardId)
@@ -614,30 +607,26 @@ class CanvasNotifier extends Notifier<CanvasData> {
           })
           .where((g) => g.cardIds.isNotEmpty)
           .toList(),
-    );
-    await _save();
+    ));
   }
 
   Future<void> addConnection(CanvasConnection conn) async {
-    _pushUndo();
-    state = state.copyWith(connections: [...state.connections, conn]);
-    await _save();
+    await _mutateAndPersist(() => state.copyWith(connections: [...state.connections, conn]));
   }
 
   Future<void> removeConnection(String connId) async {
-    _pushUndo();
-    state = state.copyWith(
+    await _mutateAndPersist(() => state.copyWith(
       connections: state.connections.where((c) => c.id != connId).toList(),
-    );
-    await _save();
+    ));
   }
 
   void updateConnection(CanvasConnection conn) {
-    final conns = state.connections
-        .map((c) => c.id == conn.id ? conn : c)
-        .toList();
-    state = state.copyWith(connections: conns);
-    _debouncedSave();
+    _mutateAndDebounce(() {
+      final conns = state.connections
+          .map((c) => c.id == conn.id ? conn : c)
+          .toList();
+      return state.copyWith(connections: conns);
+    });
   }
 
   void addWaypoint(String connId, Offset position, {int? insertIndex}) {
@@ -684,9 +673,7 @@ class CanvasNotifier extends Notifier<CanvasData> {
   }
 
   Future<void> clearCanvas() async {
-    _pushUndo();
-    state = CanvasData();
-    await _save();
+    await _mutateAndPersist(() => CanvasData());
   }
 
   void addTag(String cardId, String tag) {
@@ -978,22 +965,22 @@ class CanvasNotifier extends Notifier<CanvasData> {
 
   void autoLayout(AutoLayoutType type) {
     if (state.cards.isEmpty) return;
-    _pushUndo();
     final positions = _layoutService.computeLayout(
       state.cards,
       state.connections,
       type,
       snapToGrid: state.settings.snapToGrid,
     );
-    final newCards = state.cards.map((card) {
-      final pos = positions[card.id];
-      if (pos != null) {
-        return card.copyWith(x: pos.dx, y: pos.dy);
-      }
-      return card;
-    }).toList();
-    state = state.copyWith(cards: newCards);
-    _debouncedSave();
+    _mutateAndDebounce(() {
+      final newCards = state.cards.map((card) {
+        final pos = positions[card.id];
+        if (pos != null) {
+          return card.copyWith(x: pos.dx, y: pos.dy);
+        }
+        return card;
+      }).toList();
+      return state.copyWith(cards: newCards);
+    });
   }
 
   // === Export delegation ===
@@ -1146,15 +1133,11 @@ class CanvasNotifier extends Notifier<CanvasData> {
   void loadTemplate(String templateName) {
     final template = CanvasTemplatesService.builtInTemplates[templateName];
     if (template == null) return;
-    _pushUndo();
-    state = template;
-    _debouncedSave();
+    _mutateAndDebounce(() => template);
   }
 
   void loadFromData(CanvasData data) {
-    _pushUndo();
-    state = data;
-    _debouncedSave();
+    _mutateAndDebounce(() => data);
   }
 
   void setFontFamily(String cardId, String family) {

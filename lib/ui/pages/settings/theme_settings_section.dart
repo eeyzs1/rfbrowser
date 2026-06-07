@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/settings_service.dart';
+import '../../../core/color_extensions.dart';
 import '../../widgets/settings_section.dart';
 import '../../widgets/color_picker_dialog.dart';
 
@@ -250,10 +251,7 @@ class ThemeSettingsSection extends ConsumerWidget {
     );
   }
 
-  Color _contrastText(Color bg) {
-    final lum = bg.r * 0.299 + bg.g * 0.587 + bg.b * 0.114;
-    return lum > 128 ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
-  }
+  Color _contrastText(Color bg) => bg.contrastText;
 
   Widget _buildOpacitySliders(
     BuildContext context,

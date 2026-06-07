@@ -107,7 +107,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
             ),
             const Spacer(),
             TextButton.icon(
-              onPressed: () => _showAddProviderDialog(context, ref, l),
+              onPressed: () => _showProviderFormDialog(context: context, ref: ref, l: l),
               icon: const Icon(Icons.add, size: 16),
               label: Text(l.addProvider),
             ),
@@ -237,14 +237,14 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                 children: [
                   ...LocalServiceScanner.presets.map(
                     (preset) =>
-                        _buildPresetTileSheet(context, theme, l, preset, ctx),
+                        _buildPresetTile(context, theme, l, preset, sheetCtx: ctx, compact: true),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: _isScanning
                         ? null
                         : () async {
-                            await _scanForLocalServicesFromSheet(ctx, l);
+                            await _scanForLocalServices(context, l, sheetCtx: ctx);
                           },
                     icon: _isScanning
                         ? SizedBox(
@@ -263,129 +263,6 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPresetTileSheet(
-    BuildContext context,
-    ThemeData theme,
-    AppLocalizations l,
-    LocalServiceInfo preset,
-    BuildContext sheetCtx,
-  ) {
-    final isOnline = _presetOnlineStatus[preset.name];
-    final isAddingThis = _isAddingPreset;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: isAddingThis
-            ? null
-            : () async {
-                await _onPresetTap(preset, isOnline, sheetCtx: sheetCtx);
-              },
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: isOnline == true
-                  ? theme.colorScheme.primary.withValues(alpha: 0.4)
-                  : theme.colorScheme.outlineVariant,
-            ),
-            borderRadius: BorderRadius.circular(10),
-            color: isOnline == true
-                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.15)
-                : null,
-          ),
-          child: Row(
-            children: [
-              Stack(
-                children: [
-                  Icon(
-                    preset.icon,
-                    size: 22,
-                    color: isOnline == true
-                        ? theme.colorScheme.primary
-                        : theme.hintColor,
-                  ),
-                  if (isOnline != null)
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: isOnline
-                              ? Colors.green
-                              : theme.colorScheme.outlineVariant,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: theme.colorScheme.surface,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      preset.name,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      isOnline == true
-                          ? l.serviceRunning
-                          : isOnline == false
-                          ? l.serviceNotRunning
-                          : preset.description,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isOnline == true
-                            ? Colors.green.shade700
-                            : isOnline == false
-                            ? theme.hintColor
-                            : theme.hintColor,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (_isAddingPreset)
-                SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: theme.colorScheme.primary,
-                  ),
-                )
-              else
-                Icon(
-                  isOnline == true
-                      ? Icons.add_circle
-                      : isOnline == false
-                      ? Icons.warning_amber_rounded
-                      : Icons.add_circle_outline,
-                  size: 20,
-                  color: isOnline == true
-                      ? theme.colorScheme.primary
-                      : isOnline == false
-                      ? theme.colorScheme.error
-                      : theme.hintColor,
-                ),
-            ],
-          ),
         ),
       ),
     );
@@ -467,7 +344,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed: () => _showAddProviderDialog(context, ref, l),
+                    onPressed: () => _showProviderFormDialog(context: context, ref: ref, l: l),
                     icon: const Icon(Icons.cloud, size: 14),
                     label: Text(l.addCloudProvider),
                     style: OutlinedButton.styleFrom(
@@ -515,17 +392,32 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
     BuildContext context,
     ThemeData theme,
     AppLocalizations l,
-    LocalServiceInfo preset,
-  ) {
+    LocalServiceInfo preset, {
+    BuildContext? sheetCtx,
+    bool compact = false,
+  }) {
     final isOnline = _presetOnlineStatus[preset.name];
+    final isAddingThis = _isAddingPreset;
+    final iconSize = compact ? 22.0 : 18.0;
+    final spacing = compact ? 12.0 : 10.0;
+    final dotSize = compact ? 8.0 : 7.0;
+    final trailingSize = compact ? 20.0 : 18.0;
+    final spinnerSize = compact ? 18.0 : 16.0;
+    final hPadding = compact ? 14.0 : 12.0;
+    final vPadding = compact ? 12.0 : 10.0;
+    final bottomPadding = compact ? 8.0 : 6.0;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: EdgeInsets.only(bottom: bottomPadding),
       child: InkWell(
-        onTap: _isAddingPreset ? null : () => _onPresetTap(preset, isOnline),
+        onTap: isAddingThis
+            ? null
+            : () async {
+                await _onPresetTap(preset, isOnline, sheetCtx: sheetCtx);
+              },
         borderRadius: BorderRadius.circular(10),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
           decoration: BoxDecoration(
             border: Border.all(
               color: isOnline == true
@@ -543,7 +435,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                 children: [
                   Icon(
                     preset.icon,
-                    size: 18,
+                    size: iconSize,
                     color: isOnline == true
                         ? theme.colorScheme.primary
                         : theme.hintColor,
@@ -553,8 +445,8 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                       right: 0,
                       bottom: 0,
                       child: Container(
-                        width: 7,
-                        height: 7,
+                        width: dotSize,
+                        height: dotSize,
                         decoration: BoxDecoration(
                           color: isOnline
                               ? Colors.green
@@ -569,7 +461,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                     ),
                 ],
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: spacing),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,8 +490,8 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
               ),
               if (_isAddingPreset)
                 SizedBox(
-                  width: 16,
-                  height: 16,
+                  width: spinnerSize,
+                  height: spinnerSize,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     color: theme.colorScheme.primary,
@@ -612,7 +504,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                       : isOnline == false
                       ? Icons.warning_amber_rounded
                       : Icons.add_circle_outline,
-                  size: 18,
+                  size: trailingSize,
                   color: isOnline == true
                       ? theme.colorScheme.primary
                       : isOnline == false
@@ -716,8 +608,9 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
 
   Future<void> _scanForLocalServices(
     BuildContext context,
-    AppLocalizations l,
-  ) async {
+    AppLocalizations l, {
+    BuildContext? sheetCtx,
+  }) async {
     setState(() => _isScanning = true);
     final scanner = ref.read(localServiceScannerProvider);
     final messenger = ScaffoldMessenger.of(context);
@@ -741,37 +634,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
       return;
     }
 
-    _showDetectedServicesDialog(detected);
-  }
-
-  Future<void> _scanForLocalServicesFromSheet(
-    BuildContext sheetCtx,
-    AppLocalizations l,
-  ) async {
-    setState(() => _isScanning = true);
-    final scanner = ref.read(localServiceScannerProvider);
-    final messenger = ScaffoldMessenger.of(context);
-    final detected = await scanner.scan();
-
-    if (!mounted) return;
-    setState(() {
-      _isScanning = false;
-      _detectedServices = detected;
-    });
-
-    await _checkPresetStatus();
-
-    if (detected.isEmpty) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(l.noLocalServiceFound),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-      return;
-    }
-
-    if (sheetCtx.mounted) {
+    if (sheetCtx != null && sheetCtx.mounted) {
       Navigator.pop(sheetCtx);
     }
     _showDetectedServicesDialog(detected);
@@ -1218,7 +1081,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
   ) {
     switch (action) {
       case 'edit':
-        _showEditProviderDialog(context, ref, provider, l);
+        _showProviderFormDialog(context: context, ref: ref, l: l, provider: provider);
         break;
       case 'toggle':
         ref
@@ -1234,18 +1097,20 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
     }
   }
 
-  void _showAddProviderDialog(
-    BuildContext context,
-    WidgetRef ref,
-    AppLocalizations l,
-  ) {
-    final nameController = TextEditingController();
+  void _showProviderFormDialog({
+    required BuildContext context,
+    required WidgetRef ref,
+    required AppLocalizations l,
+    AIProvider? provider,
+  }) {
+    final isEditing = provider != null;
+    final nameController = TextEditingController(text: provider?.name ?? '');
     final baseUrlController = TextEditingController(
-      text: ApiProtocol.openaiCompatible.defaultBaseUrl,
+      text: provider?.baseUrl ?? ApiProtocol.openaiCompatible.defaultBaseUrl,
     );
     final apiKeyController = TextEditingController();
-    ApiProtocol selectedProtocol = ApiProtocol.openaiCompatible;
-    bool requiresApiKey = true;
+    ApiProtocol selectedProtocol = provider?.protocol ?? ApiProtocol.openaiCompatible;
+    bool requiresApiKey = provider?.requiresApiKey ?? true;
 
     showDialog(
       context: context,
@@ -1267,7 +1132,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
           }
 
           return AlertDialog(
-            title: Text(l.addProvider),
+            title: Text(isEditing ? l.editProvider : l.addProvider),
             content: SingleChildScrollView(
               child: SizedBox(
                 width: 400,
@@ -1278,7 +1143,7 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                       controller: nameController,
                       decoration: InputDecoration(
                         labelText: l.providerName,
-                        hintText: l.providerNameHint,
+                        hintText: isEditing ? null : l.providerNameHint,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1294,14 +1159,18 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                             ),
                           )
                           .toList(),
-                      onChanged: onProtocolChanged,
+                      onChanged: isEditing
+                          ? (p) {
+                              if (p != null) setState(() => selectedProtocol = p);
+                            }
+                          : onProtocolChanged,
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: baseUrlController,
                       decoration: InputDecoration(
                         labelText: l.baseUrl,
-                        hintText: 'https://api.example.com',
+                        hintText: isEditing ? null : 'https://api.example.com',
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1319,118 +1188,14 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                         controller: apiKeyController,
                         obscureText: true,
                         decoration: InputDecoration(
-                          labelText: l.apiKey,
-                          hintText:
-                              selectedProtocol == ApiProtocol.openaiCompatible
-                              ? 'sk-...'
-                              : '',
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(l.cancel),
-              ),
-              FilledButton(
-                onPressed: () {
-                  final name = nameController.text.trim();
-                  if (name.isEmpty) return;
-                  final provider = AIProvider(
-                    id: 'provider_${DateTime.now().millisecondsSinceEpoch}',
-                    name: name,
-                    protocol: selectedProtocol,
-                    baseUrl: baseUrlController.text.trim().replaceAll(
-                      RegExp(r'/$'),
-                      '',
-                    ),
-                    apiKey: requiresApiKey
-                        ? apiKeyController.text.trim()
-                        : null,
-                    requiresApiKey: requiresApiKey,
-                  );
-                  ref.read(aiConfigProvider.notifier).addProvider(provider);
-                  Navigator.pop(ctx);
-                },
-                child: Text(l.save),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  void _showEditProviderDialog(
-    BuildContext context,
-    WidgetRef ref,
-    AIProvider provider,
-    AppLocalizations l,
-  ) {
-    final nameController = TextEditingController(text: provider.name);
-    final baseUrlController = TextEditingController(text: provider.baseUrl);
-    final apiKeyController = TextEditingController();
-    ApiProtocol selectedProtocol = provider.protocol;
-    bool requiresApiKey = provider.requiresApiKey;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) {
-          return AlertDialog(
-            title: Text(l.editProvider),
-            content: SingleChildScrollView(
-              child: SizedBox(
-                width: 400,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: InputDecoration(labelText: l.providerName),
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<ApiProtocol>(
-                      key: ValueKey(selectedProtocol),
-                      initialValue: selectedProtocol,
-                      decoration: InputDecoration(labelText: l.protocol),
-                      items: ApiProtocol.values
-                          .map(
-                            (p) => DropdownMenuItem(
-                              value: p,
-                              child: Text(p.label),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (p) {
-                        if (p != null) setState(() => selectedProtocol = p);
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: baseUrlController,
-                      decoration: InputDecoration(labelText: l.baseUrl),
-                    ),
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l.requireApiKey),
-                      value: requiresApiKey,
-                      onChanged: (val) {
-                        setState(() => requiresApiKey = val);
-                      },
-                    ),
-                    if (requiresApiKey) ...[
-                      const SizedBox(height: 4),
-                      TextField(
-                        controller: apiKeyController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: '${l.apiKey} (${l.leaveEmptyToKeep})',
+                          labelText: isEditing
+                              ? '${l.apiKey} (${l.leaveEmptyToKeep})'
+                              : l.apiKey,
+                          hintText: isEditing
+                              ? null
+                              : selectedProtocol == ApiProtocol.openaiCompatible
+                                  ? 'sk-...'
+                                  : '',
                         ),
                       ),
                     ],
@@ -1445,23 +1210,33 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
               ),
               FilledButton(
                 onPressed: () async {
-                  final updated = provider.copyWith(
-                    name: nameController.text.trim(),
-                    protocol: selectedProtocol,
-                    baseUrl: baseUrlController.text.trim().replaceAll(
-                      RegExp(r'/$'),
-                      '',
-                    ),
-                    apiKey:
-                        requiresApiKey &&
-                            apiKeyController.text.trim().isNotEmpty
-                        ? apiKeyController.text.trim()
-                        : null,
-                    requiresApiKey: requiresApiKey,
-                  );
-                  await ref
-                      .read(aiConfigProvider.notifier)
-                      .updateProvider(updated);
+                  final name = nameController.text.trim();
+                  if (name.isEmpty) return;
+                  final baseUrl = baseUrlController.text.trim().replaceAll(RegExp(r'/$'), '');
+                  final apiKey = requiresApiKey && apiKeyController.text.trim().isNotEmpty
+                      ? apiKeyController.text.trim()
+                      : null;
+
+                  if (isEditing) {
+                    final updated = provider.copyWith(
+                      name: name,
+                      protocol: selectedProtocol,
+                      baseUrl: baseUrl,
+                      apiKey: apiKey,
+                      requiresApiKey: requiresApiKey,
+                    );
+                    await ref.read(aiConfigProvider.notifier).updateProvider(updated);
+                  } else {
+                    final newProvider = AIProvider(
+                      id: 'provider_${DateTime.now().millisecondsSinceEpoch}',
+                      name: name,
+                      protocol: selectedProtocol,
+                      baseUrl: baseUrl,
+                      apiKey: apiKey,
+                      requiresApiKey: requiresApiKey,
+                    );
+                    ref.read(aiConfigProvider.notifier).addProvider(newProvider);
+                  }
                   if (ctx.mounted) Navigator.pop(ctx);
                 },
                 child: Text(l.save),

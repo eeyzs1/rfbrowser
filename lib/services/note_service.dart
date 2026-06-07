@@ -11,10 +11,13 @@ import '../data/stores/index_store.dart';
 import '../data/stores/vault_store.dart';
 import '../plugins/plugin_registry.dart';
 import '../plugins/host/plugin_host.dart';
+import '../core/active_note_mixin.dart';
 import 'browser_service.dart';
 
-class NoteState {
+class NoteState with ActiveNoteMixin {
+  @override
   final List<Note> notes;
+  @override
   final String? activeNoteId;
 
   const NoteState({this.notes = const [], this.activeNoteId});
@@ -24,15 +27,6 @@ class NoteState {
       notes: notes ?? this.notes,
       activeNoteId: activeNoteId ?? this.activeNoteId,
     );
-  }
-
-  Note? get activeNote {
-    if (activeNoteId == null) return null;
-    try {
-      return notes.firstWhere((n) => n.id == activeNoteId);
-    } catch (_) {
-      return null;
-    }
   }
 }
 
@@ -305,6 +299,14 @@ class NoteNotifier extends Notifier<NoteState> {
     return note;
   }
 
+  Future<Directory> _ensureAttachmentsDir(String vaultPath) async {
+    final dir = Directory(p.join(vaultPath, 'attachments'));
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return dir;
+  }
+
   Future<String?> _saveRawHtml(
     String vaultPath,
     String htmlContent,
@@ -313,10 +315,7 @@ class NoteNotifier extends Notifier<NoteState> {
     if (htmlContent.isEmpty) return null;
     try {
       final dateStr = DateTime.now().toIso8601String().substring(0, 10);
-      final attachDir = Directory(p.join(vaultPath, 'attachments'));
-      if (!await attachDir.exists()) {
-        await attachDir.create(recursive: true);
-      }
+      final attachDir = await _ensureAttachmentsDir(vaultPath);
       final htmlFileName = '$fileName-$dateStr.html';
       final htmlFile = File(p.join(attachDir.path, htmlFileName));
       await htmlFile.writeAsString(htmlContent);
@@ -334,10 +333,7 @@ class NoteNotifier extends Notifier<NoteState> {
   ) async {
     try {
       final dateStr = DateTime.now().toIso8601String().substring(0, 10);
-      final attachDir = Directory(p.join(vaultPath, 'attachments'));
-      if (!await attachDir.exists()) {
-        await attachDir.create(recursive: true);
-      }
+      final attachDir = await _ensureAttachmentsDir(vaultPath);
       final imgFileName = '$fileName-$dateStr.jpg';
       final imgFile = File(p.join(attachDir.path, imgFileName));
       await imgFile.writeAsBytes(screenshotData);

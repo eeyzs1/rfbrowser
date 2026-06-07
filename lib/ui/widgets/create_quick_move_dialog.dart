@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/quick_move_service.dart';
+import '../../core/color_extensions.dart';
 
 const _iconOptions = [
   Icons.translate,
@@ -175,13 +176,7 @@ void showCreateQuickMoveDialog(
                               ? Icon(
                                   Icons.check,
                                   size: 14,
-                                  color:
-                                      (Color(colorValue).r * 0.299 +
-                                              Color(colorValue).g * 0.587 +
-                                              Color(colorValue).b * 0.114) >
-                                          128
-                                      ? Colors.black
-                                      : Colors.white,
+                                  color: Color(colorValue).contrastText,
                                 )
                               : null,
                         ),

@@ -10,6 +10,11 @@ class AgentPersistence {
 
   AgentPersistence({this.basePath});
 
+  Future<File> _getFile() async {
+    final path = await _getFilePath();
+    return File(path);
+  }
+
   Future<String> _getFilePath() async {
     if (basePath != null) {
       return '$basePath${Platform.pathSeparator}$_fileName';
@@ -20,8 +25,7 @@ class AgentPersistence {
 
   Future<List<AgentTask>> loadTasks() async {
     try {
-      final path = await _getFilePath();
-      final file = File(path);
+      final file = await _getFile();
       if (!await file.exists()) return [];
       final content = await file.readAsString();
       final json = jsonDecode(content) as List<dynamic>;
@@ -44,8 +48,7 @@ class AgentPersistence {
 
   Future<void> saveTasks(List<AgentTask> tasks) async {
     try {
-      final path = await _getFilePath();
-      final file = File(path);
+      final file = await _getFile();
       await file.parent.create(recursive: true);
       final taskMaps = tasks.map((t) => t.toJson()).toList();
       await file.writeAsString(jsonEncode(taskMaps));
@@ -56,8 +59,7 @@ class AgentPersistence {
 
   Future<void> clearTasks() async {
     try {
-      final path = await _getFilePath();
-      final file = File(path);
+      final file = await _getFile();
       if (await file.exists()) {
         await file.delete();
       }

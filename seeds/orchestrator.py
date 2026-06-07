@@ -568,7 +568,8 @@ def show_status() -> None:
     print(f"Task: {task.get('name', 'unknown')}")
     print(f"Goal: {task.get('goal', 'N/A')}")
     print(f"Status: {state.get('status', 'unknown')}")
-    print(f"\nAcceptance Criteria: {len(completed)}/{len(criteria)} satisfied")
+    satisfied = sum(1 for c in criteria if c in completed)
+    print(f"\nAcceptance Criteria: {satisfied}/{len(criteria)} satisfied")
     for c in criteria:
         status = "✅" if c in completed else "❌"
         print(f"  {status} {c}")

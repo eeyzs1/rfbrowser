@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/agent_task.dart';
 import '../data/models/note.dart';
@@ -11,7 +10,7 @@ import 'agent/agent_tool.dart';
 import 'agent/agent_tool_registry.dart';
 import 'agent/agent_persistence.dart';
 import 'agent/builtin_tools.dart';
-import 'agent/plan_generator.dart';
+import 'agent/task_execution_strategy.dart';
 
 class AgentState {
   final List<AgentTask> tasks;
@@ -35,8 +34,6 @@ class AgentState {
 }
 
 class AgentNotifier extends Notifier<AgentState> {
-  static const int maxSteps = 50;
-  static const Duration maxDuration = Duration(minutes: 30);
   static const int defaultReactIterations = 20;
   final AgentPersistence _persistence = AgentPersistence();
 
@@ -47,6 +44,10 @@ class AgentNotifier extends Notifier<AgentState> {
     _loadPersistedTasks();
     return agentState;
   }
+
+  // ---------------------------------------------------------------------------
+  // Persistence
+  // ---------------------------------------------------------------------------
 
   Future<void> _loadPersistedTasks() async {
     final tasks = await _persistence.loadTasks();
@@ -67,6 +68,10 @@ class AgentNotifier extends Notifier<AgentState> {
   Future<void> _persistTasks() async {
     await _persistence.saveTasks(state.tasks);
   }
+
+  // ---------------------------------------------------------------------------
+  // Tool registration
+  // ---------------------------------------------------------------------------
 
   void _registerBuiltinTools(AgentToolRegistry registry) {
     registry.register(
@@ -228,6 +233,10 @@ class AgentNotifier extends Notifier<AgentState> {
 
   AgentToolRegistry get toolRegistry => state.toolRegistry;
 
+  // ---------------------------------------------------------------------------
+  // Task lookup & state helpers
+  // ---------------------------------------------------------------------------
+
   AgentTask? getTask(String id) {
     return state.tasks.where((t) => t.id == id).firstOrNull;
   }
@@ -239,6 +248,10 @@ class AgentNotifier extends Notifier<AgentState> {
     _persistTasks();
   }
 
+  // ---------------------------------------------------------------------------
+  // Task execution — delegates to the appropriate strategy
+  // ---------------------------------------------------------------------------
+
   Future<AgentTask> executeTask(AgentTask task) async {
     if (state.tasks.any((t) => t.id == task.id)) {
       return task;
@@ -248,428 +261,23 @@ class AgentNotifier extends Notifier<AgentState> {
     state = state.copyWith(tasks: [...state.tasks, current]);
     _persistTasks();
 
-    switch (task.mode) {
-      case TaskMode.manual:
-        return await _executeManualTask(current);
-      case TaskMode.aiPlanned:
-        return await _executeAiPlannedTask(current);
-      case TaskMode.reactLoop:
-        return await _executeReactTask(current);
-    }
-  }
-
-  Future<AgentTask> _executeManualTask(AgentTask current) async {
-    final stopwatch = Stopwatch()..start();
-    final stepResults = <String>[];
-
-    for (var i = 0; i < current.steps.length; i++) {
-      if (current.status == TaskStatus.paused) break;
-      if (current.status == TaskStatus.failed) break;
-
-      if (i >= maxSteps) {
-        current = current.copyWith(
-          status: TaskStatus.failed,
-          result: 'step_limit_exceeded',
-        );
-        _updateTask(current);
-        break;
-      }
-
-      if (stopwatch.elapsed > maxDuration) {
-        current = current.copyWith(
-          status: TaskStatus.failed,
-          result: 'time_limit_exceeded',
-        );
-        _updateTask(current);
-        break;
-      }
-
-      final step = current.steps[i];
-
-      if (step.condition != null &&
-          !_evaluateCondition(step.condition!, stepResults)) {
-        final skippedSteps = List<AgentStep>.from(current.steps);
-        skippedSteps[i] = skippedSteps[i].copyWith(
-          status: TaskStatus.completed,
-          result: 'Skipped: condition not met',
-        );
-        current = current.copyWith(steps: skippedSteps);
-        _updateTask(current);
-        stepResults.add('Skipped');
-        continue;
-      }
-
-      final updatedSteps = List<AgentStep>.from(current.steps);
-      updatedSteps[i] = updatedSteps[i].copyWith(status: TaskStatus.running);
-      current = current.copyWith(steps: updatedSteps);
-      _updateTask(current);
-
-      final result = await _executeStepWithRetry(current.steps[i], stepResults);
-
-      if (result.success) {
-        stepResults.add(result.output);
-        final completedSteps = List<AgentStep>.from(current.steps);
-        completedSteps[i] = completedSteps[i].copyWith(
-          status: TaskStatus.completed,
-          result: result.output,
-          completedAt: DateTime.now(),
-        );
-        current = current.copyWith(steps: completedSteps);
-        _updateTask(current);
-      } else {
-        final onFailure = current.steps[i].onFailure ?? 'abort';
-        if (onFailure == 'skip') {
-          stepResults.add('Error (skipped): ${result.error}');
-          final skippedSteps = List<AgentStep>.from(current.steps);
-          skippedSteps[i] = skippedSteps[i].copyWith(
-            status: TaskStatus.completed,
-            result: 'Error (skipped): ${result.error}',
-            completedAt: DateTime.now(),
-          );
-          current = current.copyWith(steps: skippedSteps);
-          _updateTask(current);
-        } else {
-          final failedSteps = List<AgentStep>.from(current.steps);
-          failedSteps[i] = failedSteps[i].copyWith(
-            status: TaskStatus.failed,
-            result: result.error,
-          );
-          current = current.copyWith(
-            steps: failedSteps,
-            status: TaskStatus.failed,
-            result: result.error,
-          );
-          _updateTask(current);
-          break;
-        }
-      }
-    }
-
-    if (current.status == TaskStatus.running) {
-      current = current.copyWith(
-        status: TaskStatus.completed,
-        completed: DateTime.now(),
-        result: stepResults.join('\n\n'),
-      );
-      _updateTask(current);
-    }
-
-    return current;
-  }
-
-  Future<AgentTask> _executeAiPlannedTask(AgentTask current) async {
-    final planGenerator = PlanGenerator(state.toolRegistry);
-    final aiNotifier = ref.read(aiProvider.notifier);
-
-    final systemPrompt = planGenerator.buildSystemPrompt();
-    final userMessage = current.description;
-
-    await aiNotifier.sendMessage(userMessage, systemPrompt: systemPrompt);
-
-    final messages = ref.read(aiProvider).messages;
-    final lastResponse = messages.lastWhere(
-      (m) => m.role == 'assistant' && !m.isStreaming,
-      orElse: () => ChatMessage(role: 'assistant', content: ''),
+    final context = ExecutionContext(
+      toolRegistry: state.toolRegistry,
+      onUpdateTask: _updateTask,
+      ref: ref,
     );
 
-    final planSteps = planGenerator.parsePlan(lastResponse.content);
-
-    if (planSteps.isEmpty) {
-      current = current.copyWith(
-        status: TaskStatus.failed,
-        result: 'AI failed to generate a valid plan',
-      );
-      _updateTask(current);
-      return current;
-    }
-
-    final steps = planSteps
-        .map(
-          (ps) => AgentStep(
-            description: ps.description ?? 'Use ${ps.toolName}',
-            toolName: ps.toolName,
-            args: ps.args,
-            condition: ps.condition,
-            retryCount: ps.retryCount,
-            onFailure: ps.onFailure,
-          ),
-        )
-        .toList();
-
-    current = current.copyWith(steps: steps);
-    _updateTask(current);
-
-    return await _executeManualTask(current);
-  }
-
-  Future<AgentTask> _executeReactTask(AgentTask current) async {
-    final planGenerator = PlanGenerator(state.toolRegistry);
-    final aiNotifier = ref.read(aiProvider.notifier);
-    final systemPrompt = planGenerator.buildReactSystemPrompt();
-
-    final stopwatch = Stopwatch()..start();
-    final stepResults = <String>[];
-    final dynamicSteps = <AgentStep>[];
-    var iteration = 0;
-    final maxIter = current.maxIterations.clamp(1, maxSteps);
-
-    current = current.copyWith(status: TaskStatus.running);
-    _updateTask(current);
-
-    while (iteration < maxIter) {
-      if (current.status == TaskStatus.paused) break;
-      if (current.status == TaskStatus.failed) break;
-
-      if (stopwatch.elapsed > maxDuration) {
-        current = current.copyWith(
-          status: TaskStatus.failed,
-          result: 'time_limit_exceeded',
-        );
-        _updateTask(current);
-        break;
-      }
-
-      final observation = planGenerator.buildReactObservation(
-        current.description,
-        stepResults,
-        iteration,
-        maxIter,
-      );
-
-      await aiNotifier.sendMessage(observation, systemPrompt: systemPrompt);
-
-      final messages = ref.read(aiProvider).messages;
-      final lastResponse = messages.lastWhere(
-        (m) => m.role == 'assistant' && !m.isStreaming,
-        orElse: () => ChatMessage(role: 'assistant', content: ''),
-      );
-
-      final reactAction = planGenerator.parseReactResponse(
-        lastResponse.content,
-      );
-      if (reactAction == null) {
-        iteration++;
-        stepResults.add('Failed to parse AI response, retrying...');
-        continue;
-      }
-
-      final isDone = reactAction['done'] == true;
-      final toolName = reactAction['tool'] as String? ?? '';
-      final args = (reactAction['args'] as Map<String, dynamic>?) ?? {};
-      final thought = reactAction['thought'] as String? ?? '';
-
-      if (isDone || toolName == 'final_answer') {
-        final answer = args['answer'] as String? ?? stepResults.join('\n');
-        dynamicSteps.add(
-          AgentStep(
-            description: thought.isNotEmpty ? thought : 'Final answer',
-            toolName: 'final_answer',
-            args: args,
-            status: TaskStatus.completed,
-            result: answer,
-            completedAt: DateTime.now(),
-          ),
-        );
-        current = current.copyWith(
-          steps: dynamicSteps,
-          status: TaskStatus.completed,
-          completed: DateTime.now(),
-          result: answer,
-        );
-        _updateTask(current);
-        return current;
-      }
-
-      if (!state.toolRegistry.hasTool(toolName)) {
-        stepResults.add(
-          'Unknown tool: $toolName. Available: ${state.toolRegistry.tools.keys.join(", ")}',
-        );
-        iteration++;
-        continue;
-      }
-
-      final step = AgentStep(
-        description: thought.isNotEmpty ? thought : 'Use $toolName',
-        toolName: toolName,
-        args: args,
-      );
-
-      final updatedSteps = List<AgentStep>.from(dynamicSteps)
-        ..add(step.copyWith(status: TaskStatus.running));
-      current = current.copyWith(steps: updatedSteps);
-      _updateTask(current);
-
-      final result = await _executeStepWithRetry(step, stepResults);
-
-      if (result.success) {
-        stepResults.add(result.output);
-        dynamicSteps.add(
-          step.copyWith(
-            status: TaskStatus.completed,
-            result: result.output,
-            completedAt: DateTime.now(),
-          ),
-        );
-      } else {
-        stepResults.add('Error: ${result.error}');
-        dynamicSteps.add(
-          step.copyWith(status: TaskStatus.failed, result: result.error),
-        );
-      }
-
-      current = current.copyWith(steps: dynamicSteps);
-      _updateTask(current);
-      iteration++;
-    }
-
-    if (current.status == TaskStatus.running) {
-      current = current.copyWith(
-        status: TaskStatus.completed,
-        completed: DateTime.now(),
-        result: stepResults.join('\n\n'),
-      );
-      _updateTask(current);
-    }
-
-    return current;
-  }
-
-  Future<ToolResult> _executeStepWithRetry(
-    AgentStep step,
-    List<String> previousResults,
-  ) async {
-    final toolName = step.toolName;
-    if (toolName == null || toolName.isEmpty) {
-      return _executeLegacyStep(step, previousResults);
-    }
-
-    final planGenerator = PlanGenerator(state.toolRegistry);
-    final resolvedJson = planGenerator.resolveStepReferences(
-      step.args,
-      previousResults,
+    final strategy = ExecutionStrategyFactory.createStrategy(
+      current.mode,
+      context,
     );
-    final resolvedArgs = planGenerator.parseResolvedArgs(resolvedJson);
 
-    final tool = state.toolRegistry.getTool(toolName);
-    if (tool == null) {
-      return ToolResult.failure('Unknown tool: $toolName');
-    }
-
-    var lastResult = ToolResult.failure('not executed');
-    for (var attempt = 0; attempt <= step.retryCount; attempt++) {
-      try {
-        final result = await state.toolRegistry.execute(toolName, resolvedArgs);
-        if (result.success) return result;
-        lastResult = result;
-        if (attempt < step.retryCount) {
-          await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
-        }
-      } catch (e) {
-        lastResult = ToolResult.failure(e.toString());
-        if (attempt < step.retryCount) {
-          await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
-        }
-      }
-    }
-
-    return lastResult;
+    return await strategy.execute(current);
   }
 
-  Future<ToolResult> _executeLegacyStep(
-    AgentStep step,
-    List<String> previousResults,
-  ) async {
-    final desc = step.description;
-
-    if (desc.startsWith('Navigate to:')) {
-      final url = desc.replaceFirst('Navigate to:', '').trim();
-      return state.toolRegistry.execute('navigate', {'url': url});
-    }
-
-    if (desc.startsWith('Extract text from:')) {
-      final url = desc.replaceFirst('Extract text from:', '').trim();
-      return state.toolRegistry.execute('extract_text', {'url': url});
-    }
-
-    if (desc.startsWith('Create note:')) {
-      final title = desc.replaceFirst('Create note:', '').trim();
-      final content = previousResults.isNotEmpty
-          ? '## Context\n\n${previousResults.join('\n\n')}'
-          : '';
-      return state.toolRegistry.execute('create_note', {
-        'title': title,
-        'content': content,
-      });
-    }
-
-    if (desc.startsWith('Summarize extracted content')) {
-      if (previousResults.isEmpty) {
-        return ToolResult.failure('No content to summarize');
-      }
-      return state.toolRegistry.execute('ai_reason', {
-        'prompt':
-            'Summarize the following content:\n\n${previousResults.join('\n\n')}',
-        'system_prompt':
-            'You are a helpful assistant that creates concise summaries.',
-      });
-    }
-
-    if (desc.startsWith('Extract data using schema:')) {
-      final schema = desc.replaceFirst('Extract data using schema:', '').trim();
-      if (previousResults.isEmpty) {
-        return ToolResult.failure('No content to extract data from');
-      }
-      return state.toolRegistry.execute('ai_reason', {
-        'prompt':
-            'Extract data from the following content using this schema: $schema\n\nContent:\n${previousResults.last}',
-        'system_prompt':
-            'You are a data extraction assistant. Output structured data matching the given schema.',
-      });
-    }
-
-    if (desc.contains('Searching') ||
-        desc.contains('Analyzing') ||
-        desc.contains('Suggesting') ||
-        desc.contains('Creating organization')) {
-      return state.toolRegistry.execute('ai_reason', {
-        'prompt': desc,
-        'system_prompt':
-            'You are a knowledge management assistant. Help with the described task.',
-      });
-    }
-
-    return ToolResult.success('Step completed: $desc');
-  }
-
-  bool _evaluateCondition(String condition, List<String> previousResults) {
-    try {
-      if (condition.startsWith('step_')) {
-        final parts = condition.split('.');
-        if (parts.length >= 2) {
-          final indexStr = parts[0].replaceFirst('step_', '');
-          final index = int.tryParse(indexStr);
-          if (index != null && index < previousResults.length) {
-            final result = previousResults[index];
-            final check = condition.substring(parts[0].length + 1);
-            if (check.startsWith('contains:')) {
-              return result.contains(check.replaceFirst('contains:', ''));
-            }
-            if (check.startsWith('notEmpty')) {
-              return result.isNotEmpty;
-            }
-            if (check.startsWith('success')) {
-              return !result.startsWith('Error') &&
-                  !result.startsWith('Failed');
-            }
-          }
-        }
-      }
-      return true;
-    } catch (e) {
-      debugPrint('Condition evaluation error: $e');
-      return true;
-    }
-  }
+  // ---------------------------------------------------------------------------
+  // Task lifecycle controls
+  // ---------------------------------------------------------------------------
 
   void pauseTask(String id) {
     final task = getTask(id);
@@ -696,6 +304,10 @@ class AgentNotifier extends Notifier<AgentState> {
     );
     _persistTasks();
   }
+
+  // ---------------------------------------------------------------------------
+  // Convenience task builders
+  // ---------------------------------------------------------------------------
 
   Future<AgentTask> research(String topic, {int depth = 3}) async {
     final task = AgentTask(

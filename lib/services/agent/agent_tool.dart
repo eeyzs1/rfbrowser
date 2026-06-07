@@ -59,6 +59,26 @@ abstract class AgentTool {
     'source': source,
   };
 
+  /// Extract a required string argument from [args], returning the value
+  /// or null if the key is missing or the value is empty.
+  String? getStringArg(Map<String, dynamic> args, String key) {
+    final value = args[key];
+    if (value is! String || value.isEmpty) return null;
+    return value;
+  }
+
+  /// Wrap execution in try/catch, returning a failure ToolResult on error.
+  /// The error message includes the tool name for easier debugging.
+  Future<ToolResult> wrapExecution(
+    Future<ToolResult> Function() fn,
+  ) async {
+    try {
+      return await fn();
+    } catch (e) {
+      return ToolResult.failure('$name failed: $e');
+    }
+  }
+
   String toPromptDescription() {
     final props = parametersSchema['properties'];
     final params = props != null

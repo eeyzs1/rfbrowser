@@ -8,6 +8,7 @@ import '../data/models/unlinked_mention.dart';
 import '../data/stores/index_store.dart';
 import '../data/stores/vault_store.dart';
 import '../core/graph/filter_engine.dart';
+import '../core/active_note_mixin.dart';
 import 'note_service.dart';
 import 'link_service.dart';
 import 'search_service.dart';
@@ -19,8 +20,10 @@ export 'search_service.dart';
 
 enum NoteFilter { all, hasLinks, hasAttachments, hasTags }
 
-class KnowledgeState {
+class KnowledgeState with ActiveNoteMixin {
+  @override
   final List<Note> notes;
+  @override
   final String? activeNoteId;
   final List<Link> links;
   final Map<String, List<Link>> backlinksCache;
@@ -60,15 +63,6 @@ class KnowledgeState {
       selectedTags: selectedTags ?? this.selectedTags,
       noteFilter: noteFilter ?? this.noteFilter,
     );
-  }
-
-  Note? get activeNote {
-    if (activeNoteId == null) return null;
-    try {
-      return notes.firstWhere((n) => n.id == activeNoteId);
-    } catch (_) {
-      return null;
-    }
   }
 
   List<Link> get outlinks {
