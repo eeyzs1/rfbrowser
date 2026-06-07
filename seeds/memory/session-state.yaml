@@ -51,12 +51,12 @@ evolution_counts:
   innovations_proposed: 6
   mutations_applied: 36
 metrics:
-  completed: 109
+  completed: 110
   constraint_violations: 0
   lint_issues: 0
   satisfaction_rate: 1.0
-  test_count: 97
-  total_criteria: 109
+  test_count: 229
+  total_criteria: 110
 next_phase: 'v1.0 Release: macOS build + E2E tests + docs + version bump'
 progress:
   completed_criteria:
@@ -87,8 +87,10 @@ progress:
   - '[architecture] 3-scene architecture (capture/think/connect), every component
     has data flow path'
   - '[ci_cd] Analyze + constraints + audit + tests + 4-platform build + release'
-  - '[testing] 97 tests pass, HNSW benchmark 4/4, WebView security 13/13, Graph+Canvas
-    15/15'
+  - '[testing] 229 integration tests pass (20 files, 220 passed + 9 skipped), covering all core
+    features: AI, agent, browser, canvas, context assembly, graph, hybrid search,
+    knowledge, link, local provider, note lifecycle, plugin, quick move, settings,
+    shortcut, vault, webhook'
   - '[harness] Evolution cycles x4, 48/48 genome constraints verified, execution layer
     functional, paths adapted to RFBrowser'
   - flutter analyze passes with 0 issues
@@ -169,8 +171,8 @@ progress:
   pending:
   - 'v1.0 Release: macOS build job + E2E user journey tests + auto-generated docs
     + version bump'
-  total_completed: 108
-status: in_progress
+  total_completed: 109
+status: solid
 task: RFBrowser — AI-Powered Knowledge Browser
-updated_at: '2026-06-07T17:00:00.000000'
-version: 12
+updated_at: '2026-06-07T18:00:00.000000'
+version: 13

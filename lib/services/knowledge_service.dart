@@ -332,6 +332,8 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
 
   void toggleTag(String tag) {
     _searchSvc.toggleTag(tag);
+    final searchState = ref.read(searchServiceProvider);
+    state = state.copyWith(selectedTags: searchState.selectedTags);
   }
 
   void clearTags() {

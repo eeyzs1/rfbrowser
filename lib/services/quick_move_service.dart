@@ -59,6 +59,11 @@ class QuickMoveNotifier extends Notifier<QuickMoveState> {
   }
 
   Future<void> deleteMove(String id) async {
+    final move = state.moves.firstWhere(
+      (m) => m.id == id,
+      orElse: () => throw StateError('Move not found: $id'),
+    );
+    if (move.type == QuickMoveType.preset) return;
     final updatedMoves = state.moves.where((m) => m.id != id).toList();
     state = state.copyWith(moves: updatedMoves);
     await _store.save(state);

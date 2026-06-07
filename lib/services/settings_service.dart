@@ -511,7 +511,11 @@ class AIConfigNotifier extends Notifier<AIConfigState> with SharedPrefsAware {
     final models = state.models
         .where((m) => m.providerId != providerId)
         .toList();
-    await _secureStorage.delete(key: 'ai_key_$providerId');
+    try {
+      await _secureStorage.delete(key: 'ai_key_$providerId');
+    } catch (_) {
+      // Secure storage may not be available (e.g., in tests)
+    }
     final clearActive = state.activeConfig?.providerId == providerId;
     state = state.copyWith(
       providers: providers,
