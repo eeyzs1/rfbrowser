@@ -1,0 +1,59 @@
+# RFBrowser — Meta-Harness Project Configuration
+# Generated from task.yaml (legacy migration)
+
+project:
+  name: "RFBrowser"
+  description: "AI-Powered Knowledge Browser — Flutter desktop app"
+  schema_version: "2.0.0"
+
+repos:
+  - name: rfbrowser
+    url: git@github.com:eeyzs1/rfbrowser.git
+    language: dart
+    branch: main
+
+meta_harness_version: "2.0.0"
+
+# === 运行模式 ===
+run_mode: "full"  # fast | full | deep
+
+# === 技能-Phase 映射 ===
+phase_skills:
+  plan:
+    - brainstorming
+    - writing-plans
+  implement:
+    - tdd
+    - subagent-driven-dev
+    - executing-plans
+  test:
+    - code-review
+    - verification
+    - systematic-debugging
+  post-audit:
+    - finishing-a-development-branch
+
+cross_phase_skills:
+  - dispatching-parallel-agents
+
+# === 适配器 ===
+adapters:
+  ci:
+    type: "github-actions"
+  executor:
+    type: "sub-agent"
+  work_item:
+    type: "file"
+    path: ".meta-harness/work-items.json"
+
+# === 分支策略 ===
+branch:
+  prefix: "meta-harness/"
+  merge_strategy: "incremental"
+
+# === 证据 ===
+evidence:
+  required_artifacts:
+    - "flutter analyze --no-fatal-infos"
+    - "flutter test"
+  quality_gate: "verification/quality-gate.py"

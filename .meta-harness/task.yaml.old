@@ -1,0 +1,40 @@
+version: 2
+name: "RFBrowser — AI-Powered Knowledge Browser"
+domain: "desktop_app"
+real_need: "Build a self-evolving Flutter desktop application that integrates web browsing, markdown note editing, knowledge graph, AI chat, and infinite canvas — governed by evidence-driven evolution"
+goal: "Produce a high-quality Flutter desktop app where every component follows AGENTS.md rules, every mistake becomes a constraint, and the harness itself evolves with the project"
+scale: "personal"
+quality_attributes:
+  - "Code quality: 0 lint issues, 0 empty catch blocks"
+  - "Performance: no unnecessary repaints, cached SharedPreferences"
+  - "Correctness: all acceptance criteria provably satisfied"
+hard_constraints:
+  - "flutter analyze must pass with 0 issues"
+  - "All catch blocks must log errors"
+  - "SharedPreferences must be cached (P-3)"
+  - "shouldRepaint must compare actual data (P-2)"
+  - "Destructive actions require confirmation"
+  - "API keys must use flutter_secure_storage"
+soft_constraints:
+  - "Prefer debugPrint for Flutter-aware code, print for pure Dart"
+  - "Follow Riverpod Notifier + State + Provider pattern"
+  - "Test files mirror lib/ structure"
+unknowns:
+  - "Which features will evolve next via innovation engine"
+  - "Performance bottlenecks under real usage"
+  - "User feedback on UX flows"
+acceptance_criteria:
+  - "flutter analyze passes with 0 issues"
+  - "All empty catch blocks replaced with proper error logging"
+  - "SharedPreferences cached in all notifiers"
+  - "_CanvasPainter.shouldRepaint compares actual data"
+  - "Manual JSON parser in tantivy_bridge.dart replaced with dart:convert"
+  - "Duplicate connection-side computation extracted to CanvasConnection.computeSides()"
+  - "All test file lint issues resolved"
+  - "execution/ layer exists and functional"
+  - "Harness paths adapted from generic template to RFBrowser"
+  - "genome.yaml reflects AGENTS.md evidence-driven rules"
+assumptions:
+  - "The meta-harness was correctly generated but needs domain adaptation"
+  - "Flutter analyze and flutter test are the primary verification tools"
+  - "The project will continue self-evolving through the harness loop"

@@ -1,0 +1,3 @@
+[submodule "meta-harness"]
+	path = meta-harness
+	url = git@github.com:eeyzs1/meta_harness.git
