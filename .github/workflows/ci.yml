@@ -49,6 +49,16 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
           cache: true
+      - name: Configure git for tests
+        # git_sync_service_test.dart exercises real `git commit` / `git push`
+        # which fail on a clean ubuntu-latest runner because user.name and
+        # user.email are not set; "Author identity unknown" aborts the
+        # commit and the test then sees a silent no-op.
+        run: |
+          git config --global user.name  "RFBrowser CI"
+          git config --global user.email "ci@rfbrowser.local"
+          git config --global init.defaultBranch main
+          git config --global protocol.file.allow always
       - run: flutter pub get
       - run: flutter gen-l10n
       - run: flutter test --no-pub --coverage test/data/ test/services/ test/core/ test/acceptance/ test/security/ test/agents/ test/performance/ test/plugins/capability_checker_test.dart test/services/shortcut_service_test.dart test/services/git_merge_test.dart test/integration/browser_lifecycle_integration_test.dart test/integration/note_lifecycle_integration_test.dart test/integration/agent_bailian_integration_test.dart test/integration/local_provider_integration_test.dart test/integration/ai_integration_test.dart test/integration/link_e2e_test.dart test/integration/agent_integration_test.dart test/integration/canvas_integration_test.dart test/integration/end_to_end_flow_test.dart test/core/ai/sse_stream_parser_test.dart test/ui/graph_canvas_compliance_test.dart test/ui/capture_scene_test.dart test/ui/scene_integration_test.dart
