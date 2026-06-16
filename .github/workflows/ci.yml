@@ -233,13 +233,35 @@ jobs:
           # `$env:SESSION_ID` in the next step.
           echo "SESSION_ID=${session_id}" >> "$GITHUB_ENV"
       - name: Plugin Lifecycle Integration Test (interactive console)
+        # PsExec spawns the test process in the agent's interactive
+        # session (Session 2 on windows-2022) but the spawned process
+        # does NOT see the agent's PATH. `subosito/flutter-action` adds
+        # `flutter` to PATH only for the current process tree, so a
+        # bare `flutter test ...` command inside PsExec fails with
+        # "The system cannot find the file specified." (Win32 0x2).
+        # Fix: invoke flutter by its absolute path
+        # ($env:FLUTTER_ROOT\bin\flutter.bat). FLUTTER_ROOT is exported
+        # by subosito/flutter-action and survives the env inheritance
+        # chain; the spawned batch file is a normal .bat that Windows
+        # CreateProcess can launch without any PATH lookup.
+        #
+        # We do NOT use a `--` separator: PsExec does not understand
+        # the GNU option-terminator convention, treats `--` as the
+        # program name, and prints the usage screen (we hit this
+        # exact bug in 9693f83).
         shell: pwsh
         run: |
+          $flutter = Join-Path $env:FLUTTER_ROOT 'bin\flutter.bat'
+          if (-not (Test-Path $flutter)) {
+            throw "flutter.bat not found at $flutter (FLUTTER_ROOT=$env:FLUTTER_ROOT)"
+          }
+          Write-Host "Invoking $flutter in session $env:SESSION_ID"
           & "$env:RUNNER_TEMP\PsExec.exe" `
             -i $env:SESSION_ID `
             -accepteula `
             -w $PWD `
-            flutter test integration_test/plugin_lifecycle_test.dart --no-pub
+            $flutter `
+            test integration_test/plugin_lifecycle_test.dart --no-pub
         env:
           # Tell Flutter the build is in test mode so the test
           # framework skips some of the desktop-only code paths
@@ -248,11 +270,17 @@ jobs:
       - name: Plugin Settings UI Integration Test (interactive console)
         shell: pwsh
         run: |
+          $flutter = Join-Path $env:FLUTTER_ROOT 'bin\flutter.bat'
+          if (-not (Test-Path $flutter)) {
+            throw "flutter.bat not found at $flutter (FLUTTER_ROOT=$env:FLUTTER_ROOT)"
+          }
+          Write-Host "Invoking $flutter in session $env:SESSION_ID"
           & "$env:RUNNER_TEMP\PsExec.exe" `
             -i $env:SESSION_ID `
             -accepteula `
             -w $PWD `
-            flutter test integration_test/plugin_settings_test.dart --no-pub
+            $flutter `
+            test integration_test/plugin_settings_test.dart --no-pub
         env:
           FLUTTER_TEST: 'true'
 
