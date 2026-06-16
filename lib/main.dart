@@ -8,13 +8,14 @@ import 'app.dart';
 
 void main() async {
   // Debug: prove the integration-test-windows workflow reaches the
-  // app's main(), and what FLUTTER_TEST value it sees. The print is
+  // app's main(), and what test-mode value it sees. The print is
   // intentionally unconditional so we can distinguish "main() was
-  // never called" from "main() was called but FLUTTER_TEST != 'true'".
+  // never called" from "main() was called but the test-mode env var
+  // is not 'true'".
   // ignore: avoid_print
   print(
-    '[main] main() entered; FLUTTER_TEST='
-    '"${Platform.environment['FLUTTER_TEST'] ?? '<unset>'}"',
+    '[main] main() entered; RFBROWSER_INTEGRATION_TEST='
+    '"${Platform.environment['RFBROWSER_INTEGRATION_TEST'] ?? '<unset>'}"',
   );
 
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,13 +37,13 @@ void main() async {
   // with "Unable to start the app on the device" because runApp() is
   // never reached. The integration tests in integration_test/ only
   // exercise Dart-level plugin / service logic; they do not need a
-  // real window. FLUTTER_TEST is set by .github/workflows/ci.yml in
-  // the integration-test-windows job.
-  if (Platform.environment['FLUTTER_TEST'] == 'true') {
+  // real window. RFBROWSER_INTEGRATION_TEST is set by
+  // .github/workflows/ci.yml in the integration-test-windows job.
+  if (Platform.environment['RFBROWSER_INTEGRATION_TEST'] == 'true') {
     // ignore: avoid_print
     print(
-      '[main] FLUTTER_TEST detected, skipping windowManager and '
-      'running RFBrowserApp without a real window.',
+      '[main] RFBROWSER_INTEGRATION_TEST detected, skipping windowManager '
+      'and running RFBrowserApp without a real window.',
     );
     runApp(const ProviderScope(child: RFBrowserApp()));
     return;

@@ -287,10 +287,15 @@ jobs:
           Write-Host "==== end of output ===="
           exit $ec
         env:
-          # Tell Flutter the build is in test mode so the test
-          # framework skips some of the desktop-only code paths
-          # (defence in depth for the Session 0 vs console boundary).
-          FLUTTER_TEST: 'true'
+          # Tell lib/main.dart we are running inside an integration test,
+          # so it can skip the windowManager.ensureInitialized() call
+          # (which blocks forever in Session 0 / on a runner with no
+          # interactive desktop) and go straight to runApp(). We use a
+          # custom env var name (RFBROWSER_INTEGRATION_TEST) instead of
+          # FLUTTER_TEST because the flutter test framework sets the
+          # latter internally and would either override or conflict
+          # with our value.
+          RFBROWSER_INTEGRATION_TEST: 'true'
       - name: Plugin Settings UI Integration Test (interactive console)
         shell: pwsh
         run: |
@@ -323,7 +328,7 @@ jobs:
           Write-Host "==== end of output ===="
           exit $ec
         env:
-          FLUTTER_TEST: 'true'
+          RFBROWSER_INTEGRATION_TEST: 'true'
 
   cross-component-flow:
     name: Cross-Component Data Flow (G15-C)
