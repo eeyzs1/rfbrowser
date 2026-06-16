@@ -7,6 +7,14 @@ import 'services/database_init.dart';
 import 'app.dart';
 
 void main() async {
+  // Debug: prove the integration-test-windows workflow reaches the
+  // app's main(), and what FLUTTER_TEST value it sees. The print is
+  // intentionally unconditional so we can distinguish "main() was
+  // never called" from "main() was called but FLUTTER_TEST != 'true'".
+  // ignore: avoid_print
+  print('[main] main() entered; FLUTTER_TEST='
+      '"${Platform.environment['FLUTTER_TEST'] ?? '<unset>'}"');
+
   WidgetsFlutterBinding.ensureInitialized();
 
   // Disable the engine-level semantics tree to prevent accessibility_bridge
