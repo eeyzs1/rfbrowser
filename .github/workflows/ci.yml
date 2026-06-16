@@ -180,47 +180,41 @@ jobs:
         # (no Session 1 — Windows jumped straight to Session 2 for the
         # GitHub Actions agent's interactive session). Parse 'query
         # session' to get the right ID at runtime.
+        #
+        # Implementation: use `shell: bash` (Git Bash) instead of
+        # `shell: pwsh`. I tried four PowerShell variants
+        # (Out-File, Add-Content -Encoding utf8, Add-Content
+        # -Encoding utf8NoBOM, and .NET [System.IO.File]::AppendAllText
+        # with UTF8Encoding($false)) and all four produced silent
+        # exit code 1 with no PowerShell error in the log, but the
+        # subsequent step still saw an empty $env:SESSION_ID. There
+        # is something subtle about how pwsh and the GitHub Actions
+        # runner interact on windows-2022 that I could not pin down
+        # in a reasonable amount of time; bash's `>>` redirect is a
+        # much simpler, much more reliable write path that
+        # provably produces UTF-8 (no BOM) bytes.
         id: session
-        shell: pwsh
+        shell: bash
         run: |
-          $out = (query session) -join "`n"
-          Write-Host "=== query session ==="
-          Write-Host $out
-          # Don't anchor on ^ — `query session` may emit the column
-          # header, the services row, and the console row all on one
-          # line in some terminal widths. Look for ">console <user>
+          set -e
+          sessions=$(query session 2>&1)
+          echo "=== query session ==="
+          echo "$sessions"
+          # `query session` may emit all sessions on a single line
+          # if the terminal width is narrow, so we don't anchor on
+          # a line-start `^`. Just look for ">console <user>
           # <id> Active" anywhere in the output.
-          $sessionId = $null
-          if ($out -match '>console\s+\S+\s+(\d+)\s+Active') {
-            $sessionId = $Matches[1]
-          }
-          if (-not $sessionId) {
-            throw "No Active console session found in 'query session' output. The runner image likely has no interactive desktop at all; PsExec cannot help here."
-          }
-          Write-Host "=== using session id: $sessionId ==="
-          # Write the session id back to GITHUB_ENV so the next step
-          # can read it. Use the .NET file API with an explicit
-          # UTF-8-no-BOM encoding. Reasons:
-          #   * Out-File defaults to UTF-16 LE with BOM, which breaks
-          #     the GITHUB_ENV `key=value` parser.
-          #   * Add-Content -Encoding utf8 ALSO writes a BOM in
-          #     PowerShell 5.1 and 7.x, so the previous fix using
-          #     Add-Content utf8 was a no-op (we just hit the same
-          #     BOM problem from a different cmdlet).
-          #   * The .NET File.AppendAllText overload that takes a
-          #     UTF8Encoding(false) is the only call that guarantees
-          #     no BOM. Using it here makes the write side provably
-          #     correct regardless of which PowerShell host the
-          #     runner happens to use today.
-          $envFile = $env:GITHUB_ENV
-          if ([string]::IsNullOrEmpty($envFile)) {
-            throw 'GITHUB_ENV is not set in this step; cannot propagate session_id to the next step.'
-          }
-          [System.IO.File]::AppendAllText(
-            $envFile,
-            "session_id=$sessionId`n",
-            (New-Object System.Text.UTF8Encoding($false))
-          )
+          session_id=$(echo "$sessions" \
+            | grep -oP '>console\s+\S+\s+\K[0-9]+(?=\s+Active)' \
+            | head -1 || true)
+          if [ -z "$session_id" ]; then
+            echo "::error::No Active console session found in 'query session' output. The runner image likely has no interactive desktop at all; PsExec cannot help here."
+            exit 1
+          fi
+          echo "=== using session id: $session_id ==="
+          {
+            echo "session_id=${session_id}"
+          } >> "$GITHUB_ENV"
       - name: Plugin Lifecycle Integration Test (interactive console)
         shell: pwsh
         run: |
