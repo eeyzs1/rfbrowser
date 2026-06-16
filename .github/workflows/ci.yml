@@ -31,29 +31,16 @@ jobs:
       - run: dart format --set-exit-if-changed .
       - run: flutter analyze --no-pub --fatal-infos
 
-  constraints:
-    name: Genome Constraints
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check genome constraints
-        run: python seeds/orchestrator.py --check-constraints
-
-  audit-services:
-    name: Service Audit
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run service layer audit
-        run: python seeds/tools/audit_services.py
-
+  # TODO(phase-5): re-introduce Genome Constraints + Service Audit jobs once
+  # the seeds/ directory is brought back or the constraint files are moved
+  # into a different location. They were removed in 9c54089 ("Migrate
+  # meta-harness from copy-paste to git submodule") but the workflow still
+  # references them, so they fail with "No such file or directory" in ~5s.
+  # Removing them from ci.yml unblocks the rest of the pipeline.
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
-    needs: [analyze, constraints, audit-services]
+    needs: [analyze]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
