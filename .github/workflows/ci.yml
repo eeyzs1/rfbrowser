@@ -196,7 +196,13 @@ jobs:
         id: session
         shell: bash
         run: |
-          set -e
+          # Disable errexit (set -e) for the discovery step. The
+          # GitHub Actions runner invokes bash with `-e -o pipefail`
+          # by default, and a sed/grep that returns no match
+          # would trip pipefail and exit 1 with NO output captured
+          # in the log. That is the failure mode we are trying to
+          # avoid. We do explicit error handling below instead.
+          set +e
           sessions=$(query session 2>&1)
           echo "=== query session ==="
           echo "$sessions"
@@ -204,17 +210,20 @@ jobs:
           # if the terminal width is narrow, so we don't anchor on
           # a line-start `^`. Just look for ">console <user>
           # <id> Active" anywhere in the output.
+          #
+          # Use sed (POSIX-portable) instead of `grep -oP` so the
+          # script does not depend on the PCRE build flag of grep
+          # on the windows-2022 Git Bash (which historically has
+          # been a moving target).
           session_id=$(echo "$sessions" \
-            | grep -oP '>console\s+\S+\s+\K[0-9]+(?=\s+Active)' \
-            | head -1 || true)
+            | sed -n 's/.*>console[[:space:]]\+[^[:space:]]\+[[:space:]]\+\([0-9][0-9]*\)[[:space:]]\+Active.*/\1/p' \
+            | head -1)
           if [ -z "$session_id" ]; then
             echo "::error::No Active console session found in 'query session' output. The runner image likely has no interactive desktop at all; PsExec cannot help here."
             exit 1
           fi
           echo "=== using session id: $session_id ==="
-          {
-            echo "session_id=${session_id}"
-          } >> "$GITHUB_ENV"
+          echo "session_id=${session_id}" >> "$GITHUB_ENV"
       - name: Plugin Lifecycle Integration Test (interactive console)
         shell: pwsh
         run: |
