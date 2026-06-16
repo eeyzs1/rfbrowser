@@ -18,6 +18,23 @@ if(POLICY CMP0175)
   cmake_policy(SET CMP0175 OLD)
 endif()
 
+# Force MSVC to compile the entire project (including all Flutter plugins)
+# with C++17 and the legacy /await flag. MSVC 14.50+ defaults to C++20, and
+# the WebView2 SDK headers pulled in by flutter_inappwebview_windows include
+# <experimental/coroutine>, which trips a hard static_assert under C++20+:
+#
+#   error C2338: static assertion failed: 'error STL1011: The /await
+#   compiler option, <experimental/coroutine>, <experimental/generator>,
+#   and <experimental/resumable> are not supported when compiling with
+#   /std:c++20 or later'
+#
+# Pinning the project to C++17 + /await avoids the STL1011 error for every
+# C++ translation unit that ends up transitively including the WebView2
+# header, including the integration-test build.
+if(MSVC)
+  add_compile_options(/std:c++17 /await)
+endif()
+
 # Define build configuration option.
 get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(IS_MULTICONFIG)
