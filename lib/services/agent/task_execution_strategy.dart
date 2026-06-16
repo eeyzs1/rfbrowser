@@ -350,8 +350,10 @@ class AIPlannedExecutionStrategy extends TaskExecutionStrategy {
     final aiNotifier = context.ref.read(aiProvider.notifier);
 
     final systemPrompt = planGenerator.buildSystemPrompt();
-    await aiNotifier.sendMessage(current.description,
-        systemPrompt: systemPrompt);
+    await aiNotifier.sendMessage(
+      current.description,
+      systemPrompt: systemPrompt,
+    );
 
     final lastResponse = getLastAIResponse();
     final planSteps = planGenerator.parsePlan(lastResponse.content);
@@ -416,7 +418,9 @@ class ReactLoopExecutionStrategy extends TaskExecutionStrategy {
       await aiNotifier.sendMessage(observation, systemPrompt: systemPrompt);
 
       final lastResponse = getLastAIResponse();
-      final reactAction = planGenerator.parseReactResponse(lastResponse.content);
+      final reactAction = planGenerator.parseReactResponse(
+        lastResponse.content,
+      );
       if (reactAction == null) {
         iteration++;
         stepResults.add('Failed to parse AI response, retrying...');
@@ -430,14 +434,16 @@ class ReactLoopExecutionStrategy extends TaskExecutionStrategy {
 
       if (isDone || toolName == 'final_answer') {
         final answer = args['answer'] as String? ?? stepResults.join('\n');
-        dynamicSteps.add(AgentStep(
-          description: thought.isNotEmpty ? thought : 'Final answer',
-          toolName: 'final_answer',
-          args: args,
-          status: TaskStatus.completed,
-          result: answer,
-          completedAt: DateTime.now(),
-        ));
+        dynamicSteps.add(
+          AgentStep(
+            description: thought.isNotEmpty ? thought : 'Final answer',
+            toolName: 'final_answer',
+            args: args,
+            status: TaskStatus.completed,
+            result: answer,
+            completedAt: DateTime.now(),
+          ),
+        );
         current = current.copyWith(
           steps: dynamicSteps,
           status: TaskStatus.completed,
@@ -471,11 +477,13 @@ class ReactLoopExecutionStrategy extends TaskExecutionStrategy {
 
       if (result.success) {
         stepResults.add(result.output);
-        dynamicSteps.add(step.copyWith(
-          status: TaskStatus.completed,
-          result: result.output,
-          completedAt: DateTime.now(),
-        ));
+        dynamicSteps.add(
+          step.copyWith(
+            status: TaskStatus.completed,
+            result: result.output,
+            completedAt: DateTime.now(),
+          ),
+        );
       } else {
         stepResults.add('Error: ${result.error}');
         dynamicSteps.add(

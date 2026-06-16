@@ -74,7 +74,9 @@ When you have completed the task and have a final answer, set "done": true and p
       return steps.map((s) {
         final step = s as Map<String, dynamic>;
         return AgentStep(
-          description: step['description'] as String? ?? 'Use ${step['tool'] ?? 'unknown'}',
+          description:
+              step['description'] as String? ??
+              'Use ${step['tool'] ?? 'unknown'}',
           toolName: step['tool'] as String? ?? '',
           args: (step['args'] as Map<String, dynamic>?) ?? {},
           condition: step['condition'] as String?,
@@ -155,11 +157,9 @@ What should I do next?''';
         }
       }
 
-      steps.add(AgentStep(
-        description: 'Use $toolName',
-        toolName: toolName,
-        args: args,
-      ));
+      steps.add(
+        AgentStep(description: 'Use $toolName', toolName: toolName, args: args),
+      );
     }
 
     return steps;

@@ -369,9 +369,21 @@ mixin _CanvasDialogsMixin on _CanvasViewStateBase {
   }
 
   @override
-  void _addCardAt(Offset pos, {CanvasCardType type = CanvasCardType.note}) {
+  Future<void> _addCardAt(
+    Offset pos, {
+    CanvasCardType type = CanvasCardType.note,
+  }) async {
     final snappedX = _snapToGrid(pos.dx - type.defaultWidth / 2);
     final snappedY = _snapToGrid(pos.dy - type.defaultHeight / 2);
+
+    String? imagePath;
+    if (type == CanvasCardType.image) {
+      final result = await FilePicker.platform.pickFiles(type: FileType.image);
+      if (result != null && result.files.isNotEmpty) {
+        imagePath = result.files.single.path;
+      }
+    }
+
     final card = CanvasCard(
       id: 'card_${DateTime.now().millisecondsSinceEpoch}',
       type: type,
@@ -380,10 +392,18 @@ mixin _CanvasDialogsMixin on _CanvasViewStateBase {
       width: type.defaultWidth,
       height: type.defaultHeight,
       title: '',
-      content: '',
+      content: imagePath ?? '',
+      imagePath: imagePath,
     );
     ref.read(canvasProvider.notifier).addCard(card);
-    _startInlineEditing(card.id);
+
+    if (imagePath != null) {
+      _loadImageCards([card]);
+    }
+
+    if (type != CanvasCardType.image) {
+      _startInlineEditing(card.id);
+    }
   }
 
   @override

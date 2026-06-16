@@ -6,26 +6,58 @@ import '../data/models/ai_provider.dart';
 import 'dio_factory.dart';
 import 'connectivity_service.dart';
 import 'settings_service.dart';
+import 'agent_chat_bridge.dart';
+import 'memory_service.dart';
+import 'dreaming_service.dart';
+
+class ToolCallInfo {
+  final String id;
+  final String name;
+  final Map<String, dynamic> args;
+
+  ToolCallInfo({required this.id, required this.name, required this.args});
+}
 
 class ChatMessage {
   final String role;
   final String content;
   final DateTime timestamp;
   final bool isStreaming;
+  final List<ToolCallInfo> toolCalls;
+  final String? toolCallDisplay;
+  final String? toolResultDisplay;
 
   ChatMessage({
     required this.role,
     required this.content,
     DateTime? timestamp,
     this.isStreaming = false,
+    this.toolCalls = const [],
+    this.toolCallDisplay,
+    this.toolResultDisplay,
   }) : timestamp = timestamp ?? DateTime.now();
 
-  ChatMessage copyWith({String? content, bool? isStreaming}) {
+  ChatMessage copyWith({
+    String? content,
+    bool? isStreaming,
+    List<ToolCallInfo>? toolCalls,
+    String? toolCallDisplay,
+    String? toolResultDisplay,
+    bool clearToolCallDisplay = false,
+    bool clearToolResultDisplay = false,
+  }) {
     return ChatMessage(
       role: role,
       content: content ?? this.content,
       timestamp: timestamp,
       isStreaming: isStreaming ?? this.isStreaming,
+      toolCalls: toolCalls ?? this.toolCalls,
+      toolCallDisplay: clearToolCallDisplay
+          ? null
+          : (toolCallDisplay ?? this.toolCallDisplay),
+      toolResultDisplay: clearToolResultDisplay
+          ? null
+          : (toolResultDisplay ?? this.toolResultDisplay),
     );
   }
 }
@@ -70,6 +102,9 @@ class AIState {
 class AINotifier extends Notifier<AIState> {
   static final _dio = DioFactory.instance;
 
+  MemoryService get _memory => ref.read(memoryServiceProvider);
+  DreamingService get _dreaming => ref.read(dreamingServiceProvider);
+
   @override
   AIState build() {
     final aiConfig = ref.read(aiConfigProvider);
@@ -78,10 +113,15 @@ class AINotifier extends Notifier<AIState> {
       final provider = aiConfig.activeProvider;
       final model = aiConfig.activeModel;
       if (provider != null && model != null) {
+        _configureDreaming(provider, model);
         return AIState(activeProvider: provider, activeModel: model);
       }
     }
     return AIState();
+  }
+
+  void _configureDreaming(AIProvider provider, AIModel model) {
+    _dreaming.configureAI(provider: provider, model: model);
   }
 
   void setActiveModel(AIProvider provider, AIModel model) {
@@ -97,12 +137,19 @@ class AINotifier extends Notifier<AIState> {
     String userMessage, {
     String? systemPrompt,
     String? context,
+    List<Map<String, dynamic>>? tools,
+    AgentChatBridge? bridge,
   }) async {
     if (state.isLoading) return;
 
     var provider =
         state.activeProvider ?? ref.read(aiConfigProvider).activeProvider;
     var model = state.activeModel ?? ref.read(aiConfigProvider).activeModel;
+
+    // ── Memory: query relevant fragments ────────────────────────
+    final memoryContext = await _buildMemoryContext(userMessage);
+    final effectiveContext = _mergeContext(context, memoryContext);
+    // ─────────────────────────────────────────────────────────────
 
     final connectivity = ref.read(connectivityProvider);
     if (!connectivity.isOnline) {
@@ -155,13 +202,19 @@ class AINotifier extends Notifier<AIState> {
       clearError: true,
     );
 
+    // ── Memory: persist user message (fire-and-forget) ──────────
+    _persistMessage('user', userMessage);
+    // ─────────────────────────────────────────────────────────────
+
     try {
-      final messages = _buildMessages(systemPrompt, context);
+      final messages = _buildMessages(systemPrompt, effectiveContext);
       final apiKey = provider.requiresApiKey
           ? await ref
                 .read(aiConfigProvider.notifier)
                 .getApiKeyForProvider(provider.id)
           : null;
+
+      final hasTools = tools != null && tools.isNotEmpty && bridge != null;
 
       final response = await _sendRequest(
         provider: provider,
@@ -169,35 +222,50 @@ class AINotifier extends Notifier<AIState> {
         messages: messages,
         apiKey: apiKey,
         stream: true,
+        tools: tools,
       );
 
-      final buffer = StringBuffer();
-      final stream = response.data.stream;
-      await for (final chunk in stream) {
-        final text = utf8.decode(chunk);
-        final lines = text.split('\n');
-        for (final line in lines) {
-          if (line.startsWith('data: ')) {
-            final data = line.substring(6).trim();
-            if (data == '[DONE]') break;
-            try {
-              final json = jsonDecode(data);
-              final delta = _extractStreamDelta(json, provider.protocol);
-              if (delta != null) {
-                buffer.write(delta);
-                _updateLastAssistantMessage(
-                  buffer.toString(),
-                  isStreaming: true,
-                );
+      if (hasTools) {
+        await _handleToolCallLoop(
+          response,
+          provider,
+          model,
+          apiKey,
+          bridge,
+          tools,
+          messages,
+        );
+      } else {
+        final buffer = StringBuffer();
+        final stream = response.data.stream;
+        await for (final chunk in stream) {
+          final text = utf8.decode(chunk);
+          final lines = text.split('\n');
+          for (final line in lines) {
+            if (line.startsWith('data: ')) {
+              final data = line.substring(6).trim();
+              if (data == '[DONE]') break;
+              try {
+                final json = jsonDecode(data);
+                final delta = _extractStreamDelta(json, provider.protocol);
+                if (delta != null) {
+                  buffer.write(delta);
+                  _updateLastAssistantMessage(
+                    buffer.toString(),
+                    isStreaming: true,
+                  );
+                }
+              } catch (e) {
+                debugPrint('Stream chunk parse error: $e');
               }
-            } catch (e) {
-              debugPrint('Stream chunk parse error: $e');
             }
           }
         }
+        _updateLastAssistantMessage(buffer.toString(), isStreaming: false);
+        // ── Memory: persist assistant response ──────────────────
+        _persistMessage('assistant', buffer.toString());
+        // ─────────────────────────────────────────────────────────
       }
-
-      _updateLastAssistantMessage(buffer.toString(), isStreaming: false);
     } on DioException catch (e) {
       final errorMsg = _extractErrorMessage(e, provider.protocol);
       _removeLastAssistantMessage();
@@ -236,13 +304,237 @@ class AINotifier extends Notifier<AIState> {
     state = state.copyWith(messages: messages);
   }
 
+  /// Process a streaming response that may contain tool calls.
+  /// When tool calls are detected, execute them and loop until
+  /// the AI returns a text-only response.
+  Future<void> _handleToolCallLoop(
+    Response<dynamic> firstResponse,
+    AIProvider provider,
+    AIModel model,
+    String? apiKey,
+    AgentChatBridge bridge,
+    List<Map<String, dynamic>> tools,
+    List<Map<String, dynamic>> apiMessages,
+  ) async {
+    const maxLoops = 10;
+    var currentMessages = List<Map<String, dynamic>>.from(apiMessages);
+    var loopCount = 0;
+
+    while (loopCount < maxLoops) {
+      final toolCallsByIndex = <int, _AccToolCall>{};
+      final textBuffer = StringBuffer();
+
+      // Read the stream
+      final stream = (loopCount == 0)
+          ? firstResponse.data.stream
+          : (await _sendRequest(
+              provider: provider,
+              model: model,
+              messages: currentMessages,
+              apiKey: apiKey,
+              stream: true,
+              tools: tools,
+            )).data.stream;
+
+      await for (final chunk in stream) {
+        final text = utf8.decode(chunk);
+        final lines = text.split('\n');
+        for (final line in lines) {
+          if (!line.startsWith('data: ')) continue;
+          final data = line.substring(6).trim();
+          if (data == '[DONE]') break;
+          try {
+            final json = jsonDecode(data);
+            _accumulateStreamChunk(
+              json,
+              provider.protocol,
+              toolCallsByIndex,
+              textBuffer,
+            );
+          } catch (e) {
+            debugPrint('Tool loop chunk parse error: $e');
+          }
+        }
+      }
+
+      // Update UI with accumulated text
+      final accumulatedText = textBuffer.toString();
+      if (accumulatedText.isNotEmpty) {
+        _updateLastAssistantMessage(accumulatedText, isStreaming: true);
+      }
+
+      // Check if we have tool calls to execute
+      if (toolCallsByIndex.isEmpty) {
+        _updateLastAssistantMessage(accumulatedText, isStreaming: false);
+        // ── Memory: persist final assistant response ────────────
+        if (accumulatedText.isNotEmpty) {
+          _persistMessage('assistant', accumulatedText);
+        }
+        // ─────────────────────────────────────────────────────────
+        return;
+      }
+
+      // Execute tool calls
+      final sortedCalls = toolCallsByIndex.entries.toList()
+        ..sort((a, b) => a.key.compareTo(b.key));
+      final toolCalls = sortedCalls.map((e) => e.value).toList();
+
+      // Build assistant message with tool_calls for the API
+      final assistantToolCalls = toolCalls.map((tc) {
+        return {
+          'id': tc.id,
+          'type': 'function',
+          'function': {'name': tc.name, 'arguments': tc.argsJson},
+        };
+      }).toList();
+
+      currentMessages.add({
+        'role': 'assistant',
+        'content': accumulatedText.isNotEmpty ? accumulatedText : null,
+        'tool_calls': assistantToolCalls,
+      });
+
+      // Display tool calls in UI
+      for (final tc in toolCalls) {
+        final args = _parseArgs(tc.argsJson);
+        final display = bridge.formatToolCallForDisplay(tc.name, args);
+
+        // Add a display-only message for the tool call
+        final callMsg = ChatMessage(
+          role: 'tool_call',
+          content: '',
+          toolCallDisplay: display,
+        );
+        state = state.copyWith(messages: [...state.messages, callMsg]);
+
+        // Execute the tool
+        final result = await bridge.executeTool(tc.name, args);
+        final resultDisplay = bridge.formatToolResultForDisplay(
+          tc.name,
+          result,
+        );
+
+        // Add tool result to API messages
+        currentMessages.add({
+          'role': 'tool',
+          'tool_call_id': tc.id,
+          'content': jsonEncode(result),
+        });
+
+        // Display tool result in UI
+        final resultMsg = ChatMessage(
+          role: 'tool_result',
+          content: '',
+          toolResultDisplay: resultDisplay,
+        );
+        state = state.copyWith(messages: [...state.messages, resultMsg]);
+      }
+
+      _removeLastAssistantMessage();
+      state = state.copyWith(isLoading: true);
+      loopCount++;
+    }
+
+    // Max loops exceeded
+    _updateLastAssistantMessage(
+      'Agent tool loop limit reached. Please simplify your request.',
+      isStreaming: false,
+    );
+  }
+
+  /// Accumulate streaming chunks, separating text content and tool calls.
+  void _accumulateStreamChunk(
+    Map<String, dynamic> json,
+    ApiProtocol protocol,
+    Map<int, _AccToolCall> toolCallsByIndex,
+    StringBuffer textBuffer,
+  ) {
+    final choices = json['choices'] as List<dynamic>?;
+    if (choices == null || choices.isEmpty) return;
+
+    for (final choice in choices) {
+      final delta = choice['delta'] as Map<String, dynamic>?;
+      if (delta == null) continue;
+
+      // Text content
+      final content = delta['content'] as String?;
+      if (content != null) {
+        textBuffer.write(content);
+        // Update UI with both text and tool calls
+        _updateLastAssistantMessage(textBuffer.toString(), isStreaming: true);
+      }
+
+      // Tool calls (OpenAI format)
+      final tcItems = delta['tool_calls'] as List<dynamic>?;
+      if (tcItems == null) continue;
+
+      for (final tc in tcItems) {
+        final tcMap = tc as Map<String, dynamic>;
+        final index = tcMap['index'] as int? ?? 0;
+        final acc = toolCallsByIndex.putIfAbsent(index, () => _AccToolCall());
+        if (tcMap.containsKey('id') && tcMap['id'] != null) {
+          acc.id = tcMap['id'] as String;
+        }
+        final func = tcMap['function'] as Map<String, dynamic>?;
+        if (func != null) {
+          if (func.containsKey('name') && func['name'] != null) {
+            acc.name = func['name'] as String;
+          }
+          final argsDelta = func['arguments'] as String?;
+          if (argsDelta != null) {
+            acc.argsBuffer.write(argsDelta);
+          }
+        }
+      }
+    }
+  }
+
+  Map<String, dynamic> _parseArgs(String argsJson) {
+    try {
+      return jsonDecode(argsJson) as Map<String, dynamic>;
+    } catch (_) {
+      return {};
+    }
+  }
+
   void clearMessages() {
     state = state.copyWith(messages: []);
+    _memory.newSession();
   }
 
   void clearError() {
     state = state.copyWith(clearError: true);
   }
+
+  // ─── Memory helpers ────────────────────────────────────────────────
+
+  /// Query relevant memory fragments and format them for the system prompt.
+  Future<String?> _buildMemoryContext(String userMessage) async {
+    try {
+      final fragments = await _memory.searchFragments(userMessage, limit: 5);
+      if (fragments.isEmpty) return null;
+      return MemoryService.formatFragmentsForContext(fragments);
+    } catch (e) {
+      debugPrint('AI: memory context query failed: $e');
+      return null;
+    }
+  }
+
+  /// Merge caller-provided context with memory context.
+  String? _mergeContext(String? callerContext, String? memoryContext) {
+    if (callerContext == null && memoryContext == null) return null;
+    if (callerContext == null) return memoryContext;
+    if (memoryContext == null) return callerContext;
+    return '$memoryContext\n\n$callerContext';
+  }
+
+  /// Persist a message and notify the dreaming service.
+  void _persistMessage(String role, String content) {
+    _memory.saveMessage(role: role, content: content);
+    _dreaming.onMessageSaved();
+  }
+
+  // ─── Message building ──────────────────────────────────────────────
 
   List<Map<String, dynamic>> _buildMessages(
     String? systemPrompt,
@@ -270,6 +562,7 @@ class AINotifier extends Notifier<AIState> {
     required List<Map<String, dynamic>> messages,
     String? apiKey,
     required bool stream,
+    List<Map<String, dynamic>>? tools,
   }) async {
     final headers = <String, String>{
       'Content-Type': 'application/json',
@@ -278,17 +571,21 @@ class AINotifier extends Notifier<AIState> {
 
     switch (provider.protocol) {
       case ApiProtocol.openaiCompatible:
+        final body = <String, dynamic>{
+          'model': model.id,
+          'messages': messages,
+          'stream': stream,
+        };
+        if (tools != null && tools.isNotEmpty) {
+          body['tools'] = tools;
+        }
         return _dio.post(
           provider.chatEndpoint,
           options: Options(
             headers: headers,
             responseType: stream ? ResponseType.stream : ResponseType.json,
           ),
-          data: jsonEncode({
-            'model': model.id,
-            'messages': messages,
-            'stream': stream,
-          }),
+          data: jsonEncode(body),
         );
 
       case ApiProtocol.anthropic:
@@ -348,6 +645,14 @@ class AINotifier extends Notifier<AIState> {
     }
     return e.message ?? 'Unknown error';
   }
+}
+
+class _AccToolCall {
+  String id = '';
+  String name = '';
+  final StringBuffer argsBuffer = StringBuffer();
+
+  String get argsJson => argsBuffer.toString();
 }
 
 final aiProvider = NotifierProvider<AINotifier, AIState>(AINotifier.new);

@@ -48,8 +48,7 @@ void main() {
 
     tearDown(() {
       container.dispose();
-      PathProviderPlatform.instance =
-          MethodChannelPathProvider();
+      PathProviderPlatform.instance = MethodChannelPathProvider();
       if (Directory(supportDir).existsSync()) {
         Directory(supportDir).deleteSync(recursive: true);
       }
@@ -80,8 +79,10 @@ void main() {
       final restored = VaultConfig.fromJson(json);
       expect(restored.path, config.path);
       expect(restored.name, config.name);
-      expect(restored.lastOpened.millisecondsSinceEpoch,
-          config.lastOpened.millisecondsSinceEpoch);
+      expect(
+        restored.lastOpened.millisecondsSinceEpoch,
+        config.lastOpened.millisecondsSinceEpoch,
+      );
     });
 
     test('VaultState copyWith updates fields', () {
@@ -151,7 +152,9 @@ void main() {
       await notifier.openVault(tempVaultDir);
 
       final state = container.read(vaultProvider);
-      final count = state.recentVaults.where((v) => v.path == tempVaultDir).length;
+      final count = state.recentVaults
+          .where((v) => v.path == tempVaultDir)
+          .length;
       expect(count, 1);
     });
 

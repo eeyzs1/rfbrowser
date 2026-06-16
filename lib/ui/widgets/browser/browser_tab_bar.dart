@@ -52,18 +52,15 @@ class _BrowserTabBarState extends ConsumerState<BrowserTabBar> {
               buildDefaultDragHandles: false,
               scrollDirection: Axis.horizontal,
               itemCount: visibleTabs.length + 1,
-              onReorder: (oldIndex, newIndex) {
-                if (newIndex > visibleTabs.length) return;
+              onReorderItem: (oldIndex, newIndex) {
+                if (newIndex >= visibleTabs.length) return;
                 final adjustedOld = oldIndex < visibleTabs.length
                     ? oldIndex
                     : oldIndex - 1;
-                final adjustedNew = newIndex > adjustedOld
-                    ? newIndex - 1
-                    : newIndex;
-                if (adjustedOld != adjustedNew) {
+                if (adjustedOld != newIndex) {
                   ref
                       .read(browserProvider.notifier)
-                      .reorderTab(adjustedOld, adjustedNew);
+                      .reorderTab(adjustedOld, newIndex);
                 }
               },
               itemBuilder: (context, index) {

@@ -545,7 +545,13 @@ class NoteNotifier extends Notifier<NoteState> {
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
         .replaceAll(RegExp(r'\s+'), '-');
     sanitized = p.basename(p.normalize(sanitized));
-    if (sanitized.isEmpty || sanitized == '.') sanitized = 'untitled';
+    // Empty / pure-punctuation results are not valid filenames — fall back.
+    if (sanitized.isEmpty ||
+        sanitized == '.' ||
+        sanitized == '-' ||
+        sanitized == '_') {
+      sanitized = 'untitled';
+    }
     if (sanitized.length > 100) sanitized = sanitized.substring(0, 100);
     return sanitized;
   }

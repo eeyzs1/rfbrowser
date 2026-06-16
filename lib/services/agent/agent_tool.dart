@@ -69,9 +69,7 @@ abstract class AgentTool {
 
   /// Wrap execution in try/catch, returning a failure ToolResult on error.
   /// The error message includes the tool name for easier debugging.
-  Future<ToolResult> wrapExecution(
-    Future<ToolResult> Function() fn,
-  ) async {
+  Future<ToolResult> wrapExecution(Future<ToolResult> Function() fn) async {
     try {
       return await fn();
     } catch (e) {

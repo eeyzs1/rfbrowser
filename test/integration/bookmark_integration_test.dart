@@ -99,21 +99,22 @@ void main() {
       final folderId = notifier.createBookmarkFolder('Research');
 
       final state = container.read(browserProvider);
-      expect(
-        state.bookmarkFolders.any((f) => f.name == 'Research'),
-        isTrue,
-      );
+      expect(state.bookmarkFolders.any((f) => f.name == 'Research'), isTrue);
       final folder = state.bookmarkFolders.firstWhere((f) => f.id == folderId);
       expect(folder.parentId, 'bookmarks-bar');
     });
 
     test('createBookmarkFolder with parentId creates nested folder', () {
       final parentId = notifier.createBookmarkFolder('Parent');
-      final childId = notifier.createBookmarkFolder('Child', parentId: parentId);
+      final childId = notifier.createBookmarkFolder(
+        'Child',
+        parentId: parentId,
+      );
 
       final state = container.read(browserProvider);
-      final childFolder =
-          state.bookmarkFolders.firstWhere((f) => f.id == childId);
+      final childFolder = state.bookmarkFolders.firstWhere(
+        (f) => f.id == childId,
+      );
       expect(childFolder.parentId, parentId);
     });
 
@@ -125,10 +126,7 @@ void main() {
       notifier.deleteBookmarkFolder(parentId);
 
       final state = container.read(browserProvider);
-      expect(
-        state.bookmarkFolders.any((f) => f.id == parentId),
-        isFalse,
-      );
+      expect(state.bookmarkFolders.any((f) => f.id == parentId), isFalse);
     });
 
     test('renameBookmarkFolder changes folder name', () {
@@ -136,8 +134,7 @@ void main() {
 
       notifier.renameBookmarkFolder(folderId, 'New Name');
       final state = container.read(browserProvider);
-      final renamed =
-          state.bookmarkFolders.firstWhere((f) => f.id == folderId);
+      final renamed = state.bookmarkFolders.firstWhere((f) => f.id == folderId);
       expect(renamed.name, 'New Name');
     });
 
@@ -148,16 +145,10 @@ void main() {
       final bmId = container.read(browserProvider).bookmarks.first.id;
 
       notifier.moveBookmarkToFolder(bmId, folder1);
-      expect(
-        container.read(browserProvider).bookmarks.first.folderId,
-        folder1,
-      );
+      expect(container.read(browserProvider).bookmarks.first.folderId, folder1);
 
       notifier.moveBookmarkToFolder(bmId, folder2);
-      expect(
-        container.read(browserProvider).bookmarks.first.folderId,
-        folder2,
-      );
+      expect(container.read(browserProvider).bookmarks.first.folderId, folder2);
     });
 
     test('toggleBookmarkFolder toggles isExpanded', () {
@@ -170,7 +161,8 @@ void main() {
 
       notifier.toggleBookmarkFolder(folderId);
       expect(
-        container.read(browserProvider)
+        container
+            .read(browserProvider)
             .bookmarkFolders
             .firstWhere((f) => f.id == folderId)
             .isExpanded,
@@ -208,10 +200,7 @@ void main() {
       final folder2 = notifier.createBookmarkFolder('Lifecycle 2');
       final bmId = container.read(browserProvider).bookmarks.first.id;
       notifier.moveBookmarkToFolder(bmId, folder2);
-      expect(
-        container.read(browserProvider).bookmarks.first.folderId,
-        folder2,
-      );
+      expect(container.read(browserProvider).bookmarks.first.folderId, folder2);
 
       notifier.removeBookmark(bmId);
       expect(container.read(browserProvider).bookmarks, isEmpty);

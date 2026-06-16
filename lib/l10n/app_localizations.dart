@@ -1040,6 +1040,42 @@ abstract class AppLocalizations {
   /// **'WebDAV Configuration'**
   String get webdavConfig;
 
+  /// No description provided for @vaultRequiredForSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a vault first to configure sync'**
+  String get vaultRequiredForSync;
+
+  /// No description provided for @gitRemoteSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Git remote saved'**
+  String get gitRemoteSaved;
+
+  /// No description provided for @gitRemoteSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save Git remote:'**
+  String get gitRemoteSaveFailed;
+
+  /// No description provided for @webdavConfigSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV configuration saved'**
+  String get webdavConfigSaved;
+
+  /// No description provided for @restartingWebhook.
+  ///
+  /// In en, this message translates to:
+  /// **'Restarting webhook on new port…'**
+  String get restartingWebhook;
+
+  /// No description provided for @webhookRestartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to restart webhook:'**
+  String get webhookRestartFailed;
+
   /// No description provided for @providers.
   ///
   /// In en, this message translates to:
@@ -3565,6 +3601,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add Layer'**
   String get addLayer;
+
+  /// No description provided for @agentModeOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent Mode: ON — AI can use tools'**
+  String get agentModeOn;
+
+  /// No description provided for @agentModeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent Mode: OFF — Click to enable tools'**
+  String get agentModeOff;
+
+  /// No description provided for @hideLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get hideLayer;
+
+  /// No description provided for @showLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get showLayer;
+
+  /// No description provided for @lockLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock'**
+  String get lockLayer;
+
+  /// No description provided for @unlockLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlockLayer;
 
   /// No description provided for @layers.
   ///

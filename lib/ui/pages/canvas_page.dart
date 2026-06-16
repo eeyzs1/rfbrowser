@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -112,6 +113,29 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
   Map<String, (double, double)> _multiDragStarts = {};
   bool _altKeyPressed = false;
   bool _hadFlowAnimation = false;
+
+  final Map<String, ui.Image> _imageCache = {};
+
+  Future<void> _loadImageCards(List<CanvasCard> cards) async {
+    final imageCards = cards.where(
+      (c) => c.type == CanvasCardType.image && c.imagePath != null,
+    );
+    for (final card in imageCards) {
+      final path = card.imagePath!;
+      if (_imageCache.containsKey(path)) continue;
+      try {
+        final file = File(path);
+        if (!await file.exists()) continue;
+        final bytes = await file.readAsBytes();
+        final codec = await ui.instantiateImageCodec(bytes);
+        final frame = await codec.getNextFrame();
+        _imageCache[path] = frame.image;
+      } catch (_) {
+        // Ignore load errors for invalid/missing images
+      }
+    }
+    if (mounted) setState(() {});
+  }
 
   final GlobalKey _canvasPaintKey = GlobalKey();
 
@@ -255,7 +279,10 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
   );
   void _showConnectionStyleDialog(CanvasConnection conn);
   void _duplicateCard(String cardId, Offset pos);
-  void _addCardAt(Offset pos, {CanvasCardType type = CanvasCardType.note});
+  Future<void> _addCardAt(
+    Offset pos, {
+    CanvasCardType type = CanvasCardType.note,
+  });
   void _addContainerAt(Offset pos);
   void _toggleContainerCollapse(String cardId);
   void _saveCardToScratchpad(CanvasCard card);
@@ -313,7 +340,10 @@ class _CanvasViewState extends _CanvasViewStateBase
   Future<void> _initCanvas() async {
     final notifier = ref.read(canvasProvider.notifier);
     await notifier.initialize();
-    if (mounted) _centerOrFitView();
+    if (mounted) {
+      _centerOrFitView();
+      _loadImageCards(ref.read(canvasProvider).cards);
+    }
   }
 
   @override
@@ -623,6 +653,7 @@ class _CanvasViewState extends _CanvasViewStateBase
                                                     _animController.value,
                                                 selectedLayerId:
                                                     canvasData.selectedLayerId,
+                                                cardImageCache: _imageCache,
                                               ),
                                             ),
                                           ),

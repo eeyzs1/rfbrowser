@@ -487,6 +487,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webdavConfig => 'WebDAV Configuration';
 
   @override
+  String get vaultRequiredForSync => 'Open a vault first to configure sync';
+
+  @override
+  String get gitRemoteSaved => 'Git remote saved';
+
+  @override
+  String get gitRemoteSaveFailed => 'Failed to save Git remote:';
+
+  @override
+  String get webdavConfigSaved => 'WebDAV configuration saved';
+
+  @override
+  String get restartingWebhook => 'Restarting webhook on new port…';
+
+  @override
+  String get webhookRestartFailed => 'Failed to restart webhook:';
+
+  @override
   String get providers => 'Providers';
 
   @override
@@ -1815,6 +1833,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addLayer => 'Add Layer';
+
+  @override
+  String get agentModeOn => 'Agent Mode: ON — AI can use tools';
+
+  @override
+  String get agentModeOff => 'Agent Mode: OFF — Click to enable tools';
+
+  @override
+  String get hideLayer => 'Hide';
+
+  @override
+  String get showLayer => 'Show';
+
+  @override
+  String get lockLayer => 'Lock';
+
+  @override
+  String get unlockLayer => 'Unlock';
 
   @override
   String get layers => 'Layers';

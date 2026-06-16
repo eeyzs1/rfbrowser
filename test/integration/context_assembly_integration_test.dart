@@ -28,20 +28,25 @@ void main() {
       expect(assembly.items.any((i) => i.type == ContextType.note), isTrue);
     });
 
-    test('assemble with current web content referenced via @web[current]',
-        () async {
-      final assembler = Assembler(maxTokens: 4096);
+    test(
+      'assemble with current web content referenced via @web[current]',
+      () async {
+        final assembler = Assembler(maxTokens: 4096);
 
-      final assembly = await assembler.assemble(
-        'Summarize @web[current]',
-        currentWebUrl: 'https://example.com',
-        currentWebTitle: 'Example Page',
-        currentWebContent: 'This is the web page content.',
-      );
+        final assembly = await assembler.assemble(
+          'Summarize @web[current]',
+          currentWebUrl: 'https://example.com',
+          currentWebTitle: 'Example Page',
+          currentWebContent: 'This is the web page content.',
+        );
 
-      expect(assembly.items, isNotEmpty);
-      expect(assembly.items.any((i) => i.type == ContextType.webPage), isTrue);
-    });
+        expect(assembly.items, isNotEmpty);
+        expect(
+          assembly.items.any((i) => i.type == ContextType.webPage),
+          isTrue,
+        );
+      },
+    );
 
     test('assemble with clips referenced via @clip[name]', () async {
       final assembler = Assembler(maxTokens: 4096);
@@ -53,9 +58,11 @@ void main() {
 
       expect(assembly.items, isNotEmpty);
       expect(
-        assembly.items.any((i) =>
-            i.metadata.containsKey('source') &&
-            i.metadata['source'] == 'clip'),
+        assembly.items.any(
+          (i) =>
+              i.metadata.containsKey('source') &&
+              i.metadata['source'] == 'clip',
+        ),
         isTrue,
       );
     });
@@ -69,22 +76,30 @@ void main() {
       );
 
       expect(assembly.items, isNotEmpty);
-      expect(assembly.items.any((i) => i.type == ContextType.agentResult),
-          isTrue);
+      expect(
+        assembly.items.any((i) => i.type == ContextType.agentResult),
+        isTrue,
+      );
     });
 
     test('assemble with note references finds matching notes', () async {
       final assembler = Assembler(maxTokens: 4096);
       final allNotes = [
         Note(
-          id: 'n1', title: 'AI Research', filePath: 'ai.md',
+          id: 'n1',
+          title: 'AI Research',
+          filePath: 'ai.md',
           content: 'AI research notes.',
-          created: DateTime.now(), modified: DateTime.now(),
+          created: DateTime.now(),
+          modified: DateTime.now(),
         ),
         Note(
-          id: 'n2', title: 'Meeting Notes', filePath: 'meeting.md',
+          id: 'n2',
+          title: 'Meeting Notes',
+          filePath: 'meeting.md',
           content: 'Meeting notes content.',
-          created: DateTime.now(), modified: DateTime.now(),
+          created: DateTime.now(),
+          modified: DateTime.now(),
         ),
       ];
 
@@ -200,7 +215,10 @@ void main() {
       final items = [
         ContextItem(type: ContextType.file, id: 'f1', content: 'File content'),
         ContextItem(
-            type: ContextType.selection, id: 's1', content: 'Selection'),
+          type: ContextType.selection,
+          id: 's1',
+          content: 'Selection',
+        ),
       ];
 
       final ranked = ranker.rank(items);

@@ -1,21 +1,45 @@
 # RFBrowser — Meta-Harness Project Configuration
-# Generated from task.yaml (legacy migration)
+# Schema version: 2.0.0
 
 project:
   name: "RFBrowser"
   description: "AI-Powered Knowledge Browser — Flutter desktop app"
   schema_version: "2.0.0"
 
+# === 仓库 ===
 repos:
   - name: rfbrowser
     url: git@github.com:eeyzs1/rfbrowser.git
     language: dart
     branch: main
+    path: "."
+    build_command: "flutter build windows --debug"
+    typecheck_command: "flutter analyze"
+    lint_command: "flutter analyze"
+    test_command: "flutter test"
 
 meta_harness_version: "2.0.0"
 
 # === 运行模式 ===
-run_mode: "full"  # fast | full | deep
+# fast: 跳过 brainstorm + code-review，适合小改动和 bugfix
+# full: 默认，完整 pipeline
+# deep: 额外 research + pair-review，适合复杂架构决策
+run_mode: "full"
+
+# === Phase 类型 ===
+phases: [plan, implement, test]
+
+# === 质量门 ===
+quality_gates:
+  - name: lint
+    repo: "rfbrowser"
+    command: "flutter analyze"
+  - name: test
+    repo: "rfbrowser"
+    command: "flutter test"
+  - name: build
+    repo: "rfbrowser"
+    command: "flutter build windows --debug"
 
 # === 技能-Phase 映射 ===
 phase_skills:
@@ -50,10 +74,26 @@ adapters:
 branch:
   prefix: "meta-harness/"
   merge_strategy: "incremental"
+  template: "feature/{work_item_id}"
+  base: "origin/main"
+  sync: "rebase"
 
 # === 证据 ===
 evidence:
   required_artifacts:
-    - "flutter analyze --no-fatal-infos"
+    - "flutter analyze"
     - "flutter test"
-  quality_gate: "verification/quality-gate.py"
+    - "flutter build windows --debug"
+  quality_gate: "meta-harness/seeds/verification/quality-gate.py"
+  required_kinds: [screenshot, log, test-report]
+
+# === 记忆 ===
+memory:
+  enabled: true
+  dir: ".meta-harness/memory"
+  max_files: 50
+
+# === 运行时目录 ===
+runtime:
+  dir: ".meta-harness"
+  runs_dir: ".meta-harness/runs"

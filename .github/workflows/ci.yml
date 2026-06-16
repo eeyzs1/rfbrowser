@@ -64,7 +64,7 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter gen-l10n
-      - run: flutter test --no-pub --coverage test/data/ test/services/ test/core/ test/acceptance/ test/security/ test/integration/browser_lifecycle_integration_test.dart test/integration/note_lifecycle_integration_test.dart test/integration/agent_bailian_integration_test.dart test/integration/local_provider_integration_test.dart test/integration/ai_integration_test.dart test/integration/link_e2e_test.dart test/integration/agent_integration_test.dart test/integration/canvas_integration_test.dart test/ui/graph_canvas_compliance_test.dart test/ui/capture_scene_test.dart test/ui/scene_integration_test.dart
+      - run: flutter test --no-pub --coverage test/data/ test/services/ test/core/ test/acceptance/ test/security/ test/agents/ test/performance/ test/plugins/capability_checker_test.dart test/services/shortcut_service_test.dart test/services/git_merge_test.dart test/integration/browser_lifecycle_integration_test.dart test/integration/note_lifecycle_integration_test.dart test/integration/agent_bailian_integration_test.dart test/integration/local_provider_integration_test.dart test/integration/ai_integration_test.dart test/integration/link_e2e_test.dart test/integration/agent_integration_test.dart test/integration/canvas_integration_test.dart test/integration/end_to_end_flow_test.dart test/core/ai/sse_stream_parser_test.dart test/ui/graph_canvas_compliance_test.dart test/ui/capture_scene_test.dart test/ui/scene_integration_test.dart
       - uses: codecov/codecov-action@v4
         if: github.event_name == 'push'
         with:
@@ -135,6 +135,51 @@ jobs:
         run: flutter test integration_test/plugin_lifecycle_test.dart
       - name: Plugin Settings UI Integration Test
         run: flutter test integration_test/plugin_settings_test.dart
+
+  cross-component-flow:
+    name: Cross-Component Data Flow (G15-C)
+    runs-on: ubuntu-latest
+    needs: [test]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - name: search → note → graph → canvas → AI (G13-D)
+        run: flutter test test/integration/end_to_end_flow_test.dart --no-pub
+      - name: 5 canonical user journeys (G15-B)
+        run: flutter test test/integration/user_journey_test.dart --no-pub
+      - name: knowledge <-> index store sync
+        run: flutter test test/integration/knowledge_integration_test.dart --no-pub
+      - name: link <-> note repository sync
+        run: flutter test test/integration/link_e2e_test.dart --no-pub
+      - name: vault provider propagation
+        run: flutter test test/integration/vault_lifecycle_test.dart --no-pub
+
+  smoke-test-macos:
+    name: Smoke Test (macOS)
+    runs-on: macos-latest
+    needs: [test]
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - name: Analyze on macOS
+        run: flutter analyze --no-pub
+      - name: Run smoke tests on macOS
+        run: flutter test --no-pub test/data/ test/services/ test/core/
 
   build-windows:
     name: Build Windows
@@ -221,7 +266,7 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [build-windows, build-linux, build-android]
+    needs: [build-windows, build-linux, build-android, build-macos]
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
@@ -239,15 +284,21 @@ jobs:
         with:
           name: rfbrowser-android
           path: dist/android/
+      - uses: actions/download-artifact@v4
+        with:
+          name: rfbrowser-macos
+          path: dist/macos/
       - name: Create release archive
         run: |
           cd dist/windows && zip -r ../../rfbrowser-windows.zip . && cd ../..
           cd dist/linux && tar czf ../../rfbrowser-linux.tar.gz . && cd ../..
           mv dist/android/app-release.apk rfbrowser-android.apk
+          cd dist/macos && zip -r ../../rfbrowser-macos.zip . && cd ../..
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             rfbrowser-windows.zip
             rfbrowser-linux.tar.gz
             rfbrowser-android.apk
+            rfbrowser-macos.zip
           generate_release_notes: true

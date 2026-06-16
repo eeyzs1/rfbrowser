@@ -138,7 +138,6 @@ class AppSettings {
 }
 
 class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
-
   @override
   AppSettings build() => AppSettings();
 
@@ -181,7 +180,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setLocale(String locale) async {
     await _updateSetting(
-      key: 'locale', value: locale,
+      key: 'locale',
+      value: locale,
       persist: (p, k, v) => p.setString(k, v),
       update: (s, v) => s.copyWith(locale: v),
     );
@@ -189,7 +189,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setEditorFontSize(double size) async {
     await _updateSetting(
-      key: 'editorFontSize', value: size,
+      key: 'editorFontSize',
+      value: size,
       persist: (p, k, v) => p.setDouble(k, v),
       update: (s, v) => s.copyWith(editorFontSize: v),
     );
@@ -218,7 +219,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setScaffoldBgColor(Color color) async {
     await _updateSetting(
-      key: 'scaffoldBgColorValue', value: color.toARGB32(),
+      key: 'scaffoldBgColorValue',
+      value: color.toARGB32(),
       persist: (p, k, v) => p.setInt(k, v),
       update: (s, v) => s.copyWith(scaffoldBgColorValue: v),
     );
@@ -226,7 +228,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setSurfaceColor(Color color) async {
     await _updateSetting(
-      key: 'surfaceColorValue', value: color.toARGB32(),
+      key: 'surfaceColorValue',
+      value: color.toARGB32(),
       persist: (p, k, v) => p.setInt(k, v),
       update: (s, v) => s.copyWith(surfaceColorValue: v),
     );
@@ -234,7 +237,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setButtonStyle(AppButtonStyle style) async {
     await _updateSetting(
-      key: 'buttonStyle', value: style.index,
+      key: 'buttonStyle',
+      value: style.index,
       persist: (p, k, v) => p.setInt(k, v),
       update: (s, v) => s.copyWith(buttonStyle: style),
     );
@@ -242,7 +246,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setDensity(ComponentDensity d) async {
     await _updateSetting(
-      key: 'density', value: d.index,
+      key: 'density',
+      value: d.index,
       persist: (p, k, v) => p.setInt(k, v),
       update: (s, v) => s.copyWith(density: d),
     );
@@ -250,7 +255,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setIconSize(int size) async {
     await _updateSetting(
-      key: 'iconSize', value: size,
+      key: 'iconSize',
+      value: size,
       persist: (p, k, v) => p.setInt(k, v),
       update: (s, v) => s.copyWith(iconSize: v),
     );
@@ -258,7 +264,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setBorderRadius(double r) async {
     await _updateSetting(
-      key: 'borderRadius', value: r,
+      key: 'borderRadius',
+      value: r,
       persist: (p, k, v) => p.setDouble(k, v),
       update: (s, v) => s.copyWith(borderRadius: v),
     );
@@ -266,7 +273,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setAlwaysShowWelcomePage(bool value) async {
     await _updateSetting(
-      key: 'alwaysShowWelcomePage', value: value,
+      key: 'alwaysShowWelcomePage',
+      value: value,
       persist: (p, k, v) => p.setBool(k, v),
       update: (s, v) => s.copyWith(alwaysShowWelcomePage: v),
     );
@@ -274,7 +282,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setHighContrastMode(bool value) async {
     await _updateSetting(
-      key: 'highContrastMode', value: value,
+      key: 'highContrastMode',
+      value: value,
       persist: (p, k, v) => p.setBool(k, v),
       update: (s, v) => s.copyWith(highContrastMode: v),
     );
@@ -282,7 +291,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setThemeTintOpacity(double value) async {
     await _updateSetting(
-      key: 'themeTintOpacity', value: value,
+      key: 'themeTintOpacity',
+      value: value,
       persist: (p, k, v) => p.setDouble(k, v),
       update: (s, v) => s.copyWith(themeTintOpacity: v),
     );
@@ -290,7 +300,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setSurfaceOpacity(double value) async {
     await _updateSetting(
-      key: 'surfaceOpacity', value: value,
+      key: 'surfaceOpacity',
+      value: value,
       persist: (p, k, v) => p.setDouble(k, v),
       update: (s, v) => s.copyWith(surfaceOpacity: v),
     );
@@ -298,7 +309,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setBackgroundOpacity(double value) async {
     await _updateSetting(
-      key: 'backgroundOpacity', value: value,
+      key: 'backgroundOpacity',
+      value: value,
       persist: (p, k, v) => p.setDouble(k, v),
       update: (s, v) => s.copyWith(backgroundOpacity: v),
     );
@@ -306,7 +318,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
 
   Future<void> setSearchEngine(String engine) async {
     await _updateSetting(
-      key: 'searchEngine', value: engine,
+      key: 'searchEngine',
+      value: engine,
       persist: (p, k, v) => p.setString(k, v),
       update: (s, v) => s.copyWith(searchEngine: v),
     );

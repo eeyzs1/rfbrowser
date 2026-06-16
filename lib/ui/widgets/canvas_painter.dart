@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../data/models/canvas_model.dart';
 import '../../data/models/note.dart';
@@ -41,6 +42,7 @@ abstract class _CanvasPainterBase extends CustomPainter {
   late final int? backgroundColorValue;
   late final bool rulersVisible;
   late final double animationValue;
+  late final Map<String, ui.Image> cardImageCache;
 
   _CanvasPainterBase({
     required this.cards,
@@ -80,6 +82,7 @@ abstract class _CanvasPainterBase extends CustomPainter {
     this.rulersVisible = false,
     this.animationValue = 0,
     this.selectedLayerId,
+    this.cardImageCache = const {},
   });
 
   bool _isCardInSelectedLayer(CanvasCard card) {
@@ -234,6 +237,7 @@ class CanvasPainter extends _CanvasPainterBase
     super.rulersVisible,
     super.animationValue,
     super.selectedLayerId,
+    super.cardImageCache,
   });
 
   @override

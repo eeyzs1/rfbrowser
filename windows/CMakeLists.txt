@@ -10,6 +10,14 @@ set(BINARY_NAME "rfbrowser")
 # versions of CMake.
 cmake_policy(VERSION 3.14...3.25)
 
+# Suppress CMP0175 deprecation warning emitted by some Flutter plugins
+# (e.g. flutter_inappwebview_windows) that still use the legacy
+# add_custom_command(TARGET) DEPENDS pattern. Keep this for as long as those
+# plugins haven't migrated to the new signature.
+if(POLICY CMP0175)
+  cmake_policy(SET CMP0175 OLD)
+endif()
+
 # Define build configuration option.
 get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(IS_MULTICONFIG)
@@ -66,7 +74,12 @@ set(BUILD_BUNDLE_DIR "$<TARGET_FILE_DIR:${BINARY_NAME}>")
 # Make the "install" step default, as it's required to run.
 set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD 1)
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "${BUILD_BUNDLE_DIR}" CACHE PATH "..." FORCE)
+  # Use CMAKE_BINARY_DIR (a real absolute path) instead of BUILD_BUNDLE_DIR
+  # (which contains a generator expression and is therefore a literal string
+  # at config time, not a path). Without this, CMake silently falls back to
+  # the default prefix (e.g. C:/Program Files/<name>) and the install step
+  # fails with "cannot create directory: ... need administrative privileges".
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "..." FORCE)
 endif()
 
 set(INSTALL_BUNDLE_DATA_DIR "${CMAKE_INSTALL_PREFIX}/data")

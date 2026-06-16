@@ -439,5 +439,214 @@ Some content here.''';
       final ks = container.read(knowledgeProvider);
       expect(ks.notes.where((n) => n.id == note.id), isEmpty);
     });
+
+    // ===================================================================
+    // No-title save ("没标题就push") workflow
+    // ===================================================================
+
+    test('createNote with empty title falls back to "untitled" filename '
+        'and the note is still pushed to disk', () async {
+      final tempDir = Directory.systemTemp.createTempSync('rfb_nl_');
+      addTearDown(() {
+        try {
+          tempDir.deleteSync(recursive: true);
+        } catch (_) {}
+      });
+
+      final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+      if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+
+      final vaultState = VaultState(
+        currentVault: VaultConfig(
+          path: tempDir.path,
+          name: 'test',
+          lastOpened: DateTime.now(),
+        ),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(knowledgeProvider);
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      final kn = container.read(knowledgeProvider.notifier);
+      // AC: 空标题依然能保存（fallback to "untitled"）。
+      final note = await kn.createNote(title: '');
+
+      // The fresh Note object preserves the empty title.
+      expect(note.title.isEmpty, isTrue);
+      // Filename must be the "untitled" fallback per _sanitizeFileName.
+      expect(note.filePath, 'untitled.md');
+
+      // The file must actually exist on disk (it was "pushed").
+      final file = File(p.join(tempDir.path, note.filePath));
+      expect(file.existsSync(), isTrue);
+
+      // The file content starts with a (empty) H1 marker.
+      final content = file.readAsStringSync();
+      // Note: empty title means no YAML frontmatter is generated; only
+      // the empty H1 + blank line is written.
+      expect(content, contains('# \n'), reason: 'empty H1 in body');
+      expect(content.contains('---\n'), isFalse);
+
+      // Repository can read the note back via path. Note.fromMarkdown
+      // applies its own no-title fallback ("Untitled") when reading
+      // a file whose H1 line has no text — this is graceful degradation,
+      // not data loss.
+      final repo = container.read(noteRepositoryProvider);
+      final onDisk = await repo?.getNoteByPath(note.filePath);
+      expect(onDisk, isNotNull);
+      expect(onDisk!.filePath, 'untitled.md');
+      expect(
+        onDisk.title,
+        'Untitled',
+        reason: 'fromMarkdown fallback for empty H1 line',
+      );
+
+      // Knowledge state contains the note.
+      final ks = container.read(knowledgeProvider);
+      expect(ks.notes.where((n) => n.id == note.id), isNotEmpty);
+    });
+
+    test('createNote with whitespace-only title still pushes a file '
+        'and the title is normalised to a non-empty fallback', () async {
+      final tempDir = Directory.systemTemp.createTempSync('rfb_nl_');
+      addTearDown(() {
+        try {
+          tempDir.deleteSync(recursive: true);
+        } catch (_) {}
+      });
+
+      final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+      if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+
+      final repo = NoteRepository(tempDir.path);
+      // Use whitespace + dot-only title: both fall through _sanitizeFileName
+      // to the "untitled" fallback.
+      final note = await repo.createNote(title: '   ..   ');
+
+      expect(note.filePath, 'untitled.md');
+      final file = File(p.join(tempDir.path, note.filePath));
+      expect(file.existsSync(), isTrue);
+
+      final onDisk = await repo.getNoteByPath(note.filePath);
+      expect(onDisk, isNotNull);
+    });
+
+    test('no-title note can be renamed afterwards and re-pushed without '
+        'losing its content', () async {
+      final tempDir = Directory.systemTemp.createTempSync('rfb_nl_');
+      addTearDown(() {
+        try {
+          tempDir.deleteSync(recursive: true);
+        } catch (_) {}
+      });
+
+      final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+      if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+
+      final vaultState = VaultState(
+        currentVault: VaultConfig(
+          path: tempDir.path,
+          name: 'test',
+          lastOpened: DateTime.now(),
+        ),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(knowledgeProvider);
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      final kn = container.read(knowledgeProvider.notifier);
+
+      // 1) Push a no-title note.
+      final untitled = await kn.createNote(title: '');
+      expect(untitled.filePath, 'untitled.md');
+
+      // 2) Add content to it (createNote already made it active).
+      kn.updateActiveNoteContent('These are my thoughts on Flutter Riverpod.');
+      await kn.saveActiveNote();
+
+      // 3) Rename it.
+      final renamed = await kn.renameNote(untitled.filePath, 'Flutter Notes');
+      expect(renamed.title, 'Flutter Notes');
+      // Note: spaces in the new title get replaced with "-" by
+      // _sanitizeFileName; the Note object preserves the original title.
+      expect(renamed.filePath, 'Flutter-Notes.md');
+
+      // Old file is gone, new file exists.
+      expect(File(p.join(tempDir.path, 'untitled.md')).existsSync(), isFalse);
+      expect(
+        File(p.join(tempDir.path, 'Flutter-Notes.md')).existsSync(),
+        isTrue,
+      );
+
+      // Content survived the rename.
+      final finalContent = File(
+        p.join(tempDir.path, 'Flutter-Notes.md'),
+      ).readAsStringSync();
+      expect(finalContent, contains('Flutter Riverpod'));
+    });
+
+    test('two no-title notes pushed to the same vault do not overwrite each '
+        'other (filename uniqueness)', () async {
+      final tempDir = Directory.systemTemp.createTempSync('rfb_nl_');
+      addTearDown(() {
+        try {
+          tempDir.deleteSync(recursive: true);
+        } catch (_) {}
+      });
+
+      final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
+      if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
+
+      final vaultState = VaultState(
+        currentVault: VaultConfig(
+          path: tempDir.path,
+          name: 'test',
+          lastOpened: DateTime.now(),
+        ),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(knowledgeProvider);
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      final kn = container.read(knowledgeProvider.notifier);
+      final first = await kn.createNote(title: '');
+      // The second call must disambiguate (suffix or skip) so it does not
+      // clobber the first file (filename uniqueness enforced via
+      // getUniqueTitle).
+      final second = await kn.createNote(title: '');
+
+      expect(first.id, isNot(second.id));
+      expect(first.filePath, isNot(second.filePath));
+      // Filesystem state: both notes' files exist on disk.
+      final firstFile = File(p.join(tempDir.path, first.filePath));
+      final secondFile = File(p.join(tempDir.path, second.filePath));
+      expect(firstFile.existsSync(), isTrue);
+      expect(secondFile.existsSync(), isTrue);
+      // At least two .md files in the vault.
+      final mdFiles = tempDir
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.md'))
+          .toList();
+      expect(mdFiles.length, greaterThanOrEqualTo(2));
+    });
   });
 }

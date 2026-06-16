@@ -9,6 +9,7 @@ import '../../services/knowledge_service.dart';
 import '../../services/settings_service.dart';
 import '../../data/models/note.dart';
 import '../../data/models/link.dart';
+import '../../data/models/link_type.dart';
 import '../../data/stores/vault_store.dart';
 import '../../core/graph/layout_engine.dart';
 import '../../core/graph/filter_engine.dart';
@@ -99,8 +100,14 @@ class _GraphViewState extends ConsumerState<GraphView> {
       if (!allLinks.any(
         (l) => l.sourceId == link.sourceId && l.targetId == link.targetId,
       )) {
+        // Auto-discovered = wikilink ([[...]]); manual = reference/embed/webLink
+        final isAuto = link.type == LinkType.wikilink;
         allLinks.add(
-          GraphLink(sourceId: link.sourceId, targetId: link.targetId),
+          GraphLink(
+            sourceId: link.sourceId,
+            targetId: link.targetId,
+            isAuto: isAuto,
+          ),
         );
         allDataLinks.add(link);
       }
@@ -111,8 +118,14 @@ class _GraphViewState extends ConsumerState<GraphView> {
       if (!allLinks.any(
         (l) => l.sourceId == link.sourceId && l.targetId == link.targetId,
       )) {
+        // Backlinks inherit auto/manual from the original link direction
+        final isAuto = link.type == LinkType.wikilink;
         allLinks.add(
-          GraphLink(sourceId: link.sourceId, targetId: link.targetId),
+          GraphLink(
+            sourceId: link.sourceId,
+            targetId: link.targetId,
+            isAuto: isAuto,
+          ),
         );
         allDataLinks.add(link);
       }
@@ -887,6 +900,38 @@ class _GraphLegend extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Solid line sample (manual link)
+              Container(
+                width: 16,
+                height: 2,
+                color: theme.colorScheme.primary.withValues(alpha: 0.5),
+              ),
+              const SizedBox(width: DesignSpacing.sm),
+              Text('Solid = manual link', style: theme.textTheme.labelSmall),
+            ],
+          ),
+          const SizedBox(height: DesignSpacing.xs),
+          // Dashed line sample (auto-discovered [[wikilink]])
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomPaint(
+                size: const Size(16, 2),
+                painter: _DashedLineLegendPainter(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                ),
+              ),
+              const SizedBox(width: DesignSpacing.sm),
+              Text(
+                'Dashed = auto [[wikilink]]',
+                style: theme.textTheme.labelSmall,
+              ),
+            ],
+          ),
+          const SizedBox(height: DesignSpacing.xs),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Container(
                 width: 8,
                 height: 8,
@@ -941,7 +986,12 @@ class _GraphLegend extends StatelessWidget {
 class GraphLink {
   final String sourceId;
   final String targetId;
-  GraphLink({required this.sourceId, required this.targetId});
+  final bool isAuto;
+  GraphLink({
+    required this.sourceId,
+    required this.targetId,
+    this.isAuto = false,
+  });
 }
 
 class GraphPainter extends CustomPainter {
@@ -1019,10 +1069,26 @@ class GraphPainter extends CustomPainter {
       ..strokeWidth = 1.0 * scale
       ..style = PaintingStyle.stroke;
 
+    final autoEdgePaint = Paint()
+      ..color = primaryColor.withValues(alpha: 0.35)
+      ..strokeWidth = 1.2 * scale
+      ..style = PaintingStyle.stroke;
+
     for (final link in links) {
       final sourcePos = nodePositions[link.sourceId];
       final targetPos = nodePositions[link.targetId];
-      if (sourcePos != null && targetPos != null) {
+      if (sourcePos == null || targetPos == null) continue;
+      if (link.isAuto) {
+        // A-6: auto-discovered wikilinks are rendered as dashed lines
+        _drawDashedLine(
+          canvas,
+          sourcePos,
+          targetPos,
+          autoEdgePaint,
+          dash: 6.0,
+          gap: 4.0,
+        );
+      } else {
         canvas.drawLine(sourcePos, targetPos, edgePaint);
       }
     }
@@ -1136,4 +1202,70 @@ class GraphPainter extends CustomPainter {
       oldDelegate.hoveredNode != hoveredNode ||
       oldDelegate.selectedNode != selectedNode ||
       oldDelegate.bridgeIds != bridgeIds;
+
+  /// Draws a straight line between [a] and [b] as a dashed pattern.
+  /// Used for A-6: auto-discovered [[wikilink]] edges in the graph.
+  void _drawDashedLine(
+    Canvas canvas,
+    Offset a,
+    Offset b,
+    Paint paint, {
+    double dash = 6.0,
+    double gap = 4.0,
+  }) {
+    final path = Path()
+      ..moveTo(a.dx, a.dy)
+      ..lineTo(b.dx, b.dy);
+    for (final metric in path.computeMetrics()) {
+      double dist = 0;
+      bool draw = true;
+      while (dist < metric.length) {
+        if (draw) {
+          final end = (dist + dash).clamp(0.0, metric.length);
+          if (end > dist) {
+            canvas.drawPath(metric.extractPath(dist, end), paint);
+          }
+          dist = end;
+        } else {
+          dist += gap;
+        }
+        draw = !draw;
+      }
+    }
+  }
+}
+
+/// Tiny painter used by [_GraphLegend] to draw a dashed line sample,
+/// matching the auto-discovered [[wikilink]] edge style (A-6).
+class _DashedLineLegendPainter extends CustomPainter {
+  final Color color;
+  _DashedLineLegendPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+    double x = 0;
+    bool draw = true;
+    while (x < size.width) {
+      if (draw) {
+        final end = (x + 4).clamp(0.0, size.width);
+        canvas.drawLine(
+          Offset(x, size.height / 2),
+          Offset(end, size.height / 2),
+          paint,
+        );
+        x = end;
+      } else {
+        x += 3;
+      }
+      draw = !draw;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedLineLegendPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

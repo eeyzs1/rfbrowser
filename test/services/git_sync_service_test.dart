@@ -305,5 +305,25 @@ void main() {
         expect(state.message, contains('Not a git repo'));
       });
     });
+
+    group('getRemoteUrl (G9-1)', () {
+      test('returns null for non-git directory', () async {
+        expect(await service.getRemoteUrl(), isNull);
+      });
+
+      test('returns null after init() without remoteUrl', () async {
+        final hasGit = await _hasGitInstalled();
+        if (!hasGit) return;
+        await service.init(null);
+        expect(await service.getRemoteUrl(), isNull);
+      });
+
+      test('returns the configured remote URL after init(url)', () async {
+        final hasGit = await _hasGitInstalled();
+        if (!hasGit) return;
+        await service.init('https://example.com/vault.git');
+        expect(await service.getRemoteUrl(), 'https://example.com/vault.git');
+      });
+    });
   });
 }

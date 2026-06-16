@@ -17,20 +17,19 @@ Note makeNote(String id, String title, String content) {
   );
 }
 
-Link makeLink(String sourceId, String targetId, {LinkType type = LinkType.wikilink}) {
+Link makeLink(
+  String sourceId,
+  String targetId, {
+  LinkType type = LinkType.wikilink,
+}) {
   return Link(sourceId: sourceId, targetId: targetId, type: type);
 }
 
 void main() {
   group('Graph Algorithm Integration', () {
     test('shortestPath finds direct connection', () {
-      final notes = [
-        makeNote('a', 'A', ''),
-        makeNote('b', 'B', ''),
-      ];
-      final links = [
-        makeLink('a', 'b'),
-      ];
+      final notes = [makeNote('a', 'A', ''), makeNote('b', 'B', '')];
+      final links = [makeLink('a', 'b')];
       final algo = GraphAlgorithm(allNotes: notes, allLinks: links);
 
       final path = algo.shortestPath('a', 'b');
@@ -43,10 +42,7 @@ void main() {
         makeNote('b', 'B', ''),
         makeNote('c', 'C', ''),
       ];
-      final links = [
-        makeLink('a', 'b'),
-        makeLink('b', 'c'),
-      ];
+      final links = [makeLink('a', 'b'), makeLink('b', 'c')];
       final algo = GraphAlgorithm(allNotes: notes, allLinks: links);
 
       final path = algo.shortestPath('a', 'c');
@@ -59,9 +55,7 @@ void main() {
         makeNote('b', 'B', ''),
         makeNote('c', 'C', ''),
       ];
-      final links = [
-        makeLink('a', 'b'),
-      ];
+      final links = [makeLink('a', 'b')];
       final algo = GraphAlgorithm(allNotes: notes, allLinks: links);
 
       final path = algo.shortestPath('a', 'c');
@@ -69,9 +63,7 @@ void main() {
     });
 
     test('shortestPath self-loop returns single node', () {
-      final notes = [
-        makeNote('a', 'A', ''),
-      ];
+      final notes = [makeNote('a', 'A', '')];
       final algo = GraphAlgorithm(allNotes: notes, allLinks: []);
 
       final path = algo.shortestPath('a', 'a');
@@ -79,9 +71,7 @@ void main() {
     });
 
     test('shortestPath unknown node returns empty', () {
-      final notes = [
-        makeNote('a', 'A', ''),
-      ];
+      final notes = [makeNote('a', 'A', '')];
       final algo = GraphAlgorithm(allNotes: notes, allLinks: []);
 
       final path = algo.shortestPath('a', 'unknown');
@@ -95,10 +85,7 @@ void main() {
         makeNote('c', 'C', ''),
         makeNote('d', 'D', ''),
       ];
-      final links = [
-        makeLink('a', 'b'),
-        makeLink('c', 'd'),
-      ];
+      final links = [makeLink('a', 'b'), makeLink('c', 'd')];
       final algo = GraphAlgorithm(allNotes: notes, allLinks: links);
 
       final components = algo.connectedComponents();
@@ -132,10 +119,7 @@ void main() {
         makeNote('b', 'B', ''),
         makeNote('c', 'C', ''),
       ];
-      final links = [
-        makeLink('a', 'b'),
-        makeLink('b', 'c'),
-      ];
+      final links = [makeLink('a', 'b'), makeLink('b', 'c')];
       final algo = GraphAlgorithm(allNotes: notes, allLinks: links);
 
       final stats = algo.getGraphStats();
@@ -148,19 +132,31 @@ void main() {
     test('filterByTag returns notes with matching tag', () {
       final notes = [
         Note(
-          id: 'n1', title: 'AI', filePath: 'ai.md',
-          content: '', tags: ['ai', 'tech'],
-          created: DateTime.now(), modified: DateTime.now(),
+          id: 'n1',
+          title: 'AI',
+          filePath: 'ai.md',
+          content: '',
+          tags: ['ai', 'tech'],
+          created: DateTime.now(),
+          modified: DateTime.now(),
         ),
         Note(
-          id: 'n2', title: 'Food', filePath: 'food.md',
-          content: '', tags: ['food'],
-          created: DateTime.now(), modified: DateTime.now(),
+          id: 'n2',
+          title: 'Food',
+          filePath: 'food.md',
+          content: '',
+          tags: ['food'],
+          created: DateTime.now(),
+          modified: DateTime.now(),
         ),
         Note(
-          id: 'n3', title: 'ML', filePath: 'ml.md',
-          content: '', tags: ['ai', 'ml'],
-          created: DateTime.now(), modified: DateTime.now(),
+          id: 'n3',
+          title: 'ML',
+          filePath: 'ml.md',
+          content: '',
+          tags: ['ai', 'ml'],
+          created: DateTime.now(),
+          modified: DateTime.now(),
         ),
       ];
 
@@ -174,9 +170,13 @@ void main() {
     test('filterByTag returns empty for unknown tag', () {
       final notes = [
         Note(
-          id: 'n1', title: 'A', filePath: 'a.md',
-          content: '', tags: ['x'],
-          created: DateTime.now(), modified: DateTime.now(),
+          id: 'n1',
+          title: 'A',
+          filePath: 'a.md',
+          content: '',
+          tags: ['x'],
+          created: DateTime.now(),
+          modified: DateTime.now(),
         ),
       ];
 
@@ -189,12 +189,17 @@ void main() {
       final now = DateTime.now();
       final notes = [
         Note(
-          id: 'n1', title: 'Flutter Guide', filePath: 'fg.md',
+          id: 'n1',
+          title: 'Flutter Guide',
+          filePath: 'fg.md',
           content: 'A comprehensive guide to Flutter',
-          created: now, modified: now,
+          created: now,
+          modified: now,
         ),
         Note(
-          id: 'n2', title: 'Dart Tips', filePath: 'dt.md',
+          id: 'n2',
+          title: 'Dart Tips',
+          filePath: 'dt.md',
           content: 'Dart programming tips and tricks',
           created: now.subtract(const Duration(days: 30)),
           modified: now.subtract(const Duration(days: 30)),
@@ -216,10 +221,7 @@ void main() {
         makeNote('b', 'B', ''),
         makeNote('c', 'C', ''),
       ];
-      final links = [
-        makeLink('a', 'b'),
-        makeLink('b', 'c'),
-      ];
+      final links = [makeLink('a', 'b'), makeLink('b', 'c')];
 
       final filter = GraphFilter(allNotes: notes, allLinks: links);
       final local = filter.getLocalGraph('b', depth: 1);
@@ -239,10 +241,7 @@ void main() {
         LayoutEdge(sourceId: 'b', targetId: 'c'),
       ];
 
-      final layout = ForceDirectedLayout(
-        areaWidth: 800,
-        areaHeight: 600,
-      );
+      final layout = ForceDirectedLayout(areaWidth: 800, areaHeight: 600);
 
       final result = layout.compute(nodes, edges);
       expect(result.positions.length, 3);
@@ -259,10 +258,7 @@ void main() {
     });
 
     test('forceDirectedLayout handles empty graph', () {
-      final layout = ForceDirectedLayout(
-        areaWidth: 800,
-        areaHeight: 600,
-      );
+      final layout = ForceDirectedLayout(areaWidth: 800, areaHeight: 600);
 
       final result = layout.compute([], []);
       expect(result.positions, isEmpty);
@@ -271,10 +267,7 @@ void main() {
     test('forceDirectedLayout handles single node', () {
       final nodes = [LayoutNode(id: 'a')];
 
-      final layout = ForceDirectedLayout(
-        areaWidth: 800,
-        areaHeight: 600,
-      );
+      final layout = ForceDirectedLayout(areaWidth: 800, areaHeight: 600);
 
       final result = layout.compute(nodes, []);
       expect(result.positions.length, 1);

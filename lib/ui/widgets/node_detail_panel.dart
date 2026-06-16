@@ -37,7 +37,7 @@ class NodeDetailPanel extends ConsumerWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    activeNote != null ? l.nodeDetail : l.nodeDetail,
+                    l.nodeDetail,
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),

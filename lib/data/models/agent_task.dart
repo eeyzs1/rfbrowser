@@ -135,7 +135,9 @@ class AgentTask {
       steps: steps ?? this.steps,
       context: context ?? this.context,
       created: created,
-      completed: identical(completed, _sentinel) ? this.completed : completed as DateTime?,
+      completed: identical(completed, _sentinel)
+          ? this.completed
+          : completed as DateTime?,
       result: identical(result, _sentinel) ? this.result : result as String?,
       maxIterations: maxIterations ?? this.maxIterations,
     );

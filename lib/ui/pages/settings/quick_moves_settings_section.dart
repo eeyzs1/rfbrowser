@@ -167,7 +167,7 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: quickMoveState.moves.length,
-                  onReorder: (oldIndex, newIndex) {
+                  onReorderItem: (oldIndex, newIndex) {
                     final move = quickMoveState.moves[oldIndex];
                     ref
                         .read(quickMoveProvider.notifier)

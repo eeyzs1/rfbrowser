@@ -22,6 +22,40 @@ class _AgentSettingsSectionState extends ConsumerState<AgentSettingsSection> {
     super.dispose();
   }
 
+  /// Persist the port change to the provider and, if the webhook is currently
+  /// running, restart it on the new port so the change takes effect immediately.
+  Future<void> _onPortChanged(int newPort) async {
+    final notifier = ref.read(webhookServerProvider.notifier);
+    final wasRunning = ref.read(webhookServerProvider).isRunning;
+    notifier.setPort(newPort);
+    if (!wasRunning) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    if (l10n != null) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.restartingWebhook),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+    try {
+      await notifier.stop();
+      await notifier.start(port: newPort);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${l10n?.webhookRestartFailed ?? "Restart failed:"} $e',
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -71,7 +105,12 @@ class _AgentSettingsSectionState extends ConsumerState<AgentSettingsSection> {
                 ),
                 border: OutlineInputBorder(),
               ),
-              enabled: !webhookState.isRunning,
+              onSubmitted: (v) {
+                final p = int.tryParse(v.trim());
+                if (p != null && p > 0 && p < 65536) {
+                  _onPortChanged(p);
+                }
+              },
             ),
           ),
         ),

@@ -12,6 +12,111 @@ import '../data/models/note.dart';
 import 'tantivy_bridge_stub.dart' if (dart.library.ffi) 'tantivy_bridge.dart';
 import 'onnx_embedding_service.dart';
 
+class TfidfVectorizer {
+  static const int _dimensions = 128;
+  static const int _hashSeed = 0x9E3779B9;
+
+  final Map<String, double> _idf = {};
+  final Map<String, int> _tokenDocCount = {};
+  int _totalDocs = 0;
+
+  bool get isBuilt => _idf.isNotEmpty;
+
+  void buildFromCorpus(List<String> documents) {
+    _tokenDocCount.clear();
+    _totalDocs = documents.length;
+
+    for (final doc in documents) {
+      final tokens = _tokenize(doc).toSet();
+      for (final token in tokens) {
+        _tokenDocCount[token] = (_tokenDocCount[token] ?? 0) + 1;
+      }
+    }
+
+    _idf.clear();
+    for (final entry in _tokenDocCount.entries) {
+      _idf[entry.key] = log((_totalDocs + 1) / (entry.value + 1)) + 1.0;
+    }
+  }
+
+  List<double> vectorize(String text) {
+    final tokens = _tokenize(text);
+    if (tokens.isEmpty) return List<double>.filled(_dimensions, 0.0);
+
+    final tf = <String, int>{};
+    for (final t in tokens) {
+      tf[t] = (tf[t] ?? 0) + 1;
+    }
+
+    final vec = List<double>.filled(_dimensions, 0.0);
+    for (final entry in tf.entries) {
+      final idf = _idf[entry.key] ?? 1.0;
+      final weight = entry.value * idf;
+      final idx = _hashToken(entry.key) % _dimensions;
+      vec[idx] += weight;
+    }
+
+    // L2 normalize
+    final norm = vec.fold(0.0, (sum, v) => sum + v * v);
+    if (norm > 0) {
+      final invNorm = 1.0 / sqrt(norm);
+      for (var i = 0; i < vec.length; i++) {
+        vec[i] *= invNorm;
+      }
+    }
+
+    return vec;
+  }
+
+  static List<String> _tokenize(String text) {
+    final tokens = <String>[];
+    final lower = text.toLowerCase();
+
+    // CJK character unigrams
+    final cjkPattern = RegExp(r'[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]');
+    final nonCjkPattern = RegExp(r'[a-zA-Z0-9]+');
+
+    // Extract non-CJK words
+    for (final match in nonCjkPattern.allMatches(lower)) {
+      final word = match.group(0)!;
+      tokens.add('w:$word');
+    }
+
+    // Extract CJK characters as unigrams
+    for (final match in cjkPattern.allMatches(lower)) {
+      tokens.add('c:${match.group(0)}');
+    }
+
+    // Character bigrams (across all text, no spaces)
+    final cleaned = lower.replaceAll(RegExp(r'\s+'), ' ');
+    for (var i = 0; i < cleaned.length - 1; i++) {
+      final bigram = cleaned.substring(i, i + 2);
+      if (!bigram.contains(' ')) {
+        tokens.add('b:$bigram');
+      }
+    }
+
+    // Character trigrams
+    for (var i = 0; i < cleaned.length - 2; i++) {
+      final trigram = cleaned.substring(i, i + 3);
+      if (!trigram.contains(' ') && !trigram.contains('  ')) {
+        tokens.add('t:$trigram');
+      }
+    }
+
+    return tokens;
+  }
+
+  static int _hashToken(String token) {
+    var hash = _hashSeed;
+    for (var i = 0; i < token.length; i++) {
+      hash ^= token.codeUnitAt(i);
+      hash = ((hash << 5) - hash + (hash >> 2)) & 0x7FFFFFFF;
+    }
+    return hash.abs();
+  }
+}
+
 typedef FtsSearchFn =
     Future<List<Map<String, dynamic>>> Function(String query, {int limit});
 
@@ -20,6 +125,7 @@ class EmbeddingService {
   HnswIndex? _hnswIndex;
   VectorStore? _vectorStore;
   OnnxEmbeddingService? _onnxService;
+  final TfidfVectorizer _tfidf = TfidfVectorizer();
 
   HnswIndex get hnswIndex =>
       _hnswIndex ??= HnswIndex(M: 16, efConstruction: 200);
@@ -36,12 +142,48 @@ class EmbeddingService {
     _localEmbeddingModel = model;
   }
 
+  /// Cosine similarity in `[-1.0, 1.0]`. Returns 0.0 for empty / zero-norm vectors.
+  /// G10-AC2: required for vector-store scoring & fallback ranking.
+  ///
+  /// When vectors have different lengths, the dot product is taken over the
+  /// overlapping prefix; norms use the FULL vectors of each side (so the result
+  /// degrades gracefully rather than spuriously reporting 1.0 for mismatched
+  /// lengths).
+  static double cosineSimilarity(List<double> a, List<double> b) {
+    if (a.isEmpty || b.isEmpty) return 0.0;
+    final overlap = a.length < b.length ? a.length : b.length;
+    double dot = 0.0;
+    for (var i = 0; i < overlap; i++) {
+      dot += a[i] * b[i];
+    }
+    double normA = 0.0;
+    for (final v in a) {
+      normA += v * v;
+    }
+    double normB = 0.0;
+    for (final v in b) {
+      normB += v * v;
+    }
+    if (normA == 0.0 || normB == 0.0) return 0.0;
+    final cos = dot / (sqrt(normA) * sqrt(normB));
+    // Clamp to handle floating-point drift outside [-1, 1].
+    return cos.clamp(-1.0, 1.0);
+  }
+
   Future<void> initOnnx() async {
     _onnxService ??= OnnxEmbeddingService();
     await _onnxService!.initialize();
   }
 
   OnnxEmbeddingService? get onnxService => _onnxService;
+
+  void buildTfidfFromNotes(List<Note> notes) {
+    final docs = notes.map((n) => '${n.title} ${n.content}').toList();
+    _tfidf.buildFromCorpus(docs);
+    debugPrint('EmbeddingService: TF-IDF built from ${notes.length} notes');
+  }
+
+  bool get isTfidfBuilt => _tfidf.isBuilt;
 
   Future<List<double>> embed(
     String text, {
@@ -125,6 +267,11 @@ class EmbeddingService {
   }
 
   List<double> _embedLocally(String text) {
+    if (_tfidf.isBuilt) {
+      return _tfidf.vectorize(text);
+    }
+
+    // Fallback to simple n-gram hashing when no corpus available
     final dimensions = 128;
     final embedding = List<double>.filled(dimensions, 0.0);
 
@@ -165,15 +312,20 @@ class EmbeddingService {
       }
     }
 
+    _warnLocalEmbedding();
+    return embedding;
+  }
+
+  void _warnLocalEmbedding() {
     if (!_hasWarnedLocalEmbedding) {
       _hasWarnedLocalEmbedding = true;
       debugPrint(
-        'EmbeddingService: WARNING - Using local n-gram hashing fallback. '
+        'EmbeddingService: WARNING - Using local embedding fallback. '
         'Semantic search quality will be degraded. '
-        'Configure a local model provider (e.g. Ollama, LM Studio) or an API-based embedding model for accurate results.',
+        'Configure a local model provider (e.g. Ollama, LM Studio) or an API-based embedding model for accurate results. '
+        'TF-IDF corpus-based embedding can be enabled by calling buildTfidfFromNotes().',
       );
     }
-    return embedding;
   }
 
   static bool _hasWarnedLocalEmbedding = false;

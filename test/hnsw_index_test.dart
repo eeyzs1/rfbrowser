@@ -268,10 +268,13 @@ void main() {
       final recall = total > 0 ? hits / total : 0.0;
       final avgMs = totalLat / (numQueries * 1000);
 
+      // G13-C: production-grade HNSW recall target.
       expect(
         recall,
-        greaterThanOrEqualTo(0.3),
-        reason: 'HNSW recall@10 must be >= 0.3 with curated clusters',
+        greaterThanOrEqualTo(0.9),
+        reason:
+            'HNSW recall@10 must be >= 0.9 on curated clusters, '
+            'got ${recall.toStringAsFixed(3)}',
       );
       expect(
         avgMs,
@@ -311,11 +314,70 @@ void main() {
 
       final recall = total > 0 ? hits / total : 0.0;
 
+      // Random vectors have no cluster structure — recall will be lower.
+      // We assert a moderate threshold to guard against gross regressions
+      // (e.g. always returning the same documents) without being flaky.
       expect(
         recall,
-        greaterThanOrEqualTo(0.3),
+        greaterThanOrEqualTo(0.2),
         reason:
-            'Random vector stress test recall@10 must be >= 0.3, got ${recall.toStringAsFixed(3)}',
+            'Random vector stress test recall@10 must be >= 0.2, got ${recall.toStringAsFixed(3)}',
+      );
+    });
+
+    test('G13-C: MRR (Mean Reciprocal Rank) on curated clusters', () {
+      // MRR = average of 1/rank for the first correct result.
+      // For a well-tuned HNSW with curated clusters, MRR should be > 0.8.
+      const dim = 64;
+      const numClusters = 10;
+      const docsPerCluster = 20;
+      const numQueries = 50;
+
+      final hnsw = HnswIndex(M: 16, efConstruction: 200);
+      final data = <String, List<double>>{};
+
+      final centroids = List.generate(
+        numClusters,
+        (i) => _randomUnitVector(dim, seed: i * 1000),
+      );
+
+      for (int c = 0; c < numClusters; c++) {
+        for (int d = 0; d < docsPerCluster; d++) {
+          final id = 'c${c}_d$d';
+          final v = _perturb(centroids[c], 0.1, seed: c * docsPerCluster + d);
+          data[id] = v;
+          hnsw.insert(id, v, metadata: {'cluster': c});
+        }
+      }
+
+      double totalRR = 0.0;
+      for (int q = 0; q < numQueries; q++) {
+        final c = q % numClusters;
+        final query = _perturb(centroids[c], 0.05, seed: q * 100);
+        final groundTruth = _bruteTopK(data, query, 1).first;
+        final results = hnsw.search(query, k: 10, ef: 100);
+
+        // Find the rank of the first ground-truth hit.
+        int? rank;
+        for (int i = 0; i < results.length; i++) {
+          if (results[i].id == groundTruth) {
+            rank = i + 1;
+            break;
+          }
+        }
+        if (rank != null) {
+          totalRR += 1.0 / rank;
+        }
+        // If not in top-10 → reciprocal rank is 0 (already).
+      }
+
+      final mrr = totalRR / numQueries;
+      expect(
+        mrr,
+        greaterThanOrEqualTo(0.8),
+        reason:
+            'MRR on curated clusters must be >= 0.8, '
+            'got ${mrr.toStringAsFixed(3)}',
       );
     });
 

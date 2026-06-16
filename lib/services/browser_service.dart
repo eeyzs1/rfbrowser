@@ -204,7 +204,11 @@ class BrowserNotifier extends Notifier<BrowserState> {
     state = state.copyWith(tabs: tabs, activeTabId: tabId);
   }
 
-  void _updateTab<T>(String tabId, T value, BrowserTab Function(BrowserTab, T) updater) {
+  void _updateTab<T>(
+    String tabId,
+    T value,
+    BrowserTab Function(BrowserTab, T) updater,
+  ) {
     final tabs = state.tabs
         .map((t) => t.id == tabId ? updater(t, value) : t)
         .toList();

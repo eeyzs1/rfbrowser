@@ -20,9 +20,7 @@ class NavigateTool extends AgentTool {
   Future<ToolResult> execute(Map<String, dynamic> args) async {
     final url = getStringArg(args, 'url');
     if (url == null) return ToolResult.failure('url is required');
-    return wrapExecution(
-      () async => ToolResult.success(await _navigate(url)),
-    );
+    return wrapExecution(() async => ToolResult.success(await _navigate(url)));
   }
 }
 
@@ -325,9 +323,7 @@ class GetTagsTool extends AgentTool {
 
   @override
   Future<ToolResult> execute(Map<String, dynamic> args) async {
-    return wrapExecution(
-      () async => ToolResult.success(await _getTags()),
-    );
+    return wrapExecution(() async => ToolResult.success(await _getTags()));
   }
 }
 

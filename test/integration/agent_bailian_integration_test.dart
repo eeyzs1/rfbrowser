@@ -112,6 +112,45 @@ const _skipReason =
     '未找到百炼 API Key。请在 .env 文件中设置 BAILIAN_API_KEY，'
     '或设置环境变量 BAILIAN_API_KEY / DASHSCOPE_API_KEY';
 
+/// Quick connectivity probe used to decide whether the cached key + model
+/// are still valid. Returns false on auth errors, deprecated model, or any
+/// unexpected transport failure (in which case we treat the run as
+/// "no network available" and skip the network-dependent tests).
+Future<bool> _probeBailian() async {
+  final base =
+      _envVars['BAILIAN_BASE_URL'] ??
+      'https://dashscope.aliyuncs.com/compatible-mode';
+  final model = _envVars['BAILIAN_MODEL'] ?? 'qwen-turbo';
+  try {
+    final dio = DioFactory.instance;
+    final response = await dio.post(
+      '$base/v1/chat/completions',
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_cachedApiKey',
+        },
+        // Don't let dio raise on 4xx — we want to inspect the code.
+        validateStatus: (s) => s != null && s < 500,
+        sendTimeout: const Duration(seconds: 8),
+        receiveTimeout: const Duration(seconds: 8),
+      ),
+      data: jsonEncode({
+        'model': model,
+        'messages': [
+          {'role': 'user', 'content': 'ping'},
+        ],
+        'max_tokens': 1,
+      }),
+    );
+    final code = response.statusCode ?? 0;
+    return code >= 200 && code < 400;
+  } catch (e) {
+    print('Bailian probe threw: $e');
+    return false;
+  }
+}
+
 Future<void> main() async {
   HttpOverrides.global = _RealHttpOverrides();
 
@@ -119,6 +158,19 @@ Future<void> main() async {
   databaseFactory = databaseFactoryFfi;
 
   _cachedApiKey = await _loadApiKey();
+  if (_cachedApiKey != null) {
+    // Quick API probe — bail if the key is rejected (401/403) or the model
+    // is deprecated (400). Without this, a stale .env key would surface as
+    // confusing "Expected: not empty / true" failures instead of a clean skip.
+    final probeOk = await _probeBailian();
+    if (!probeOk) {
+      print(
+        'Bailian API probe failed (key/model rejected). '
+        'Treating as "no key available" and skipping all network tests.',
+      );
+      _cachedApiKey = null;
+    }
+  }
   if (_cachedApiKey != null) {
     _bailianModel = _envVars['BAILIAN_MODEL'] ?? 'qwen-turbo';
     _bailianBaseUrl =

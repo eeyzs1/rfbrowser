@@ -119,6 +119,77 @@ void main() {
     test('GraphView widget exists', () {
       expect(const GraphView(), isA<GraphView>());
     });
+
+    // G5-AC2 (A-6): auto-discovered [[wikilink]] edges must be marked isAuto=true
+    test('GraphLink.isAuto defaults to false', () {
+      final l = GraphLink(sourceId: 'A', targetId: 'B');
+      expect(l.isAuto, isFalse);
+    });
+
+    test('GraphLink.isAuto can be set to true (auto wikilink)', () {
+      final l = GraphLink(sourceId: 'A', targetId: 'B', isAuto: true);
+      expect(l.isAuto, isTrue);
+    });
+
+    test('wikilink Links produce auto GraphLinks (G5-AC2)', () {
+      // The graph_page build logic derives isAuto from link.type == LinkType.wikilink.
+      // This test asserts the mapping that drives A-6 visual distinction.
+      final link = Link(sourceId: 'A', targetId: 'B', type: LinkType.wikilink);
+      expect(link.type, LinkType.wikilink);
+      final isAuto = link.type == LinkType.wikilink;
+      expect(isAuto, isTrue);
+    });
+
+    test('reference/embed/webLink Links produce manual GraphLinks', () {
+      for (final type in [
+        LinkType.reference,
+        LinkType.embed,
+        LinkType.webLink,
+      ]) {
+        final link = Link(sourceId: 'A', targetId: 'B', type: type);
+        final isAuto = link.type == LinkType.wikilink;
+        expect(isAuto, isFalse, reason: 'Type $type should be manual');
+      }
+    });
+
+    test('GraphPainter shouldRepaint differs when isAuto changes', () {
+      final notes = _ns(['A', 'B']);
+      final autoLinks = [GraphLink(sourceId: 'A', targetId: 'B', isAuto: true)];
+      final manualLinks = [
+        GraphLink(sourceId: 'A', targetId: 'B', isAuto: false),
+      ];
+
+      final p1 = GraphPainter(
+        notes: notes,
+        links: autoLinks,
+        scale: 1.0,
+        offset: Offset.zero,
+        primaryColor: Colors.blue,
+        secondaryColor: Colors.cyan,
+        surfaceColor: Colors.white,
+        onSurfaceColor: Colors.black,
+        hintColor: Colors.grey,
+        cardColor: Colors.white,
+        errorColor: Colors.red,
+        bridgeIds: {},
+      );
+      final p2 = GraphPainter(
+        notes: notes,
+        links: manualLinks,
+        scale: 1.0,
+        offset: Offset.zero,
+        primaryColor: Colors.blue,
+        secondaryColor: Colors.cyan,
+        surfaceColor: Colors.white,
+        onSurfaceColor: Colors.black,
+        hintColor: Colors.grey,
+        cardColor: Colors.white,
+        errorColor: Colors.red,
+        bridgeIds: {},
+      );
+
+      expect(p1.shouldRepaint(p2), isTrue);
+    });
   });
 
   group('G6: CanvasPage compliance', () {

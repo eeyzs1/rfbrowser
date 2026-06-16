@@ -692,7 +692,11 @@ class PluginHostNotifier extends Notifier<PluginState> {
         final activeTab = browserState.activeTab;
         return {'url': activeTab?.url ?? ''};
       case 'browser.extractText':
-        return {'text': ''};
+        final browserNotifier = ref.read(browserProvider.notifier);
+        final activeId = ref.read(browserProvider).activeTabId;
+        if (activeId == null) return {'text': ''};
+        final content = await browserNotifier.fetchPageContent(activeId);
+        return {'text': content?.text ?? ''};
       case 'agent.createTask':
         final agent = ref.read(agentProvider.notifier);
         final modeStr = args['mode'] as String? ?? 'manual';

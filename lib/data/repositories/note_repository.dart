@@ -180,8 +180,8 @@ class NoteRepository {
         .replaceAll(RegExp(r'\s+'), '-');
     if (sanitized.isEmpty ||
         sanitized == '.' ||
-        sanitized == '..' ||
-        sanitized == '...') {
+        sanitized == '-' ||
+        sanitized == '_') {
       sanitized = 'untitled';
     }
     if (sanitized.length > 100) {

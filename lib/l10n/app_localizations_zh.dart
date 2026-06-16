@@ -484,6 +484,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get webdavConfig => 'WebDAV 配置';
 
   @override
+  String get vaultRequiredForSync => '请先打开一个知识库再配置同步';
+
+  @override
+  String get gitRemoteSaved => 'Git 远程仓库已保存';
+
+  @override
+  String get gitRemoteSaveFailed => '保存 Git 远程仓库失败：';
+
+  @override
+  String get webdavConfigSaved => 'WebDAV 配置已保存';
+
+  @override
+  String get restartingWebhook => '正在用新端口重启 Webhook…';
+
+  @override
+  String get webhookRestartFailed => '重启 Webhook 失败：';
+
+  @override
   String get providers => '提供商';
 
   @override
@@ -1797,6 +1815,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get addLayer => '添加图层';
+
+  @override
+  String get agentModeOn => 'Agent模式: 开 — AI可调用工具';
+
+  @override
+  String get agentModeOff => 'Agent模式: 关 — 点击启用工具';
+
+  @override
+  String get hideLayer => '隐藏';
+
+  @override
+  String get showLayer => '显示';
+
+  @override
+  String get lockLayer => '锁定';
+
+  @override
+  String get unlockLayer => '解锁';
 
   @override
   String get layers => '图层';

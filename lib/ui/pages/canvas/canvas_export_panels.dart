@@ -298,6 +298,51 @@ mixin _CanvasExportPanelsMixin on _CanvasViewStateBase {
                         children: [
                           IconButton(
                             icon: Icon(
+                              layer.visible
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              size: 14,
+                              color: layer.visible
+                                  ? theme.colorScheme.primary
+                                  : theme.hintColor.withValues(alpha: 0.4),
+                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 24,
+                              minHeight: 24,
+                            ),
+                            tooltip: layer.visible ? l.hideLayer : l.showLayer,
+                            onPressed: () {
+                              notifier.setLayerVisible(
+                                layer.id,
+                                !layer.visible,
+                              );
+                              setDialogState(() {});
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              layer.locked
+                                  ? Icons.lock_outlined
+                                  : Icons.lock_open_outlined,
+                              size: 14,
+                              color: layer.locked
+                                  ? theme.colorScheme.error
+                                  : theme.hintColor.withValues(alpha: 0.4),
+                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 24,
+                              minHeight: 24,
+                            ),
+                            tooltip: layer.locked ? l.unlockLayer : l.lockLayer,
+                            onPressed: () {
+                              notifier.setLayerLocked(layer.id, !layer.locked);
+                              setDialogState(() {});
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(
                               Icons.arrow_upward,
                               size: 14,
                               color: theme.hintColor,

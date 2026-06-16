@@ -13,6 +13,33 @@ class ShortcutConflictError implements Exception {
       'ShortcutConflictError: $message (conflicts with $existingAction)';
 }
 
+/// G11-AC2: a single conflict between two actions sharing a shortcut.
+class ShortcutConflict {
+  final String shortcut;
+  final String actionA;
+  final String actionB;
+
+  const ShortcutConflict({
+    required this.shortcut,
+    required this.actionA,
+    required this.actionB,
+  });
+
+  @override
+  String toString() =>
+      'ShortcutConflict($actionA, $actionB) both bound to "$shortcut"';
+
+  @override
+  bool operator ==(Object other) =>
+      other is ShortcutConflict &&
+      other.shortcut == shortcut &&
+      other.actionA == actionA &&
+      other.actionB == actionB;
+
+  @override
+  int get hashCode => Object.hash(shortcut, actionA, actionB);
+}
+
 class ShortcutService {
   Map<String, String> _bindings = {};
   Map<String, String> _defaults = {};
@@ -63,6 +90,17 @@ class ShortcutService {
     _bindings[action] = shortcut;
   }
 
+  /// Bypasses conflict detection. Used by tests and one-off user overrides
+  /// where the caller has already resolved any conflict explicitly.
+  void forceRegister(String action, String shortcut) {
+    _bindings[action] = shortcut;
+  }
+
+  /// Removes the binding for [action]. Returns true if anything was removed.
+  bool unregister(String action) {
+    return _bindings.remove(action) != null;
+  }
+
   String? findActionForShortcut(String shortcut) =>
       _findActionForShortcut(shortcut);
 
@@ -77,6 +115,35 @@ class ShortcutService {
 
   void resetToDefaults() {
     _bindings = Map.from(_defaults);
+  }
+
+  /// G11-AC2: returns every pair of actions that share the same shortcut.
+  /// Each pair appears once (sorted by action key for determinism). For N
+  /// colliding actions on the same shortcut, returns C(N,2) pairs.
+  List<ShortcutConflict> detectConflicts() {
+    final byShortcut = <String, List<String>>{};
+    for (final entry in _bindings.entries) {
+      final key = entry.value.toLowerCase();
+      byShortcut.putIfAbsent(key, () => []).add(entry.key);
+    }
+    final conflicts = <ShortcutConflict>[];
+    for (final entry in byShortcut.entries) {
+      final actions = entry.value;
+      if (actions.length < 2) continue;
+      actions.sort();
+      for (var i = 0; i < actions.length; i++) {
+        for (var j = i + 1; j < actions.length; j++) {
+          conflicts.add(
+            ShortcutConflict(
+              shortcut: entry.key,
+              actionA: actions[i],
+              actionB: actions[j],
+            ),
+          );
+        }
+      }
+    }
+    return conflicts;
   }
 
   Future<void> persist() async {

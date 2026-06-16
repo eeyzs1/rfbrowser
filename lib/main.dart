@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
@@ -7,6 +8,11 @@ import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Disable the engine-level semantics tree to prevent accessibility_bridge
+  // errors caused by WebView2 native windows on Windows.
+  // See: Flutter engine issue #98099, flutter_inappwebview compatibility
+  PlatformDispatcher.instance.setSemanticsTreeEnabled(false);
 
   if (Platform.isLinux || Platform.isWindows) {
     initDatabaseFactory();

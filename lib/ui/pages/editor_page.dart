@@ -552,12 +552,14 @@ class _EditorViewState extends ConsumerState<EditorView> {
                 ),
               ),
               Expanded(
-                child: InAppWebView(
-                  initialData: InAppWebViewInitialData(data: htmlContent),
-                  initialSettings: InAppWebViewSettings(
-                    useHybridComposition: true,
-                    supportZoom: true,
-                    javaScriptEnabled: false,
+                child: ExcludeSemantics(
+                  child: InAppWebView(
+                    initialData: InAppWebViewInitialData(data: htmlContent),
+                    initialSettings: InAppWebViewSettings(
+                      useHybridComposition: true,
+                      supportZoom: true,
+                      javaScriptEnabled: false,
+                    ),
                   ),
                 ),
               ),
@@ -595,11 +597,13 @@ class _EditorViewState extends ConsumerState<EditorView> {
             ),
           ),
           Expanded(
-            child: InAppWebView(
-              initialUrlRequest: URLRequest(url: WebUri(note.sourceUrl!)),
-              initialSettings: InAppWebViewSettings(
-                useHybridComposition: true,
-                supportZoom: true,
+            child: ExcludeSemantics(
+              child: InAppWebView(
+                initialUrlRequest: URLRequest(url: WebUri(note.sourceUrl!)),
+                initialSettings: InAppWebViewSettings(
+                  useHybridComposition: true,
+                  supportZoom: true,
+                ),
               ),
             ),
           ),

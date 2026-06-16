@@ -24,16 +24,36 @@ Key technical facts:
 - File format: Pure Markdown (.md) with YAML frontmatter
 - Sync: Git CLI + WebDAV
 
+## Non-Negotiable (these 5 rules ALWAYS apply)
+
+1. **NO mocking real integrations** — use real APIs or explain why you can't
+2. **NO completion without evidence** — every claim must be verifiable
+3. **NO prototype shortcuts** — engineering-grade or explicit acknowledgment of scope
+4. **NO passive waiting** — auto-advance through pipeline without being asked
+5. **NO tool path dependency** — evaluate alternatives before reuse
+
 ## Phase-Specific Files (LOAD ON DEMAND)
 
 | Phase | Load |
 |-------|------|
-| INTERPRET | `meta-harness/meta/interpreter.md` + `meta-harness/meta/phase-loader.md` |
-| GENERATE | `meta-harness/meta/harness-generator.md` + `meta-harness/seeds/planning/project-yaml-template.yaml` |
-| FACTORY | `meta-harness/meta/agent-factory.md` |
-| PROVE | `meta-harness/scripts/verify-generation.py` + `meta-harness/seeds/verification/auditor-engine.md` |
+| INTERPRET | `meta-harness/meta/interpreter.md` + `meta-harness/meta/phase-loader.md` + `meta-harness/seeds/planning/planner-engine.md` |
+| GENERATE | `meta-harness/meta/harness-generator.md` + `meta-harness/seeds/planning/project-yaml-template.yaml` + `meta-harness/seeds/planning/planner-engine.md` |
+| FACTORY | `meta-harness/meta/agent-factory.md` + `meta-harness/seeds/planning/leaf-protocol.md` |
+| PROVE | `meta-harness/seeds/verification/auditor-engine.md` + `meta-harness/seeds/verification/recovery-and-audit.md` + `meta-harness/seeds/verification/quality-gate.py` |
 | JUDGE | `meta-harness/seeds/guard.py` + `meta-harness/seeds/planning/orchestrator.py` |
 | EVOLVE | `meta-harness/evolution/framework.md` + `meta-harness/scripts/evolve.py` |
+
+## Rule Files (LOAD ON DEMAND)
+
+All rules are unified in `meta-harness/meta/rules/absolute-rules.md`. Load the relevant appendix:
+
+| Trigger | Load |
+|---------|------|
+| Mock/fake/stub patterns detected | `absolute-rules.md` Appendix A |
+| Code generation phase | `absolute-rules.md` Appendix B |
+| Introducing new dependencies | `absolute-rules.md` Appendix C |
+| Self-check (suspect heuristic trap) | `absolute-rules.md` Appendix D |
+| Any rule conflict or uncertainty | `absolute-rules.md` full text |
 
 ## Configuration
 
@@ -48,5 +68,3 @@ bash meta-harness/scripts/update-harness.sh
 # Windows
 powershell meta-harness/scripts/update-harness.ps1
 ```
-
-Full rules live at `meta-harness/meta/rules/` — load only when needed.

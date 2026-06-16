@@ -107,7 +107,8 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
             ),
             const Spacer(),
             TextButton.icon(
-              onPressed: () => _showProviderFormDialog(context: context, ref: ref, l: l),
+              onPressed: () =>
+                  _showProviderFormDialog(context: context, ref: ref, l: l),
               icon: const Icon(Icons.add, size: 16),
               label: Text(l.addProvider),
             ),
@@ -236,15 +237,25 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   ...LocalServiceScanner.presets.map(
-                    (preset) =>
-                        _buildPresetTile(context, theme, l, preset, sheetCtx: ctx, compact: true),
+                    (preset) => _buildPresetTile(
+                      context,
+                      theme,
+                      l,
+                      preset,
+                      sheetCtx: ctx,
+                      compact: true,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: _isScanning
                         ? null
                         : () async {
-                            await _scanForLocalServices(context, l, sheetCtx: ctx);
+                            await _scanForLocalServices(
+                              context,
+                              l,
+                              sheetCtx: ctx,
+                            );
                           },
                     icon: _isScanning
                         ? SizedBox(
@@ -344,7 +355,11 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed: () => _showProviderFormDialog(context: context, ref: ref, l: l),
+                    onPressed: () => _showProviderFormDialog(
+                      context: context,
+                      ref: ref,
+                      l: l,
+                    ),
                     icon: const Icon(Icons.cloud, size: 14),
                     label: Text(l.addCloudProvider),
                     style: OutlinedButton.styleFrom(
@@ -417,7 +432,10 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
               },
         borderRadius: BorderRadius.circular(10),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
+          padding: EdgeInsets.symmetric(
+            horizontal: hPadding,
+            vertical: vPadding,
+          ),
           decoration: BoxDecoration(
             border: Border.all(
               color: isOnline == true
@@ -1081,7 +1099,12 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
   ) {
     switch (action) {
       case 'edit':
-        _showProviderFormDialog(context: context, ref: ref, l: l, provider: provider);
+        _showProviderFormDialog(
+          context: context,
+          ref: ref,
+          l: l,
+          provider: provider,
+        );
         break;
       case 'toggle':
         ref
@@ -1109,7 +1132,8 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
       text: provider?.baseUrl ?? ApiProtocol.openaiCompatible.defaultBaseUrl,
     );
     final apiKeyController = TextEditingController();
-    ApiProtocol selectedProtocol = provider?.protocol ?? ApiProtocol.openaiCompatible;
+    ApiProtocol selectedProtocol =
+        provider?.protocol ?? ApiProtocol.openaiCompatible;
     bool requiresApiKey = provider?.requiresApiKey ?? true;
 
     showDialog(
@@ -1161,7 +1185,8 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                           .toList(),
                       onChanged: isEditing
                           ? (p) {
-                              if (p != null) setState(() => selectedProtocol = p);
+                              if (p != null)
+                                setState(() => selectedProtocol = p);
                             }
                           : onProtocolChanged,
                     ),
@@ -1194,8 +1219,8 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                           hintText: isEditing
                               ? null
                               : selectedProtocol == ApiProtocol.openaiCompatible
-                                  ? 'sk-...'
-                                  : '',
+                              ? 'sk-...'
+                              : '',
                         ),
                       ),
                     ],
@@ -1212,8 +1237,12 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                 onPressed: () async {
                   final name = nameController.text.trim();
                   if (name.isEmpty) return;
-                  final baseUrl = baseUrlController.text.trim().replaceAll(RegExp(r'/$'), '');
-                  final apiKey = requiresApiKey && apiKeyController.text.trim().isNotEmpty
+                  final baseUrl = baseUrlController.text.trim().replaceAll(
+                    RegExp(r'/$'),
+                    '',
+                  );
+                  final apiKey =
+                      requiresApiKey && apiKeyController.text.trim().isNotEmpty
                       ? apiKeyController.text.trim()
                       : null;
 
@@ -1225,7 +1254,9 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                       apiKey: apiKey,
                       requiresApiKey: requiresApiKey,
                     );
-                    await ref.read(aiConfigProvider.notifier).updateProvider(updated);
+                    await ref
+                        .read(aiConfigProvider.notifier)
+                        .updateProvider(updated);
                   } else {
                     final newProvider = AIProvider(
                       id: 'provider_${DateTime.now().millisecondsSinceEpoch}',
@@ -1235,7 +1266,9 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                       apiKey: apiKey,
                       requiresApiKey: requiresApiKey,
                     );
-                    ref.read(aiConfigProvider.notifier).addProvider(newProvider);
+                    ref
+                        .read(aiConfigProvider.notifier)
+                        .addProvider(newProvider);
                   }
                   if (ctx.mounted) Navigator.pop(ctx);
                 },

@@ -13,6 +13,7 @@ import 'note_service.dart';
 import 'link_service.dart';
 import 'search_service.dart';
 import '../plugins/host/plugin_host.dart';
+import 'embedding_service.dart';
 
 export 'note_service.dart';
 export 'link_service.dart';
@@ -106,6 +107,8 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     if (noteState.notes.isNotEmpty) {
       _linkSvc.rebuildAllLinks(noteState.notes);
       _syncLinks();
+      // Build TF-IDF corpus for better local semantic search
+      ref.read(embeddingServiceProvider).buildTfidfFromNotes(noteState.notes);
     }
   }
 

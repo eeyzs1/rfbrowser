@@ -7,7 +7,6 @@ import 'package:rfbrowser/data/models/note.dart';
 import 'package:rfbrowser/data/stores/vault_store.dart';
 import 'package:rfbrowser/services/knowledge_service.dart';
 
-
 class TestVaultNotifier extends VaultNotifier {
   final VaultState _state;
   TestVaultNotifier(this._state);
@@ -33,10 +32,12 @@ void main() {
       final rfbDir = Directory(p.join(tempDir.path, '.rfbrowser'));
       if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
 
-      File(p.join(tempDir.path, 'source.md'))
-          .writeAsStringSync('# Source Note\n\nSee [[Target Note]] for details.');
-      File(p.join(tempDir.path, 'target.md'))
-          .writeAsStringSync('# Target Note\n\nTarget content');
+      File(
+        p.join(tempDir.path, 'source.md'),
+      ).writeAsStringSync('# Source Note\n\nSee [[Target Note]] for details.');
+      File(
+        p.join(tempDir.path, 'target.md'),
+      ).writeAsStringSync('# Target Note\n\nTarget content');
 
       final vaultState = VaultState(
         currentVault: VaultConfig(
@@ -279,7 +280,10 @@ void main() {
       final state = container.read(linkServiceProvider);
       expect(state.links, isNotEmpty);
       // _pathToId converts filePath to id: 'note-two.md' -> 'note-two'
-      expect(state.links.any((l) => l.sourceId == 'n1' && l.targetId == 'note-two'), isTrue);
+      expect(
+        state.links.any((l) => l.sourceId == 'n1' && l.targetId == 'note-two'),
+        isTrue,
+      );
     });
 
     test('getBacklinks returns backlinks for a note', () {

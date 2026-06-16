@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/ai_service.dart';
+import '../../services/agent_chat_bridge.dart';
 import '../../services/settings_service.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/browser_service.dart';
@@ -23,6 +24,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
   final _focusNode = FocusNode();
   List<_AutocompleteItem> _autocompleteItems = [];
   bool _showAutocomplete = false;
+  bool _agentMode = false;
 
   @override
   void initState() {
@@ -389,6 +391,25 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
+                    icon: Icon(
+                      _agentMode
+                          ? Icons.auto_awesome
+                          : Icons.auto_awesome_outlined,
+                      size: 18,
+                      color: _agentMode
+                          ? theme.colorScheme.primary
+                          : theme.hintColor,
+                    ),
+                    tooltip: _agentMode ? l.agentModeOn : l.agentModeOff,
+                    onPressed: () => setState(() => _agentMode = !_agentMode),
+                    style: IconButton.styleFrom(
+                      backgroundColor: _agentMode
+                          ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                          : Colors.transparent,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
                     icon: aiState.isLoading
                         ? SizedBox(
                             width: 14,
@@ -417,6 +438,14 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
   Widget _buildMessage(ThemeData theme, ChatMessage msg) {
     final l = AppLocalizations.of(context)!;
     final isUser = msg.role == 'user';
+
+    if (msg.role == 'tool_call' && msg.toolCallDisplay != null) {
+      return _buildToolCallMessage(theme, msg.toolCallDisplay!);
+    }
+    if (msg.role == 'tool_result' && msg.toolResultDisplay != null) {
+      return _buildToolResultMessage(theme, msg.toolResultDisplay!);
+    }
+
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -521,6 +550,83 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                     ),
                 ],
               ),
+      ),
+    );
+  }
+
+  Widget _buildToolCallMessage(ThemeData theme, String display) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: theme.colorScheme.primary.withValues(alpha: 0.2),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.build_outlined,
+              size: 14,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                display,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToolResultMessage(ThemeData theme, String display) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.tertiary.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: theme.colorScheme.tertiary.withValues(alpha: 0.15),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              size: 14,
+              color: theme.colorScheme.tertiary,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                display,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 11,
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -904,7 +1010,16 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
       );
     }
 
-    ref.read(aiProvider.notifier).sendMessage(text, context: effectiveContext);
+    ref
+        .read(aiProvider.notifier)
+        .sendMessage(
+          text,
+          context: effectiveContext,
+          tools: _agentMode
+              ? ref.read(agentChatBridgeProvider).toOpenAITools()
+              : null,
+          bridge: _agentMode ? ref.read(agentChatBridgeProvider) : null,
+        );
   }
 
   void _showSkillPicker(ThemeData theme) async {

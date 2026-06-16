@@ -128,7 +128,12 @@ void main() {
     test('moveCardToLayer assigns card to layer', () {
       const service = CanvasLayersService();
       final cards = [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'Card', content: ''),
+        CanvasCard(
+          id: 'c1',
+          type: CanvasCardType.text,
+          title: 'Card',
+          content: '',
+        ),
       ];
 
       final result = service.moveCardToLayer(cards, 'c1', 'layer1');
@@ -139,14 +144,38 @@ void main() {
   group('Canvas Layout Service Integration', () {
     test('computeLayout grid positions cards', () {
       final cards = [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'A', content: '',
-            x: 0, y: 0),
-        CanvasCard(id: 'c2', type: CanvasCardType.text, title: 'B', content: '',
-            x: 0, y: 0),
-        CanvasCard(id: 'c3', type: CanvasCardType.text, title: 'C', content: '',
-            x: 0, y: 0),
-        CanvasCard(id: 'c4', type: CanvasCardType.text, title: 'D', content: '',
-            x: 0, y: 0),
+        CanvasCard(
+          id: 'c1',
+          type: CanvasCardType.text,
+          title: 'A',
+          content: '',
+          x: 0,
+          y: 0,
+        ),
+        CanvasCard(
+          id: 'c2',
+          type: CanvasCardType.text,
+          title: 'B',
+          content: '',
+          x: 0,
+          y: 0,
+        ),
+        CanvasCard(
+          id: 'c3',
+          type: CanvasCardType.text,
+          title: 'C',
+          content: '',
+          x: 0,
+          y: 0,
+        ),
+        CanvasCard(
+          id: 'c4',
+          type: CanvasCardType.text,
+          title: 'D',
+          content: '',
+          x: 0,
+          y: 0,
+        ),
       ];
 
       const service = CanvasLayoutService();
@@ -168,14 +197,30 @@ void main() {
 
     test('computeLayout force directed positions cards', () {
       final cards = [
-        CanvasCard(id: 'c1', type: CanvasCardType.text, title: 'A', content: '',
-            x: 0, y: 0),
-        CanvasCard(id: 'c2', type: CanvasCardType.text, title: 'B', content: '',
-            x: 0, y: 0),
+        CanvasCard(
+          id: 'c1',
+          type: CanvasCardType.text,
+          title: 'A',
+          content: '',
+          x: 0,
+          y: 0,
+        ),
+        CanvasCard(
+          id: 'c2',
+          type: CanvasCardType.text,
+          title: 'B',
+          content: '',
+          x: 0,
+          y: 0,
+        ),
       ];
 
       const service = CanvasLayoutService();
-      final positions = service.computeLayout(cards, [], AutoLayoutType.forceDirected);
+      final positions = service.computeLayout(
+        cards,
+        [],
+        AutoLayoutType.forceDirected,
+      );
 
       expect(positions.length, 2);
       for (final pos in positions.values) {

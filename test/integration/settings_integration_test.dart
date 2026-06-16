@@ -19,35 +19,39 @@ void main() {
       container.dispose();
     });
 
-    test('SettingsNotifier loadSettings returns defaults when no stored data',
-        () async {
-      final notifier = container.read(settingsProvider.notifier);
-      await notifier.loadSettings();
+    test(
+      'SettingsNotifier loadSettings returns defaults when no stored data',
+      () async {
+        final notifier = container.read(settingsProvider.notifier);
+        await notifier.loadSettings();
 
-      final settings = container.read(settingsProvider);
-      expect(settings.locale, 'system');
-      expect(settings.editorFontSize, 14.0);
-      expect(settings.showLineNumbers, false);
-      expect(settings.themePreset, 'sky');
-      expect(settings.accentColorValue, 0xFF0EA5E9);
-      expect(settings.buttonStyle, AppButtonStyle.rounded);
-      expect(settings.density, ComponentDensity.comfortable);
-      expect(settings.searchEngine, 'bing');
-      expect(settings.alwaysShowWelcomePage, false);
-      expect(settings.highContrastMode, false);
-    });
+        final settings = container.read(settingsProvider);
+        expect(settings.locale, 'system');
+        expect(settings.editorFontSize, 14.0);
+        expect(settings.showLineNumbers, false);
+        expect(settings.themePreset, 'sky');
+        expect(settings.accentColorValue, 0xFF0EA5E9);
+        expect(settings.buttonStyle, AppButtonStyle.rounded);
+        expect(settings.density, ComponentDensity.comfortable);
+        expect(settings.searchEngine, 'bing');
+        expect(settings.alwaysShowWelcomePage, false);
+        expect(settings.highContrastMode, false);
+      },
+    );
 
-    test('SettingsNotifier setEditorFontSize persists and reads back',
-        () async {
-      final notifier = container.read(settingsProvider.notifier);
-      await notifier.loadSettings();
+    test(
+      'SettingsNotifier setEditorFontSize persists and reads back',
+      () async {
+        final notifier = container.read(settingsProvider.notifier);
+        await notifier.loadSettings();
 
-      await notifier.setEditorFontSize(18.0);
-      expect(container.read(settingsProvider).editorFontSize, 18.0);
+        await notifier.setEditorFontSize(18.0);
+        expect(container.read(settingsProvider).editorFontSize, 18.0);
 
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getDouble('editorFontSize'), 18.0);
-    });
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getDouble('editorFontSize'), 18.0);
+      },
+    );
 
     test('SettingsNotifier setThemePreset changes accent color', () async {
       final notifier = container.read(settingsProvider.notifier);
@@ -68,19 +72,21 @@ void main() {
       expect(container.read(settingsProvider).themePreset, 'custom');
     });
 
-    test('SettingsNotifier setScaffoldBgColor and setSurfaceColor work',
-        () async {
-      final notifier = container.read(settingsProvider.notifier);
-      await notifier.loadSettings();
+    test(
+      'SettingsNotifier setScaffoldBgColor and setSurfaceColor work',
+      () async {
+        final notifier = container.read(settingsProvider.notifier);
+        await notifier.loadSettings();
 
-      await notifier.setScaffoldBgColor(const Color(0xFFFFFFFF));
-      await notifier.setSurfaceColor(const Color(0xFFF5F5F5));
+        await notifier.setScaffoldBgColor(const Color(0xFFFFFFFF));
+        await notifier.setSurfaceColor(const Color(0xFFF5F5F5));
 
-      final settings = container.read(settingsProvider);
-      expect(settings.scaffoldBgColorValue, 0xFFFFFFFF);
-      expect(settings.surfaceColorValue, 0xFFF5F5F5);
-      expect(settings.isDarkMode, isFalse);
-    });
+        final settings = container.read(settingsProvider);
+        expect(settings.scaffoldBgColorValue, 0xFFFFFFFF);
+        expect(settings.surfaceColorValue, 0xFFF5F5F5);
+        expect(settings.isDarkMode, isFalse);
+      },
+    );
 
     test('SettingsNotifier setButtonStyle changes style', () async {
       final notifier = container.read(settingsProvider.notifier);
@@ -96,7 +102,10 @@ void main() {
       await notifier.loadSettings();
 
       await notifier.setDensity(ComponentDensity.compact);
-      expect(container.read(settingsProvider).density, ComponentDensity.compact);
+      expect(
+        container.read(settingsProvider).density,
+        ComponentDensity.compact,
+      );
     });
 
     test('SettingsNotifier setLocale changes language', () async {
@@ -124,17 +133,17 @@ void main() {
     });
 
     test(
-        'SettingsNotifier setAlwaysShowWelcomePage toggles welcome page',
-        () async {
-      final notifier = container.read(settingsProvider.notifier);
-      await notifier.loadSettings();
+      'SettingsNotifier setAlwaysShowWelcomePage toggles welcome page',
+      () async {
+        final notifier = container.read(settingsProvider.notifier);
+        await notifier.loadSettings();
 
-      await notifier.setAlwaysShowWelcomePage(true);
-      expect(container.read(settingsProvider).alwaysShowWelcomePage, isTrue);
-    });
+        await notifier.setAlwaysShowWelcomePage(true);
+        expect(container.read(settingsProvider).alwaysShowWelcomePage, isTrue);
+      },
+    );
 
-    test('SettingsNotifier setOpacityValues changes theme opacity',
-        () async {
+    test('SettingsNotifier setOpacityValues changes theme opacity', () async {
       final notifier = container.read(settingsProvider.notifier);
       await notifier.loadSettings();
 
@@ -192,18 +201,22 @@ void main() {
       final notifier = container.read(aiConfigProvider.notifier);
       await notifier.loadConfig();
 
-      await notifier.addProvider(AIProvider(
-        id: 'p1',
-        name: 'Provider 1',
-        protocol: ApiProtocol.openaiCompatible,
-        baseUrl: 'https://api1.example.com',
-      ));
-      await notifier.addProvider(AIProvider(
-        id: 'p2',
-        name: 'Provider 2',
-        protocol: ApiProtocol.openaiCompatible,
-        baseUrl: 'https://api2.example.com',
-      ));
+      await notifier.addProvider(
+        AIProvider(
+          id: 'p1',
+          name: 'Provider 1',
+          protocol: ApiProtocol.openaiCompatible,
+          baseUrl: 'https://api1.example.com',
+        ),
+      );
+      await notifier.addProvider(
+        AIProvider(
+          id: 'p2',
+          name: 'Provider 2',
+          protocol: ApiProtocol.openaiCompatible,
+          baseUrl: 'https://api2.example.com',
+        ),
+      );
 
       await notifier.removeProvider('p1');
       final config = container.read(aiConfigProvider);
@@ -211,29 +224,35 @@ void main() {
       expect(config.providers.first.id, 'p2');
     });
 
-    test('AIConfigNotifier updateProvider modifies existing provider',
-        () async {
-      final notifier = container.read(aiConfigProvider.notifier);
-      await notifier.loadConfig();
+    test(
+      'AIConfigNotifier updateProvider modifies existing provider',
+      () async {
+        final notifier = container.read(aiConfigProvider.notifier);
+        await notifier.loadConfig();
 
-      await notifier.addProvider(AIProvider(
-        id: 'p1',
-        name: 'Original',
-        protocol: ApiProtocol.openaiCompatible,
-        baseUrl: 'https://api.example.com',
-      ));
+        await notifier.addProvider(
+          AIProvider(
+            id: 'p1',
+            name: 'Original',
+            protocol: ApiProtocol.openaiCompatible,
+            baseUrl: 'https://api.example.com',
+          ),
+        );
 
-      await notifier.updateProvider(AIProvider(
-        id: 'p1',
-        name: 'Updated',
-        protocol: ApiProtocol.openaiCompatible,
-        baseUrl: 'https://api.example.com/v2',
-      ));
+        await notifier.updateProvider(
+          AIProvider(
+            id: 'p1',
+            name: 'Updated',
+            protocol: ApiProtocol.openaiCompatible,
+            baseUrl: 'https://api.example.com/v2',
+          ),
+        );
 
-      final config = container.read(aiConfigProvider);
-      expect(config.providers.first.name, 'Updated');
-      expect(config.providers.first.baseUrl, 'https://api.example.com/v2');
-    });
+        final config = container.read(aiConfigProvider);
+        expect(config.providers.first.name, 'Updated');
+        expect(config.providers.first.baseUrl, 'https://api.example.com/v2');
+      },
+    );
 
     test('AIConfigNotifier addCustomModel and removeModel', () async {
       final notifier = container.read(aiConfigProvider.notifier);
@@ -253,32 +272,33 @@ void main() {
       expect(container.read(aiConfigProvider).models, isEmpty);
     });
 
-    test('AIConfigNotifier setActiveConfig updates active provider and model',
-        () async {
-      final notifier = container.read(aiConfigProvider.notifier);
-      await notifier.loadConfig();
+    test(
+      'AIConfigNotifier setActiveConfig updates active provider and model',
+      () async {
+        final notifier = container.read(aiConfigProvider.notifier);
+        await notifier.loadConfig();
 
-      await notifier.addProvider(AIProvider(
-        id: 'p1',
-        name: 'Provider 1',
-        protocol: ApiProtocol.openaiCompatible,
-        baseUrl: 'https://api.example.com',
-      ));
-      await notifier.addCustomModel(const AIModel(
-        id: 'm1',
-        providerId: 'p1',
-        displayName: 'Model 1',
-      ));
+        await notifier.addProvider(
+          AIProvider(
+            id: 'p1',
+            name: 'Provider 1',
+            protocol: ApiProtocol.openaiCompatible,
+            baseUrl: 'https://api.example.com',
+          ),
+        );
+        await notifier.addCustomModel(
+          const AIModel(id: 'm1', providerId: 'p1', displayName: 'Model 1'),
+        );
 
-      await notifier.setActiveConfig(const ActiveAIConfig(
-        providerId: 'p1',
-        modelId: 'm1',
-      ));
+        await notifier.setActiveConfig(
+          const ActiveAIConfig(providerId: 'p1', modelId: 'm1'),
+        );
 
-      final config = container.read(aiConfigProvider);
-      expect(config.activeConfig, isNotNull);
-      expect(config.activeConfig!.providerId, 'p1');
-      expect(config.activeConfig!.modelId, 'm1');
-    });
+        final config = container.read(aiConfigProvider);
+        expect(config.activeConfig, isNotNull);
+        expect(config.activeConfig!.providerId, 'p1');
+        expect(config.activeConfig!.modelId, 'm1');
+      },
+    );
   });
 }

@@ -14,8 +14,6 @@ class BrowserWebViewStack extends ConsumerStatefulWidget {
   final void Function(String tabId, String url) onUrlChanged;
   final void Function(InAppWebViewController controller) onNavStateChanged;
 
-  static const int _maxActiveWebViews = 5;
-
   const BrowserWebViewStack({
     super.key,
     required this.browserState,
@@ -42,12 +40,9 @@ class _BrowserWebViewStackState extends ConsumerState<BrowserWebViewStack> {
       widget.initializedTabs.remove(id);
     }
 
-    final activeTabIds = _getActiveTabIds();
-
     final webViews = <Widget>[];
     for (final tab in widget.browserState.tabs) {
       final isActive = tab.id == widget.activeTab.id;
-      final shouldMaintain = activeTabIds.contains(tab.id);
 
       if (!widget.initializedTabs.contains(tab.id)) {
         widget.initializedTabs.add(tab.id);
@@ -59,57 +54,63 @@ class _BrowserWebViewStackState extends ConsumerState<BrowserWebViewStack> {
           duration: const Duration(milliseconds: 150),
           child: Visibility(
             visible: isActive,
-            maintainState: shouldMaintain,
+            maintainState: isActive,
             maintainSize: false,
             maintainAnimation: false,
-            child: InAppWebView(
-              key: ValueKey(tab.id),
-              initialUrlRequest: URLRequest(url: WebUri(tab.url)),
-              initialSettings: InAppWebViewSettings(
-                useShouldOverrideUrlLoading: true,
-                mediaPlaybackRequiresUserGesture: false,
-                allowsInlineMediaPlayback: true,
+            child: ExcludeSemantics(
+              child: InAppWebView(
+                key: ValueKey(tab.id),
+                initialUrlRequest: URLRequest(url: WebUri(tab.url)),
+                initialSettings: InAppWebViewSettings(
+                  useShouldOverrideUrlLoading: true,
+                  mediaPlaybackRequiresUserGesture: false,
+                  allowsInlineMediaPlayback: true,
+                ),
+                onWebViewCreated: (controller) {
+                  widget.controllers[tab.id] = controller;
+                },
+                onLoadStart: (controller, url) {
+                  ref
+                      .read(browserProvider.notifier)
+                      .setTabLoading(tab.id, true);
+                  if (url != null) {
+                    ref
+                        .read(browserProvider.notifier)
+                        .updateTabUrl(tab.id, url.toString());
+                    widget.onUrlChanged(tab.id, url.toString());
+                  }
+                },
+                onLoadStop: (controller, url) async {
+                  ref
+                      .read(browserProvider.notifier)
+                      .setTabLoading(tab.id, false);
+                  if (url != null) {
+                    ref
+                        .read(browserProvider.notifier)
+                        .updateTabUrl(tab.id, url.toString());
+                  }
+                  final title = await controller.getTitle();
+                  if (title != null) {
+                    ref
+                        .read(browserProvider.notifier)
+                        .updateTabTitle(tab.id, title);
+                  }
+                  if (tab.id == ref.read(browserProvider).activeTabId) {
+                    _updateQuickMoveContext(controller, url, title);
+                    widget.onNavStateChanged(controller);
+                  }
+                },
+                shouldOverrideUrlLoading: (controller, navigationAction) async {
+                  final url = navigationAction.request.url?.toString() ?? '';
+                  final uri = Uri.tryParse(url);
+                  if (uri == null) return NavigationActionPolicy.CANCEL;
+                  const allowed = {'http', 'https', 'about'};
+                  if (!allowed.contains(uri.scheme)) {
+                    return NavigationActionPolicy.CANCEL;
+                  }
+                  return NavigationActionPolicy.ALLOW;
+                },
               ),
-              onWebViewCreated: (controller) {
-                widget.controllers[tab.id] = controller;
-              },
-              onLoadStart: (controller, url) {
-                ref.read(browserProvider.notifier).setTabLoading(tab.id, true);
-                if (url != null) {
-                  ref
-                      .read(browserProvider.notifier)
-                      .updateTabUrl(tab.id, url.toString());
-                  widget.onUrlChanged(tab.id, url.toString());
-                }
-              },
-              onLoadStop: (controller, url) async {
-                ref.read(browserProvider.notifier).setTabLoading(tab.id, false);
-                if (url != null) {
-                  ref
-                      .read(browserProvider.notifier)
-                      .updateTabUrl(tab.id, url.toString());
-                }
-                final title = await controller.getTitle();
-                if (title != null) {
-                  ref
-                      .read(browserProvider.notifier)
-                      .updateTabTitle(tab.id, title);
-                }
-                if (tab.id == ref.read(browserProvider).activeTabId) {
-                  _updateQuickMoveContext(controller, url, title);
-                  widget.onNavStateChanged(controller);
-                }
-              },
-              shouldOverrideUrlLoading: (controller, navigationAction) async {
-                final url = navigationAction.request.url?.toString() ?? '';
-                final uri = Uri.tryParse(url);
-                if (uri == null) return NavigationActionPolicy.CANCEL;
-                const allowed = {'http', 'https', 'about'};
-                if (!allowed.contains(uri.scheme)) {
-                  return NavigationActionPolicy.CANCEL;
-                }
-                return NavigationActionPolicy.ALLOW;
-              },
             ),
           ),
         ),
@@ -117,18 +118,6 @@ class _BrowserWebViewStackState extends ConsumerState<BrowserWebViewStack> {
     }
 
     return Stack(children: webViews);
-  }
-
-  Set<String> _getActiveTabIds() {
-    final tabs = widget.browserState.tabs;
-    final activeId = widget.browserState.activeTabId;
-    final result = <String>{};
-    if (activeId != null) result.add(activeId);
-    for (final tab in tabs) {
-      if (result.length >= BrowserWebViewStack._maxActiveWebViews) break;
-      result.add(tab.id);
-    }
-    return result;
   }
 
   void _updateQuickMoveContext(

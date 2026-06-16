@@ -116,6 +116,18 @@ class GitSyncService {
     return result.stdout.toString().trim();
   }
 
+  /// Returns the configured `origin` remote URL, or null if not set / not a repo.
+  Future<String?> getRemoteUrl() async {
+    if (!await isGitRepo()) return null;
+    try {
+      final result = await _runGit(['remote', 'get-url', 'origin']);
+      if (result.exitCode != 0) return null;
+      return result.stdout.toString().trim();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<ProcessResult> _runGit(List<String> args) async {
     return Process.run('git', args, workingDirectory: vaultPath);
   }

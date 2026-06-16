@@ -125,5 +125,52 @@ void main() {
 
       expect(results.length, lessThanOrEqualTo(5));
     });
+
+    group('cosineSimilarity (G10-AC2)', () {
+      test('returns 1.0 for identical vectors', () {
+        final v = [1.0, 2.0, 3.0];
+        expect(EmbeddingService.cosineSimilarity(v, v), closeTo(1.0, 1e-9));
+      });
+
+      test('returns -1.0 for opposite vectors', () {
+        final a = [1.0, 0.0];
+        final b = [-1.0, 0.0];
+        expect(EmbeddingService.cosineSimilarity(a, b), closeTo(-1.0, 1e-9));
+      });
+
+      test('returns ~0.0 for orthogonal vectors', () {
+        final a = [1.0, 0.0];
+        final b = [0.0, 1.0];
+        expect(EmbeddingService.cosineSimilarity(a, b), closeTo(0.0, 1e-9));
+      });
+
+      test('returns 0.0 for zero-norm vectors', () {
+        expect(EmbeddingService.cosineSimilarity([0.0, 0.0], [1.0, 2.0]), 0.0);
+        expect(EmbeddingService.cosineSimilarity([1.0, 2.0], [0.0, 0.0]), 0.0);
+      });
+
+      test('returns 0.0 for empty vectors', () {
+        expect(EmbeddingService.cosineSimilarity([], [1.0, 2.0]), 0.0);
+        expect(EmbeddingService.cosineSimilarity([1.0, 2.0], []), 0.0);
+      });
+
+      test('handles different-length vectors (uses min length)', () {
+        final a = [1.0, 2.0, 3.0];
+        final b = [1.0, 2.0];
+        // dot = 1 + 4 = 5; |a|² = 14; |b|² = 5; cos = 5 / sqrt(70)
+        expect(
+          EmbeddingService.cosineSimilarity(a, b),
+          closeTo(5.0 / sqrt(70.0), 1e-9),
+        );
+      });
+
+      test('result is always within [-1, 1] (clamped)', () {
+        // Construct pathological vectors where floating-point could overflow.
+        final v = [1e200, 1e200, 1e200];
+        final r = EmbeddingService.cosineSimilarity(v, v);
+        expect(r, greaterThanOrEqualTo(-1.0));
+        expect(r, lessThanOrEqualTo(1.0));
+      });
+    });
   });
 }

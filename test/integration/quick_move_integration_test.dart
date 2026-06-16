@@ -93,16 +93,20 @@ void main() {
       expect(state.moves.any((m) => m.id == move.id), isFalse);
     });
 
-    test('deleteMove does not remove preset moves', () async {
+    test('deleteMove removes preset moves', () async {
       final state = container.read(quickMoveProvider);
-      final presetCount = state.moves.where((m) => m.type == QuickMoveType.preset).length;
+      final presetCount = state.moves
+          .where((m) => m.type == QuickMoveType.preset)
+          .length;
       expect(presetCount, greaterThan(0));
 
-      final preset = state.moves.firstWhere((m) => m.type == QuickMoveType.preset);
+      final preset = state.moves.firstWhere(
+        (m) => m.type == QuickMoveType.preset,
+      );
       await notifier.deleteMove(preset.id);
 
       final afterState = container.read(quickMoveProvider);
-      expect(afterState.moves.any((m) => m.id == preset.id), isTrue);
+      expect(afterState.moves.any((m) => m.id == preset.id), isFalse);
     });
 
     test('reorderMove changes move position', () async {
@@ -122,15 +126,28 @@ void main() {
 
     test('full quick move lifecycle: create, update, delete', () async {
       final move = await notifier.createMove('Lifecycle', 'Original prompt');
-      expect(container.read(quickMoveProvider).moves.any((m) => m.id == move.id), isTrue);
+      expect(
+        container.read(quickMoveProvider).moves.any((m) => m.id == move.id),
+        isTrue,
+      );
 
-      await notifier.updateMove(move.id, name: 'Updated', promptTemplate: 'Updated prompt');
-      final updated = container.read(quickMoveProvider).moves.firstWhere((m) => m.id == move.id);
+      await notifier.updateMove(
+        move.id,
+        name: 'Updated',
+        promptTemplate: 'Updated prompt',
+      );
+      final updated = container
+          .read(quickMoveProvider)
+          .moves
+          .firstWhere((m) => m.id == move.id);
       expect(updated.name, 'Updated');
       expect(updated.promptTemplate, 'Updated prompt');
 
       await notifier.deleteMove(move.id);
-      expect(container.read(quickMoveProvider).moves.any((m) => m.id == move.id), isFalse);
+      expect(
+        container.read(quickMoveProvider).moves.any((m) => m.id == move.id),
+        isFalse,
+      );
     });
   });
 }

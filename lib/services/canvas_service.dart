@@ -218,26 +218,28 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
   Future<void> batchDeleteCards(List<String> cardIds) async {
     if (cardIds.isEmpty) return;
     final cardIdSet = cardIds.toSet();
-    await _mutateAndPersist(() => state.copyWith(
-      cards: state.cards.where((c) => !cardIdSet.contains(c.id)).toList(),
-      connections: state.connections
-          .where(
-            (c) =>
-                !cardIdSet.contains(c.fromCardId) &&
-                !cardIdSet.contains(c.toCardId),
-          )
-          .toList(),
-      groups: state.groups
-          .map((g) {
-            final remaining = g.cardIds
-                .where((id) => !cardIdSet.contains(id))
-                .toList();
-            return g.copyWith(cardIds: remaining);
-          })
-          .where((g) => g.cardIds.isNotEmpty)
-          .toList(),
-      clearSelectedCardIds: true,
-    ));
+    await _mutateAndPersist(
+      () => state.copyWith(
+        cards: state.cards.where((c) => !cardIdSet.contains(c.id)).toList(),
+        connections: state.connections
+            .where(
+              (c) =>
+                  !cardIdSet.contains(c.fromCardId) &&
+                  !cardIdSet.contains(c.toCardId),
+            )
+            .toList(),
+        groups: state.groups
+            .map((g) {
+              final remaining = g.cardIds
+                  .where((id) => !cardIdSet.contains(id))
+                  .toList();
+              return g.copyWith(cardIds: remaining);
+            })
+            .where((g) => g.cardIds.isNotEmpty)
+            .toList(),
+        clearSelectedCardIds: true,
+      ),
+    );
   }
 
   void batchUpdateCardColor(List<String> cardIds, int colorValue) {
@@ -272,13 +274,17 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
       name: name ?? 'Group ${state.groups.length + 1}',
       cardIds: cardIds,
     );
-    await _mutateAndPersist(() => state.copyWith(groups: [...state.groups, group]));
+    await _mutateAndPersist(
+      () => state.copyWith(groups: [...state.groups, group]),
+    );
   }
 
   Future<void> ungroupCards(String groupId) async {
-    await _mutateAndPersist(() => state.copyWith(
-      groups: state.groups.where((g) => g.id != groupId).toList(),
-    ));
+    await _mutateAndPersist(
+      () => state.copyWith(
+        groups: state.groups.where((g) => g.id != groupId).toList(),
+      ),
+    );
   }
 
   Future<void> renameGroup(String groupId, String name) async {
@@ -584,7 +590,9 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
   }
 
   Future<void> addCard(CanvasCard card) async {
-    await _mutateAndPersist(() => state.copyWith(cards: [...state.cards, card]));
+    await _mutateAndPersist(
+      () => state.copyWith(cards: [...state.cards, card]),
+    );
   }
 
   Future<void> updateCard(CanvasCard card) async {
@@ -595,29 +603,35 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
   }
 
   Future<void> removeCard(String cardId) async {
-    await _mutateAndPersist(() => state.copyWith(
-      cards: state.cards.where((c) => c.id != cardId).toList(),
-      connections: state.connections
-          .where((c) => c.fromCardId != cardId && c.toCardId != cardId)
-          .toList(),
-      groups: state.groups
-          .map((g) {
-            final remaining = g.cardIds.where((id) => id != cardId).toList();
-            return g.copyWith(cardIds: remaining);
-          })
-          .where((g) => g.cardIds.isNotEmpty)
-          .toList(),
-    ));
+    await _mutateAndPersist(
+      () => state.copyWith(
+        cards: state.cards.where((c) => c.id != cardId).toList(),
+        connections: state.connections
+            .where((c) => c.fromCardId != cardId && c.toCardId != cardId)
+            .toList(),
+        groups: state.groups
+            .map((g) {
+              final remaining = g.cardIds.where((id) => id != cardId).toList();
+              return g.copyWith(cardIds: remaining);
+            })
+            .where((g) => g.cardIds.isNotEmpty)
+            .toList(),
+      ),
+    );
   }
 
   Future<void> addConnection(CanvasConnection conn) async {
-    await _mutateAndPersist(() => state.copyWith(connections: [...state.connections, conn]));
+    await _mutateAndPersist(
+      () => state.copyWith(connections: [...state.connections, conn]),
+    );
   }
 
   Future<void> removeConnection(String connId) async {
-    await _mutateAndPersist(() => state.copyWith(
-      connections: state.connections.where((c) => c.id != connId).toList(),
-    ));
+    await _mutateAndPersist(
+      () => state.copyWith(
+        connections: state.connections.where((c) => c.id != connId).toList(),
+      ),
+    );
   }
 
   void updateConnection(CanvasConnection conn) {
@@ -1050,10 +1064,38 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
   }
 
   void toggleLayerVisibility(String layerId) {
+    final layers = state.layers.map((l) {
+      if (l.id == layerId) return l.copyWith(visible: !l.visible);
+      return l;
+    }).toList();
+    state = state.copyWith(layers: layers);
+    _debouncedSave();
+  }
+
+  void setLayerVisible(String layerId, bool visible) {
+    final layers = state.layers.map((l) {
+      if (l.id == layerId) return l.copyWith(visible: visible);
+      return l;
+    }).toList();
+    state = state.copyWith(layers: layers);
     _debouncedSave();
   }
 
   void toggleLayerLock(String layerId) {
+    final layers = state.layers.map((l) {
+      if (l.id == layerId) return l.copyWith(locked: !l.locked);
+      return l;
+    }).toList();
+    state = state.copyWith(layers: layers);
+    _debouncedSave();
+  }
+
+  void setLayerLocked(String layerId, bool locked) {
+    final layers = state.layers.map((l) {
+      if (l.id == layerId) return l.copyWith(locked: locked);
+      return l;
+    }).toList();
+    state = state.copyWith(layers: layers);
     _debouncedSave();
   }
 
