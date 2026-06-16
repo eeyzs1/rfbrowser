@@ -156,7 +156,7 @@ jobs:
       - name: link <-> note repository sync
         run: flutter test test/integration/link_e2e_test.dart --no-pub
       - name: vault provider propagation
-        run: flutter test test/integration/vault_lifecycle_test.dart --no-pub
+        run: flutter test test/integration/vault_integration_test.dart --no-pub
 
   smoke-test-macos:
     name: Smoke Test (macOS)
