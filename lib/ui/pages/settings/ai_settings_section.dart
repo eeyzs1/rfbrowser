@@ -1185,8 +1185,9 @@ class _AISettingsSectionState extends ConsumerState<AISettingsSection> {
                           .toList(),
                       onChanged: isEditing
                           ? (p) {
-                              if (p != null)
+                              if (p != null) {
                                 setState(() => selectedProtocol = p);
+                              }
                             }
                           : onProtocolChanged,
                     ),
