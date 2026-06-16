@@ -223,7 +223,15 @@ jobs:
             exit 1
           fi
           echo "=== using session id: $session_id ==="
-          echo "session_id=${session_id}" >> "$GITHUB_ENV"
+          # Use uppercase SESSION_ID to match the $env:SESSION_ID
+          # reads in the two test steps below. Although Windows
+          # environment variables are case-insensitive when read
+          # by a process, the GITHUB_ENV file parser is
+          # case-sensitive (it builds a literal map keyed by
+          # whatever case is on the `KEY=...` line), so a
+          # `session_id=2` write would NOT be visible to
+          # `$env:SESSION_ID` in the next step.
+          echo "SESSION_ID=${session_id}" >> "$GITHUB_ENV"
       - name: Plugin Lifecycle Integration Test (interactive console)
         shell: pwsh
         run: |
