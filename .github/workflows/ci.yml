@@ -116,7 +116,7 @@ jobs:
 
   integration-test-windows:
     name: Integration Tests (Windows)
-    runs-on: windows-latest
+    runs-on: windows-2022
     needs: [test, plugin-test]
     timeout-minutes: 30
     steps:
@@ -180,7 +180,7 @@ jobs:
 
   build-windows:
     name: Build Windows
-    runs-on: windows-latest
+    runs-on: windows-2022
     needs: [test, plugin-test, quick-moves-acceptance]
     if: github.event_name == 'push'
     timeout-minutes: 20
