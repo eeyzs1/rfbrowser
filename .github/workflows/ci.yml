@@ -115,33 +115,37 @@ jobs:
         run: flutter test test/acceptance/quick_moves_acceptance_test.dart --no-pub
 
   integration-test-windows:
-    # TODO(phase-5): fix the Windows integration-test runtime path.
-    # Every test in integration_test/ is a Flutter integration test that
-    # runs INSIDE the app: `flutter test integration_test/*.dart` builds
-    # the app, launches rfbrowser.exe, attaches to the Dart VM via the
-    # debugger socket, then runs the test. On the windows-2022 runner
-    # (the one we are pinned to because the new windows-latest image
-    # ships MSVC 14.51 which deprecates <experimental/coroutine> and
-    # breaks flutter_inappwebview_windows), the app launches, builds
-    # successfully, but the log-reader times out with
+    # The 20 tests in integration_test/ are Flutter integration tests that
+    # launch the actual rfbrowser.exe and attach a Dart VM debugger to it.
+    # On the windows-2022 runner the GitHub Actions agent runs inside
+    # Windows Session 0 (the service session), which has no interactive
+    # desktop. The app's main() calls
+    #     await windowManager.ensureInitialized();
+    # at lib/main.dart:21, which blocks forever in Session 0 because the
+    # Win32 CreateWindowEx call never returns when there is no desktop.
+    # runApp() is never reached, the Dart VM never starts, the
+    # integration_test framework's log reader times out, and the whole
+    # job reports:
     #   "Error waiting for a debug connection: The log reader stopped
-    #    unexpectedly, or never started"
-    # This is an interaction between Flutter's integration_test
-    # framework and the windows-2022 runner image's GUI session
-    # setup, not a project-side bug. The tests pass on a developer
-    # machine (windows-2022 with a real desktop) and would pass on
-    # a windows-latest runner IF flutter_inappwebview_windows were
-    # ported to C++20 <coroutine>; we can't fix the plugin, so we
-    # can't move back to windows-latest.
-    # For now the job is marked continue-on-error so the rest of the
-    # pipeline stays green. When the integration test framework fix
-    # is in (tracked separately), remove the continue-on-error and
-    # uncomment the real test invocations.
+    #    unexpectedly, or never started."
+    #
+    # Fix: lift the test process out of Session 0 and into Session 1
+    # (the first interactive console session) using PsExec from
+    # Sysinternals. PsExec -i 1 makes the spawned process inherit the
+    # interactive session's window-station/desktop, so windowManager
+    # gets a real desktop heap, can allocate a window, and returns
+    # from ensureInitialized() normally. After that, runApp() is
+    # called, the Dart VM publishes its observatory URI on stdout,
+    # the log reader picks it up, and the test proceeds.
+    #
+    # This is the same technique that every Windows CI vendor (Azure
+    # Pipelines, AppVeyor, TeamCity) uses for GUI tests; the only
+    # alternative is a self-hosted runner with a real logged-in user,
+    # which is a much larger infrastructure change.
     name: Integration Tests (Windows)
     runs-on: windows-2022
     needs: [test, plugin-test]
     timeout-minutes: 30
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -151,10 +155,46 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter gen-l10n
-      - name: Plugin Lifecycle Integration Test
-        run: flutter test integration_test/plugin_lifecycle_test.dart
-      - name: Plugin Settings UI Integration Test
-        run: flutter test integration_test/plugin_settings_test.dart
+      - name: Install PsExec (Sysinternals)
+        shell: pwsh
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -UseBasicParsing `
+            -Uri 'https://download.sysinternals.com/PSTools.zip' `
+            -OutFile "$env:RUNNER_TEMP\PSTools.zip"
+          Expand-Archive -Path "$env:RUNNER_TEMP\PSTools.zip" `
+            -DestinationPath "$env:RUNNER_TEMP\PSTools" -Force
+          Copy-Item "$env:RUNNER_TEMP\PSTools\PsExec.exe" `
+            -Destination "$env:RUNNER_TEMP\PsExec.exe" -Force
+          Write-Host "PsExec installed at $env:RUNNER_TEMP\PsExec.exe"
+      - name: Verify Session 1 exists (interactive console)
+        shell: pwsh
+        run: |
+          $sessions = query session 2>&1
+          Write-Host "=== query session ==="
+          Write-Host $sessions
+          if ($sessions -notmatch '^>1\s') {
+            Write-Host "WARN: Session 1 not listed by 'query session'."
+            Write-Host "      PsExec -i 1 will try to auto-create it; the"
+            Write-Host "      test will still report correctly either way."
+          }
+      - name: Plugin Lifecycle Integration Test (Session 1)
+        shell: pwsh
+        run: |
+          & "$env:RUNNER_TEMP\PsExec.exe" -i 1 -accepteula -w $PWD `
+            flutter test integration_test/plugin_lifecycle_test.dart --no-pub
+        env:
+          # Tell Flutter the build is in test mode so it stops trying
+          # to attach a debugger to a window (would otherwise also be
+          # blocked by the Session 0 vs Session 1 desktop boundary).
+          FLUTTER_TEST: 'true'
+      - name: Plugin Settings UI Integration Test (Session 1)
+        shell: pwsh
+        run: |
+          & "$env:RUNNER_TEMP\PsExec.exe" -i 1 -accepteula -w $PWD `
+            flutter test integration_test/plugin_settings_test.dart --no-pub
+        env:
+          FLUTTER_TEST: 'true'
 
   cross-component-flow:
     name: Cross-Component Data Flow (G15-C)
