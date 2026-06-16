@@ -172,32 +172,54 @@ jobs:
           Copy-Item "$env:RUNNER_TEMP\PSTools\PsExec.exe" `
             -Destination "$env:RUNNER_TEMP\PsExec.exe" -Force
           Write-Host "PsExec installed at $env:RUNNER_TEMP\PsExec.exe"
-      - name: Verify Session 1 exists (interactive console)
+      - name: Discover interactive session ID
+        # windows-2022 does not always create Session 1; the actual
+        # interactive console is whatever ID 'query session' shows with
+        # STATE=Active and SESSIONNAME=console. Earlier we hard-coded
+        # `psexec -i 1` and it failed immediately on this runner image
+        # (no Session 1 — Windows jumped straight to Session 2 for the
+        # GitHub Actions agent's interactive session). Parse 'query
+        # session' to get the right ID at runtime.
+        id: session
         shell: pwsh
         run: |
-          $sessions = query session 2>&1
+          $out = (query session) -join "`n"
           Write-Host "=== query session ==="
-          Write-Host $sessions
-          if ($sessions -notmatch '^>1\s') {
-            Write-Host "WARN: Session 1 not listed by 'query session'."
-            Write-Host "      PsExec -i 1 will try to auto-create it; the"
-            Write-Host "      test will still report correctly either way."
+          Write-Host $out
+          # Don't anchor on ^ — `query session` may emit the column
+          # header, the services row, and the console row all on one
+          # line in some terminal widths. Look for ">console <user>
+          # <id> Active" anywhere in the output.
+          $sessionId = $null
+          if ($out -match '>console\s+\S+\s+(\d+)\s+Active') {
+            $sessionId = $Matches[1]
           }
-      - name: Plugin Lifecycle Integration Test (Session 1)
+          if (-not $sessionId) {
+            throw "No Active console session found in 'query session' output. The runner image likely has no interactive desktop at all; PsExec cannot help here."
+          }
+          Write-Host "=== using session id: $sessionId ==="
+          "session_id=$sessionId" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Plugin Lifecycle Integration Test (interactive console)
         shell: pwsh
         run: |
-          & "$env:RUNNER_TEMP\PsExec.exe" -i 1 -accepteula -w $PWD `
-            flutter test integration_test/plugin_lifecycle_test.dart --no-pub
+          & "$env:RUNNER_TEMP\PsExec.exe" `
+            -i $env:SESSION_ID `
+            -accepteula `
+            -w $PWD `
+            -- flutter test integration_test/plugin_lifecycle_test.dart --no-pub
         env:
-          # Tell Flutter the build is in test mode so it stops trying
-          # to attach a debugger to a window (would otherwise also be
-          # blocked by the Session 0 vs Session 1 desktop boundary).
+          # Tell Flutter the build is in test mode so the test
+          # framework skips some of the desktop-only code paths
+          # (defence in depth for the Session 0 vs console boundary).
           FLUTTER_TEST: 'true'
-      - name: Plugin Settings UI Integration Test (Session 1)
+      - name: Plugin Settings UI Integration Test (interactive console)
         shell: pwsh
         run: |
-          & "$env:RUNNER_TEMP\PsExec.exe" -i 1 -accepteula -w $PWD `
-            flutter test integration_test/plugin_settings_test.dart --no-pub
+          & "$env:RUNNER_TEMP\PsExec.exe" `
+            -i $env:SESSION_ID `
+            -accepteula `
+            -w $PWD `
+            -- flutter test integration_test/plugin_settings_test.dart --no-pub
         env:
           FLUTTER_TEST: 'true'
 
