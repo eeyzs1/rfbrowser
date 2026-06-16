@@ -249,19 +249,43 @@ jobs:
         # the GNU option-terminator convention, treats `--` as the
         # program name, and prints the usage screen (we hit this
         # exact bug in 9693f83).
+        #
+        # The actual `flutter test` is invoked through a tiny .bat
+        # wrapper we write to the runner temp directory. The wrapper
+        # redirects stdout+stderr to a log file. Without this, PsExec
+        # never relays flutter's output back to our step (we get only
+        # "Starting ... on runnervm30ugi" and "exited with code 1",
+        # nothing in between) and we cannot diagnose failures.
         shell: pwsh
         run: |
           $flutter = Join-Path $env:FLUTTER_ROOT 'bin\flutter.bat'
           if (-not (Test-Path $flutter)) {
             throw "flutter.bat not found at $flutter (FLUTTER_ROOT=$env:FLUTTER_ROOT)"
           }
-          Write-Host "Invoking $flutter in session $env:SESSION_ID"
+          $wrapper = Join-Path $env:RUNNER_TEMP 'run_plugin_lifecycle_test.bat'
+          $logPath = Join-Path $env:RUNNER_TEMP 'plugin_lifecycle_test.log'
+          if (Test-Path $logPath) { Remove-Item $logPath -Force }
+          $bat = @"
+          @echo off
+          "$flutter" test integration_test/plugin_lifecycle_test.dart --no-pub > "$logPath" 2>&1
+          exit /b %ERRORLEVEL%
+          "@
+          [System.IO.File]::WriteAllText($wrapper, $bat, [System.Text.UTF8Encoding]::new($false))
+          Write-Host "Invoking $wrapper in session $env:SESSION_ID"
           & "$env:RUNNER_TEMP\PsExec.exe" `
             -i $env:SESSION_ID `
             -accepteula `
             -w $PWD `
-            $flutter `
-            test integration_test/plugin_lifecycle_test.dart --no-pub
+            cmd.exe /c $wrapper
+          $ec = $LASTEXITCODE
+          Write-Host "==== flutter test output ===="
+          if (Test-Path $logPath) {
+            Get-Content $logPath -Raw | Write-Host
+          } else {
+            Write-Host "(no log file produced at $logPath)"
+          }
+          Write-Host "==== end of output ===="
+          exit $ec
         env:
           # Tell Flutter the build is in test mode so the test
           # framework skips some of the desktop-only code paths
@@ -274,13 +298,30 @@ jobs:
           if (-not (Test-Path $flutter)) {
             throw "flutter.bat not found at $flutter (FLUTTER_ROOT=$env:FLUTTER_ROOT)"
           }
-          Write-Host "Invoking $flutter in session $env:SESSION_ID"
+          $wrapper = Join-Path $env:RUNNER_TEMP 'run_plugin_settings_test.bat'
+          $logPath = Join-Path $env:RUNNER_TEMP 'plugin_settings_test.log'
+          if (Test-Path $logPath) { Remove-Item $logPath -Force }
+          $bat = @"
+          @echo off
+          "$flutter" test integration_test/plugin_settings_test.dart --no-pub > "$logPath" 2>&1
+          exit /b %ERRORLEVEL%
+          "@
+          [System.IO.File]::WriteAllText($wrapper, $bat, [System.Text.UTF8Encoding]::new($false))
+          Write-Host "Invoking $wrapper in session $env:SESSION_ID"
           & "$env:RUNNER_TEMP\PsExec.exe" `
             -i $env:SESSION_ID `
             -accepteula `
             -w $PWD `
-            $flutter `
-            test integration_test/plugin_settings_test.dart --no-pub
+            cmd.exe /c $wrapper
+          $ec = $LASTEXITCODE
+          Write-Host "==== flutter test output ===="
+          if (Test-Path $logPath) {
+            Get-Content $logPath -Raw | Write-Host
+          } else {
+            Write-Host "(no log file produced at $logPath)"
+          }
+          Write-Host "==== end of output ===="
+          exit $ec
         env:
           FLUTTER_TEST: 'true'
 
