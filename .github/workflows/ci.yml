@@ -198,7 +198,11 @@ jobs:
             throw "No Active console session found in 'query session' output. The runner image likely has no interactive desktop at all; PsExec cannot help here."
           }
           Write-Host "=== using session id: $sessionId ==="
-          "session_id=$sessionId" | Out-File -FilePath $env:GITHUB_ENV -Append
+          # Use Add-Content with explicit UTF-8 (no BOM) so the
+          # subsequent steps can read the value. Out-File defaults
+          # to UTF-16 LE with a BOM, which GitHub Actions does not
+          # strip on read and breaks the `key=value` parser.
+          Add-Content -Path $env:GITHUB_ENV -Value "session_id=$sessionId" -Encoding utf8
       - name: Plugin Lifecycle Integration Test (interactive console)
         shell: pwsh
         run: |
@@ -237,16 +241,54 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter gen-l10n
+      # Each test below is wrapped in a retry loop because the
+      # sqlite3 dart package downloads a pre-compiled libsqlite3 at
+      # first build time. The download is fetched from
+      # github.com/simolus3/sqlite3.dart/releases and is occasionally
+      # cut off mid-stream (HTTP "Connection closed before full
+      # header was received"). The artifact is cached after the
+      # first successful download, so retrying is sufficient: a
+      # second attempt usually hits the cache and runs offline.
       - name: search → note → graph → canvas → AI (G13-D)
-        run: flutter test test/integration/end_to_end_flow_test.dart --no-pub
+        run: |
+          for i in 1 2 3 4 5; do
+            echo "=== attempt $i ==="
+            if flutter test test/integration/end_to_end_flow_test.dart --no-pub; then
+              exit 0
+            fi
+            echo "attempt $i failed, waiting 10s before retry"
+            sleep 10
+          done
+          echo "all 5 attempts failed"
+          exit 1
       - name: 5 canonical user journeys (G15-B)
-        run: flutter test test/integration/user_journey_test.dart --no-pub
+        run: |
+          for i in 1 2 3; do
+            if flutter test test/integration/user_journey_test.dart --no-pub; then exit 0; fi
+            sleep 5
+          done
+          exit 1
       - name: knowledge <-> index store sync
-        run: flutter test test/integration/knowledge_integration_test.dart --no-pub
+        run: |
+          for i in 1 2 3; do
+            if flutter test test/integration/knowledge_integration_test.dart --no-pub; then exit 0; fi
+            sleep 5
+          done
+          exit 1
       - name: link <-> note repository sync
-        run: flutter test test/integration/link_e2e_test.dart --no-pub
+        run: |
+          for i in 1 2 3; do
+            if flutter test test/integration/link_e2e_test.dart --no-pub; then exit 0; fi
+            sleep 5
+          done
+          exit 1
       - name: vault provider propagation
-        run: flutter test test/integration/vault_integration_test.dart --no-pub
+        run: |
+          for i in 1 2 3; do
+            if flutter test test/integration/vault_integration_test.dart --no-pub; then exit 0; fi
+            sleep 5
+          done
+          exit 1
 
   smoke-test-macos:
     name: Smoke Test (macOS)
