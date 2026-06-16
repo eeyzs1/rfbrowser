@@ -12,8 +12,10 @@ void main() async {
   // intentionally unconditional so we can distinguish "main() was
   // never called" from "main() was called but FLUTTER_TEST != 'true'".
   // ignore: avoid_print
-  print('[main] main() entered; FLUTTER_TEST='
-      '"${Platform.environment['FLUTTER_TEST'] ?? '<unset>'}"');
+  print(
+    '[main] main() entered; FLUTTER_TEST='
+    '"${Platform.environment['FLUTTER_TEST'] ?? '<unset>'}"',
+  );
 
   WidgetsFlutterBinding.ensureInitialized();
 
