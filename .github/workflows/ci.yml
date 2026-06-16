@@ -198,11 +198,29 @@ jobs:
             throw "No Active console session found in 'query session' output. The runner image likely has no interactive desktop at all; PsExec cannot help here."
           }
           Write-Host "=== using session id: $sessionId ==="
-          # Use Add-Content with explicit UTF-8 (no BOM) so the
-          # subsequent steps can read the value. Out-File defaults
-          # to UTF-16 LE with a BOM, which GitHub Actions does not
-          # strip on read and breaks the `key=value` parser.
-          Add-Content -Path $env:GITHUB_ENV -Value "session_id=$sessionId" -Encoding utf8
+          # Write the session id back to GITHUB_ENV so the next step
+          # can read it. Use the .NET file API with an explicit
+          # UTF-8-no-BOM encoding. Reasons:
+          #   * Out-File defaults to UTF-16 LE with BOM, which breaks
+          #     the GITHUB_ENV `key=value` parser.
+          #   * Add-Content -Encoding utf8 ALSO writes a BOM in
+          #     PowerShell 5.1 and 7.x, so the previous fix using
+          #     Add-Content utf8 was a no-op (we just hit the same
+          #     BOM problem from a different cmdlet).
+          #   * The .NET File.AppendAllText overload that takes a
+          #     UTF8Encoding(false) is the only call that guarantees
+          #     no BOM. Using it here makes the write side provably
+          #     correct regardless of which PowerShell host the
+          #     runner happens to use today.
+          $envFile = $env:GITHUB_ENV
+          if ([string]::IsNullOrEmpty($envFile)) {
+            throw 'GITHUB_ENV is not set in this step; cannot propagate session_id to the next step.'
+          }
+          [System.IO.File]::AppendAllText(
+            $envFile,
+            "session_id=$sessionId`n",
+            (New-Object System.Text.UTF8Encoding($false))
+          )
       - name: Plugin Lifecycle Integration Test (interactive console)
         shell: pwsh
         run: |
