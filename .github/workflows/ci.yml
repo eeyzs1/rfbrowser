@@ -239,7 +239,7 @@ jobs:
             -i $env:SESSION_ID `
             -accepteula `
             -w $PWD `
-            -- flutter test integration_test/plugin_lifecycle_test.dart --no-pub
+            flutter test integration_test/plugin_lifecycle_test.dart --no-pub
         env:
           # Tell Flutter the build is in test mode so the test
           # framework skips some of the desktop-only code paths
@@ -252,7 +252,7 @@ jobs:
             -i $env:SESSION_ID `
             -accepteula `
             -w $PWD `
-            -- flutter test integration_test/plugin_settings_test.dart --no-pub
+            flutter test integration_test/plugin_settings_test.dart --no-pub
         env:
           FLUTTER_TEST: 'true'
 
