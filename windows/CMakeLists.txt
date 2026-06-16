@@ -28,11 +28,26 @@ endif()
 #   and <experimental/resumable> are not supported when compiling with
 #   /std:c++20 or later'
 #
-# Pinning the project to C++17 + /await avoids the STL1011 error for every
-# C++ translation unit that ends up transitively including the WebView2
-# header, including the integration-test build.
+# Two independent hooks are used because the simple
+# `add_compile_options(/std:c++17 /await)` from the previous attempt did
+# NOT take effect on the flutter_inappwebview_windows target:
+#   * the plugin's own CMakeLists.txt sets cxx_std_17 via
+#     `target_compile_features`, which CMake translates to /std:c++17 for
+#     the target's compile-feature, but the order in which flags are
+#     appended in MSVC's command line means a later /std:c++20 (added by
+#     some other target's cxx_std_20 default) can win.
+#   * therefore we (a) set CMAKE_CXX_STANDARD globally so CMake injects
+#     /std:c++17 for every target that doesn't override, and (b) append
+#     /await to CMAKE_CXX_FLAGS so it survives even when a target later
+#     resets cxx_std.
+#   * also disable the MSVC C++ language extension (`/permissive-`) so the
+#     standard really is C++17 and not "C++17 with MS extensions" which
+#     silently re-enables /std:c++20 behaviour for some STL headers.
 if(MSVC)
-  add_compile_options(/std:c++17 /await)
+  set(CMAKE_CXX_STANDARD 17 CACHE STRING "" FORCE)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE BOOL "" FORCE)
+  set(CMAKE_CXX_EXTENSIONS OFF CACHE BOOL "" FORCE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /await /permissive-")
 endif()
 
 # Define build configuration option.
