@@ -29,6 +29,11 @@ void main() async {
   // real window. FLUTTER_TEST is set by .github/workflows/ci.yml in
   // the integration-test-windows job.
   if (Platform.environment['FLUTTER_TEST'] == 'true') {
+    // ignore: avoid_print
+    print(
+      '[main] FLUTTER_TEST detected, skipping windowManager and '
+      'running RFBrowserApp without a real window.',
+    );
     runApp(const ProviderScope(child: RFBrowserApp()));
     return;
   }
