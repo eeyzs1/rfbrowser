@@ -18,6 +18,21 @@ void main() async {
     initDatabaseFactory();
   }
 
+  // Skip the native window setup when running inside flutter integration
+  // tests. windowManager.ensureInitialized() needs a real interactive
+  // desktop (a logged-in user on a window-station); the GitHub Actions
+  // runner provides neither, so the call would block forever on
+  // CreateWindowEx and the integration test framework would time out
+  // with "Unable to start the app on the device" because runApp() is
+  // never reached. The integration tests in integration_test/ only
+  // exercise Dart-level plugin / service logic; they do not need a
+  // real window. FLUTTER_TEST is set by .github/workflows/ci.yml in
+  // the integration-test-windows job.
+  if (Platform.environment['FLUTTER_TEST'] == 'true') {
+    runApp(const ProviderScope(child: RFBrowserApp()));
+    return;
+  }
+
   await windowManager.ensureInitialized();
 
   WindowOptions windowOptions = const WindowOptions(
