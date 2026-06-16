@@ -159,9 +159,14 @@ jobs:
         shell: pwsh
         run: |
           $ProgressPreference = 'SilentlyContinue'
+          # Current canonical URL is the /files/ path; the bare
+          # https://download.sysinternals.com/PSTools.zip URL now 404s.
           Invoke-WebRequest -UseBasicParsing `
-            -Uri 'https://download.sysinternals.com/PSTools.zip' `
+            -Uri 'https://download.sysinternals.com/files/PSTools.zip' `
             -OutFile "$env:RUNNER_TEMP\PSTools.zip"
+          if ((Get-Item "$env:RUNNER_TEMP\PSTools.zip").Length -lt 1000000) {
+            throw "PSTools.zip download looks too small ($((Get-Item $env:RUNNER_TEMP\PSTools.zip).Length) bytes) — got an HTML error page instead of the archive."
+          }
           Expand-Archive -Path "$env:RUNNER_TEMP\PSTools.zip" `
             -DestinationPath "$env:RUNNER_TEMP\PSTools" -Force
           Copy-Item "$env:RUNNER_TEMP\PSTools\PsExec.exe" `
