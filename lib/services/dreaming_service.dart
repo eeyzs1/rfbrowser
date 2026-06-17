@@ -40,6 +40,26 @@ class DreamingService {
   Timer? _idleTimer;
   bool _isConsolidating = false;
   int _lastExportedMessageCount = 0;
+  // ── Last-run status snapshot. Updated by [_consolidate] and read by
+  //    the `dreamingStatusProvider` so the UI can show "last dream
+  //    was N minutes ago, extracted K fragments".
+  DateTime? _lastConsolidationAt;
+  int _lastNewFragments = 0;
+  int _lastSummariesCreated = 0;
+  int _lastRecordsTransitioned = 0;
+  int _lastStaleEdgesPruned = 0;
+  DateTime? _lastExportAt;
+  String? _lastExportPath;
+
+  // ── Public accessors for the status provider ──────────────────────
+  DateTime? get lastConsolidationAt => _lastConsolidationAt;
+  int get lastNewFragments => _lastNewFragments;
+  int get lastSummariesCreated => _lastSummariesCreated;
+  int get lastRecordsTransitioned => _lastRecordsTransitioned;
+  int get lastStaleEdgesPruned => _lastStaleEdgesPruned;
+  DateTime? get lastExportAt => _lastExportAt;
+  String? get lastExportPath => _lastExportPath;
+  bool get isConsolidating => _isConsolidating;
 
   /// Threshold: trigger consolidation after this many new messages.
   static const int messageThreshold = 8;
@@ -172,11 +192,17 @@ class DreamingService {
       // 2.5. Reap Hebbian edges that have decayed and never been
       //      reinforced — keeps the edge table from growing forever.
       final staleEdges = await _memory.deleteStaleHebbianEdges();
+      _lastStaleEdgesPruned = staleEdges;
       if (staleEdges > 0) {
         debugPrint('DreamingService: pruned $staleEdges stale Hebbian edges');
       }
 
       _lastConsolidatedCount = await _memory.getUnconsolidatedCount();
+      // Capture last-run status for the dreamingStatusProvider.
+      _lastConsolidationAt = DateTime.now();
+      _lastNewFragments = extractResult.newFragments.length;
+      _lastSummariesCreated = forgettingStats.createdSummaries;
+      _lastRecordsTransitioned = forgettingStats.transitionedRecords;
       debugPrint(
         'DreamingService: extracted ${extractResult.newFragments.length} new, '
         '${extractResult.supersededIds.length} superseded, '
@@ -204,6 +230,8 @@ class DreamingService {
       final path = await exporter.exportSession();
       if (path != null) {
         _lastExportedMessageCount = total;
+        _lastExportAt = DateTime.now();
+        _lastExportPath = path;
         debugPrint('DreamingService: exported chat to $path');
       }
     } catch (e) {
@@ -222,6 +250,8 @@ class DreamingService {
     final path = await exporter.exportSession();
     if (path != null) {
       _lastExportedMessageCount = _lastConsolidatedCount;
+      _lastExportAt = DateTime.now();
+      _lastExportPath = path;
     }
     return path;
   }
@@ -671,4 +701,81 @@ class _ForgettingRunResult {
     required this.transitionedRecords,
     required this.archivedDetailRecords,
   });
+}
+
+/// A snapshot of the [DreamingService]'s last-run stats and current state.
+/// Rendered by the Memory Settings "Dreaming activity" card so the user
+/// can see "when did the system last dream" without having to dig through
+/// logs.
+class DreamingStatus {
+  final DateTime? lastConsolidationAt;
+  final int lastNewFragments;
+  final int lastSummariesCreated;
+  final int lastRecordsTransitioned;
+  final int lastStaleEdgesPruned;
+  final DateTime? lastExportAt;
+  final String? lastExportPath;
+  final bool isConsolidating;
+  final int pendingMessages;
+  const DreamingStatus({
+    this.lastConsolidationAt,
+    this.lastNewFragments = 0,
+    this.lastSummariesCreated = 0,
+    this.lastRecordsTransitioned = 0,
+    this.lastStaleEdgesPruned = 0,
+    this.lastExportAt,
+    this.lastExportPath,
+    this.isConsolidating = false,
+    this.pendingMessages = 0,
+  });
+
+  DreamingStatus copyWith({
+    DateTime? lastConsolidationAt,
+    int? lastNewFragments,
+    int? lastSummariesCreated,
+    int? lastRecordsTransitioned,
+    int? lastStaleEdgesPruned,
+    DateTime? lastExportAt,
+    String? lastExportPath,
+    bool? isConsolidating,
+    int? pendingMessages,
+  }) {
+    return DreamingStatus(
+      lastConsolidationAt: lastConsolidationAt ?? this.lastConsolidationAt,
+      lastNewFragments: lastNewFragments ?? this.lastNewFragments,
+      lastSummariesCreated: lastSummariesCreated ?? this.lastSummariesCreated,
+      lastRecordsTransitioned:
+          lastRecordsTransitioned ?? this.lastRecordsTransitioned,
+      lastStaleEdgesPruned: lastStaleEdgesPruned ?? this.lastStaleEdgesPruned,
+      lastExportAt: lastExportAt ?? this.lastExportAt,
+      lastExportPath: lastExportPath ?? this.lastExportPath,
+      isConsolidating: isConsolidating ?? this.isConsolidating,
+      pendingMessages: pendingMessages ?? this.pendingMessages,
+    );
+  }
+}
+
+/// Riverpod provider for the dreaming activity snapshot. Auto-refreshes
+/// every 30 seconds so the settings card stays current without requiring
+/// the user to tap a refresh button.
+final dreamingStatusProvider = StreamProvider<DreamingStatus>((ref) async* {
+  // Emit immediately with the current snapshot, then on a timer.
+  final svc = ref.watch(dreamingServiceProvider);
+  yield _snapshot(svc, ref);
+  await for (final _ in Stream<void>.periodic(const Duration(seconds: 30))) {
+    yield _snapshot(svc, ref);
+  }
+});
+
+DreamingStatus _snapshot(DreamingService svc, Ref ref) {
+  return DreamingStatus(
+    lastConsolidationAt: svc.lastConsolidationAt,
+    lastNewFragments: svc.lastNewFragments,
+    lastSummariesCreated: svc.lastSummariesCreated,
+    lastRecordsTransitioned: svc.lastRecordsTransitioned,
+    lastStaleEdgesPruned: svc.lastStaleEdgesPruned,
+    lastExportAt: svc.lastExportAt,
+    lastExportPath: svc.lastExportPath,
+    isConsolidating: svc.isConsolidating,
+  );
 }

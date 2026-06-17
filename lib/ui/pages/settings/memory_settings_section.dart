@@ -32,6 +32,15 @@ class MemorySettingsSection extends ConsumerWidget {
           value: settings.memoryInjectContext,
           onChanged: notifier.setMemoryInjectContext,
         ),
+        _IntSlider(
+          label: 'Memory context budget',
+          suffix: 'tokens',
+          value: settings.memoryContextBudget,
+          min: 200,
+          max: 4000,
+          divisions: 38,
+          onChanged: notifier.setMemoryContextBudget,
+        ),
         const Divider(height: 1),
         const _SectionHeader(label: 'Progressive forgetting'),
         SwitchListTile(
@@ -134,6 +143,9 @@ class MemorySettingsSection extends ConsumerWidget {
           onChanged: notifier.setMemoryAutoExportEveryNMessages,
         ),
         const _ManualExportTile(),
+        const Divider(height: 1),
+        const _SectionHeader(label: 'Dreaming activity'),
+        const _DreamingStatusCard(),
       ],
     );
   }
@@ -269,5 +281,148 @@ class _ManualExportTile extends ConsumerWidget {
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('Export failed: $e')));
     }
+  }
+}
+
+/// Live status card for the dreaming engine. Shows "when did the system
+/// last consolidate, what did it do" without requiring the user to read
+/// logs. Auto-refreshes every 30s via [dreamingStatusProvider].
+class _DreamingStatusCard extends ConsumerWidget {
+  const _DreamingStatusCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final asyncStatus = ref.watch(dreamingStatusProvider);
+
+    return asyncStatus.when(
+      data: (s) => _DreamingStatusBody(status: s, theme: theme),
+      loading: () => const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          'Status unavailable: $e',
+          style: TextStyle(color: theme.colorScheme.error),
+        ),
+      ),
+    );
+  }
+}
+
+class _DreamingStatusBody extends StatelessWidget {
+  final DreamingStatus status;
+  final ThemeData theme;
+  const _DreamingStatusBody({required this.status, required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    final df = _relativeDateFormat(status.lastConsolidationAt);
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                status.isConsolidating ? Icons.sync : Icons.auto_awesome,
+                size: 16,
+                color: status.isConsolidating
+                    ? theme.colorScheme.tertiary
+                    : theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                status.isConsolidating
+                    ? 'Dreaming in progress…'
+                    : (status.lastConsolidationAt == null
+                          ? 'No dreams yet'
+                          : 'Last dream: $df'),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          if (status.lastConsolidationAt != null) ...[
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 12,
+              runSpacing: 4,
+              children: [
+                _StatusChip(
+                  icon: Icons.add_circle_outline,
+                  label: '${status.lastNewFragments} extracted',
+                ),
+                _StatusChip(
+                  icon: Icons.notes,
+                  label: '${status.lastSummariesCreated} summaries',
+                ),
+                _StatusChip(
+                  icon: Icons.swap_vert,
+                  label: '${status.lastRecordsTransitioned} transitioned',
+                ),
+                if (status.lastStaleEdgesPruned > 0)
+                  _StatusChip(
+                    icon: Icons.cleaning_services,
+                    label: '${status.lastStaleEdgesPruned} edges pruned',
+                  ),
+                if (status.lastExportAt != null)
+                  _StatusChip(
+                    icon: Icons.save_alt,
+                    label:
+                        'last export ${_relativeDateFormat(status.lastExportAt)}',
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  static String _relativeDateFormat(DateTime? t) {
+    if (t == null) return 'never';
+    final d = DateTime.now().difference(t);
+    if (d.inSeconds < 5) return 'just now';
+    if (d.inMinutes < 1) return '${d.inSeconds}s ago';
+    if (d.inHours < 1) return '${d.inMinutes}m ago';
+    if (d.inDays < 1) return '${d.inHours}h ago';
+    return '${d.inDays}d ago';
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _StatusChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: theme.colorScheme.outlineVariant, width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: theme.colorScheme.primary),
+          const SizedBox(width: 4),
+          Text(label, style: theme.textTheme.bodySmall),
+        ],
+      ),
+    );
   }
 }

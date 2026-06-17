@@ -37,6 +37,19 @@ class ChatMessage {
   /// on first access if the message was constructed without one.
   final String? id;
 
+  /// Memory fragment ids that were injected into this response's context.
+  /// Lets the UI render a "memory footprint" so the user can see what the
+  /// model was thinking with.
+  final List<String> usedMemoryFragmentIds;
+
+  /// Memory summary ids that were injected as a fallback when no fragments
+  /// matched.
+  final List<String> usedMemorySummaryIds;
+
+  /// Approximate number of memory-context tokens consumed by this turn.
+  /// Tracked for the budget cap + UI display.
+  final int memoryContextTokens;
+
   ChatMessage({
     required this.role,
     required this.content,
@@ -46,6 +59,9 @@ class ChatMessage {
     this.toolCallDisplay,
     this.toolResultDisplay,
     this.id,
+    this.usedMemoryFragmentIds = const [],
+    this.usedMemorySummaryIds = const [],
+    this.memoryContextTokens = 0,
   }) : timestamp = timestamp ?? DateTime.now();
 
   ChatMessage copyWith({
@@ -54,6 +70,9 @@ class ChatMessage {
     List<ToolCallInfo>? toolCalls,
     String? toolCallDisplay,
     String? toolResultDisplay,
+    List<String>? usedMemoryFragmentIds,
+    List<String>? usedMemorySummaryIds,
+    int? memoryContextTokens,
     bool clearToolCallDisplay = false,
     bool clearToolResultDisplay = false,
   }) {
@@ -69,8 +88,49 @@ class ChatMessage {
       toolResultDisplay: clearToolResultDisplay
           ? null
           : (toolResultDisplay ?? this.toolResultDisplay),
+      usedMemoryFragmentIds:
+          usedMemoryFragmentIds ?? this.usedMemoryFragmentIds,
+      usedMemorySummaryIds: usedMemorySummaryIds ?? this.usedMemorySummaryIds,
+      memoryContextTokens: memoryContextTokens ?? this.memoryContextTokens,
     );
   }
+}
+
+/// What [_AiMemoryBrain.buildContext] (or equivalent) decided to put into
+/// the system prompt. Carries the formatted string plus the source rows
+/// and an approximate token cost so the chat panel can render a
+/// "memory footprint" beside the assistant's reply.
+class MemoryContextBundle {
+  /// Final prompt fragment injected into the system prompt.
+  final String? context;
+
+  /// Ids of the memory fragments that were picked.
+  final List<String> fragmentIds;
+
+  /// Ids of the summaries used as a fallback (when no fragments fit).
+  final List<String> summaryIds;
+
+  /// Approximate number of tokens the formatted context consumed. Tracked
+  /// for the user-facing budget display.
+  final int tokensUsed;
+
+  /// The budget the picker was targeting.
+  final int budget;
+  const MemoryContextBundle({
+    required this.context,
+    required this.fragmentIds,
+    required this.summaryIds,
+    required this.tokensUsed,
+    required this.budget,
+  });
+  const MemoryContextBundle.empty()
+    : context = null,
+      fragmentIds = const [],
+      summaryIds = const [],
+      tokensUsed = 0,
+      budget = 0;
+  bool get isEmpty =>
+      context == null && fragmentIds.isEmpty && summaryIds.isEmpty;
 }
 
 class AIState {
@@ -167,10 +227,10 @@ class AINotifier extends Notifier<AIState> {
     // ─────────────────────────────────────────────────────────────
 
     // ── Memory: query relevant fragments ────────────────────────
-    final memoryContext = await _buildMemoryContext(userMessage);
+    final memoryBundle = await _buildMemoryContextBundle(userMessage);
     final effectiveContext = _mergeContext(
       _mergeContext(context, ambientBlock.isEmpty ? null : ambientBlock),
-      memoryContext,
+      memoryBundle.context,
     );
     // ─────────────────────────────────────────────────────────────
 
@@ -289,7 +349,11 @@ class AINotifier extends Notifier<AIState> {
             }
           }
         }
-        _updateLastAssistantMessage(buffer.toString(), isStreaming: false);
+        _updateLastAssistantMessage(
+          buffer.toString(),
+          isStreaming: false,
+          attachMemoryFootprint: true,
+        );
         // ── Memory: persist assistant response ──────────────────
         _persistMessage('assistant', buffer.toString());
         // ─────────────────────────────────────────────────────────
@@ -307,6 +371,7 @@ class AINotifier extends Notifier<AIState> {
   void _updateLastAssistantMessage(
     String content, {
     required bool isStreaming,
+    bool attachMemoryFootprint = false,
   }) {
     final messages = List<ChatMessage>.from(state.messages);
     for (int i = messages.length - 1; i >= 0; i--) {
@@ -314,6 +379,18 @@ class AINotifier extends Notifier<AIState> {
         messages[i] = messages[i].copyWith(
           content: content,
           isStreaming: isStreaming,
+          // Only stamp the memory footprint on the terminal update so we
+          // don't flash a "using N memories" badge while the message is
+          // still streaming.
+          usedMemoryFragmentIds: attachMemoryFootprint
+              ? _bundle.fragmentIds
+              : messages[i].usedMemoryFragmentIds,
+          usedMemorySummaryIds: attachMemoryFootprint
+              ? _bundle.summaryIds
+              : messages[i].usedMemorySummaryIds,
+          memoryContextTokens: attachMemoryFootprint
+              ? _bundle.tokensUsed
+              : messages[i].memoryContextTokens,
         );
         break;
       }
@@ -393,7 +470,11 @@ class AINotifier extends Notifier<AIState> {
 
       // Check if we have tool calls to execute
       if (toolCallsByIndex.isEmpty) {
-        _updateLastAssistantMessage(accumulatedText, isStreaming: false);
+        _updateLastAssistantMessage(
+          accumulatedText,
+          isStreaming: false,
+          attachMemoryFootprint: true,
+        );
         // ── Memory: persist final assistant response ────────────
         if (accumulatedText.isNotEmpty) {
           _persistMessage('assistant', accumulatedText);
@@ -467,6 +548,7 @@ class AINotifier extends Notifier<AIState> {
     _updateLastAssistantMessage(
       'Agent tool loop limit reached. Please simplify your request.',
       isStreaming: false,
+      attachMemoryFootprint: true,
     );
   }
 
@@ -536,6 +618,16 @@ class AINotifier extends Notifier<AIState> {
 
   // ─── Memory helpers ────────────────────────────────────────────────
 
+  /// Snapshot returned by [_buildMemoryContext] — the formatted
+  /// prompt fragment plus the source rows so the UI can render a
+  /// "memory footprint" alongside the assistant's reply.
+  MemoryContextBundle _bundle = const MemoryContextBundle.empty();
+
+  /// Last memory bundle used to construct a context. Exposed so the chat
+  /// panel can read the same fragment ids the model was "thinking with"
+  /// after the assistant's reply completes streaming.
+  MemoryContextBundle get lastMemoryContext => _bundle;
+
   /// Query relevant memory fragments and format them for the system prompt.
   ///
   /// Pipeline:
@@ -544,7 +636,14 @@ class AINotifier extends Notifier<AIState> {
   ///   3. Record the union as a co-access group (so the next call sees
   ///      stronger edges between them)
   ///   4. Fall back to summary search when fragment results are sparse
-  Future<String?> _buildMemoryContext(String userMessage) async {
+  ///   5. Trim to the user-configured token budget
+  ///
+  /// The result is cached in [_bundle] for the duration of the turn so the
+  /// chat panel can render the memory footprint after the assistant's
+  /// reply lands.
+  Future<MemoryContextBundle> _buildMemoryContextBundle(
+    String userMessage,
+  ) async {
     try {
       final fragments = await _memory.searchFragments(userMessage, limit: 5);
       final hebbian = ref.read(hebbianServiceProvider);
@@ -574,21 +673,54 @@ class AINotifier extends Notifier<AIState> {
         ...neighbors.map((n) => n.fragment),
       ];
 
-      String? ctx = allFragments.isEmpty
-          ? null
-          : MemoryService.formatFragmentsForContext(allFragments);
+      // Token budget cap: drop low-score fragments until the formatted
+      // context fits within `memoryContextBudget` (approx 4 chars per token).
+      final settings = ref.read(settingsProvider);
+      final budget = settings.memoryContextBudget;
+      final ordered = [...allFragments]
+        ..sort((a, b) {
+          // Higher importance first, then higher recency.
+          final s = b.importanceScore.compareTo(a.importanceScore);
+          if (s != 0) return s;
+          return (b.lastAccessAt ?? b.createdAt).compareTo(
+            a.lastAccessAt ?? a.createdAt,
+          );
+        });
+      var picked = <MemoryFragment>[];
+      var used = 0;
+      for (final f in ordered) {
+        // Approximate the formatted cost as 4× content length.
+        final cost = (f.content.length / 4).ceil() + 20;
+        if (used + cost > budget) continue;
+        picked.add(f);
+        used += cost;
+      }
 
-      // Fallback: if no fragments matched, look at summaries.
-      if (allFragments.isEmpty) {
+      String? ctx = picked.isEmpty
+          ? null
+          : MemoryService.formatFragmentsForContext(picked);
+
+      var summaryIds = const <String>[];
+      // Fallback: if nothing fit, look at summaries.
+      if (picked.isEmpty) {
         final summaries = await _memory.searchSummaries(userMessage, limit: 3);
         if (summaries.isNotEmpty) {
           ctx = _formatSummariesForContext(summaries);
+          summaryIds = summaries.map((s) => s.summaryId).toList();
         }
       }
-      return ctx;
+      _bundle = MemoryContextBundle(
+        context: ctx,
+        fragmentIds: picked.map((f) => f.id).toList(),
+        summaryIds: summaryIds,
+        tokensUsed: used,
+        budget: budget,
+      );
+      return _bundle;
     } catch (e) {
       debugPrint('AI: memory context query failed: $e');
-      return null;
+      _bundle = const MemoryContextBundle.empty();
+      return _bundle;
     }
   }
 

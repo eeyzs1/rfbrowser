@@ -88,6 +88,12 @@ class AppSettings {
   /// scorer falls back to the original createdAt-only behavior.
   final bool memoryUseLastAccessForRecency;
 
+  /// Maximum approximate token count the memory subsystem will inject
+  /// into the AI's system prompt. Fragments are dropped in
+  /// importance-ascending order until the budget is met. Default 800
+  /// (≈ 3200 characters), which is roughly 5 short fragments.
+  final int memoryContextBudget;
+
   AppSettings({
     this.locale = 'system',
     this.editorFontSize = 14.0,
@@ -118,6 +124,7 @@ class AppSettings {
     this.memoryCreatedRecencyHalfLifeDays = 180,
     this.memoryAccessRecencyHalfLifeDays = 30,
     this.memoryUseLastAccessForRecency = true,
+    this.memoryContextBudget = 800,
   });
 
   Color get accentColor => Color(accentColorValue);
@@ -180,6 +187,7 @@ class AppSettings {
     int? memoryCreatedRecencyHalfLifeDays,
     int? memoryAccessRecencyHalfLifeDays,
     bool? memoryUseLastAccessForRecency,
+    int? memoryContextBudget,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
@@ -224,6 +232,7 @@ class AppSettings {
           this.memoryAccessRecencyHalfLifeDays,
       memoryUseLastAccessForRecency:
           memoryUseLastAccessForRecency ?? this.memoryUseLastAccessForRecency,
+      memoryContextBudget: memoryContextBudget ?? this.memoryContextBudget,
     );
   }
 }
@@ -274,6 +283,7 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
           prefs.getInt('memoryAccessRecencyHalfLifeDays') ?? 30,
       memoryUseLastAccessForRecency:
           prefs.getBool('memoryUseLastAccessForRecency') ?? true,
+      memoryContextBudget: prefs.getInt('memoryContextBudget') ?? 800,
     );
   }
 
@@ -542,6 +552,15 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
       value: v,
       persist: (p, k, val) => p.setBool(k, val),
       update: (s, val) => s.copyWith(memoryUseLastAccessForRecency: val),
+    );
+  }
+
+  Future<void> setMemoryContextBudget(int v) async {
+    await _updateSetting(
+      key: 'memoryContextBudget',
+      value: v,
+      persist: (p, k, val) => p.setInt(k, val),
+      update: (s, val) => s.copyWith(memoryContextBudget: val),
     );
   }
 }
