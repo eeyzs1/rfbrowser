@@ -132,5 +132,50 @@ void main() {
       );
       expect(path, isNull);
     });
+
+    test('keeps only the N most recent exports per session', () async {
+      final limited = ChatHistoryExporter(
+        memory,
+        format: const ChatHistoryFormat(keepLastNPerSession: 2),
+      );
+      await memory.saveMessage(role: 'user', content: 'hi');
+      final targetDir = p.join(tempDir.path, 'chats_rotated');
+      // Write 5 exports of the same session.
+      for (var i = 0; i < 5; i++) {
+        await limited.exportSession(targetDir: targetDir);
+        // Stagger the modification times so rotation has a stable order.
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+      }
+      final dir = Directory(targetDir);
+      final files = dir
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.md'))
+          .toList();
+      expect(
+        files.length,
+        2,
+        reason: 'rotation should leave only the latest 2',
+      );
+    });
+
+    test('keeps all files when keepLastNPerSession = 0', () async {
+      final unlimited = ChatHistoryExporter(
+        memory,
+        format: const ChatHistoryFormat(keepLastNPerSession: 0),
+      );
+      await memory.saveMessage(role: 'user', content: 'hi');
+      final targetDir = p.join(tempDir.path, 'chats_unlimited');
+      for (var i = 0; i < 4; i++) {
+        await unlimited.exportSession(targetDir: targetDir);
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      final count = Directory(targetDir)
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.md'))
+          .length;
+      expect(count, 4);
+    });
   });
 }

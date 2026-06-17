@@ -400,6 +400,31 @@ class MemoryService {
     );
   }
 
+  /// Hard-delete a fragment by id. This is irreversible and also removes
+  /// any Hebbian edges incident on the fragment. Use for explicit
+  /// "Delete" actions from the UI; for normal forgetting the
+  /// tier-transition path is preferred.
+  Future<int> deleteFragment(String fragmentId) async {
+    final db = await database;
+    return db.transaction((txn) async {
+      await txn.delete(
+        'memory_hebbian_links',
+        where: 'fragment_a = ? OR fragment_b = ?',
+        whereArgs: [fragmentId, fragmentId],
+      );
+      await txn.delete(
+        'memory_fragments_fts',
+        where: 'id = ?',
+        whereArgs: [fragmentId],
+      );
+      return txn.delete(
+        'memory_fragments',
+        where: 'id = ?',
+        whereArgs: [fragmentId],
+      );
+    });
+  }
+
   /// Transition a fragment's tier (short → mid → long).
   /// Optionally archives the raw content by writing `archivedAt` and clearing
   /// the body, leaving only a pointer back to the consolidating summary.
@@ -757,6 +782,31 @@ class MemoryService {
         );
       }
     });
+  }
+
+  /// Delete Hebbian edges that have decayed below the floor for longer
+  /// than [olderThan] (defaults to 90 days). Returns the number of rows
+  /// removed. Called periodically by the dreaming engine to prevent the
+  /// edge table from growing without bound.
+  ///
+  /// "Below the floor for X days" is approximated by selecting rows whose
+  /// [HebbianEdge.lastStrengthenedAt] is older than [olderThan] AND whose
+  /// [HebbianEdge.coAccessCount] is exactly 1 (i.e. they have never been
+  /// reinforced). That keeps the cleanup conservative — edges that have
+  /// proven valuable at least once survive a long quiet period.
+  Future<int> deleteStaleHebbianEdges({
+    Duration olderThan = const Duration(days: 90),
+    DateTime? now,
+  }) async {
+    final cutoff = (now ?? DateTime.now())
+        .subtract(olderThan)
+        .toIso8601String();
+    final db = await database;
+    return db.delete(
+      'memory_hebbian_links',
+      where: 'last_strengthened_at < ? AND co_access_count <= 1',
+      whereArgs: [cutoff],
+    );
   }
 
   // ─── Bulk session export ───────────────────────────────────────────

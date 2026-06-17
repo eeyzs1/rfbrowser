@@ -169,6 +169,13 @@ class DreamingService {
         );
       }
 
+      // 2.5. Reap Hebbian edges that have decayed and never been
+      //      reinforced — keeps the edge table from growing forever.
+      final staleEdges = await _memory.deleteStaleHebbianEdges();
+      if (staleEdges > 0) {
+        debugPrint('DreamingService: pruned $staleEdges stale Hebbian edges');
+      }
+
       _lastConsolidatedCount = await _memory.getUnconsolidatedCount();
       debugPrint(
         'DreamingService: extracted ${extractResult.newFragments.length} new, '

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,10 +16,16 @@ class ChatHistoryFormat {
   final bool includeRawMetadata;
   final int maxKeyLength;
 
+  /// After writing a new export, keep only the most recent N files for
+  /// the same session id (matched by the trailing 8-char hash in the
+  /// filename). 0 disables rotation and keeps everything. Default 8.
+  final int keepLastNPerSession;
+
   const ChatHistoryFormat({
     this.locale,
     this.includeRawMetadata = true,
     this.maxKeyLength = 180,
+    this.keepLastNPerSession = 8,
   });
 
   static const ChatHistoryFormat defaults = ChatHistoryFormat();
@@ -80,14 +87,29 @@ class ChatHistoryExporter {
       updatedAt: session.updatedAt,
       messages: messages,
     );
+    final exportedAt = DateTime.now();
     final dir = targetDir ?? await _resolveExportDir();
     if (dir == null) {
       debugPrint('ChatHistoryExporter: no vault open, skipping export');
       return null;
     }
-    final file = File(p.join(dir, _filenameForSession(session)));
-    await file.parent.create(recursive: true);
+    final outDir = Directory(dir);
+    if (!await outDir.exists()) {
+      await outDir.create(recursive: true);
+    }
+    final file = File(
+      p.join(outDir.path, _filenameForSession(session, exportAt: exportedAt)),
+    );
     await file.writeAsString(md, flush: true);
+    // Rotate older exports for the same session to keep the directory
+    // from filling up. Best-effort: failures are logged but not rethrown.
+    final rotated = await _rotateOldExports(dir: outDir, sessionId: session.id);
+    if (rotated > 0) {
+      debugPrint(
+        'ChatHistoryExporter: rotated $rotated old exports for session '
+        '${session.id.substring(0, 8)}',
+      );
+    }
     return file.path;
   }
 
@@ -133,13 +155,67 @@ class ChatHistoryExporter {
 
   // ─── File naming & paths ──────────────────────────────────────────
 
-  String _filenameForSession(ChatSession session) {
+  String _filenameForSession(ChatSession session, {DateTime? exportAt}) {
     final slug = _slugify(session.title);
-    final stamp = session.createdAt.toIso8601String().substring(0, 10);
+    final t = exportAt ?? DateTime.now();
+    final base = t.toIso8601String();
+    // Drop subseconds beyond 3 digits and replace colons with dashes so
+    // the filename is Windows-safe.
+    final safeStamp = base
+        .replaceAll(':', '-')
+        .replaceAll(RegExp(r'\.(\d{3})\d+'), '.\$1');
     final suffix = session.id.length >= 8
         ? session.id.substring(0, 8)
         : session.id;
-    return '${stamp}_${slug}_$suffix.md';
+    // Short random tag so two exports within the same millisecond still
+    // get distinct filenames (helps on slow Windows clocks during tests).
+    final tagHex = math.Random()
+        .nextInt(0xFFFF)
+        .toRadixString(16)
+        .padLeft(4, '0');
+    return '${safeStamp}_${slug}_${suffix}_$tagHex.md';
+  }
+
+  /// Remove older exports for the same session, keeping at most
+  /// [ChatHistoryFormat.keepLastNPerSession] files. Files are matched
+  /// by the trailing 8-char session hash in their filename. Sorted by
+  /// last-modified time (oldest first) so the most recent N are kept.
+  Future<int> _rotateOldExports({
+    required Directory dir,
+    required String sessionId,
+  }) async {
+    if (format.keepLastNPerSession <= 0) return 0;
+    final suffix = sessionId.length >= 8
+        ? sessionId.substring(0, 8)
+        : sessionId;
+    // Match `_SUFFIX_HEX.md` (the trailing 4-char random tag is dropped
+    // from the match pattern, so we just require the suffix + .md).
+    final files = await dir
+        .list()
+        .where(
+          (e) =>
+              e is File &&
+              RegExp(
+                r'_' + RegExp.escape(suffix) + r'_[0-9a-fA-F]{4}\.md$',
+              ).hasMatch(e.path),
+        )
+        .cast<File>()
+        .toList();
+    if (files.length <= format.keepLastNPerSession) return 0;
+    files.sort(
+      (a, b) => a.statSync().modified.compareTo(b.statSync().modified),
+    );
+    final toDelete = files.length - format.keepLastNPerSession;
+    var deleted = 0;
+    for (var i = 0; i < toDelete; i++) {
+      try {
+        await files[i].delete();
+        deleted++;
+      } catch (_) {
+        // Best-effort: a single failed delete shouldn't fail the export.
+      }
+    }
+    return deleted;
   }
 
   Future<String?> _resolveExportDir() async {
