@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
 import 'package:rfbrowser/l10n/app_localizations.dart';
 import 'package:rfbrowser/data/stores/vault_store.dart';
 import 'package:rfbrowser/plugins/host/plugin_host.dart';
@@ -27,16 +28,7 @@ class _TestPluginHostNotifier extends PluginHostNotifier {
 }
 
 void main() {
-  // These tests are pure widget tests — they pump a small widget tree
-  // into a TestWidgetsFlutterBinding and assert what the renderer draws.
-  // They do not need the integration-test driver, a real desktop, or
-  // the rfbrowser.exe launcher. Originally they lived under
-  // integration_test/ which forced a separate rfbrowser.exe build and
-  // launch on a desktop session, which the windows-2022 CI runner
-  // cannot provide. Running them as plain widget tests under
-  // test/integration/ exercises the exact same code paths and produces
-  // real failure messages, without needing a window.
-  TestWidgetsFlutterBinding.ensureInitialized();
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('PluginSettingsSection UI', () {
     Future<void> pumpPluginSettings(

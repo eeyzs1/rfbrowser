@@ -61,7 +61,7 @@ jobs:
           git config --global protocol.file.allow always
       - run: flutter pub get
       - run: flutter gen-l10n
-      - run: flutter test --no-pub --coverage test/data/ test/services/ test/core/ test/acceptance/ test/security/ test/agents/ test/performance/ test/plugins/capability_checker_test.dart test/services/shortcut_service_test.dart test/services/git_merge_test.dart test/integration/browser_lifecycle_integration_test.dart test/integration/note_lifecycle_integration_test.dart test/integration/agent_bailian_integration_test.dart test/integration/local_provider_integration_test.dart test/integration/ai_integration_test.dart test/integration/link_e2e_test.dart test/integration/agent_integration_test.dart test/integration/canvas_integration_test.dart test/integration/end_to_end_flow_test.dart test/integration/plugin_lifecycle_test.dart test/integration/plugin_settings_test.dart test/core/ai/sse_stream_parser_test.dart test/ui/graph_canvas_compliance_test.dart test/ui/capture_scene_test.dart test/ui/scene_integration_test.dart
+      - run: flutter test --no-pub --coverage test/data/ test/services/ test/core/ test/acceptance/ test/security/ test/agents/ test/performance/ test/plugins/capability_checker_test.dart test/services/shortcut_service_test.dart test/services/git_merge_test.dart test/integration/browser_lifecycle_integration_test.dart test/integration/note_lifecycle_integration_test.dart test/integration/agent_bailian_integration_test.dart test/integration/local_provider_integration_test.dart test/integration/ai_integration_test.dart test/integration/link_e2e_test.dart test/integration/agent_integration_test.dart test/integration/canvas_integration_test.dart test/integration/end_to_end_flow_test.dart test/core/ai/sse_stream_parser_test.dart test/ui/graph_canvas_compliance_test.dart test/ui/capture_scene_test.dart test/ui/scene_integration_test.dart
       - uses: codecov/codecov-action@v4
         if: github.event_name == 'push'
         with:
@@ -113,6 +113,145 @@ jobs:
         run: flutter test test/services/quick_move_service_test.dart --no-pub
       - name: Quick Move Acceptance Tests (US-1 ~ US-7)
         run: flutter test test/acceptance/quick_moves_acceptance_test.dart --no-pub
+
+  integration-test-windows:
+    # The 20 tests in integration_test/ are Flutter integration tests
+    # that compile the actual rfbrowser.exe with the test file as
+    # main(), launch it, and attach a Dart VM debugger to it. This
+    # needs a real Win32 desktop — the Flutter engine creates a hidden
+    # HWND during init, and the integration_test driver connects to
+    # the resulting VM service over TCP. Neither works in the
+    # windows-2022 agent's headless service session, no matter how we
+    # lift the process with PsExec (we tried 8+ variants in the
+    # history of this file; the test binary always exits with
+    # "log reader stopped unexpectedly").
+    #
+    # Correct infrastructure for this job is a self-hosted Windows
+    # runner with a real logged-in desktop session. Provisioning:
+    #
+    #   1. Take a Windows 10/11 VM or physical box. Log in as a
+    #      regular user; do NOT lock / sign out (the session needs
+    #      to stay active so HWND creation succeeds).
+    #   2. Install the GitHub Actions runner from
+    #      https://github.com/actions/runner/releases and register
+    #      it with the `windows-desktop` label:
+    #        ./config.cmd --url https://github.com/<owner>/<repo> \
+    #                     --token <PAT> --labels windows-desktop
+    #   3. Leave the runner running. The job picks it up
+    #      automatically when triggered.
+    #
+    # The PsExec + .bat wrapper machinery inside the job is a
+    # belt-and-braces guard: on a self-hosted runner the runner's
+    # own process tree is already in the active console session, so
+    # PsExec is a no-op, but it costs nothing to keep and makes the
+    # job robust to runners that have multiple sessions.
+    name: Integration Tests (Windows)
+    runs-on: [self-hosted, windows-desktop]
+    needs: [test, plugin-test]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - name: Install PsExec (Sysinternals)
+        shell: pwsh
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -UseBasicParsing `
+            -Uri 'https://download.sysinternals.com/files/PSTools.zip' `
+            -OutFile "$env:RUNNER_TEMP\PSTools.zip"
+          if ((Get-Item "$env:RUNNER_TEMP\PSTools.zip").Length -lt 1000000) {
+            throw "PSTools.zip download looks too small ($((Get-Item $env:RUNNER_TEMP\PSTools.zip).Length) bytes) — got an HTML error page instead of the archive."
+          }
+          Expand-Archive -Path "$env:RUNNER_TEMP\PSTools.zip" `
+            -DestinationPath "$env:RUNNER_TEMP\PSTools" -Force
+          Copy-Item "$env:RUNNER_TEMP\PSTools\PsExec.exe" `
+            -Destination "$env:RUNNER_TEMP\PsExec.exe" -Force
+          Write-Host "PsExec installed at $env:RUNNER_TEMP\PsExec.exe"
+      - name: Discover interactive session ID
+        id: session
+        shell: bash
+        run: |
+          set +e
+          sessions=$(query session 2>&1)
+          echo "=== query session ==="
+          echo "$sessions"
+          session_id=$(echo "$sessions" \
+            | sed -n 's/.*>console[[:space:]]\+[^[:space:]]\+[[:space:]]\+\([0-9][0-9]*\)[[:space:]]\+Active.*/\1/p' \
+            | head -1)
+          if [ -z "$session_id" ]; then
+            echo "::error::No Active console session found in 'query session' output. The runner image likely has no interactive desktop at all; PsExec cannot help here."
+            exit 1
+          fi
+          echo "=== using session id: $session_id ==="
+          echo "SESSION_ID=${session_id}" >> "$GITHUB_ENV"
+      - name: Plugin Lifecycle Integration Test
+        shell: pwsh
+        run: |
+          $flutter = Join-Path $env:FLUTTER_ROOT 'bin\flutter.bat'
+          if (-not (Test-Path $flutter)) {
+            throw "flutter.bat not found at $flutter (FLUTTER_ROOT=$env:FLUTTER_ROOT)"
+          }
+          $wrapper = Join-Path $env:RUNNER_TEMP 'run_plugin_lifecycle_test.bat'
+          $logPath = Join-Path $env:RUNNER_TEMP 'plugin_lifecycle_test.log'
+          if (Test-Path $logPath) { Remove-Item $logPath -Force }
+          $bat = @"
+          @echo off
+          "$flutter" test integration_test/plugin_lifecycle_test.dart --no-pub > "$logPath" 2>&1
+          exit /b %ERRORLEVEL%
+          "@
+          [System.IO.File]::WriteAllText($wrapper, $bat, [System.Text.UTF8Encoding]::new($false))
+          Write-Host "Invoking $wrapper in session $env:SESSION_ID"
+          & "$env:RUNNER_TEMP\PsExec.exe" `
+            -i $env:SESSION_ID `
+            -accepteula `
+            -w $PWD `
+            cmd.exe /c $wrapper
+          $ec = $LASTEXITCODE
+          Write-Host "==== flutter test output ===="
+          if (Test-Path $logPath) {
+            Get-Content $logPath -Raw | Write-Host
+          } else {
+            Write-Host "(no log file produced at $logPath)"
+          }
+          Write-Host "==== end of output ===="
+          exit $ec
+      - name: Plugin Settings UI Integration Test
+        shell: pwsh
+        run: |
+          $flutter = Join-Path $env:FLUTTER_ROOT 'bin\flutter.bat'
+          if (-not (Test-Path $flutter)) {
+            throw "flutter.bat not found at $flutter (FLUTTER_ROOT=$env:FLUTTER_ROOT)"
+          }
+          $wrapper = Join-Path $env:RUNNER_TEMP 'run_plugin_settings_test.bat'
+          $logPath = Join-Path $env:RUNNER_TEMP 'plugin_settings_test.log'
+          if (Test-Path $logPath) { Remove-Item $logPath -Force }
+          $bat = @"
+          @echo off
+          "$flutter" test integration_test/plugin_settings_test.dart --no-pub > "$logPath" 2>&1
+          exit /b %ERRORLEVEL%
+          "@
+          [System.IO.File]::WriteAllText($wrapper, $bat, [System.Text.UTF8Encoding]::new($false))
+          Write-Host "Invoking $wrapper in session $env:SESSION_ID"
+          & "$env:RUNNER_TEMP\PsExec.exe" `
+            -i $env:SESSION_ID `
+            -accepteula `
+            -w $PWD `
+            cmd.exe /c $wrapper
+          $ec = $LASTEXITCODE
+          Write-Host "==== flutter test output ===="
+          if (Test-Path $logPath) {
+            Get-Content $logPath -Raw | Write-Host
+          } else {
+            Write-Host "(no log file produced at $logPath)"
+          }
+          Write-Host "==== end of output ===="
+          exit $ec
 
   cross-component-flow:
     name: Cross-Component Data Flow (G15-C)

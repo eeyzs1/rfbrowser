@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:integration_test/integration_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:rfbrowser/plugins/host/plugin_host.dart';
 import 'package:rfbrowser/plugins/plugin_registry.dart';
@@ -11,15 +12,7 @@ import 'package:rfbrowser/data/stores/index_store.dart';
 import 'package:rfbrowser/services/browser_service.dart';
 
 void main() {
-  // These tests exercise pure Dart logic against ProviderContainer; they
-  // do not need a real app window, an integration-test driver, or the
-  // platform channels that IntegrationTestWidgetsFlutterBinding brings in.
-  // Originally they lived under integration_test/ which forced them to be
-  // compiled into a separate rfbrowser.exe and launched on a desktop
-  // session, which the windows-2022 CI runner cannot provide. Running
-  // them as plain widget tests under test/integration/ sidesteps that
-  // launcher entirely while exercising the exact same code paths.
-  TestWidgetsFlutterBinding.ensureInitialized();
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() {
     sqfliteFfiInit();
@@ -113,7 +106,7 @@ void main() {
         );
         expect(
           container.read(pluginHostProvider).running['no-auto-enable'],
-          isNot(equals(true)),
+          isNull,
         );
         expect(
           container.read(pluginHostProvider).enabled['no-auto-enable'],
@@ -681,8 +674,8 @@ permissions: [knowledgeRead]
       final map = hook.toMap();
       final restored = PluginHook.fromMap(map);
 
-      expect(restored.event, hook.event);
-      expect(restored.handler, hook.handler);
+      expect(restored.event, 'note.opened');
+      expect(restored.handler, 'onNoteOpened');
     });
   });
 }
