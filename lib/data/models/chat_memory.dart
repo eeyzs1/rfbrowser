@@ -64,6 +64,15 @@ class MemoryFragment {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // ── Source tracking (added in schema v3) ──
+  /// 'auto' (dreaming cycle), 'manual' (user remembered), or
+  /// 'forgotten' (user explicitly forgot).
+  final String source;
+
+  /// When [source] is 'manual' or 'forgotten', the originating chat
+  /// message id. Null for auto-extracted fragments.
+  final String? sourceMessageId;
+
   const MemoryFragment({
     required this.id,
     required this.sessionId,
@@ -82,6 +91,8 @@ class MemoryFragment {
     this.parentSummaryId,
     required this.createdAt,
     required this.updatedAt,
+    this.source = 'auto',
+    this.sourceMessageId,
   });
 
   MemoryFragment copyWith({
@@ -103,6 +114,9 @@ class MemoryFragment {
     String? parentSummaryId,
     bool clearParentSummaryId = false,
     DateTime? updatedAt,
+    String? source,
+    String? sourceMessageId,
+    bool clearSourceMessageId = false,
   }) {
     return MemoryFragment(
       id: id,
@@ -128,6 +142,10 @@ class MemoryFragment {
           : (parentSummaryId ?? this.parentSummaryId),
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      source: source ?? this.source,
+      sourceMessageId: clearSourceMessageId
+          ? null
+          : (sourceMessageId ?? this.sourceMessageId),
     );
   }
 
@@ -149,6 +167,8 @@ class MemoryFragment {
     'parent_summary_id': parentSummaryId,
     'created_at': createdAt.toIso8601String(),
     'updated_at': updatedAt.toIso8601String(),
+    'source': source,
+    'source_message_id': sourceMessageId,
   };
 
   factory MemoryFragment.fromRow(Map<String, dynamic> row) {
@@ -187,6 +207,8 @@ class MemoryFragment {
       parentSummaryId: row['parent_summary_id'] as String?,
       createdAt: DateTime.parse(row['created_at'] as String),
       updatedAt: DateTime.parse(row['updated_at'] as String),
+      source: (row['source'] as String?) ?? 'auto',
+      sourceMessageId: row['source_message_id'] as String?,
     );
   }
 

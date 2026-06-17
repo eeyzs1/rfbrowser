@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import '../data/models/ai_provider.dart';
 import '../data/models/chat_memory.dart';
 import 'dio_factory.dart';
@@ -31,6 +32,11 @@ class ChatMessage {
   final String? toolCallDisplay;
   final String? toolResultDisplay;
 
+  /// Stable id used for cross-references (e.g. the "Remember this" button
+  /// links a memory fragment back to the originating message). Generated
+  /// on first access if the message was constructed without one.
+  final String? id;
+
   ChatMessage({
     required this.role,
     required this.content,
@@ -39,6 +45,7 @@ class ChatMessage {
     this.toolCalls = const [],
     this.toolCallDisplay,
     this.toolResultDisplay,
+    this.id,
   }) : timestamp = timestamp ?? DateTime.now();
 
   ChatMessage copyWith({
@@ -206,11 +213,16 @@ class AINotifier extends Notifier<AIState> {
       }
     }
 
-    final userMsg = ChatMessage(role: 'user', content: userMessage);
+    final userMsg = ChatMessage(
+      role: 'user',
+      content: userMessage,
+      id: const Uuid().v4(),
+    );
     final streamingMsg = ChatMessage(
       role: 'assistant',
       content: '',
       isStreaming: true,
+      id: const Uuid().v4(),
     );
     state = state.copyWith(
       messages: [...state.messages, userMsg, streamingMsg],

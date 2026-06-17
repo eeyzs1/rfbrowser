@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -72,13 +73,17 @@ class MemoryService {
     }
     return openDatabase(
       _dbPath,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await _createV2Schema(db);
+        await _upgradeV2ToV3(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await _upgradeV1ToV2(db);
+        }
+        if (oldVersion < 3) {
+          await _upgradeV2ToV3(db);
         }
       },
     );
@@ -148,6 +153,24 @@ class MemoryService {
     await _createHebbianTable(db);
     // 7. Indexes
     await _createIndexes(db);
+  }
+
+  /// v2 → v3: add `source_message_id`, `source`, `extra_json` columns to
+  /// `memory_fragments`. These are populated by the "Remember this" /
+  /// "Forget" UI actions and let us link a fragment back to the
+  /// originating chat message.
+  Future<void> _upgradeV2ToV3(Database db) async {
+    await db.execute(
+      'ALTER TABLE memory_fragments ADD COLUMN source_message_id TEXT',
+    );
+    await db.execute(
+      "ALTER TABLE memory_fragments ADD COLUMN source TEXT NOT NULL DEFAULT 'auto'",
+    );
+    await db.execute('ALTER TABLE memory_fragments ADD COLUMN extra_json TEXT');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_fragments_source_message_id '
+      'ON memory_fragments(source_message_id)',
+    );
   }
 
   Future<void> _createFragmentsV2(Database db) async {
@@ -423,6 +446,142 @@ class MemoryService {
         whereArgs: [fragmentId],
       );
     });
+  }
+
+  /// Insert a fragment directly from a user "remember this" action in the
+  /// chat panel. Bypasses the dreaming cycle so the fragment is
+  /// immediately searchable and contributes to the next context
+  /// assembly. Sets [MemoryFragment.source] to `'manual'` and
+  /// [MemoryFragment.importanceScore] to [importance] (default 0.7, above
+  /// the natural decay threshold) so it survives longer than an
+  /// auto-extracted fact.
+  ///
+  /// If a fragment with the same [sourceMessageId] already exists, this
+  /// returns its id without inserting a duplicate. This makes the chat
+  /// button idempotent: clicking "remember" twice does nothing harmful.
+  Future<String> addFragmentFromMessage({
+    required String sessionId,
+    required String messageId,
+    required String content,
+    double importance = 0.7,
+    String source = 'manual',
+    Map<String, Object?>? extra,
+  }) async {
+    final db = await database;
+    final now = DateTime.now();
+    final existing = await db.query(
+      'memory_fragments',
+      where: 'source_message_id = ?',
+      whereArgs: [messageId],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) {
+      return (existing.first['id'] as String);
+    }
+    final id = _uuid.v4();
+    await db.insert('memory_fragments', {
+      'id': id,
+      'session_id': sessionId,
+      'source_message_id': messageId,
+      'content': content,
+      'tier': MemoryTier.short.name,
+      'importance_score': importance,
+      'access_count': 0,
+      'is_pinned': 0,
+      'is_active': 1,
+      'source': source,
+      'extra_json': extra == null ? null : jsonEncode(extra),
+      'created_at': now.toIso8601String(),
+      'updated_at': now.toIso8601String(),
+    });
+    // Add an FTS row so the new fragment is immediately searchable.
+    await db.insert('memory_fragments_fts', {
+      'id': id,
+      'content': content,
+      'category': 'fact',
+    });
+    return id;
+  }
+
+  /// Mark a fragment as "forgotten by the user" — soft-delete with a
+  /// special [MemoryFragment.source] of `'forgotten'`. The dreaming
+  /// engine will skip these and they will not be returned by
+  /// [searchFragments]. They remain in the DB for audit.
+  Future<int> forgetFragment(String fragmentId) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    return db.update(
+      'memory_fragments',
+      {'is_active': 0, 'source': 'forgotten', 'updated_at': now},
+      where: 'id = ?',
+      whereArgs: [fragmentId],
+    );
+  }
+
+  /// Look up a fragment by its `source_message_id`. Used by the chat
+  /// panel to determine whether a "Remember" or "Forget" button should
+  /// be shown for a given message.
+  Future<MemoryFragment?> getFragmentByMessageId(String? messageId) async {
+    if (messageId == null) return null;
+    final db = await database;
+    final rows = await db.query(
+      'memory_fragments',
+      where: 'source_message_id = ?',
+      whereArgs: [messageId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return MemoryFragment.fromRow(rows.first);
+  }
+
+  /// Compact, paginated edge list for the Hebbian graph view. Returns
+  /// the top [limit] strongest edges, descending. Used by the memory
+  /// graph page to render the network.
+  Future<List<HebbianEdge>> getTopHebbianEdges({int limit = 200}) async {
+    final db = await database;
+    final rows = await db.rawQuery(
+      'SELECT id, fragment_a, fragment_b, strength, stability, '
+      'co_access_count, last_strengthened_at FROM memory_hebbian_links '
+      'ORDER BY strength DESC, last_strengthened_at DESC LIMIT ?',
+      [limit],
+    );
+    return rows
+        .map(
+          (r) => HebbianEdge(
+            id: r['id'] as String,
+            fragmentA: r['fragment_a'] as String,
+            fragmentB: r['fragment_b'] as String,
+            strength: (r['strength'] as num).toDouble(),
+            stability: (r['stability'] as num).toDouble(),
+            coAccessCount: r['co_access_count'] as int,
+            lastStrengthenedAt: DateTime.parse(
+              r['last_strengthened_at'] as String,
+            ),
+          ),
+        )
+        .toList();
+  }
+
+  /// Get a list of fragment ids that participate in at least one
+  /// Hebbian edge. Used by the memory graph page to filter the
+  /// fragment list down to "network nodes" only.
+  Future<List<MemoryFragment>> getNetworkedFragments({int limit = 200}) async {
+    final db = await database;
+    final rows = await db.rawQuery(
+      '''
+      SELECT f.* FROM memory_fragments f
+      WHERE f.is_active = 1
+        AND f.id IN (
+          SELECT fragment_a FROM memory_hebbian_links
+          UNION
+          SELECT fragment_b FROM memory_hebbian_links
+        )
+      ORDER BY f.importance_score DESC, f.last_access_at DESC
+      LIMIT ?
+    ''',
+      [limit],
+    );
+    return rows.map(MemoryFragment.fromRow).toList();
   }
 
   /// Transition a fragment's tier (short → mid → long).

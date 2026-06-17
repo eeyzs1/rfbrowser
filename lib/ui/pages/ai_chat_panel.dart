@@ -7,6 +7,8 @@ import '../../services/agent_chat_bridge.dart';
 import '../../services/settings_service.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/browser_service.dart';
+import '../../services/memory_service.dart';
+import '../../services/memory_stats_service.dart';
 import '../../data/models/ai_provider.dart';
 import '../../core/context/assembler.dart';
 import '../../core/context/reference_parser.dart';
@@ -504,24 +506,31 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                   if (msg.content.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: TextButton.icon(
-                        onPressed: () => _saveAsNote(msg.content),
-                        icon: const Icon(Icons.save, size: 12),
-                        label: Text(
-                          l.saveAsNote,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.primary,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextButton.icon(
+                            onPressed: () => _saveAsNote(msg.content),
+                            icon: const Icon(Icons.save, size: 12),
+                            label: Text(
+                              l.saveAsNote,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
                           ),
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                        ),
+                          const SizedBox(width: 4),
+                          _RememberForgetButton(message: msg),
+                        ],
                       ),
                     ),
                   if (msg.isStreaming)
@@ -1279,4 +1288,99 @@ class _AutocompleteItem {
     required this.insertText,
     this.cursorOffset = 0,
   });
+}
+
+/// Per-message "Remember this" / "Forget" toggle. Looks up the
+/// fragment by the chat message id and switches the icon/label
+/// accordingly. Idempotent: clicking twice does no harm.
+class _RememberForgetButton extends ConsumerStatefulWidget {
+  final ChatMessage message;
+  const _RememberForgetButton({required this.message});
+
+  @override
+  ConsumerState<_RememberForgetButton> createState() =>
+      _RememberForgetButtonState();
+}
+
+class _RememberForgetButtonState extends ConsumerState<_RememberForgetButton> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final memory = ref.watch(memoryServiceProvider);
+
+    return FutureBuilder(
+      future: memory.getFragmentByMessageId(widget.message.id),
+      builder: (context, snap) {
+        final fragment = snap.data;
+        final isRemembered = fragment != null;
+        return TextButton.icon(
+          onPressed: _busy ? null : _onTap,
+          icon: Icon(
+            isRemembered ? Icons.bookmark : Icons.bookmark_outline,
+            size: 12,
+            color: isRemembered
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+          label: Text(
+            isRemembered ? 'Remembered' : 'Remember',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: isRemembered
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _onTap() async {
+    if (widget.message.id == null) return;
+    setState(() => _busy = true);
+    try {
+      final memory = ref.read(memoryServiceProvider);
+      final existing = await memory.getFragmentByMessageId(widget.message.id);
+      if (existing == null) {
+        await memory.addFragmentFromMessage(
+          sessionId: '',
+          messageId: widget.message.id!,
+          content: widget.message.content,
+          importance: 0.7,
+          source: 'manual',
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Saved to memory'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else if (existing.isActive) {
+        await memory.forgetFragment(existing.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Removed from memory'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+      // Invalidate stats provider so the browser refreshes.
+      ref.invalidate(memoryStatsProvider);
+      if (mounted) setState(() {});
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 }
