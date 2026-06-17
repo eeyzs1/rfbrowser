@@ -9,6 +9,8 @@ import '../data/stores/vector_store.dart' hide SearchResult;
 import '../data/stores/hnsw_index.dart';
 import '../data/stores/index_store.dart';
 import '../data/models/note.dart';
+import '../data/models/chat_memory.dart';
+import '../core/ai/embedding_document_builder.dart';
 import 'tantivy_bridge_stub.dart' if (dart.library.ffi) 'tantivy_bridge.dart';
 import 'onnx_embedding_service.dart';
 
@@ -126,6 +128,7 @@ class EmbeddingService {
   VectorStore? _vectorStore;
   OnnxEmbeddingService? _onnxService;
   final TfidfVectorizer _tfidf = TfidfVectorizer();
+  final EmbeddingDocumentBuilder _docBuilder = const EmbeddingDocumentBuilder();
 
   HnswIndex get hnswIndex =>
       _hnswIndex ??= HnswIndex(M: 16, efConstruction: 200);
@@ -141,6 +144,14 @@ class EmbeddingService {
   void setLocalEmbeddingModel(String model) {
     _localEmbeddingModel = model;
   }
+
+  /// Build a structured embedding document for a memory fragment.
+  EmbeddingDocument buildFragmentDocument(MemoryFragment fragment) =>
+      _docBuilder.buildForFragment(fragment);
+
+  /// Build a structured embedding document for a note.
+  EmbeddingDocument buildNoteDocument(Note note) =>
+      _docBuilder.buildForNote(note);
 
   /// Cosine similarity in `[-1.0, 1.0]`. Returns 0.0 for empty / zero-norm vectors.
   /// G10-AC2: required for vector-store scoring & fallback ranking.

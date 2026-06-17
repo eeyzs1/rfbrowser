@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:path/path.dart' as p;
 import '../../core/editor/highlighted_text_editing_controller.dart';
 import '../../core/editor/sync_scroll_controller.dart';
+import '../../core/ai/request_context.dart';
 import '../../data/models/drag_data.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/quick_move_service.dart';
@@ -63,6 +64,48 @@ class _EditorViewState extends ConsumerState<EditorView> {
     _autoSaveTimer = Timer(const Duration(seconds: 3), () {
       if (_isDirty) _saveNote();
     });
+    // Push the current selection (if any) into the ambient AI context.
+    // The selection may have shrunk or grown since the last call.
+    _pushSelectionToContext();
+  }
+
+  /// Push the active note + current selection into the ambient AI
+  /// [RequestContext] so the next AI prompt knows "what is the user
+  /// doing right now". Debounced at the controller level so we don't
+  /// spam the provider on every keystroke.
+  void _pushSelectionToContext() {
+    final notifier = ref.read(requestContextProvider.notifier);
+    final sel = _controller.selection;
+    if (!sel.isValid || sel.isCollapsed) {
+      notifier.updateSelection(null);
+      return;
+    }
+    final selectedText = sel.textInside(_controller.text);
+    if (selectedText.trim().isEmpty) {
+      notifier.updateSelection(null);
+      return;
+    }
+    notifier.updateSelection(SelectionSnapshot(
+      text: selectedText.length > 4000
+          ? selectedText.substring(0, 4000)
+          : selectedText,
+      startOffset: sel.start,
+      endOffset: sel.end,
+    ));
+  }
+
+  void _pushActiveNoteToContext(dynamic note) {
+    final notifier = ref.read(requestContextProvider.notifier);
+    if (note == null) {
+      notifier.updateActiveNote(null);
+      return;
+    }
+    notifier.updateActiveNote(ActiveNoteSnapshot(
+      id: note.id as String,
+      title: note.title as String,
+      path: note.filePath as String?,
+      tags: List<String>.from(note.tags as List<dynamic>),
+    ));
   }
 
   @override
@@ -201,6 +244,14 @@ class _EditorViewState extends ConsumerState<EditorView> {
     }
 
     final note = knowledgeState.activeNote;
+
+    // Mirror the active note into the ambient AI context. Done in a
+    // post-frame callback so the provider update doesn't trigger an
+    // extra rebuild of this widget.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _pushActiveNoteToContext(note);
+    });
 
     if (note == null) {
       return Center(

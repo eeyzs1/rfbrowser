@@ -7,11 +7,13 @@ import 'settings/language_settings_section.dart';
 import 'settings/ai_settings_section.dart';
 import 'settings/agent_settings_section.dart';
 import 'settings/editor_settings_section.dart';
+import 'settings/memory_settings_section.dart';
 import 'settings/shortcut_settings_section.dart';
 import 'settings/sync_settings_section.dart';
 import 'settings/plugin_settings_section.dart';
 import 'settings/quick_moves_settings_section.dart';
 import 'settings/about_section.dart';
+import 'memory_browser_page.dart';
 import 'skills_management_page.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -44,6 +46,10 @@ class SettingsPage extends ConsumerWidget {
           const SizedBox(height: 16),
           const AgentSettingsSection(),
           const SizedBox(height: 16),
+          const MemorySettingsSection(),
+          const SizedBox(height: 16),
+          _MemoryBrowserTile(),
+          const SizedBox(height: 16),
           _SkillsSettingsTile(),
           const SizedBox(height: 16),
           const ShortcutSettingsSection(),
@@ -57,6 +63,37 @@ class SettingsPage extends ConsumerWidget {
           const AboutSection(),
         ],
       ),
+    );
+  }
+}
+
+class _MemoryBrowserTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListTile(
+      leading: CircleAvatar(
+        radius: 16,
+        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+        child: Icon(
+          Icons.psychology,
+          size: 18,
+          color: theme.colorScheme.primary,
+        ),
+      ),
+      title: const Text('Memory Browser'),
+      subtitle: Text(
+        'Browse fragments, summaries, and Hebbian links',
+        style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MemoryBrowserPage()),
+        );
+      },
     );
   }
 }

@@ -11,6 +11,7 @@ import '../../services/shortcut_service.dart';
 import '../../services/agent_service.dart';
 import '../../services/quick_move_service.dart';
 import '../../data/stores/vault_store.dart';
+import '../../core/ai/request_context.dart';
 import '../widgets/command_bar.dart';
 import '../widgets/create_note_dialog.dart';
 import '../widgets/empty_vault_guide.dart';
@@ -20,6 +21,7 @@ import '../scenes/capture/capture_scene.dart';
 import '../scenes/think/think_scene.dart';
 import '../scenes/connect/connect_scene.dart';
 import '../pages/settings_page.dart';
+import '../pages/memory_browser_page.dart';
 import 'scene_scaffold.dart';
 import 'keyboard_util.dart';
 
@@ -36,7 +38,25 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   bool _rightPanelExpanded = true;
   ConnectViewMode _connectViewMode = ConnectViewMode.canvas;
 
-  void _switchScene(SceneType scene) => setState(() => _currentScene = scene);
+  void _switchScene(SceneType scene) {
+    setState(() => _currentScene = scene);
+    // Push the new scene into the ambient AI context so subsequent
+    // AI requests know what the user is currently doing.
+    ref
+        .read(requestContextProvider.notifier)
+        .updateScene(_sceneToAppScene(scene));
+  }
+
+  AppScene _sceneToAppScene(SceneType scene) {
+    switch (scene) {
+      case SceneType.capture:
+        return AppScene.capture;
+      case SceneType.think:
+        return AppScene.think;
+      case SceneType.connect:
+        return AppScene.connect;
+    }
+  }
   void _toggleLeftPanel() =>
       setState(() => _leftPanelExpanded = !_leftPanelExpanded);
   void _toggleRightPanel() =>
@@ -50,6 +70,20 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   @override
   Widget build(BuildContext context) {
     final vaultState = ref.watch(vaultProvider);
+    // Mirror vault changes into the ambient AI context so prompts
+    // include the workspace name / path.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final notifier = ref.read(requestContextProvider.notifier);
+      if (vaultState.currentVault == null) {
+        notifier.updateVault(null);
+      } else {
+        final v = vaultState.currentVault!;
+        notifier.updateVault(VaultSnapshot(
+          name: v.name,
+          path: v.path,
+        ));
+      }
+    });
     if (vaultState.currentVault == null && !vaultState.isLoading) {
       return Scaffold(
         body: EmptyVaultGuide(onCreateVault: () => _openVaultDialog()),
@@ -148,6 +182,10 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     'settings' => () => Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const SettingsPage()),
+    ),
+    'memory_browser' => () => Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MemoryBrowserPage()),
     ),
     _ => null,
   };

@@ -45,6 +45,38 @@ class AppSettings {
   final double backgroundOpacity;
   final String searchEngine;
 
+  // ── Memory subsystem (progressive forgetting + Hebbian) ──────────
+  /// Whether the ambient [RequestContext] is injected into AI prompts.
+  final bool memoryInjectContext;
+  /// Threshold below which a `short`-tier fragment is migrated to `mid`.
+  final double memoryShortToMidThreshold;
+  /// Threshold below which a `mid`-tier fragment is migrated to `long`.
+  final double memoryMidToLongThreshold;
+  /// Number of days a fragment must live in `short` tier before being
+  /// considered for migration to `mid`. Mirrors the OpenLoomi policy.
+  final int memoryShortMaxAgeDays;
+  /// Number of days a fragment must live in `mid` tier before being
+  /// considered for migration to `long`.
+  final int memoryMidMaxAgeDays;
+  /// Co-access window for Hebbian edge reinforcement (minutes).
+  final int memoryHebbianCoAccessMinutes;
+  /// Hebbian edge decay constant (days to fall to 1/e).
+  final int memoryHebbianDecayDays;
+  /// How many chat messages between auto-Markdown exports. 0 disables.
+  final int memoryAutoExportEveryNMessages;
+  /// Whether the dreaming engine runs in the background automatically.
+  final bool memoryDreamingEnabled;
+  /// Half-life of the createdAt recency signal (days). Longer = facts
+  /// are treated as "still fresh" for longer. Default 180.
+  final int memoryCreatedRecencyHalfLifeDays;
+  /// Half-life of the lastAccessAt recency signal (days). Shorter than
+  /// the created half-life so that "actively used" is a sharper signal.
+  /// Default 30.
+  final int memoryAccessRecencyHalfLifeDays;
+  /// Master switch for the dual-time-signal scoring. When false the
+  /// scorer falls back to the original createdAt-only behavior.
+  final bool memoryUseLastAccessForRecency;
+
   AppSettings({
     this.locale = 'system',
     this.editorFontSize = 14.0,
@@ -63,6 +95,18 @@ class AppSettings {
     this.surfaceOpacity = 1.0,
     this.backgroundOpacity = 1.0,
     this.searchEngine = 'bing',
+    this.memoryInjectContext = true,
+    this.memoryShortToMidThreshold = 0.65,
+    this.memoryMidToLongThreshold = 0.45,
+    this.memoryShortMaxAgeDays = 7,
+    this.memoryMidMaxAgeDays = 30,
+    this.memoryHebbianCoAccessMinutes = 5,
+    this.memoryHebbianDecayDays = 30,
+    this.memoryAutoExportEveryNMessages = 16,
+    this.memoryDreamingEnabled = true,
+    this.memoryCreatedRecencyHalfLifeDays = 180,
+    this.memoryAccessRecencyHalfLifeDays = 30,
+    this.memoryUseLastAccessForRecency = true,
   });
 
   Color get accentColor => Color(accentColorValue);
@@ -113,6 +157,18 @@ class AppSettings {
     double? surfaceOpacity,
     double? backgroundOpacity,
     String? searchEngine,
+    bool? memoryInjectContext,
+    double? memoryShortToMidThreshold,
+    double? memoryMidToLongThreshold,
+    int? memoryShortMaxAgeDays,
+    int? memoryMidMaxAgeDays,
+    int? memoryHebbianCoAccessMinutes,
+    int? memoryHebbianDecayDays,
+    int? memoryAutoExportEveryNMessages,
+    bool? memoryDreamingEnabled,
+    int? memoryCreatedRecencyHalfLifeDays,
+    int? memoryAccessRecencyHalfLifeDays,
+    bool? memoryUseLastAccessForRecency,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
@@ -126,13 +182,31 @@ class AppSettings {
       density: density ?? this.density,
       iconSize: iconSize ?? this.iconSize,
       borderRadius: borderRadius ?? this.borderRadius,
-      alwaysShowWelcomePage:
-          alwaysShowWelcomePage ?? this.alwaysShowWelcomePage,
+      alwaysShowWelcomePage: alwaysShowWelcomePage ?? this.alwaysShowWelcomePage,
       highContrastMode: highContrastMode ?? this.highContrastMode,
       themeTintOpacity: themeTintOpacity ?? this.themeTintOpacity,
       surfaceOpacity: surfaceOpacity ?? this.surfaceOpacity,
       backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
       searchEngine: searchEngine ?? this.searchEngine,
+      memoryInjectContext: memoryInjectContext ?? this.memoryInjectContext,
+      memoryShortToMidThreshold:
+          memoryShortToMidThreshold ?? this.memoryShortToMidThreshold,
+      memoryMidToLongThreshold:
+          memoryMidToLongThreshold ?? this.memoryMidToLongThreshold,
+      memoryShortMaxAgeDays: memoryShortMaxAgeDays ?? this.memoryShortMaxAgeDays,
+      memoryMidMaxAgeDays: memoryMidMaxAgeDays ?? this.memoryMidMaxAgeDays,
+      memoryHebbianCoAccessMinutes:
+          memoryHebbianCoAccessMinutes ?? this.memoryHebbianCoAccessMinutes,
+      memoryHebbianDecayDays: memoryHebbianDecayDays ?? this.memoryHebbianDecayDays,
+      memoryAutoExportEveryNMessages:
+          memoryAutoExportEveryNMessages ?? this.memoryAutoExportEveryNMessages,
+      memoryDreamingEnabled: memoryDreamingEnabled ?? this.memoryDreamingEnabled,
+      memoryCreatedRecencyHalfLifeDays: memoryCreatedRecencyHalfLifeDays ??
+          this.memoryCreatedRecencyHalfLifeDays,
+      memoryAccessRecencyHalfLifeDays: memoryAccessRecencyHalfLifeDays ??
+          this.memoryAccessRecencyHalfLifeDays,
+      memoryUseLastAccessForRecency: memoryUseLastAccessForRecency ??
+          this.memoryUseLastAccessForRecency,
     );
   }
 }
@@ -164,6 +238,25 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
       surfaceOpacity: prefs.getDouble('surfaceOpacity') ?? 1.0,
       backgroundOpacity: prefs.getDouble('backgroundOpacity') ?? 1.0,
       searchEngine: prefs.getString('searchEngine') ?? 'bing',
+      memoryInjectContext: prefs.getBool('memoryInjectContext') ?? true,
+      memoryShortToMidThreshold:
+          prefs.getDouble('memoryShortToMidThreshold') ?? 0.65,
+      memoryMidToLongThreshold:
+          prefs.getDouble('memoryMidToLongThreshold') ?? 0.45,
+      memoryShortMaxAgeDays: prefs.getInt('memoryShortMaxAgeDays') ?? 7,
+      memoryMidMaxAgeDays: prefs.getInt('memoryMidMaxAgeDays') ?? 30,
+      memoryHebbianCoAccessMinutes:
+          prefs.getInt('memoryHebbianCoAccessMinutes') ?? 5,
+      memoryHebbianDecayDays: prefs.getInt('memoryHebbianDecayDays') ?? 30,
+      memoryAutoExportEveryNMessages:
+          prefs.getInt('memoryAutoExportEveryNMessages') ?? 16,
+      memoryDreamingEnabled: prefs.getBool('memoryDreamingEnabled') ?? true,
+      memoryCreatedRecencyHalfLifeDays:
+          prefs.getInt('memoryCreatedRecencyHalfLifeDays') ?? 180,
+      memoryAccessRecencyHalfLifeDays:
+          prefs.getInt('memoryAccessRecencyHalfLifeDays') ?? 30,
+      memoryUseLastAccessForRecency:
+          prefs.getBool('memoryUseLastAccessForRecency') ?? true,
     );
   }
 
@@ -322,6 +415,117 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
       value: engine,
       persist: (p, k, v) => p.setString(k, v),
       update: (s, v) => s.copyWith(searchEngine: v),
+    );
+  }
+
+  // ── Memory setters ───────────────────────────────────────────────
+
+  Future<void> setMemoryInjectContext(bool v) async {
+    await _updateSetting(
+      key: 'memoryInjectContext',
+      value: v,
+      persist: (p, k, val) => p.setBool(k, val),
+      update: (s, val) => s.copyWith(memoryInjectContext: val),
+    );
+  }
+
+  Future<void> setMemoryShortToMidThreshold(double v) async {
+    await _updateSetting(
+      key: 'memoryShortToMidThreshold',
+      value: v,
+      persist: (p, k, val) => p.setDouble(k, val),
+      update: (s, val) => s.copyWith(memoryShortToMidThreshold: val),
+    );
+  }
+
+  Future<void> setMemoryMidToLongThreshold(double v) async {
+    await _updateSetting(
+      key: 'memoryMidToLongThreshold',
+      value: v,
+      persist: (p, k, val) => p.setDouble(k, val),
+      update: (s, val) => s.copyWith(memoryMidToLongThreshold: val),
+    );
+  }
+
+  Future<void> setMemoryShortMaxAgeDays(int v) async {
+    await _updateSetting(
+      key: 'memoryShortMaxAgeDays',
+      value: v,
+      persist: (p, k, val) => p.setInt(k, val),
+      update: (s, val) => s.copyWith(memoryShortMaxAgeDays: val),
+    );
+  }
+
+  Future<void> setMemoryMidMaxAgeDays(int v) async {
+    await _updateSetting(
+      key: 'memoryMidMaxAgeDays',
+      value: v,
+      persist: (p, k, val) => p.setInt(k, val),
+      update: (s, val) => s.copyWith(memoryMidMaxAgeDays: val),
+    );
+  }
+
+  Future<void> setMemoryHebbianCoAccessMinutes(int v) async {
+    await _updateSetting(
+      key: 'memoryHebbianCoAccessMinutes',
+      value: v,
+      persist: (p, k, val) => p.setInt(k, val),
+      update: (s, val) => s.copyWith(memoryHebbianCoAccessMinutes: val),
+    );
+  }
+
+  Future<void> setMemoryHebbianDecayDays(int v) async {
+    await _updateSetting(
+      key: 'memoryHebbianDecayDays',
+      value: v,
+      persist: (p, k, val) => p.setInt(k, val),
+      update: (s, val) => s.copyWith(memoryHebbianDecayDays: val),
+    );
+  }
+
+  Future<void> setMemoryAutoExportEveryNMessages(int v) async {
+    await _updateSetting(
+      key: 'memoryAutoExportEveryNMessages',
+      value: v,
+      persist: (p, k, val) => p.setInt(k, val),
+      update: (s, val) => s.copyWith(memoryAutoExportEveryNMessages: val),
+    );
+  }
+
+  Future<void> setMemoryDreamingEnabled(bool v) async {
+    await _updateSetting(
+      key: 'memoryDreamingEnabled',
+      value: v,
+      persist: (p, k, val) => p.setBool(k, val),
+      update: (s, val) => s.copyWith(memoryDreamingEnabled: val),
+    );
+  }
+
+  Future<void> setMemoryCreatedRecencyHalfLifeDays(int v) async {
+    await _updateSetting(
+      key: 'memoryCreatedRecencyHalfLifeDays',
+      value: v,
+      persist: (p, k, val) => p.setInt(k, val),
+      update: (s, val) =>
+          s.copyWith(memoryCreatedRecencyHalfLifeDays: val),
+    );
+  }
+
+  Future<void> setMemoryAccessRecencyHalfLifeDays(int v) async {
+    await _updateSetting(
+      key: 'memoryAccessRecencyHalfLifeDays',
+      value: v,
+      persist: (p, k, val) => p.setInt(k, val),
+      update: (s, val) => s.copyWith(memoryAccessRecencyHalfLifeDays: val),
+    );
+  }
+
+  Future<void> setMemoryUseLastAccessForRecency(bool v) async {
+    await _updateSetting(
+      key: 'memoryUseLastAccessForRecency',
+      value: v,
+      persist: (p, k, val) => p.setBool(k, val),
+      update: (s, val) => s.copyWith(memoryUseLastAccessForRecency: val),
     );
   }
 }

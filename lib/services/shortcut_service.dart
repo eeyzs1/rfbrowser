@@ -69,6 +69,7 @@ class ShortcutService {
       'canvas_select_all': 'Ctrl+A',
       'canvas_group': 'Ctrl+G',
       'canvas_ungroup': 'Ctrl+Shift+U',
+      'memory_browser': 'Ctrl+Shift+M',
     };
     _bindings = Map.from(_defaults);
   }

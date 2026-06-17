@@ -6,28 +6,40 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../data/models/ai_provider.dart';
 import '../data/models/chat_memory.dart';
+import '../core/memory/memory_scorer.dart';
+import '../core/memory/memory_summarizer.dart';
+import 'chat_history_exporter.dart';
 import 'memory_service.dart';
 import 'dio_factory.dart';
 import 'settings_service.dart';
 
 const _uuid = Uuid();
 
-/// Background service that synthesizes memory fragments from raw chat messages.
+/// Background service that consolidates raw chat messages into memory
+/// fragments and runs the progressive-forgetting engine.
 ///
-/// Inspired by OpenAI's Dreaming V3 architecture:
-///   1. Collect raw messages (Layer 0 — already persisted by MemoryService)
-///   2. Consolidate: extract fragments, detect conflicts, merge/update
-///   3. Store synthesized fragments (Layer 1 — searchable via FTS5)
+/// Pipeline (run during each consolidation):
+///   1. Materialize the current message window into candidate fragments.
+///   2. Score every active fragment with [MemoryScorer].
+///   3. For fragments whose score has dropped below the policy threshold:
+///      - group them by tier + time window + dimension
+///      - call [MemorySummarizer] to build an L1/L2 summary
+///      - transition the source fragments' tier
+///      - archive the raw body when moving short → mid if the summary is good
 ///
-/// Triggered when:
+/// The trigger condition is unchanged from the original implementation:
 ///   - N new messages accumulate since last consolidation (default: 8)
 ///   - App idle timer fires (default: 30s after last message)
 class DreamingService {
   final MemoryService _memory;
+  final MemoryScorer _scorer;
+  final MemorySummarizer _summarizer;
+  final ChatHistoryExporter? _exporter;
   final Dio _dio = DioFactory.instance;
   int _lastConsolidatedCount = 0;
   Timer? _idleTimer;
   bool _isConsolidating = false;
+  int _lastExportedMessageCount = 0;
 
   /// Threshold: trigger consolidation after this many new messages.
   static const int messageThreshold = 8;
@@ -35,18 +47,34 @@ class DreamingService {
   /// Idle time before triggering consolidation (when app is quiet).
   static const Duration idleDuration = Duration(seconds: 30);
 
-  DreamingService(this._memory);
+  /// After this many new messages since the last Markdown export, the
+  /// dreaming service will write a fresh `.rfbrowser/chats/...md` file.
+  /// 0 disables auto-export; callers can also use
+  /// [ChatHistoryExporter.exportSession] directly.
+  static const int exportEveryNMessages = 16;
+
+  DreamingService(
+    this._memory, {
+    MemoryScorer? scorer,
+    MemorySummarizer? summarizer,
+    ChatHistoryExporter? exporter,
+  })  : _scorer = scorer ?? const MemoryScorer(),
+        _summarizer = summarizer ?? const RuleBasedMemorySummarizer(),
+        _exporter = exporter;
 
   // ─── Public API ────────────────────────────────────────────────────
 
   /// Call after each message persistence. Checks threshold and idle timer.
+  /// Becomes a no-op when the user has disabled dreaming in settings.
   void onMessageSaved() {
+    if (_dreamingEnabled == false) return;
     _resetIdleTimer();
     _checkThreshold();
   }
 
   /// Call when the user is done chatting (panel collapses, etc.).
   void onUserInactive() {
+    if (_dreamingEnabled == false) return;
     _idleTimer?.cancel();
     _idleTimer = Timer(idleDuration, _consolidateIfNeeded);
   }
@@ -61,6 +89,9 @@ class DreamingService {
   void dispose() {
     _idleTimer?.cancel();
   }
+
+  /// Whether dreaming is currently enabled. Public for diagnostics.
+  bool get isDreamingEnabled => _dreamingEnabled ?? true;
 
   // ─── Internal triggers ─────────────────────────────────────────────
 
@@ -100,6 +131,14 @@ class DreamingService {
     if (_isConsolidating) return;
     _isConsolidating = true;
 
+    // Process-wide single-flight lock (defense in depth — also checked in
+    // ai_service / callers). Released in `finally`.
+    final lock = await _memory.tryAcquireConsolidationLock();
+    if (lock == null) {
+      _isConsolidating = false;
+      return;
+    }
+
     try {
       final messages = await _memory.getRecentMessages(limit: 30);
       if (messages.isEmpty) {
@@ -107,40 +146,98 @@ class DreamingService {
         return;
       }
 
+      // 1. Extract fragments from messages (LLM-assisted, with rule-based
+      //    fallback to ensure the system never blocks on a missing provider).
       final existingFragments = await _memory.getAllActiveFragments();
+      final extractResult = await _extractFragments(
+        messages,
+        existingFragments,
+      );
+      if (extractResult == null) return;
 
-      final result = await _callDreamingLLM(messages, existingFragments);
-      if (result == null) return;
+      await _applyExtractionResult(extractResult);
 
-      await _applyDreamingResult(result);
+      // 2. Run the forgetting engine over the now-updated fragment set.
+      final forgettingStats = await _runForgettingCycle();
+      if (forgettingStats.transitionedRecords > 0 ||
+          forgettingStats.createdSummaries > 0) {
+        debugPrint(
+          'DreamingService forgetting: '
+          '${forgettingStats.createdSummaries} summaries, '
+          '${forgettingStats.transitionedRecords} records transitioned, '
+          '${forgettingStats.archivedDetailRecords} details archived',
+        );
+      }
+
       _lastConsolidatedCount = await _memory.getUnconsolidatedCount();
       debugPrint(
-        'DreamingService: consolidated ${result.newFragments.length} new, '
-        '${result.supersededIds.length} superseded',
+        'DreamingService: extracted ${extractResult.newFragments.length} new, '
+        '${extractResult.supersededIds.length} superseded, '
+        '${extractResult.updatedFragments.length} updated',
       );
+
+      // 3. Auto-export the session as Markdown if enough new messages have
+      //    accumulated. Failures are logged but never block the cycle.
+      await _maybeAutoExport();
     } catch (e) {
       debugPrint('DreamingService consolidation error: $e');
     } finally {
+      _memory.releaseConsolidationLock(lock);
       _isConsolidating = false;
     }
   }
 
-  // ─── LLM call ──────────────────────────────────────────────────────
+  Future<void> _maybeAutoExport() async {
+    final exporter = _exporter;
+    if (exporter == null) return;
+    if (exportEveryNMessages <= 0) return;
+    final total = _lastConsolidatedCount;
+    if (total - _lastExportedMessageCount < exportEveryNMessages) return;
+    try {
+      final path = await exporter.exportSession();
+      if (path != null) {
+        _lastExportedMessageCount = total;
+        debugPrint('DreamingService: exported chat to $path');
+      }
+    } catch (e) {
+      debugPrint('DreamingService auto-export error: $e');
+    }
+  }
 
-  /// Call the configured LLM to extract memory fragments from recent messages.
-  Future<_DreamingResult?> _callDreamingLLM(
+  /// Force an export of the current session. Public hook for the settings
+  /// UI "Export chat" button.
+  Future<String?> exportCurrentSession() async {
+    final exporter = _exporter;
+    if (exporter == null) {
+      debugPrint('DreamingService.exportCurrentSession: no exporter wired');
+      return null;
+    }
+    final path = await exporter.exportSession();
+    if (path != null) {
+      _lastExportedMessageCount = _lastConsolidatedCount;
+    }
+    return path;
+  }
+
+  // ─── LLM extraction (preserves the original behaviour) ────────────
+
+  Future<_ExtractionResult?> _extractFragments(
     List<ChatRecord> messages,
     List<MemoryFragment> existingFragments,
   ) async {
     final provider = _provider;
     final model = _model;
     if (provider == null || model == null) {
-      debugPrint('DreamingService: no AI provider configured, skipping');
-      return null;
+      // Without a provider we can't extract facts. Run the forgetting
+      // engine anyway so the user still gets tier migration.
+      return _ExtractionResult(
+        newFragments: const [],
+        supersededIds: const [],
+        updatedFragments: const [],
+      );
     }
 
-    final prompt = _buildDreamingPrompt(messages, existingFragments);
-
+    final prompt = _buildExtractionPrompt(messages, existingFragments);
     try {
       final response = await _dio.post(
         provider.chatEndpoint,
@@ -153,37 +250,33 @@ class DreamingService {
         data: jsonEncode({
           'model': model.id,
           'messages': [
-            {'role': 'system', 'content': _systemPrompt},
+            {'role': 'system', 'content': _extractionSystemPrompt},
             {'role': 'user', 'content': prompt},
           ],
           'temperature': 0.3,
           'max_tokens': 1024,
         }),
       );
-
       final content = _extractContent(response.data, provider.protocol);
       if (content == null) {
-        debugPrint('DreamingService: empty response from LLM');
+        debugPrint('DreamingService: empty extraction response from LLM');
         return null;
       }
-      return _parseDreamingResponse(content);
+      return _parseExtractionResponse(content);
     } on DioException catch (e) {
       debugPrint('DreamingService LLM error: ${e.message}');
       return null;
     }
   }
 
-  /// Build the dreaming prompt based on recent messages and existing fragments.
-  String _buildDreamingPrompt(
+  String _buildExtractionPrompt(
     List<ChatRecord> messages,
     List<MemoryFragment> existingFragments,
   ) {
     final recent = messages.map((m) => '${m.role}: ${m.content}').join('\n');
-
     final existing = existingFragments.isNotEmpty
         ? '\nExisting memories about the user:\n${existingFragments.map((f) => '- [${f.category}] ${f.content} (id: ${f.id})').join('\n')}'
         : '\nNo existing memories.';
-
     return '''
 Recent conversation:
 $recent
@@ -194,11 +287,8 @@ Extract new facts about the user from the recent conversation. Output JSON only,
 ''';
   }
 
-  // ─── Response parsing ──────────────────────────────────────────────
-
-  _DreamingResult? _parseDreamingResponse(String content) {
+  _ExtractionResult? _parseExtractionResponse(String content) {
     try {
-      // Extract JSON from potential markdown code blocks
       var jsonStr = content.trim();
       if (jsonStr.startsWith('```')) {
         final start = jsonStr.indexOf('\n');
@@ -207,7 +297,6 @@ Extract new facts about the user from the recent conversation. Output JSON only,
           jsonStr = jsonStr.substring(start, end).trim();
         }
       }
-
       final json = jsonDecode(jsonStr) as Map<String, dynamic>;
 
       final newFragments = <_FragmentData>[];
@@ -218,6 +307,8 @@ Extract new facts about the user from the recent conversation. Output JSON only,
           _FragmentData(
             content: fMap['content'] as String? ?? '',
             category: fMap['category'] as String? ?? 'fact',
+            importance: (fMap['importance'] as num?)?.toDouble() ?? 0.0,
+            mediaRefs: _stringList(fMap['media_refs']),
           ),
         );
       }
@@ -236,12 +327,14 @@ Extract new facts about the user from the recent conversation. Output JSON only,
           _FragmentData(
             content: uMap['content'] as String? ?? '',
             category: uMap['category'] as String? ?? 'fact',
+            importance: (uMap['importance'] as num?)?.toDouble() ?? 0.0,
+            mediaRefs: _stringList(uMap['media_refs']),
             supersedesId: uMap['supersedes_id'] as String?,
           ),
         );
       }
 
-      return _DreamingResult(
+      return _ExtractionResult(
         newFragments: newFragments,
         supersededIds: superseded,
         updatedFragments: updated,
@@ -252,17 +345,21 @@ Extract new facts about the user from the recent conversation. Output JSON only,
     }
   }
 
-  // ─── Apply results ─────────────────────────────────────────────────
+  static List<String> _stringList(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .whereType<String>()
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList(growable: false);
+  }
 
-  Future<void> _applyDreamingResult(_DreamingResult result) async {
+  Future<void> _applyExtractionResult(_ExtractionResult result) async {
     final now = DateTime.now();
 
-    // Mark superseded fragments
     for (final id in result.supersededIds) {
       await _memory.deactivateFragment(id);
     }
-
-    // Update existing fragments
     for (final u in result.updatedFragments) {
       if (u.supersedesId != null) {
         await _memory.deactivateFragment(u.supersedesId!);
@@ -273,13 +370,14 @@ Extract new facts about the user from the recent conversation. Output JSON only,
         content: u.content,
         category: u.category,
         isActive: true,
+        tier: MemoryTier.short,
+        importanceScore: u.importance,
+        mediaRefs: u.mediaRefs,
         createdAt: now,
         updatedAt: now,
       );
       await _memory.upsertFragment(fragment);
     }
-
-    // Insert new fragments
     for (final n in result.newFragments) {
       if (n.content.isEmpty) continue;
       final fragment = MemoryFragment(
@@ -288,6 +386,9 @@ Extract new facts about the user from the recent conversation. Output JSON only,
         content: n.content,
         category: n.category,
         isActive: true,
+        tier: MemoryTier.short,
+        importanceScore: n.importance,
+        mediaRefs: n.mediaRefs,
         createdAt: now,
         updatedAt: now,
       );
@@ -295,7 +396,131 @@ Extract new facts about the user from the recent conversation. Output JSON only,
     }
   }
 
-  // ─── Helpers ───────────────────────────────────────────────────────
+  // ─── Progressive-forgetting engine ────────────────────────────────
+
+  /// Score all active fragments in a tier, mark the ones that fall below the
+  /// transition threshold, group them, build summaries, and apply the
+  /// transition + archive side effects.
+  Future<_ForgettingRunResult> _runForgettingCycle() async {
+    final now = DateTime.now();
+    var scanned = 0;
+    var eligible = 0;
+    var createdSummaries = 0;
+    var transitioned = 0;
+    var archived = 0;
+
+    final phases = <_ForgettingPhase>[
+      _ForgettingPhase(
+        fromTier: MemoryTier.short,
+        olderThan: now.subtract(_scorer.policy.shortMaxAge),
+        threshold: _scorer.policy.shortToMidThreshold,
+        windowMs: const Duration(days: 1).inMilliseconds,
+      ),
+      _ForgettingPhase(
+        fromTier: MemoryTier.mid,
+        olderThan: now.subtract(_scorer.policy.midMaxAge),
+        threshold: _scorer.policy.midToLongThreshold,
+        windowMs: const Duration(days: 7).inMilliseconds,
+      ),
+    ];
+
+    for (final phase in phases) {
+      final candidates = await _memory.getFragmentsInTier(
+        phase.fromTier,
+        limit: _scorer.policy.maxCandidatesPerCycle,
+      );
+      scanned += candidates.length;
+
+      final scored = candidates
+          .map((c) => _scorer.scoreWithBreakdown(c, now: now))
+          .toList();
+
+      final eligibleNow = scored
+          .where((s) => _scorer.isEligibleForTransition(s, now: now))
+          .toList();
+      eligible += eligibleNow.length;
+
+      if (eligibleNow.isEmpty) continue;
+
+      final groups = _groupEligible(
+        userId: _memory.currentSessionId,
+        records: eligibleNow,
+        fromTier: phase.fromTier,
+        windowMs: phase.windowMs,
+        now: now,
+      );
+
+      for (final group in groups) {
+        final summary = _summarizer.buildSummary(group, now: now);
+        await _memory.saveSummary(summary);
+        createdSummaries += 1;
+        transitioned += group.records.length;
+
+        final shouldArchive = group.targetTier == MemoryTier.long;
+        for (final r in group.records) {
+          await _memory.transitionFragmentTier(
+            r.fragment.id,
+            newTier: group.targetTier,
+            transitionedAt: now,
+            summaryId: summary.summaryId,
+            archive: shouldArchive,
+          );
+        }
+        if (shouldArchive) archived += group.records.length;
+      }
+    }
+
+    return _ForgettingRunResult(
+      scannedRecords: scanned,
+      eligibleRecords: eligible,
+      createdSummaries: createdSummaries,
+      transitionedRecords: transitioned,
+      archivedDetailRecords: archived,
+    );
+  }
+
+  /// Group eligible fragments by tier + time window. OpenLoomi's
+  /// `groupRecordsForTransition` is the template.
+  List<MemoryGroup> _groupEligible({
+    required String userId,
+    required List<ScoredMemoryFragment> records,
+    required MemoryTier fromTier,
+    required int windowMs,
+    required DateTime now,
+  }) {
+    final groups = <String, List<ScoredMemoryFragment>>{};
+    for (final r in records) {
+      final bucket = bucketStart(r.fragment.createdAt, Duration(milliseconds: windowMs));
+      final key = '${fromTier.name}|${bucket.millisecondsSinceEpoch}';
+      (groups[key] ??= <ScoredMemoryFragment>[]).add(r);
+    }
+    final result = <MemoryGroup>[];
+    for (final entry in groups.entries) {
+      if (entry.value.isEmpty) continue;
+      entry.value.sort(
+        (a, b) => a.fragment.createdAt.compareTo(b.fragment.createdAt),
+      );
+      final start = entry.value.first.fragment.createdAt;
+      final end = entry.value.last.fragment.createdAt;
+      result.add(
+        MemoryGroup(
+          groupId: entry.key,
+          userId: userId,
+          sourceTier: fromTier,
+          targetTier: transitionTargetTier(fromTier),
+          summaryTier: summaryTierForTransition(fromTier),
+          records: entry.value,
+          startTimestamp: start,
+          endTimestamp: end,
+        ),
+      );
+    }
+    // Newest windows first so the more relevant summaries win.
+    result.sort((a, b) => b.endTimestamp.compareTo(a.endTimestamp));
+    return result;
+  }
+
+  // ─── Response parsing helpers ──────────────────────────────────────
 
   String? _extractContent(dynamic data, ApiProtocol protocol) {
     try {
@@ -322,71 +547,120 @@ Extract new facts about the user from the recent conversation. Output JSON only,
   AIProvider? _provider;
   AIModel? _model;
 
+  /// Whether the user has enabled background dreaming in settings.
+  /// `null` means "default on" so the service is permissive in tests.
+  bool? _dreamingEnabled;
+
   void configureAI({AIProvider? provider, AIModel? model}) {
     _provider = provider;
     _model = model;
   }
+
+  void setDreamingEnabled(bool enabled) {
+    _dreamingEnabled = enabled;
+    if (!enabled) {
+      _idleTimer?.cancel();
+    }
+  }
+
+  static const String _extractionSystemPrompt = '''
+You are a memory extraction assistant. Identify facts about the user from the conversation
+and return them as compact JSON fragments. Use short, declarative sentences.
+If the conversation adds no new facts, return an empty list.
+''';
 }
+
+/// Riverpod provider for [DreamingService].
+///
+/// Single instance per process; tied to the [memoryServiceProvider] lifetime.
+/// The policy + Hebbian config + dual-time-signal scorer are derived from
+/// the active [AppSettings] so user-tunable values in the settings page
+/// immediately affect the forgetting engine.
+final dreamingServiceProvider = Provider<DreamingService>((ref) {
+  final memory = ref.watch(memoryServiceProvider);
+  final exporter = ref.watch(chatHistoryExporterProvider);
+  final settings = ref.watch(settingsProvider);
+  final policy = MemoryForgettingPolicy(
+    weights: const MemoryScoringWeights(),
+    shortToMidThreshold: settings.memoryShortToMidThreshold,
+    midToLongThreshold: settings.memoryMidToLongThreshold,
+    shortMaxAge: Duration(days: settings.memoryShortMaxAgeDays),
+    midMaxAge: Duration(days: settings.memoryMidMaxAgeDays),
+  );
+  final scorer = MemoryScorer(
+    policy: policy,
+    createdRecencyHalfLife:
+        Duration(days: settings.memoryCreatedRecencyHalfLifeDays),
+    accessRecencyHalfLife:
+        Duration(days: settings.memoryAccessRecencyHalfLifeDays),
+    useLastAccessForRecency: settings.memoryUseLastAccessForRecency,
+  );
+  final service = DreamingService(
+    memory,
+    exporter: exporter,
+    scorer: scorer,
+  );
+  service.setDreamingEnabled(settings.memoryDreamingEnabled);
+  ref.onDispose(service.dispose);
+  return service;
+});
 
 // ─── Data classes ────────────────────────────────────────────────────
 
 class _FragmentData {
   final String content;
   final String category;
+  final double importance;
+  final List<String> mediaRefs;
   final String? supersedesId;
 
   _FragmentData({
     required this.content,
     this.category = 'fact',
+    this.importance = 0.0,
+    this.mediaRefs = const [],
     this.supersedesId,
   });
 }
 
-class _DreamingResult {
+class _ExtractionResult {
   final List<_FragmentData> newFragments;
   final List<String> supersededIds;
   final List<_FragmentData> updatedFragments;
 
-  _DreamingResult({
-    this.newFragments = const [],
-    this.supersededIds = const [],
-    this.updatedFragments = const [],
+  _ExtractionResult({
+    required this.newFragments,
+    required this.supersededIds,
+    required this.updatedFragments,
   });
 }
 
-// ─── System prompt ───────────────────────────────────────────────────
+class _ForgettingPhase {
+  final MemoryTier fromTier;
+  final DateTime olderThan;
+  final double threshold;
+  final int windowMs;
 
-const _systemPrompt = '''
-You are a memory consolidation system. Your job is to extract key facts about the user from recent conversations and merge them with existing knowledge.
+  _ForgettingPhase({
+    required this.fromTier,
+    required this.olderThan,
+    required this.threshold,
+    required this.windowMs,
+  });
+}
 
-Output a JSON object with these fields:
-- "new_fragments": array of NEW facts not yet in existing memories. Each has "content" (1-2 sentences) and "category" (one of: fact, preference, project, constraint, context).
-- "superseded_ids": array of existing fragment IDs that are now OUTDATED or CONTRADICTED by new information.
-- "updated_fragments": array of updated versions of existing fragments. Each has "content", "category", and "supersedes_id" (the old fragment ID being replaced).
+class _ForgettingRunResult {
+  final int scannedRecords;
+  final int eligibleRecords;
+  final int createdSummaries;
+  final int transitionedRecords;
+  final int archivedDetailRecords;
 
-Rules:
-1. Extract facts that will be useful across sessions. Skip trivial chat.
-2. If the user says something that contradicts an existing memory, supersede the old one.
-3. If the user provides updated info on a topic, merge it into a single updated fragment.
-4. Each fragment should be a self-contained statement (1-2 sentences).
-5. "fact" = objective information about the user. "preference" = likes/dislikes. "project" = ongoing work. "constraint" = limitations/requirements. "context" = situational info.
-6. Output ONLY valid JSON, no markdown, no explanation.
-''';
-
-// ─── Riverpod provider ───────────────────────────────────────────────
-
-final dreamingServiceProvider = Provider<DreamingService>((ref) {
-  final memory = ref.read(memoryServiceProvider);
-  final service = DreamingService(memory);
-
-  // Configure AI access from current settings
-  final aiConfig = ref.read(aiConfigProvider);
-  final provider = aiConfig.activeProvider;
-  final model = aiConfig.activeModel;
-  if (provider != null && model != null) {
-    service.configureAI(provider: provider, model: model);
-  }
-
-  ref.onDispose(() => service.dispose());
-  return service;
-});
+  _ForgettingRunResult({
+    required this.scannedRecords,
+    required this.eligibleRecords,
+    required this.createdSummaries,
+    required this.transitionedRecords,
+    required this.archivedDetailRecords,
+  });
+}

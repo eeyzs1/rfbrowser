@@ -1,14 +1,18 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/ai_provider.dart';
+import '../data/models/chat_memory.dart';
 import 'dio_factory.dart';
 import 'connectivity_service.dart';
 import 'settings_service.dart';
 import 'agent_chat_bridge.dart';
 import 'memory_service.dart';
 import 'dreaming_service.dart';
+import 'hebbian_service.dart';
+import '../core/ai/request_context.dart';
 
 class ToolCallInfo {
   final String id;
@@ -146,9 +150,21 @@ class AINotifier extends Notifier<AIState> {
         state.activeProvider ?? ref.read(aiConfigProvider).activeProvider;
     var model = state.activeModel ?? ref.read(aiConfigProvider).activeModel;
 
+    // ── Ambient request context: vault / active note / selection / scene
+    //    are layered onto whatever caller-supplied context exists, so
+    //    AI services always know "what is the user doing right now".
+    //    Honored only when the user has not disabled it in settings.
+    final injectContext = ref.read(settingsProvider).memoryInjectContext;
+    final ambient = injectContext ? ref.read(requestContextProvider) : null;
+    final ambientBlock = ambient?.toSystemPromptBlock() ?? '';
+    // ─────────────────────────────────────────────────────────────
+
     // ── Memory: query relevant fragments ────────────────────────
     final memoryContext = await _buildMemoryContext(userMessage);
-    final effectiveContext = _mergeContext(context, memoryContext);
+    final effectiveContext = _mergeContext(
+      _mergeContext(context, ambientBlock.isEmpty ? null : ambientBlock),
+      memoryContext,
+    );
     // ─────────────────────────────────────────────────────────────
 
     final connectivity = ref.read(connectivityProvider);
@@ -509,15 +525,68 @@ class AINotifier extends Notifier<AIState> {
   // ─── Memory helpers ────────────────────────────────────────────────
 
   /// Query relevant memory fragments and format them for the system prompt.
+  ///
+  /// Pipeline:
+  ///   1. FTS5 search → top-k fragments
+  ///   2. Hebbian expansion → related fragments that didn't match the query
+  ///   3. Record the union as a co-access group (so the next call sees
+  ///      stronger edges between them)
+  ///   4. Fall back to summary search when fragment results are sparse
   Future<String?> _buildMemoryContext(String userMessage) async {
     try {
       final fragments = await _memory.searchFragments(userMessage, limit: 5);
-      if (fragments.isEmpty) return null;
-      return MemoryService.formatFragmentsForContext(fragments);
+      final hebbian = ref.read(hebbianServiceProvider);
+      final neighbors = fragments.isEmpty
+          ? const <HebbianNeighbor>[]
+          : await hebbian.expandByHebbianLinks(
+              fragments.map((f) => f.id),
+              limit: 3,
+            );
+
+      // Record co-access for the union of primary + neighbors. Failures are
+      // logged but never block the response.
+      final coAccessIds = <String>[
+        ...fragments.map((f) => f.id),
+        ...neighbors.map((n) => n.fragment.id),
+      ];
+      if (coAccessIds.length > 1) {
+        unawaited(
+          hebbian.recordCoAccess(coAccessIds).catchError((Object e) {
+            debugPrint('AI: hebbian recordCoAccess error: $e');
+          }),
+        );
+      }
+
+      final allFragments = <MemoryFragment>[
+        ...fragments,
+        ...neighbors.map((n) => n.fragment),
+      ];
+
+      String? ctx = allFragments.isEmpty
+          ? null
+          : MemoryService.formatFragmentsForContext(allFragments);
+
+      // Fallback: if no fragments matched, look at summaries.
+      if (allFragments.isEmpty) {
+        final summaries = await _memory.searchSummaries(userMessage, limit: 3);
+        if (summaries.isNotEmpty) {
+          ctx = _formatSummariesForContext(summaries);
+        }
+      }
+      return ctx;
     } catch (e) {
       debugPrint('AI: memory context query failed: $e');
       return null;
     }
+  }
+
+  static String _formatSummariesForContext(List<MemorySummary> summaries) {
+    final buffer = StringBuffer();
+    buffer.writeln('[Past conversation summaries — distilled knowledge:]');
+    for (final s in summaries) {
+      buffer.writeln('- [${s.summaryTier.name.toUpperCase()}] ${s.summaryText}');
+    }
+    return buffer.toString();
   }
 
   /// Merge caller-provided context with memory context.
