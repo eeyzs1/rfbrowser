@@ -52,25 +52,16 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
       expect(container.read(requestContextProvider), RequestContext.empty);
-      container.read(requestContextProvider.notifier).updateScene(AppScene.think);
-      expect(
-        container.read(requestContextProvider).scene,
-        AppScene.think,
-      );
+      container
+          .read(requestContextProvider.notifier)
+          .updateScene(AppScene.think);
+      expect(container.read(requestContextProvider).scene, AppScene.think);
       container
           .read(requestContextProvider.notifier)
           .updateActiveNote(const ActiveNoteSnapshot(id: '1', title: 'X'));
-      expect(
-        container.read(requestContextProvider).activeNote?.title,
-        'X',
-      );
-      container
-          .read(requestContextProvider.notifier)
-          .updateActiveNote(null);
-      expect(
-        container.read(requestContextProvider).activeNote,
-        isNull,
-      );
+      expect(container.read(requestContextProvider).activeNote?.title, 'X');
+      container.read(requestContextProvider.notifier).updateActiveNote(null);
+      expect(container.read(requestContextProvider).activeNote, isNull);
     });
   });
 }

@@ -85,13 +85,15 @@ class _EditorViewState extends ConsumerState<EditorView> {
       notifier.updateSelection(null);
       return;
     }
-    notifier.updateSelection(SelectionSnapshot(
-      text: selectedText.length > 4000
-          ? selectedText.substring(0, 4000)
-          : selectedText,
-      startOffset: sel.start,
-      endOffset: sel.end,
-    ));
+    notifier.updateSelection(
+      SelectionSnapshot(
+        text: selectedText.length > 4000
+            ? selectedText.substring(0, 4000)
+            : selectedText,
+        startOffset: sel.start,
+        endOffset: sel.end,
+      ),
+    );
   }
 
   void _pushActiveNoteToContext(dynamic note) {
@@ -100,12 +102,14 @@ class _EditorViewState extends ConsumerState<EditorView> {
       notifier.updateActiveNote(null);
       return;
     }
-    notifier.updateActiveNote(ActiveNoteSnapshot(
-      id: note.id as String,
-      title: note.title as String,
-      path: note.filePath as String?,
-      tags: List<String>.from(note.tags as List<dynamic>),
-    ));
+    notifier.updateActiveNote(
+      ActiveNoteSnapshot(
+        id: note.id as String,
+        title: note.title as String,
+        path: note.filePath as String?,
+        tags: List<String>.from(note.tags as List<dynamic>),
+      ),
+    );
   }
 
   @override

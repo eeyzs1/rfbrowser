@@ -57,6 +57,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         return AppScene.connect;
     }
   }
+
   void _toggleLeftPanel() =>
       setState(() => _leftPanelExpanded = !_leftPanelExpanded);
   void _toggleRightPanel() =>
@@ -78,10 +79,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         notifier.updateVault(null);
       } else {
         final v = vaultState.currentVault!;
-        notifier.updateVault(VaultSnapshot(
-          name: v.name,
-          path: v.path,
-        ));
+        notifier.updateVault(VaultSnapshot(name: v.name, path: v.path));
       }
     });
     if (vaultState.currentVault == null && !vaultState.isLoading) {

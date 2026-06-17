@@ -234,7 +234,12 @@ class HebbianService {
     final ageMs = now.difference(lastStrengthenedAt).inMilliseconds;
     if (ageMs <= 0) return strength;
     final halfLifeMs =
-        config.decayDaysConstant * 24 * 60 * 60 * 1000.0 * (1.0 / max(stability, 0.1));
+        config.decayDaysConstant *
+        24 *
+        60 *
+        60 *
+        1000.0 *
+        (1.0 / max(stability, 0.1));
     final factor = exp(-ageMs / halfLifeMs);
     final decayed = strength * factor;
     return decayed < config.strengthFloor ? 0.0 : decayed;

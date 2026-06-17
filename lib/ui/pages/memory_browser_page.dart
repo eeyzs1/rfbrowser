@@ -216,11 +216,7 @@ class _TierSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
-              Container(
-                width: 6,
-                height: 16,
-                color: color,
-              ),
+              Container(width: 6, height: 16, color: color),
               const SizedBox(width: 8),
               Text(
                 '${tier.name.toUpperCase()} (${fragments.length})',
@@ -231,9 +227,7 @@ class _TierSection extends StatelessWidget {
             ],
           ),
         ),
-        ...fragments.map(
-          (f) => _FragmentCard(fragment: f, memory: memory),
-        ),
+        ...fragments.map((f) => _FragmentCard(fragment: f, memory: memory)),
       ],
     );
   }
@@ -263,7 +257,10 @@ class _FragmentCard extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  _Tag(label: fragment.category, color: theme.colorScheme.primary),
+                  _Tag(
+                    label: fragment.category,
+                    color: theme.colorScheme.primary,
+                  ),
                   if (fragment.isPinned) ...[
                     const SizedBox(width: 4),
                     const _Tag(label: 'pinned', color: Colors.amber),
@@ -334,10 +331,7 @@ class _FragmentCard extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(fragment.content),
               const SizedBox(height: 16),
-              _DetailRow(
-                label: 'Tier',
-                value: fragment.tier.name,
-              ),
+              _DetailRow(label: 'Tier', value: fragment.tier.name),
               _DetailRow(
                 label: 'Summary tier',
                 value: fragment.summaryTier.name,
@@ -416,11 +410,9 @@ class _SummariesTab extends StatelessWidget {
       final result = <MemorySummary>[];
       for (final tier in MemorySummaryTier.values) {
         result.addAll(
-          await memory.searchSummaries(
-            '',
-            limit: 100,
-            tiers: [tier],
-          ).catchError((Object _) => <MemorySummary>[]),
+          await memory
+              .searchSummaries('', limit: 100, tiers: [tier])
+              .catchError((Object _) => <MemorySummary>[]),
         );
       }
       return result;
@@ -472,10 +464,7 @@ class _SummaryCard extends StatelessWidget {
                   .take(8)
                   .map(
                     (kw) => Chip(
-                      label: Text(
-                        kw,
-                        style: const TextStyle(fontSize: 11),
-                      ),
+                      label: Text(kw, style: const TextStyle(fontSize: 11)),
                       padding: EdgeInsets.zero,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -568,41 +557,41 @@ class _HebbianTabState extends ConsumerState<_HebbianTab> {
           child: _selectedId == null
               ? const Center(child: Text('Select a fragment to see its links'))
               : _edges.isEmpty
-                  ? const Center(child: Text('No Hebbian links for this fragment'))
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(8),
-                      itemCount: _edges.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (_, i) {
-                        final edge = _edges[i];
-                        final otherId = edge.otherEnd(_selectedId!)!;
-                        final other = _fragments.firstWhere(
-                          (f) => f.id == otherId,
-                          orElse: () => MemoryFragment(
-                            id: otherId,
-                            sessionId: '?',
-                            content: '(unknown fragment)',
-                            createdAt: DateTime.now(),
-                            updatedAt: DateTime.now(),
-                          ),
-                        );
-                        return ListTile(
-                          dense: true,
-                          leading: _StrengthBar(strength: edge.strength),
-                          title: Text(
-                            other.content.length > 80
-                                ? '${other.content.substring(0, 80)}…'
-                                : other.content,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            'co-access × ${edge.coAccessCount}'
-                            ' · stability ${edge.stability.toStringAsFixed(2)}',
-                          ),
-                        );
-                      },
-                    ),
+              ? const Center(child: Text('No Hebbian links for this fragment'))
+              : ListView.separated(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: _edges.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  itemBuilder: (_, i) {
+                    final edge = _edges[i];
+                    final otherId = edge.otherEnd(_selectedId!)!;
+                    final other = _fragments.firstWhere(
+                      (f) => f.id == otherId,
+                      orElse: () => MemoryFragment(
+                        id: otherId,
+                        sessionId: '?',
+                        content: '(unknown fragment)',
+                        createdAt: DateTime.now(),
+                        updatedAt: DateTime.now(),
+                      ),
+                    );
+                    return ListTile(
+                      dense: true,
+                      leading: _StrengthBar(strength: edge.strength),
+                      title: Text(
+                        other.content.length > 80
+                            ? '${other.content.substring(0, 80)}…'
+                            : other.content,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        'co-access × ${edge.coAccessCount}'
+                        ' · stability ${edge.stability.toStringAsFixed(2)}',
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -620,8 +609,8 @@ class _StrengthBar extends StatelessWidget {
     final color = t > 0.6
         ? Colors.green
         : t > 0.3
-            ? Colors.orange
-            : Colors.grey;
+        ? Colors.orange
+        : Colors.grey;
     return Container(
       width: 6,
       height: 32,
@@ -691,9 +680,7 @@ class _DetailRow extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
-            child: Text(value, style: theme.textTheme.bodyMedium),
-          ),
+          Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
         ],
       ),
     );

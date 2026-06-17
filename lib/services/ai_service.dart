@@ -584,7 +584,9 @@ class AINotifier extends Notifier<AIState> {
     final buffer = StringBuffer();
     buffer.writeln('[Past conversation summaries — distilled knowledge:]');
     for (final s in summaries) {
-      buffer.writeln('- [${s.summaryTier.name.toUpperCase()}] ${s.summaryText}');
+      buffer.writeln(
+        '- [${s.summaryTier.name.toUpperCase()}] ${s.summaryText}',
+      );
     }
     return buffer.toString();
   }

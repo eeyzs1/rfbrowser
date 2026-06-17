@@ -58,9 +58,9 @@ class DreamingService {
     MemoryScorer? scorer,
     MemorySummarizer? summarizer,
     ChatHistoryExporter? exporter,
-  })  : _scorer = scorer ?? const MemoryScorer(),
-        _summarizer = summarizer ?? const RuleBasedMemorySummarizer(),
-        _exporter = exporter;
+  }) : _scorer = scorer ?? const MemoryScorer(),
+       _summarizer = summarizer ?? const RuleBasedMemorySummarizer(),
+       _exporter = exporter;
 
   // ─── Public API ────────────────────────────────────────────────────
 
@@ -490,7 +490,10 @@ Extract new facts about the user from the recent conversation. Output JSON only,
   }) {
     final groups = <String, List<ScoredMemoryFragment>>{};
     for (final r in records) {
-      final bucket = bucketStart(r.fragment.createdAt, Duration(milliseconds: windowMs));
+      final bucket = bucketStart(
+        r.fragment.createdAt,
+        Duration(milliseconds: windowMs),
+      );
       final key = '${fromTier.name}|${bucket.millisecondsSinceEpoch}';
       (groups[key] ??= <ScoredMemoryFragment>[]).add(r);
     }
@@ -589,17 +592,15 @@ final dreamingServiceProvider = Provider<DreamingService>((ref) {
   );
   final scorer = MemoryScorer(
     policy: policy,
-    createdRecencyHalfLife:
-        Duration(days: settings.memoryCreatedRecencyHalfLifeDays),
-    accessRecencyHalfLife:
-        Duration(days: settings.memoryAccessRecencyHalfLifeDays),
+    createdRecencyHalfLife: Duration(
+      days: settings.memoryCreatedRecencyHalfLifeDays,
+    ),
+    accessRecencyHalfLife: Duration(
+      days: settings.memoryAccessRecencyHalfLifeDays,
+    ),
     useLastAccessForRecency: settings.memoryUseLastAccessForRecency,
   );
-  final service = DreamingService(
-    memory,
-    exporter: exporter,
-    scorer: scorer,
-  );
+  final service = DreamingService(memory, exporter: exporter, scorer: scorer);
   service.setDreamingEnabled(settings.memoryDreamingEnabled);
   ref.onDispose(service.dispose);
   return service;

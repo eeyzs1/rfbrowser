@@ -100,13 +100,15 @@ class ChatHistoryExporter {
     required List<ChatRecord> messages,
   }) {
     final buffer = StringBuffer();
-    buffer.writeln(_frontmatter(
-      sessionId: sessionId,
-      title: title,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-      messageCount: messages.length,
-    ));
+    buffer.writeln(
+      _frontmatter(
+        sessionId: sessionId,
+        title: title,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+        messageCount: messages.length,
+      ),
+    );
     buffer.writeln('# $title\n');
     buffer.writeln('> Chat ID: $sessionId');
     buffer.writeln('> Created: ${_formatDateTime(createdAt)}');

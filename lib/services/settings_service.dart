@@ -48,31 +48,42 @@ class AppSettings {
   // ── Memory subsystem (progressive forgetting + Hebbian) ──────────
   /// Whether the ambient [RequestContext] is injected into AI prompts.
   final bool memoryInjectContext;
+
   /// Threshold below which a `short`-tier fragment is migrated to `mid`.
   final double memoryShortToMidThreshold;
+
   /// Threshold below which a `mid`-tier fragment is migrated to `long`.
   final double memoryMidToLongThreshold;
+
   /// Number of days a fragment must live in `short` tier before being
   /// considered for migration to `mid`. Mirrors the OpenLoomi policy.
   final int memoryShortMaxAgeDays;
+
   /// Number of days a fragment must live in `mid` tier before being
   /// considered for migration to `long`.
   final int memoryMidMaxAgeDays;
+
   /// Co-access window for Hebbian edge reinforcement (minutes).
   final int memoryHebbianCoAccessMinutes;
+
   /// Hebbian edge decay constant (days to fall to 1/e).
   final int memoryHebbianDecayDays;
+
   /// How many chat messages between auto-Markdown exports. 0 disables.
   final int memoryAutoExportEveryNMessages;
+
   /// Whether the dreaming engine runs in the background automatically.
   final bool memoryDreamingEnabled;
+
   /// Half-life of the createdAt recency signal (days). Longer = facts
   /// are treated as "still fresh" for longer. Default 180.
   final int memoryCreatedRecencyHalfLifeDays;
+
   /// Half-life of the lastAccessAt recency signal (days). Shorter than
   /// the created half-life so that "actively used" is a sharper signal.
   /// Default 30.
   final int memoryAccessRecencyHalfLifeDays;
+
   /// Master switch for the dual-time-signal scoring. When false the
   /// scorer falls back to the original createdAt-only behavior.
   final bool memoryUseLastAccessForRecency;
@@ -182,7 +193,8 @@ class AppSettings {
       density: density ?? this.density,
       iconSize: iconSize ?? this.iconSize,
       borderRadius: borderRadius ?? this.borderRadius,
-      alwaysShowWelcomePage: alwaysShowWelcomePage ?? this.alwaysShowWelcomePage,
+      alwaysShowWelcomePage:
+          alwaysShowWelcomePage ?? this.alwaysShowWelcomePage,
       highContrastMode: highContrastMode ?? this.highContrastMode,
       themeTintOpacity: themeTintOpacity ?? this.themeTintOpacity,
       surfaceOpacity: surfaceOpacity ?? this.surfaceOpacity,
@@ -193,20 +205,25 @@ class AppSettings {
           memoryShortToMidThreshold ?? this.memoryShortToMidThreshold,
       memoryMidToLongThreshold:
           memoryMidToLongThreshold ?? this.memoryMidToLongThreshold,
-      memoryShortMaxAgeDays: memoryShortMaxAgeDays ?? this.memoryShortMaxAgeDays,
+      memoryShortMaxAgeDays:
+          memoryShortMaxAgeDays ?? this.memoryShortMaxAgeDays,
       memoryMidMaxAgeDays: memoryMidMaxAgeDays ?? this.memoryMidMaxAgeDays,
       memoryHebbianCoAccessMinutes:
           memoryHebbianCoAccessMinutes ?? this.memoryHebbianCoAccessMinutes,
-      memoryHebbianDecayDays: memoryHebbianDecayDays ?? this.memoryHebbianDecayDays,
+      memoryHebbianDecayDays:
+          memoryHebbianDecayDays ?? this.memoryHebbianDecayDays,
       memoryAutoExportEveryNMessages:
           memoryAutoExportEveryNMessages ?? this.memoryAutoExportEveryNMessages,
-      memoryDreamingEnabled: memoryDreamingEnabled ?? this.memoryDreamingEnabled,
-      memoryCreatedRecencyHalfLifeDays: memoryCreatedRecencyHalfLifeDays ??
+      memoryDreamingEnabled:
+          memoryDreamingEnabled ?? this.memoryDreamingEnabled,
+      memoryCreatedRecencyHalfLifeDays:
+          memoryCreatedRecencyHalfLifeDays ??
           this.memoryCreatedRecencyHalfLifeDays,
-      memoryAccessRecencyHalfLifeDays: memoryAccessRecencyHalfLifeDays ??
+      memoryAccessRecencyHalfLifeDays:
+          memoryAccessRecencyHalfLifeDays ??
           this.memoryAccessRecencyHalfLifeDays,
-      memoryUseLastAccessForRecency: memoryUseLastAccessForRecency ??
-          this.memoryUseLastAccessForRecency,
+      memoryUseLastAccessForRecency:
+          memoryUseLastAccessForRecency ?? this.memoryUseLastAccessForRecency,
     );
   }
 }
@@ -506,8 +523,7 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
       key: 'memoryCreatedRecencyHalfLifeDays',
       value: v,
       persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) =>
-          s.copyWith(memoryCreatedRecencyHalfLifeDays: val),
+      update: (s, val) => s.copyWith(memoryCreatedRecencyHalfLifeDays: val),
     );
   }
 

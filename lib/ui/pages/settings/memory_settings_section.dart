@@ -251,7 +251,9 @@ class _ManualExportTile extends ConsumerWidget {
   Future<void> _run(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final path = await ref.read(dreamingServiceProvider).exportCurrentSession();
+      final path = await ref
+          .read(dreamingServiceProvider)
+          .exportCurrentSession();
       if (path == null) {
         messenger.showSnackBar(
           const SnackBar(content: Text('No active chat session to export')),
@@ -265,9 +267,7 @@ class _ManualExportTile extends ConsumerWidget {
         ),
       );
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Export failed: $e')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text('Export failed: $e')));
     }
   }
 }

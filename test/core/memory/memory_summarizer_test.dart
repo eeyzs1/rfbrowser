@@ -23,8 +23,12 @@ MemoryFragment _frag({
   );
 }
 
-MemoryGroup _group(List<MemoryFragment> fragments, {MemoryTier from = MemoryTier.short}) {
-  final sorted = [...fragments]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+MemoryGroup _group(
+  List<MemoryFragment> fragments, {
+  MemoryTier from = MemoryTier.short,
+}) {
+  final sorted = [...fragments]
+    ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
   return MemoryGroup(
     groupId: 'g1',
     userId: 'u1',
@@ -32,14 +36,16 @@ MemoryGroup _group(List<MemoryFragment> fragments, {MemoryTier from = MemoryTier
     targetTier: transitionTargetTier(from),
     summaryTier: summaryTierForTransition(from),
     records: sorted
-        .map((f) => ScoredMemoryFragment(
-              fragment: f,
-              valueScore: 0.0,
-              recencyScore: 0.0,
-              accessScore: 0.0,
-              importanceScore: 0.0,
-              mediaScore: 0.0,
-            ))
+        .map(
+          (f) => ScoredMemoryFragment(
+            fragment: f,
+            valueScore: 0.0,
+            recencyScore: 0.0,
+            accessScore: 0.0,
+            importanceScore: 0.0,
+            mediaScore: 0.0,
+          ),
+        )
         .toList(),
     startTimestamp: sorted.first.createdAt,
     endTimestamp: sorted.last.createdAt,
@@ -98,18 +104,12 @@ void main() {
   group('transition helpers', () {
     test('short -> mid / l1', () {
       expect(transitionTargetTier(MemoryTier.short), MemoryTier.mid);
-      expect(
-        summaryTierForTransition(MemoryTier.short),
-        MemorySummaryTier.l1,
-      );
+      expect(summaryTierForTransition(MemoryTier.short), MemorySummaryTier.l1);
     });
 
     test('mid -> long / l2', () {
       expect(transitionTargetTier(MemoryTier.mid), MemoryTier.long);
-      expect(
-        summaryTierForTransition(MemoryTier.mid),
-        MemorySummaryTier.l2,
-      );
+      expect(summaryTierForTransition(MemoryTier.mid), MemorySummaryTier.l2);
     });
   });
 
@@ -129,20 +129,29 @@ void main() {
           createdAt: DateTime.utc(2026, 1, 2),
         ),
       ]);
-      final summary = summarizer.buildSummary(group, now: DateTime.utc(2026, 1, 2));
+      final summary = summarizer.buildSummary(
+        group,
+        now: DateTime.utc(2026, 1, 2),
+      );
 
       expect(summary.sourceRecordIds, containsAll(['a', 'b']));
       expect(summary.keyPoints, isNotEmpty);
       expect(summary.keywords, contains('flutter'));
       expect(summary.summaryText, contains('Window:'));
-      expect(summary.summaryText, contains('Tier transition: short -> mid (l1)'));
+      expect(
+        summary.summaryText,
+        contains('Tier transition: short -> mid (l1)'),
+      );
     });
 
     test('degrades gracefully for groups with no text', () {
       final group = _group([
         _frag(id: 'a', content: '', createdAt: DateTime.utc(2026, 1, 1)),
       ]);
-      final summary = summarizer.buildSummary(group, now: DateTime.utc(2026, 1, 1));
+      final summary = summarizer.buildSummary(
+        group,
+        now: DateTime.utc(2026, 1, 1),
+      );
       expect(summary.keyPoints, isEmpty);
       expect(summary.qualityScore, lessThan(0.5));
     });
@@ -152,7 +161,10 @@ void main() {
       final group = _group([
         _frag(id: 'a', content: long, createdAt: DateTime.utc(2026, 1, 1)),
       ]);
-      final summary = summarizer.buildSummary(group, now: DateTime.utc(2026, 1, 1));
+      final summary = summarizer.buildSummary(
+        group,
+        now: DateTime.utc(2026, 1, 1),
+      );
       expect(summary.keyPoints.first.length, lessThanOrEqualTo(180));
     });
   });

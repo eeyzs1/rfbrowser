@@ -55,8 +55,7 @@ class MemoryForgettingPolicy {
 
   /// OpenLoomi-aligned default policy. Same numbers as
   /// `DEFAULT_MEMORY_FORGETTING_POLICY` in `policy.ts`.
-  static const MemoryForgettingPolicy defaultPolicy =
-      MemoryForgettingPolicy();
+  static const MemoryForgettingPolicy defaultPolicy = MemoryForgettingPolicy();
 }
 
 /// A scored memory record: a fragment plus the derived metadata used by the
@@ -110,12 +109,13 @@ const Set<String> defaultSummaryStopWords = {
 
 /// Default CJK character pattern for keyword extraction. Same range as in
 /// the existing CJK tokenizer in `index_store.dart`.
-final RegExp cjkCharPattern = RegExp(r'[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]');
+final RegExp cjkCharPattern = RegExp(
+  r'[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]',
+);
 
 /// Default tokenization regex for keyword extraction. Splits on anything
 /// that isn't a letter, digit, underscore, hyphen, or CJK character.
-final RegExp wordSplitter =
-    RegExp(r'[^a-zA-Z0-9_\-\u4e00-\u9fff]+');
+final RegExp wordSplitter = RegExp(r'[^a-zA-Z0-9_\-\u4e00-\u9fff]+');
 
 /// Computes a 0..1 value score for a memory fragment, based on recency,
 /// access frequency, importance (explicit + keyword-inferred), media
@@ -182,13 +182,14 @@ class MemoryScorer {
     final pinnedBonus = fragment.isPinned ? policy.weights.pinnedBoost : 0.0;
 
     final w = policy.weights;
-    final combined = (w.recency * recency +
-            w.access * access +
-            w.importance * importance +
-            w.media * media +
-            pinnedBonus)
-        .clamp(0.0, 1.0)
-        .toDouble();
+    final combined =
+        (w.recency * recency +
+                w.access * access +
+                w.importance * importance +
+                w.media * media +
+                pinnedBonus)
+            .clamp(0.0, 1.0)
+            .toDouble();
 
     return ScoredMemoryFragment(
       fragment: fragment,
@@ -207,10 +208,7 @@ class MemoryScorer {
   /// the smaller of (age from [createdAt], age from [lastAccessAt]).
   /// A fragment that the user keeps seeing won't hit the grace period
   /// even if it was extracted long ago.
-  bool isEligibleForTransition(
-    ScoredMemoryFragment scored, {
-    DateTime? now,
-  }) {
+  bool isEligibleForTransition(ScoredMemoryFragment scored, {DateTime? now}) {
     final f = scored.fragment;
     if (f.isPinned) return false;
     if (f.archivedAt != null) return false;
@@ -327,9 +325,6 @@ class MemorySummaryLexicon {
     }
     final entries = scores.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    return entries
-        .take(maxCount)
-        .map((e) => e.key)
-        .toList(growable: false);
+    return entries.take(maxCount).map((e) => e.key).toList(growable: false);
   }
 }

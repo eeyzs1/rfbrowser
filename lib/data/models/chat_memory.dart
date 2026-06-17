@@ -170,8 +170,7 @@ class MemoryFragment {
         (t) => t.name == tierName,
         orElse: () => MemoryTier.short,
       ),
-      importanceScore:
-          (row['importance_score'] as num?)?.toDouble() ?? 0.0,
+      importanceScore: (row['importance_score'] as num?)?.toDouble() ?? 0.0,
       accessCount: (row['access_count'] as int?) ?? 0,
       lastAccessAt: row['last_access_at'] == null
           ? null

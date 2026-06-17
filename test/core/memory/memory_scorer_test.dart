@@ -92,7 +92,8 @@ void main() {
       expect(
         scorer.isEligibleForTransition(scored),
         isTrue,
-        reason: 'a 14-day-old, never-accessed, low-importance fragment should be forgotten',
+        reason:
+            'a 14-day-old, never-accessed, low-importance fragment should be forgotten',
       );
     });
 
@@ -129,9 +130,7 @@ void main() {
   });
 
   group('MemoryScorer — dual time signal', () {
-    test(
-        'recent access lifts score even when fragment is long-standing',
-        () {
+    test('recent access lifts score even when fragment is long-standing', () {
       // 100-day-old fragment, no importance/access, no media.
       // Without the access signal it would decay to ~0.45.
       final old = _fragment(age: const Duration(days: 100));
@@ -163,8 +162,7 @@ void main() {
       );
     });
 
-    test('useLastAccessForRecency=false reverts to created-only scoring',
-        () {
+    test('useLastAccessForRecency=false reverts to created-only scoring', () {
       final withAccess = _fragment(
         age: const Duration(days: 100),
         lastAccessAt: DateTime.now().subtract(const Duration(days: 1)),
@@ -178,19 +176,22 @@ void main() {
       expect(
         scorerOn.scoreWithBreakdown(withAccess).recencyScore,
         greaterThan(0.5),
-        reason: 'with the access signal on, recent access should keep '
+        reason:
+            'with the access signal on, recent access should keep '
             'recency high',
       );
       expect(
         scorerOff.scoreWithBreakdown(withAccess).recencyScore,
         lessThan(0.5),
-        reason: 'disabling useLastAccess should drop recency to '
+        reason:
+            'disabling useLastAccess should drop recency to '
             'the created-decay level',
       );
       expect(
         scorerOff.score(withAccess),
         closeTo(scorerOff.score(noAccess), 0.001),
-        reason: 'with the signal disabled, the two fragments should '
+        reason:
+            'with the signal disabled, the two fragments should '
             'score identically',
       );
     });
@@ -231,9 +232,7 @@ void main() {
     test('effectiveAge = createdAt age when lastAccessAt is null', () {
       const scorer = MemoryScorer();
       final now = DateTime.now();
-      final f = _fragment(
-        createdAt: now.subtract(const Duration(days: 42)),
-      );
+      final f = _fragment(createdAt: now.subtract(const Duration(days: 42)));
       final age = scorer.effectiveAge(f, now: now);
       expect(age, const Duration(days: 42));
     });
@@ -286,10 +285,7 @@ void main() {
     });
 
     test('respects maxCount', () {
-      final kws = lex.topKeywords(
-        List.generate(20, (i) => 'w$i'),
-        maxCount: 3,
-      );
+      final kws = lex.topKeywords(List.generate(20, (i) => 'w$i'), maxCount: 3);
       expect(kws.length, lessThanOrEqualTo(3));
     });
 

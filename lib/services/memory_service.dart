@@ -111,7 +111,9 @@ class MemoryService {
 
   Future<void> _upgradeV1ToV2(Database db) async {
     // 1. Rename old fragments table to preserve data
-    await db.execute('ALTER TABLE memory_fragments RENAME TO memory_fragments_v1');
+    await db.execute(
+      'ALTER TABLE memory_fragments RENAME TO memory_fragments_v1',
+    );
     // 2. Recreate with v2 schema
     await _createFragmentsV2(db);
     // 3. Copy data over with sensible defaults for new fields
@@ -492,7 +494,8 @@ class MemoryService {
     final tierFilter = tiers == null || tiers.isEmpty
         ? null
         : tiers.map((t) => "'${t.name}'").join(',');
-    final sql = '''
+    final sql =
+        '''
       SELECT f.* FROM memory_fragments f
       INNER JOIN memory_fragments_fts ft ON ft.id = f.id
       WHERE memory_fragments_fts MATCH ?
@@ -665,10 +668,7 @@ class MemoryService {
     List<String> splitList(Object? raw) {
       final s = (raw as String?) ?? '';
       if (s.isEmpty) return const [];
-      return s
-          .split('|')
-          .where((e) => e.isNotEmpty)
-          .toList(growable: false);
+      return s.split('|').where((e) => e.isNotEmpty).toList(growable: false);
     }
 
     return MemorySummary(
@@ -741,8 +741,9 @@ class MemoryService {
       } else {
         final row = existing.first;
         final prevStrength = (row['strength'] as num).toDouble();
-        final newStrength =
-            (prevStrength + strengthDelta).clamp(0.01, 10.0).toDouble();
+        final newStrength = (prevStrength + strengthDelta)
+            .clamp(0.01, 10.0)
+            .toDouble();
         await txn.update(
           'memory_hebbian_links',
           {

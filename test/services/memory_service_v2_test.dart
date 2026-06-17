@@ -103,8 +103,12 @@ void main() {
     });
 
     test('searchFragments respects tier filter', () async {
-      await memory.upsertFragment(_frag(id: '1', content: 'apple', tier: MemoryTier.short));
-      await memory.upsertFragment(_frag(id: '2', content: 'apple again', tier: MemoryTier.mid));
+      await memory.upsertFragment(
+        _frag(id: '1', content: 'apple', tier: MemoryTier.short),
+      );
+      await memory.upsertFragment(
+        _frag(id: '2', content: 'apple again', tier: MemoryTier.mid),
+      );
       final shortOnly = await memory.searchFragments(
         'apple',
         limit: 10,
@@ -134,13 +138,25 @@ void main() {
 
     test('getFragmentsInTier filters and orders by created_at', () async {
       await memory.upsertFragment(
-        _frag(id: '1', tier: MemoryTier.short, createdAt: DateTime.utc(2026, 1, 1)),
+        _frag(
+          id: '1',
+          tier: MemoryTier.short,
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
       );
       await memory.upsertFragment(
-        _frag(id: '2', tier: MemoryTier.short, createdAt: DateTime.utc(2026, 1, 2)),
+        _frag(
+          id: '2',
+          tier: MemoryTier.short,
+          createdAt: DateTime.utc(2026, 1, 2),
+        ),
       );
       await memory.upsertFragment(
-        _frag(id: '3', tier: MemoryTier.mid, createdAt: DateTime.utc(2026, 1, 3)),
+        _frag(
+          id: '3',
+          tier: MemoryTier.mid,
+          createdAt: DateTime.utc(2026, 1, 3),
+        ),
       );
       final shorts = await memory.getFragmentsInTier(MemoryTier.short);
       expect(shorts.map((f) => f.id).toList(), ['1', '2']);

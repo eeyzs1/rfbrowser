@@ -50,33 +50,35 @@ void main() {
       expect(cEdge.coAccessCount, 1);
     });
 
-    test('expandByHebbianLinks returns neighbors ranked by decayed strength',
-        () async {
-      // First create the fragments so hydration works.
-      for (final id in ['center', 'a', 'b', 'c']) {
-        await memory.upsertFragment(_frag(id));
-      }
-      // Build a star: 'center' is co-accessed with each of [a, b, c].
-      await hebbian.recordCoAccess(['center', 'a']);
-      await hebbian.recordCoAccess(['center', 'b']);
-      await hebbian.recordCoAccess(['center', 'c']);
-      // Reinforce 'center <-> b' multiple times so it ranks higher.
-      for (var i = 0; i < 5; i++) {
+    test(
+      'expandByHebbianLinks returns neighbors ranked by decayed strength',
+      () async {
+        // First create the fragments so hydration works.
+        for (final id in ['center', 'a', 'b', 'c']) {
+          await memory.upsertFragment(_frag(id));
+        }
+        // Build a star: 'center' is co-accessed with each of [a, b, c].
+        await hebbian.recordCoAccess(['center', 'a']);
         await hebbian.recordCoAccess(['center', 'b']);
-      }
-      final neighbors = await hebbian.expandByHebbianLinks(
-        ['center'],
-        limit: 5,
-        minStrength: 0.0,
-      );
-      expect(neighbors.length, 3);
-      // b should be ranked above a (more co-accesses).
-      expect(neighbors.first.fragment.id, 'b');
-      expect(
-        neighbors.map((n) => n.fragment.id),
-        containsAll(['a', 'b', 'c']),
-      );
-    });
+        await hebbian.recordCoAccess(['center', 'c']);
+        // Reinforce 'center <-> b' multiple times so it ranks higher.
+        for (var i = 0; i < 5; i++) {
+          await hebbian.recordCoAccess(['center', 'b']);
+        }
+        final neighbors = await hebbian.expandByHebbianLinks(
+          ['center'],
+          limit: 5,
+          minStrength: 0.0,
+        );
+        expect(neighbors.length, 3);
+        // b should be ranked above a (more co-accesses).
+        expect(neighbors.first.fragment.id, 'b');
+        expect(
+          neighbors.map((n) => n.fragment.id),
+          containsAll(['a', 'b', 'c']),
+        );
+      },
+    );
 
     test('expandByHebbianLinks excludes the seed set', () async {
       await memory.upsertFragment(_frag('a'));
@@ -91,10 +93,9 @@ void main() {
       await memory.upsertFragment(_frag('b'));
       await hebbian.recordCoAccess(['a', 'b']);
       final all = await hebbian.expandByHebbianLinks(['a'], minStrength: 0.0);
-      final filtered = await hebbian.expandByHebbianLinks(
-        ['a'],
-        minStrength: 10.0,
-      );
+      final filtered = await hebbian.expandByHebbianLinks([
+        'a',
+      ], minStrength: 10.0);
       expect(all, isNotEmpty);
       expect(filtered, isEmpty);
     });

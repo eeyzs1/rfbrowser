@@ -9,7 +9,8 @@ import '../../data/models/note.dart';
 /// Embedding caches can compare this version against the version that
 /// produced their stored vector and re-embed when mismatched.
 @visibleForTesting
-const String memoryRecordEmbeddingTextVersion = 'memory-record-embedding-text-v1';
+const String memoryRecordEmbeddingTextVersion =
+    'memory-record-embedding-text-v1';
 @visibleForTesting
 const String noteEmbeddingTextVersion = 'note-embedding-text-v1';
 
@@ -64,16 +65,8 @@ class EmbeddingDocumentBuilder {
       'Importance',
       fragment.importanceScore.toStringAsFixed(2),
     );
-    _appendSection(
-      sections,
-      'Pinned',
-      fragment.isPinned ? 'true' : 'false',
-    );
-    _appendSection(
-      sections,
-      'AccessCount',
-      fragment.accessCount.toString(),
-    );
+    _appendSection(sections, 'Pinned', fragment.isPinned ? 'true' : 'false');
+    _appendSection(sections, 'AccessCount', fragment.accessCount.toString());
     if (fragment.mediaRefs.isNotEmpty) {
       _appendSection(sections, 'Media', fragment.mediaRefs);
     }
@@ -103,11 +96,7 @@ class EmbeddingDocumentBuilder {
 
   // ─── Internals ────────────────────────────────────────────────────
 
-  void _appendSection(
-    List<String> sections,
-    String label,
-    Object? value,
-  ) {
+  void _appendSection(List<String> sections, String label, Object? value) {
     final flat = _flattenValue(value);
     if (flat.isEmpty) return;
     sections.add('$label: ${_dedupePreserveOrder(flat).join('; ')}');

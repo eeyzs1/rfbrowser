@@ -30,7 +30,11 @@ class SelectionSnapshot {
   final String text;
   final int? startOffset;
   final int? endOffset;
-  const SelectionSnapshot({required this.text, this.startOffset, this.endOffset});
+  const SelectionSnapshot({
+    required this.text,
+    this.startOffset,
+    this.endOffset,
+  });
 }
 
 /// The top-level scene (capture / think / connect) the user is currently in.
@@ -73,8 +77,7 @@ class RequestContext {
   }) {
     return RequestContext(
       vault: clearVault ? null : (vault ?? this.vault),
-      activeNote:
-          clearActiveNote ? null : (activeNote ?? this.activeNote),
+      activeNote: clearActiveNote ? null : (activeNote ?? this.activeNote),
       selection: clearSelection ? null : (selection ?? this.selection),
       scene: scene ?? this.scene,
       capturedAt: DateTime.now(),
@@ -143,5 +146,5 @@ class RequestContextNotifier extends Notifier<RequestContext> {
 /// the AI service informed of the user's current focus.
 final requestContextProvider =
     NotifierProvider<RequestContextNotifier, RequestContext>(
-  RequestContextNotifier.new,
-);
+      RequestContextNotifier.new,
+    );

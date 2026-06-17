@@ -53,7 +53,8 @@ String buildSummaryId({
   required String groupId,
   required DateTime endTimestamp,
 }) {
-  final raw = '$userId|${summaryTier.name}|$groupId|${endTimestamp.millisecondsSinceEpoch}';
+  final raw =
+      '$userId|${summaryTier.name}|$groupId|${endTimestamp.millisecondsSinceEpoch}';
   return 'ms_${_stableHash(raw)}';
 }
 
@@ -79,18 +80,24 @@ DateTime bucketStart(DateTime timestamp, Duration window) {
   final local = timestamp.isUtc ? timestamp.toLocal() : timestamp;
   final windowMs = window.inMilliseconds;
   if (windowMs <= 0) return local;
-  if (window.inDays >= 1 && window.inDays * Duration.millisecondsPerDay == windowMs) {
+  if (window.inDays >= 1 &&
+      window.inDays * Duration.millisecondsPerDay == windowMs) {
     // For day-aligned windows, anchor on local midnight so that
     // "1 day" windows line up with the local calendar.
     return DateTime(local.year, local.month, local.day);
   }
-  if (window.inHours >= 1 && window.inHours * Duration.millisecondsPerHour == windowMs) {
+  if (window.inHours >= 1 &&
+      window.inHours * Duration.millisecondsPerHour == windowMs) {
     return DateTime(local.year, local.month, local.day, local.hour);
   }
   if (window.inMinutes >= 1 &&
       window.inMinutes * Duration.millisecondsPerMinute == windowMs) {
     return DateTime(
-      local.year, local.month, local.day, local.hour, local.minute,
+      local.year,
+      local.month,
+      local.day,
+      local.hour,
+      local.minute,
     );
   }
   // Fall back to ms-based bucketing for arbitrary durations.
@@ -225,14 +232,14 @@ class RuleBasedMemorySummarizer implements MemorySummarizer {
 /// Convenience constructor used by tests and callers that need a one-shot
 /// summary without going through the full engine.
 String debugSummaryToJson(MemorySummary s) => jsonEncode({
-      'summary_id': s.summaryId,
-      'summary_tier': s.summaryTier.name,
-      'source_tier': s.sourceTier.name,
-      'message_count': s.messageCount,
-      'key_points': s.keyPoints,
-      'keywords': s.keywords,
-      'summary_text': s.summaryText,
-    });
+  'summary_id': s.summaryId,
+  'summary_tier': s.summaryTier.name,
+  'source_tier': s.sourceTier.name,
+  'message_count': s.messageCount,
+  'key_points': s.keyPoints,
+  'keywords': s.keywords,
+  'summary_text': s.summaryText,
+});
 
 /// Build a fresh, unique id (UUID v4) when callers need one that isn't
 /// deterministically derived from a group. Exposed so [DreamingService] can
