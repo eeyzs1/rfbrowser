@@ -222,14 +222,22 @@ void main() {
   });
 
   group('HnswIndex benchmark', () {
-    test('recall@10 — curated clusters benchmark', () {
-      // Flaky under parallel CI load — known timing-sensitive. Skipped.
-    }, skip: 'Flaky curated-clusters benchmark; tracked for rework');
+    test(
+      'recall@10 — curated clusters benchmark',
+      () {
+        // Flaky under parallel CI load — known timing-sensitive. Skipped.
+      },
+      skip: 'Flaky curated-clusters benchmark; tracked for rework',
+    );
 
-    test('recall@10 — legacy body (skipped, see above)', () {
-      // Body removed; see the skipped `recall@10 — curated clusters
-      // benchmark` test above for the original implementation.
-    }, skip: 'Flaky curated-clusters benchmark; tracked for rework');
+    test(
+      'recall@10 — legacy body (skipped, see above)',
+      () {
+        // Body removed; see the skipped `recall@10 — curated clusters
+        // benchmark` test above for the original implementation.
+      },
+      skip: 'Flaky curated-clusters benchmark; tracked for rework',
+    );
 
     test('recall@10 — random vectors stress test', () {
       const dim = 64;

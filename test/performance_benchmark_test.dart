@@ -32,46 +32,57 @@ void main() {
   });
 
   group('Graph Layout Performance', () {
-    test('AC-P4-5-3: 500 node layout iteration under 16ms', () {
-      // Flaky under parallel CI load — known timing-sensitive. Skipped.
-    }, skip: 'Flaky layout benchmark; tracked for rework');
+    test(
+      'AC-P4-5-3: 500 node layout iteration under 16ms',
+      () {
+        // Flaky under parallel CI load — known timing-sensitive. Skipped.
+      },
+      skip: 'Flaky layout benchmark; tracked for rework',
+    );
 
-    test('AC-P4-5-3 legacy body (skipped, see above)', () {
-      // Body kept for reference; the actual assertions live above and
-      // are gated by the skip. To re-enable, move these checks into
-      // the first test and remove its `skip` argument.
-    }, skip: 'Flaky layout benchmark; tracked for rework');
+    test(
+      'AC-P4-5-3 legacy body (skipped, see above)',
+      () {
+        // Body kept for reference; the actual assertions live above and
+        // are gated by the skip. To re-enable, move these checks into
+        // the first test and remove its `skip` argument.
+      },
+      skip: 'Flaky layout benchmark; tracked for rework',
+    );
 
-    test('AC-P4-5-3 references', () {
-      // Placeholder for the legacy body. See the skipped test above
-      // for the implementation we no longer run by default.
-      final engine = ForceDirectedLayout();
-      final nodes = <LayoutNode>[];
-      final edges = <LayoutEdge>[];
+    test(
+      'AC-P4-5-3 references',
+      () {
+        // Placeholder for the legacy body. See the skipped test above
+        // for the implementation we no longer run by default.
+        final engine = ForceDirectedLayout();
+        final nodes = <LayoutNode>[];
+        final edges = <LayoutEdge>[];
 
-      for (var i = 0; i < 500; i++) {
-        nodes.add(
-          LayoutNode(id: 'n$i', x: (i % 25) * 40.0, y: (i ~/ 25) * 40.0),
-        );
-      }
-
-      for (var i = 0; i < 500; i++) {
-        if (i + 1 < 500) {
-          edges.add(LayoutEdge(sourceId: 'n$i', targetId: 'n${i + 1}'));
+        for (var i = 0; i < 500; i++) {
+          nodes.add(
+            LayoutNode(id: 'n$i', x: (i % 25) * 40.0, y: (i ~/ 25) * 40.0),
+          );
         }
-        if (i + 25 < 500) {
-          edges.add(LayoutEdge(sourceId: 'n$i', targetId: 'n${i + 25}'));
+
+        for (var i = 0; i < 500; i++) {
+          if (i + 1 < 500) {
+            edges.add(LayoutEdge(sourceId: 'n$i', targetId: 'n${i + 1}'));
+          }
+          if (i + 25 < 500) {
+            edges.add(LayoutEdge(sourceId: 'n$i', targetId: 'n${i + 25}'));
+          }
         }
-      }
 
-      final sw = Stopwatch()..start();
-      engine.computeIncremental(nodes, edges, 1);
-      sw.stop();
+        final sw = Stopwatch()..start();
+        engine.computeIncremental(nodes, edges, 1);
+        sw.stop();
 
-      expect(sw.elapsedMilliseconds, lessThan(16));
-    },
-        skip:
-            'Flaky layout benchmark; see the skipped sibling test for the implementation');
+        expect(sw.elapsedMilliseconds, lessThan(16));
+      },
+      skip:
+          'Flaky layout benchmark; see the skipped sibling test for the implementation',
+    );
   });
 
   group('Markdown Highlighter Performance', () {
