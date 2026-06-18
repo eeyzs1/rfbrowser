@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/stores/index_store.dart';
 import '../services/embedding_service.dart';
+import '../services/memory_service.dart';
 
 class SearchState {
   final List<Map<String, dynamic>> searchResults;
@@ -71,11 +72,44 @@ class SearchNotifier extends Notifier<SearchState> {
       }
 
       final combined = _mergeResults(ftsResults, semanticResults);
-      state = state.copyWith(hybridResults: combined, isSearching: false);
-      return combined;
+      // Also recall active memory fragments so the user can find
+      // remembered facts from past chats alongside their notes.
+      final memoryResults = await _recallMemory(query);
+      final finalResults = [...combined, ...memoryResults];
+      state = state.copyWith(hybridResults: finalResults, isSearching: false);
+      return finalResults;
     } catch (e) {
       state = state.copyWith(isSearching: false);
       return [];
+    }
+  }
+
+  /// Recall active memory fragments matching [query] and format them
+  /// as search-result entries with kind='memory' so the UI can
+  /// distinguish them from notes.
+  Future<List<Map<String, dynamic>>> _recallMemory(String query) async {
+    try {
+      final memory = ref.read(memoryServiceProvider);
+      final fragments = await memory.searchFragments(query, limit: 5);
+      return [
+        for (final f in fragments)
+          {
+            'id': 'mem-${f.id}',
+            'noteId': null,
+            'memoryId': f.id,
+            'kind': 'memory',
+            'title': f.content.split('\n').first,
+            'preview': f.content.length > 140
+                ? '${f.content.substring(0, 140)}...'
+                : f.content,
+            'score': f.importanceScore,
+            'tier': f.tier.name,
+            'isPinned': f.isPinned,
+            'source': f.source,
+          },
+      ];
+    } catch (_) {
+      return const [];
     }
   }
 

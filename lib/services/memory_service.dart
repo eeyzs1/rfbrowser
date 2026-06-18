@@ -73,10 +73,11 @@ class MemoryService {
     }
     return openDatabase(
       _dbPath,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await _createV2Schema(db);
         await _upgradeV2ToV3(db);
+        await _upgradeV3ToV4(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -84,6 +85,9 @@ class MemoryService {
         }
         if (oldVersion < 3) {
           await _upgradeV2ToV3(db);
+        }
+        if (oldVersion < 4) {
+          await _upgradeV3ToV4(db);
         }
       },
     );
@@ -170,6 +174,19 @@ class MemoryService {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_fragments_source_message_id '
       'ON memory_fragments(source_message_id)',
+    );
+  }
+
+  /// v3 → v4: add `parent_summary_id` to `memory_summaries` so the
+  /// L1 → L2 → L3 pyramid can be linked. Also adds an index on the
+  /// column to keep rollup queries cheap.
+  Future<void> _upgradeV3ToV4(Database db) async {
+    await db.execute(
+      'ALTER TABLE memory_summaries ADD COLUMN parent_summary_id TEXT',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_summaries_parent_summary_id '
+      'ON memory_summaries(parent_summary_id)',
     );
   }
 
@@ -705,6 +722,50 @@ class MemoryService {
     }
   }
 
+  /// Score breakdown for a single search hit. Used by the Memory
+  /// Browser to render "why this matched" tooltips.
+  FragmentMatch _match(MemoryFragment f, Set<String> tokens, DateTime now) {
+    final lower = f.content.toLowerCase();
+    final matched = tokens.where((t) => lower.contains(t)).length;
+    final ageDays = f.lastAccessAt == null
+        ? now.difference(f.createdAt).inDays
+        : now.difference(f.lastAccessAt!).inDays;
+    final recency = (1.0 - ageDays / 30.0).clamp(0.0, 1.0);
+    final coverage = tokens.isEmpty ? 0.0 : matched / tokens.length;
+    final composite = 0.5 * coverage + 0.3 * f.importanceScore + 0.2 * recency;
+    return FragmentMatch(
+      fragment: f,
+      matchedTokens: matched,
+      totalTokens: tokens.length,
+      importanceScore: f.importanceScore,
+      recencyScore: recency,
+      compositeScore: composite,
+    );
+  }
+
+  /// Run the same FTS query as [searchFragments] but also compute a
+  /// per-hit score breakdown so the UI can show "why this matched".
+  /// Components:
+  ///   - tokenCoverage: how many of the query tokens appeared in the
+  ///     fragment (0-1)
+  ///   - importanceScore: the fragment's stored importance (0-1)
+  ///   - recencyScore: 1 - daysSinceAccess / 30 (clamped to 0)
+  ///   - compositeScore: 0.5*coverage + 0.3*importance + 0.2*recency
+  Future<List<FragmentMatch>> searchFragmentsWithScores(
+    String query, {
+    int limit = 5,
+  }) async {
+    final fragments = await searchFragments(query, limit: limit);
+    if (fragments.isEmpty) return const [];
+    // IndexStore.tokenizeForFts joins tokens with a single space; split
+    // back into a set for token-coverage scoring.
+    final tokens = IndexStore.tokenizeForFts(
+      query,
+    ).split(' ').where((t) => t.isNotEmpty).toSet();
+    final now = DateTime.now();
+    return [for (final f in fragments) _match(f, tokens, now)];
+  }
+
   /// Get all active fragments (for rebuilding or inspection).
   Future<List<MemoryFragment>> getAllActiveFragments() async {
     final db = await database;
@@ -892,6 +953,160 @@ class MemoryService {
     return rows.map(HebbianEdge.fromRow).toList();
   }
 
+  /// Tokenize a fragment's content into a small keyword set used for
+  /// cross-session association. Lowercases, strips punctuation, drops
+  /// stopwords and tokens shorter than 4 chars. Returns at most
+  /// [limit] tokens, the longest first (to bias the match toward
+  /// high-signal words).
+  static const Set<String> _crossSessionStopwords = {
+    'the',
+    'and',
+    'that',
+    'this',
+    'with',
+    'from',
+    'have',
+    'has',
+    'are',
+    'was',
+    'were',
+    'been',
+    'will',
+    'would',
+    'could',
+    'should',
+    'into',
+    'over',
+    'also',
+    'than',
+    'then',
+    'they',
+    'them',
+    'their',
+    'there',
+    'these',
+    'those',
+    'what',
+    'when',
+    'where',
+    'which',
+    'while',
+    'your',
+    'you',
+    'but',
+    'not',
+    'for',
+    'all',
+    'any',
+    'can',
+    'its',
+    'may',
+    'his',
+    'her',
+    'she',
+    'him',
+    'who',
+    'how',
+    'our',
+    'out',
+    'one',
+    'two',
+    'get',
+    'got',
+    'use',
+    'used',
+    'using',
+    'make',
+    'made',
+    'know',
+    'just',
+    'some',
+    'such',
+    'only',
+    'very',
+    'more',
+    'most',
+    'other',
+    'about',
+    'because',
+    'after',
+    'before',
+    'does',
+    'doing',
+    'going',
+    'having',
+    'said',
+    'say',
+    'says',
+    'tell',
+    'told',
+    'tells',
+    'still',
+    'really',
+    'actually',
+    'kind',
+    'sort',
+    'thing',
+    'things',
+  };
+  static List<String> tokenizeForCrossSession(String content, {int limit = 8}) {
+    if (content.isEmpty) return const [];
+    final words =
+        content
+            .toLowerCase()
+            .replaceAll(RegExp(r'[^\p{L}\p{N}\s]+', unicode: true), ' ')
+            .split(RegExp(r'\s+'))
+            .where((w) => w.length >= 4 && !_crossSessionStopwords.contains(w))
+            .toList()
+          ..sort((a, b) => b.length.compareTo(a.length));
+    return words.take(limit).toList();
+  }
+
+  /// Find fragments from *other* sessions that share at least
+  /// [minKeywordOverlap] keywords with [fragmentId]. Excludes the
+  /// fragment's own session so that same-session co-access is left
+  /// to the Hebbian machinery. Ordered by overlap count desc.
+  Future<List<({MemoryFragment fragment, int overlap})>>
+  findCrossSessionAssociates(
+    String fragmentId, {
+    int minKeywordOverlap = 2,
+    int limit = 5,
+  }) async {
+    final db = await database;
+    final rows = await db.query(
+      'memory_fragments',
+      where: 'id = ?',
+      whereArgs: [fragmentId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return const [];
+    final source = rows.first;
+    final sourceSession = source['session_id'] as String;
+    final keywords = tokenizeForCrossSession(source['content'] as String);
+    if (keywords.isEmpty) return const [];
+
+    // Pull a candidate set of recent active fragments from other sessions.
+    final candidates = await db.query(
+      'memory_fragments',
+      where: 'is_active = 1 AND id != ? AND session_id != ?',
+      whereArgs: [fragmentId, sourceSession],
+      orderBy: 'updated_at DESC',
+      limit: 200,
+    );
+
+    final results = <({MemoryFragment fragment, int overlap})>[];
+    for (final c in candidates) {
+      final f = MemoryFragment.fromRow(c);
+      final candKeywords = tokenizeForCrossSession(f.content).toSet();
+      final overlap = keywords.toSet().intersection(candKeywords).length;
+      if (overlap >= minKeywordOverlap) {
+        results.add((fragment: f, overlap: overlap));
+      }
+    }
+    results.sort((a, b) => b.overlap.compareTo(a.overlap));
+    return results.take(limit).toList();
+  }
+
   /// Upsert a Hebbian edge between two fragments. The pair is stored with the
   /// smaller id in `fragment_a` so lookups are symmetric.
   Future<void> upsertHebbianEdge(
@@ -969,6 +1184,102 @@ class MemoryService {
   }
 
   // ─── Bulk session export ───────────────────────────────────────────
+
+  // ─── JSON backup / restore ──────────────────────────────────────────
+
+  /// Snapshot the entire memory DB (fragments, summaries, Hebbian
+  /// edges, FTS rows) as a JSON map. Used by the "Backup to JSON"
+  /// button in Memory Settings. Schema-versioned so future imports
+  /// can refuse incompatible payloads.
+  Future<Map<String, Object?>> exportToJson({
+    DateTime? now,
+    int schemaVersion = 4,
+  }) async {
+    final db = await database;
+    final fragments = await db.query('memory_fragments');
+    final summaries = await db.query('memory_summaries');
+    final edges = await db.query('memory_hebbian_links');
+    final fts = await db.query('memory_fragments_fts');
+    return {
+      'schema_version': schemaVersion,
+      'exported_at': (now ?? DateTime.now()).toIso8601String(),
+      'fragments': fragments,
+      'summaries': summaries,
+      'hebbian_edges': edges,
+      'fts_rows': fts,
+      'counts': {
+        'fragments': fragments.length,
+        'summaries': summaries.length,
+        'hebbian_edges': edges.length,
+        'fts_rows': fts.length,
+      },
+    };
+  }
+
+  /// Restore from a JSON map produced by [exportToJson]. Existing
+  /// rows are kept; new rows are inserted. Use
+  /// [replaceExisting]=true to wipe + insert (destructive).
+  Future<({int fragments, int summaries, int hebbianEdges})> importFromJson(
+    Map<String, Object?> json, {
+    bool replaceExisting = false,
+  }) async {
+    final version = json['schema_version'] as int? ?? 0;
+    if (version < 2) {
+      throw const FormatException(
+        'Backup schema < 2 is not supported by this build',
+      );
+    }
+    final db = await database;
+    if (replaceExisting) {
+      await db.transaction((txn) async {
+        await txn.delete('memory_hebbian_links');
+        await txn.delete('memory_fragments_fts');
+        await txn.delete('memory_summaries');
+        await txn.delete('memory_fragments');
+      });
+    }
+    var fragments = 0;
+    var summaries = 0;
+    var edges = 0;
+    await db.transaction((txn) async {
+      for (final row in (json['fragments'] as List? ?? const [])) {
+        if (row is! Map) continue;
+        await txn.insert(
+          'memory_fragments',
+          Map<String, Object?>.from(row),
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+        fragments++;
+      }
+      for (final row in (json['summaries'] as List? ?? const [])) {
+        if (row is! Map) continue;
+        await txn.insert(
+          'memory_summaries',
+          Map<String, Object?>.from(row),
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+        summaries++;
+      }
+      for (final row in (json['hebbian_edges'] as List? ?? const [])) {
+        if (row is! Map) continue;
+        await txn.insert(
+          'memory_hebbian_links',
+          Map<String, Object?>.from(row),
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+        edges++;
+      }
+      for (final row in (json['fts_rows'] as List? ?? const [])) {
+        if (row is! Map) continue;
+        await txn.insert(
+          'memory_fragments_fts',
+          Map<String, Object?>.from(row),
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    });
+    return (fragments: fragments, summaries: summaries, hebbianEdges: edges);
+  }
 
   /// Remove all messages for the current session (for "Clear Chat").
   Future<void> clearCurrentSession() async {

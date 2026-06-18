@@ -144,6 +144,49 @@ class _MemoryBrowserPageState extends ConsumerState<MemoryBrowserPage>
   }
 }
 
+/// "Why this matched" chip — shows the composite score of a search
+/// hit. Tap to expand a tooltip with the three sub-scores.
+class _WhyMatchedChip extends StatelessWidget {
+  final FragmentMatch match;
+  const _WhyMatchedChip({required this.match});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Tooltip(
+      message:
+          'tokens ${match.matchedTokens}/${match.totalTokens} '
+          '· importance ${match.importanceScore.toStringAsFixed(2)} '
+          '· recency ${match.recencyScore.toStringAsFixed(2)}',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.tertiaryContainer,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.search,
+              size: 11,
+              color: theme.colorScheme.onTertiaryContainer,
+            ),
+            const SizedBox(width: 3),
+            Text(
+              'why ${match.compositeScore.toStringAsFixed(2)}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 10,
+                color: theme.colorScheme.onTertiaryContainer,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Compact overview card showing fragment / summary / edge counts.
 /// Re-fetches when invalidated via [memoryStatsProvider].
 class _StatsOverview extends ConsumerWidget {
@@ -405,7 +448,7 @@ class _FragmentsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<MemoryFragment>>(
+    return FutureBuilder<_FragmentsLoad>(
       future: _load(),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
@@ -414,8 +457,8 @@ class _FragmentsTab extends StatelessWidget {
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
-        final fragments = snapshot.data ?? [];
-        if (fragments.isEmpty) {
+        final items = snapshot.data?.items ?? const <_FragmentWithMatch>[];
+        if (items.isEmpty) {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(24),
@@ -428,49 +471,60 @@ class _FragmentsTab extends StatelessWidget {
           );
         }
         // Group by tier.
-        final byTier = <MemoryTier, List<MemoryFragment>>{};
-        for (final f in fragments) {
-          (byTier[f.tier] ??= []).add(f);
+        final byTier = <MemoryTier, List<_FragmentWithMatch>>{};
+        for (final wm in items) {
+          (byTier[wm.fragment.tier] ??= []).add(wm);
         }
         return ListView(
           padding: const EdgeInsets.all(12),
           children: [
             for (final tier in MemoryTier.values)
               if ((byTier[tier] ?? []).isNotEmpty)
-                _TierSection(
-                  tier: tier,
-                  fragments: byTier[tier]!,
-                  memory: memory,
-                ),
+                _TierSection(tier: tier, items: byTier[tier]!, memory: memory),
           ],
         );
       },
     );
   }
 
-  Future<List<MemoryFragment>> _load() async {
+  Future<_FragmentsLoad> _load() async {
     if (query.isEmpty) {
       final all = await memory.getAllActiveFragments();
-      return all
+      final filtered = all
           .where((f) => !onlyActive || f.isActive)
           .where((f) => !onlyPinned || f.isPinned)
+          .map((f) => _FragmentWithMatch(fragment: f))
           .toList();
+      return _FragmentsLoad(items: filtered);
     }
-    final results = await memory.searchFragments(query, limit: 200);
-    return results
-        .where((f) => !onlyActive || f.isActive)
-        .where((f) => !onlyPinned || f.isPinned)
+    final results = await memory.searchFragmentsWithScores(query, limit: 200);
+    final filtered = results
+        .where((m) => !onlyActive || m.fragment.isActive)
+        .where((m) => !onlyPinned || m.fragment.isPinned)
+        .map((m) => _FragmentWithMatch(fragment: m.fragment, match: m))
         .toList();
+    return _FragmentsLoad(items: filtered);
   }
+}
+
+class _FragmentsLoad {
+  final List<_FragmentWithMatch> items;
+  const _FragmentsLoad({this.items = const []});
+}
+
+class _FragmentWithMatch {
+  final MemoryFragment fragment;
+  final FragmentMatch? match;
+  const _FragmentWithMatch({required this.fragment, this.match});
 }
 
 class _TierSection extends StatelessWidget {
   final MemoryTier tier;
-  final List<MemoryFragment> fragments;
+  final List<_FragmentWithMatch> items;
   final MemoryService memory;
   const _TierSection({
     required this.tier,
-    required this.fragments,
+    required this.items,
     required this.memory,
   });
 
@@ -492,7 +546,7 @@ class _TierSection extends StatelessWidget {
               Container(width: 6, height: 16, color: color),
               const SizedBox(width: 8),
               Text(
-                '${tier.name.toUpperCase()} (${fragments.length})',
+                '${tier.name.toUpperCase()} (${items.length})',
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -500,7 +554,13 @@ class _TierSection extends StatelessWidget {
             ],
           ),
         ),
-        ...fragments.map((f) => _FragmentCard(fragment: f, memory: memory)),
+        ...items.map(
+          (wm) => _FragmentCard(
+            fragment: wm.fragment,
+            memory: memory,
+            match: wm.match,
+          ),
+        ),
       ],
     );
   }
@@ -509,7 +569,12 @@ class _TierSection extends StatelessWidget {
 class _FragmentCard extends ConsumerWidget {
   final MemoryFragment fragment;
   final MemoryService memory;
-  const _FragmentCard({required this.fragment, required this.memory});
+  final FragmentMatch? match;
+  const _FragmentCard({
+    required this.fragment,
+    required this.memory,
+    this.match,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -546,12 +611,15 @@ class _FragmentCard extends ConsumerWidget {
                     ),
                   ],
                   const Spacer(),
-                  Text(
-                    'access × ${fragment.accessCount}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
+                  if (match != null)
+                    _WhyMatchedChip(match: match!)
+                  else
+                    Text(
+                      'access × ${fragment.accessCount}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.hintColor,
+                      ),
                     ),
-                  ),
                   IconButton(
                     icon: Icon(
                       fragment.isPinned

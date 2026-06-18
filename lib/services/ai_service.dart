@@ -13,6 +13,7 @@ import 'agent_chat_bridge.dart';
 import 'memory_service.dart';
 import 'dreaming_service.dart';
 import 'hebbian_service.dart';
+import 'active_memory_buffer.dart';
 import '../core/ai/request_context.dart';
 
 class ToolCallInfo {
@@ -210,6 +211,7 @@ class AINotifier extends Notifier<AIState> {
     String? context,
     List<Map<String, dynamic>>? tools,
     AgentChatBridge? bridge,
+    String? sessionId,
   }) async {
     if (state.isLoading) return;
 
@@ -226,8 +228,11 @@ class AINotifier extends Notifier<AIState> {
     final ambientBlock = ambient?.toSystemPromptBlock() ?? '';
     // ─────────────────────────────────────────────────────────────
 
-    // ── Memory: query relevant fragments ────────────────────────
-    final memoryBundle = await _buildMemoryContextBundle(userMessage);
+    // ── Memory: query relevant fragments + inject active working memory
+    final memoryBundle = await _buildMemoryContextBundle(
+      userMessage,
+      sessionId: sessionId,
+    );
     final effectiveContext = _mergeContext(
       _mergeContext(context, ambientBlock.isEmpty ? null : ambientBlock),
       memoryBundle.context,
@@ -642,8 +647,9 @@ class AINotifier extends Notifier<AIState> {
   /// chat panel can render the memory footprint after the assistant's
   /// reply lands.
   Future<MemoryContextBundle> _buildMemoryContextBundle(
-    String userMessage,
-  ) async {
+    String userMessage, {
+    String? sessionId,
+  }) async {
     try {
       final fragments = await _memory.searchFragments(userMessage, limit: 5);
       final hebbian = ref.read(hebbianServiceProvider);
@@ -667,27 +673,59 @@ class AINotifier extends Notifier<AIState> {
           }),
         );
       }
+      // On-retrieval Hebbian reinforcement: the network "votes" for the
+      // user's current focus. Strengthens the primary → neighbor edges.
+      if (fragments.isNotEmpty) {
+        unawaited(
+          hebbian.recordSearchAccess(fragments.map((f) => f.id)).catchError((
+            Object e,
+          ) {
+            debugPrint('AI: hebbian recordSearchAccess error: $e');
+          }),
+        );
+      }
+
+      // Active working memory: per-session pinned fragments that bypass
+      // the budget cap and are always included. Resolved via the buffer
+      // which is RAM-only.
+      final activeBuffer = ref.read(activeMemoryBufferProvider);
+      final activeIds = sessionId == null
+          ? const <String>[]
+          : activeBuffer.activeIds(sessionId);
+      final activeFragments = sessionId == null || activeIds.isEmpty
+          ? const <MemoryFragment>[]
+          : await activeBuffer.getActive(sessionId);
 
       final allFragments = <MemoryFragment>[
+        ...activeFragments, // active first; will sort later
         ...fragments,
         ...neighbors.map((n) => n.fragment),
       ];
 
       // Token budget cap: drop low-score fragments until the formatted
       // context fits within `memoryContextBudget` (approx 4 chars per token).
+      // Active fragments are pinned to the front and skip the cap.
       final settings = ref.read(settingsProvider);
       final budget = settings.memoryContextBudget;
-      final ordered = [...allFragments]
-        ..sort((a, b) {
-          // Higher importance first, then higher recency.
-          final s = b.importanceScore.compareTo(a.importanceScore);
-          if (s != 0) return s;
-          return (b.lastAccessAt ?? b.createdAt).compareTo(
-            a.lastAccessAt ?? a.createdAt,
-          );
-        });
-      var picked = <MemoryFragment>[];
-      var used = 0;
+      final activeSet = activeIds.toSet();
+      final pinned = allFragments
+          .where((f) => activeSet.contains(f.id))
+          .toList();
+      final ordered =
+          allFragments.where((f) => !activeSet.contains(f.id)).toList()
+            ..sort((a, b) {
+              // Higher importance first, then higher recency.
+              final s = b.importanceScore.compareTo(a.importanceScore);
+              if (s != 0) return s;
+              return (b.lastAccessAt ?? b.createdAt).compareTo(
+                a.lastAccessAt ?? a.createdAt,
+              );
+            });
+      var picked = <MemoryFragment>[...pinned];
+      var used = pinned.fold<int>(
+        0,
+        (acc, f) => acc + (f.content.length / 4).ceil() + 20,
+      );
       for (final f in ordered) {
         // Approximate the formatted cost as 4× content length.
         final cost = (f.content.length / 4).ceil() + 20;

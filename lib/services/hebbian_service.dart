@@ -132,6 +132,73 @@ class HebbianService {
     _trimPending(now);
   }
 
+  /// Count of edges created via [recordSearchAccess] since the last
+  /// reset. Surfaced in the dreaming status card.
+  int _searchAccessEdges = 0;
+  int get searchAccessEdges => _searchAccessEdges;
+
+  /// On-retrieval reinforcement: when a fragment is surfaced by a
+  /// search, strengthen its Hebbian neighbors so the network "votes"
+  /// for the user's current focus. Uses [_reinforcementDelta] for the
+  /// edge boost.
+  Future<void> recordSearchAccess(
+    Iterable<String> primaryIds, {
+    int neighborLimit = 3,
+  }) async {
+    final primary = primaryIds.toSet();
+    if (primary.isEmpty) return;
+    final now = DateTime.now();
+    final neighbors = await expandByHebbianLinks(primary, limit: neighborLimit);
+    for (final n in neighbors) {
+      await _memory.upsertHebbianEdge(
+        primary.first,
+        n.fragment.id,
+        strengthDelta: _reinforcementDelta() * 0.5,
+        stability: _stabilityFromAge(now),
+        now: now,
+      );
+      _searchAccessEdges++;
+    }
+  }
+
+  /// Run cross-session association: for every recent active fragment,
+  /// find keywords-overlapping fragments from other sessions and
+  /// connect them with a soft Hebbian edge. Returns the count of
+  /// edges created. Runs in the dreaming cycle.
+  Future<int> runCrossSessionAssociation({
+    int recentLimit = 50,
+    int minKeywordOverlap = 2,
+  }) async {
+    final db = await _memory.database;
+    final rows = await db.query(
+      'memory_fragments',
+      where: 'is_active = 1',
+      orderBy: 'updated_at DESC',
+      limit: recentLimit,
+    );
+    final now = DateTime.now();
+    var created = 0;
+    for (final row in rows) {
+      final fragId = row['id'] as String;
+      final assocs = await _memory.findCrossSessionAssociates(
+        fragId,
+        minKeywordOverlap: minKeywordOverlap,
+        limit: 2,
+      );
+      for (final a in assocs) {
+        await _memory.upsertHebbianEdge(
+          fragId,
+          a.fragment.id,
+          strengthDelta: _reinforcementDelta() * 0.25,
+          stability: _stabilityFromAge(now),
+          now: now,
+        );
+        created++;
+      }
+    }
+    return created;
+  }
+
   void _trimPending(DateTime now) {
     final cutoff = now.subtract(config.coAccessWindow);
     _pendingGroups.removeWhere((g) => g.timestamp.isBefore(cutoff));

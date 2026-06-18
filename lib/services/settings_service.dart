@@ -94,6 +94,16 @@ class AppSettings {
   /// (≈ 3200 characters), which is roughly 5 short fragments.
   final int memoryContextBudget;
 
+  /// When true, the LLM is asked to summarize fragments during
+  /// dreaming cycles (requires a configured AI provider). When false
+  /// the system uses the rule-based summarizer which has zero cost.
+  final bool memoryUseLlmSummarizer;
+
+  /// When true, recall is re-ranked by the LLM after the FTS+Hebbian
+  /// pass. Disabled by default since it adds latency to every AI
+  /// request.
+  final bool memoryUseLlmRerank;
+
   AppSettings({
     this.locale = 'system',
     this.editorFontSize = 14.0,
@@ -125,6 +135,8 @@ class AppSettings {
     this.memoryAccessRecencyHalfLifeDays = 30,
     this.memoryUseLastAccessForRecency = true,
     this.memoryContextBudget = 800,
+    this.memoryUseLlmSummarizer = false,
+    this.memoryUseLlmRerank = false,
   });
 
   Color get accentColor => Color(accentColorValue);
@@ -188,6 +200,8 @@ class AppSettings {
     int? memoryAccessRecencyHalfLifeDays,
     bool? memoryUseLastAccessForRecency,
     int? memoryContextBudget,
+    bool? memoryUseLlmSummarizer,
+    bool? memoryUseLlmRerank,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
@@ -233,6 +247,9 @@ class AppSettings {
       memoryUseLastAccessForRecency:
           memoryUseLastAccessForRecency ?? this.memoryUseLastAccessForRecency,
       memoryContextBudget: memoryContextBudget ?? this.memoryContextBudget,
+      memoryUseLlmSummarizer:
+          memoryUseLlmSummarizer ?? this.memoryUseLlmSummarizer,
+      memoryUseLlmRerank: memoryUseLlmRerank ?? this.memoryUseLlmRerank,
     );
   }
 }
@@ -284,6 +301,8 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
       memoryUseLastAccessForRecency:
           prefs.getBool('memoryUseLastAccessForRecency') ?? true,
       memoryContextBudget: prefs.getInt('memoryContextBudget') ?? 800,
+      memoryUseLlmSummarizer: prefs.getBool('memoryUseLlmSummarizer') ?? false,
+      memoryUseLlmRerank: prefs.getBool('memoryUseLlmRerank') ?? false,
     );
   }
 
@@ -561,6 +580,24 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
       value: v,
       persist: (p, k, val) => p.setInt(k, val),
       update: (s, val) => s.copyWith(memoryContextBudget: val),
+    );
+  }
+
+  Future<void> setMemoryUseLlmSummarizer(bool v) async {
+    await _updateSetting(
+      key: 'memoryUseLlmSummarizer',
+      value: v,
+      persist: (p, k, val) => p.setBool(k, val),
+      update: (s, val) => s.copyWith(memoryUseLlmSummarizer: val),
+    );
+  }
+
+  Future<void> setMemoryUseLlmRerank(bool v) async {
+    await _updateSetting(
+      key: 'memoryUseLlmRerank',
+      value: v,
+      persist: (p, k, val) => p.setBool(k, val),
+      update: (s, val) => s.copyWith(memoryUseLlmRerank: val),
     );
   }
 }

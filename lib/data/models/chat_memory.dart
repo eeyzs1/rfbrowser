@@ -278,3 +278,25 @@ class ChatSession {
     );
   }
 }
+
+/// Score breakdown for a single memory search hit. Returned by
+/// `MemoryService.searchFragmentsWithScores` so the Memory Browser
+/// can render "why this matched" tooltips.
+class FragmentMatch {
+  final MemoryFragment fragment;
+  final int matchedTokens;
+  final int totalTokens;
+  final double importanceScore;
+  final double recencyScore;
+  final double compositeScore;
+  const FragmentMatch({
+    required this.fragment,
+    required this.matchedTokens,
+    required this.totalTokens,
+    required this.importanceScore,
+    required this.recencyScore,
+    required this.compositeScore,
+  });
+  double get tokenCoverage =>
+      totalTokens == 0 ? 0.0 : matchedTokens / totalTokens;
+}

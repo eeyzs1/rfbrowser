@@ -8,10 +8,12 @@ import '../data/models/ai_provider.dart';
 import '../data/models/chat_memory.dart';
 import '../core/memory/memory_scorer.dart';
 import '../core/memory/memory_summarizer.dart';
+import '../core/memory/summary_rollup.dart';
 import 'chat_history_exporter.dart';
 import 'memory_service.dart';
 import 'dio_factory.dart';
 import 'settings_service.dart';
+import 'hebbian_service.dart';
 
 const _uuid = Uuid();
 
@@ -34,6 +36,8 @@ class DreamingService {
   final MemoryService _memory;
   final MemoryScorer _scorer;
   final MemorySummarizer _summarizer;
+  final SummaryRollup _rollup;
+  final HebbianService? _hebbian;
   final ChatHistoryExporter? _exporter;
   final Dio _dio = DioFactory.instance;
   int _lastConsolidatedCount = 0;
@@ -50,6 +54,9 @@ class DreamingService {
   int _lastStaleEdgesPruned = 0;
   DateTime? _lastExportAt;
   String? _lastExportPath;
+  int _lastL2Rollups = 0;
+  int _lastL3Rollups = 0;
+  int _lastCrossSessionEdges = 0;
 
   // ── Public accessors for the status provider ──────────────────────
   DateTime? get lastConsolidationAt => _lastConsolidationAt;
@@ -60,6 +67,9 @@ class DreamingService {
   DateTime? get lastExportAt => _lastExportAt;
   String? get lastExportPath => _lastExportPath;
   bool get isConsolidating => _isConsolidating;
+  int get lastL2Rollups => _lastL2Rollups;
+  int get lastL3Rollups => _lastL3Rollups;
+  int get lastCrossSessionEdges => _lastCrossSessionEdges;
 
   /// Threshold: trigger consolidation after this many new messages.
   static const int messageThreshold = 8;
@@ -77,9 +87,13 @@ class DreamingService {
     this._memory, {
     MemoryScorer? scorer,
     MemorySummarizer? summarizer,
+    SummaryRollup? rollup,
+    HebbianService? hebbian,
     ChatHistoryExporter? exporter,
   }) : _scorer = scorer ?? const MemoryScorer(),
        _summarizer = summarizer ?? const RuleBasedMemorySummarizer(),
+       _rollup = rollup ?? SummaryRollup(_memory),
+       _hebbian = hebbian,
        _exporter = exporter;
 
   // ─── Public API ────────────────────────────────────────────────────
@@ -209,7 +223,33 @@ class DreamingService {
         '${extractResult.updatedFragments.length} updated',
       );
 
-      // 3. Auto-export the session as Markdown if enough new messages have
+      // 3. L2/L3 rollup: take the L1 / L2 summaries that have aged out
+      //    of their window and roll them up. This is the "weekly" /
+      //    "monthly" compression that makes the tier pyramid real.
+      final rollup = await _rollup.runDaily();
+      _lastL2Rollups = rollup.l2Created;
+      _lastL3Rollups = rollup.l3Created;
+      if (rollup.l2Created > 0 || rollup.l3Created > 0) {
+        debugPrint(
+          'DreamingService: rollup created ${rollup.l2Created} L2 + '
+          '${rollup.l3Created} L3 summaries',
+        );
+      }
+
+      // 3.5. Cross-session association: link fragments that share
+      //      keywords across sessions. Soft (delta × 0.25) so the
+      //      edges are reinforced gradually as patterns repeat.
+      if (_hebbian != null) {
+        _lastCrossSessionEdges = await _hebbian.runCrossSessionAssociation();
+        if (_lastCrossSessionEdges > 0) {
+          debugPrint(
+            'DreamingService: cross-session added '
+            '$_lastCrossSessionEdges edges',
+          );
+        }
+      }
+
+      // 4. Auto-export the session as Markdown if enough new messages have
       //    accumulated. Failures are logged but never block the cycle.
       await _maybeAutoExport();
     } catch (e) {
@@ -637,7 +677,13 @@ final dreamingServiceProvider = Provider<DreamingService>((ref) {
     ),
     useLastAccessForRecency: settings.memoryUseLastAccessForRecency,
   );
-  final service = DreamingService(memory, exporter: exporter, scorer: scorer);
+  final hebbian = ref.watch(hebbianServiceProvider);
+  final service = DreamingService(
+    memory,
+    exporter: exporter,
+    scorer: scorer,
+    hebbian: hebbian,
+  );
   service.setDreamingEnabled(settings.memoryDreamingEnabled);
   ref.onDispose(service.dispose);
   return service;
@@ -717,6 +763,9 @@ class DreamingStatus {
   final String? lastExportPath;
   final bool isConsolidating;
   final int pendingMessages;
+  final int lastL2Rollups;
+  final int lastL3Rollups;
+  final int lastCrossSessionEdges;
   const DreamingStatus({
     this.lastConsolidationAt,
     this.lastNewFragments = 0,
@@ -727,6 +776,9 @@ class DreamingStatus {
     this.lastExportPath,
     this.isConsolidating = false,
     this.pendingMessages = 0,
+    this.lastL2Rollups = 0,
+    this.lastL3Rollups = 0,
+    this.lastCrossSessionEdges = 0,
   });
 
   DreamingStatus copyWith({
@@ -739,6 +791,9 @@ class DreamingStatus {
     String? lastExportPath,
     bool? isConsolidating,
     int? pendingMessages,
+    int? lastL2Rollups,
+    int? lastL3Rollups,
+    int? lastCrossSessionEdges,
   }) {
     return DreamingStatus(
       lastConsolidationAt: lastConsolidationAt ?? this.lastConsolidationAt,
@@ -751,6 +806,10 @@ class DreamingStatus {
       lastExportPath: lastExportPath ?? this.lastExportPath,
       isConsolidating: isConsolidating ?? this.isConsolidating,
       pendingMessages: pendingMessages ?? this.pendingMessages,
+      lastL2Rollups: lastL2Rollups ?? this.lastL2Rollups,
+      lastL3Rollups: lastL3Rollups ?? this.lastL3Rollups,
+      lastCrossSessionEdges:
+          lastCrossSessionEdges ?? this.lastCrossSessionEdges,
     );
   }
 }
@@ -777,5 +836,8 @@ DreamingStatus _snapshot(DreamingService svc, Ref ref) {
     lastExportAt: svc.lastExportAt,
     lastExportPath: svc.lastExportPath,
     isConsolidating: svc.isConsolidating,
+    lastL2Rollups: svc.lastL2Rollups,
+    lastL3Rollups: svc.lastL3Rollups,
+    lastCrossSessionEdges: svc.lastCrossSessionEdges,
   );
 }

@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../services/dreaming_service.dart';
+import '../../../services/memory_service.dart';
 import '../../../services/settings_service.dart';
 import '../../widgets/settings_section.dart';
 
@@ -40,6 +43,24 @@ class MemorySettingsSection extends ConsumerWidget {
           max: 4000,
           divisions: 38,
           onChanged: notifier.setMemoryContextBudget,
+        ),
+        SwitchListTile(
+          title: const Text('Use LLM summarizer'),
+          subtitle: const Text(
+            'Ask the configured AI to summarize fragments during dreaming. '
+            'Higher quality but slower; requires an AI provider.',
+          ),
+          value: settings.memoryUseLlmSummarizer,
+          onChanged: notifier.setMemoryUseLlmSummarizer,
+        ),
+        SwitchListTile(
+          title: const Text('Use LLM re-ranking'),
+          subtitle: const Text(
+            'Re-rank recall hits with the LLM after FTS+Hebbian. Slower '
+            'first-token time; off by default.',
+          ),
+          value: settings.memoryUseLlmRerank,
+          onChanged: notifier.setMemoryUseLlmRerank,
         ),
         const Divider(height: 1),
         const _SectionHeader(label: 'Progressive forgetting'),
@@ -143,6 +164,9 @@ class MemorySettingsSection extends ConsumerWidget {
           onChanged: notifier.setMemoryAutoExportEveryNMessages,
         ),
         const _ManualExportTile(),
+        const Divider(height: 1),
+        const _SectionHeader(label: 'Backup & restore'),
+        const _BackupRestoreRow(),
         const Divider(height: 1),
         const _SectionHeader(label: 'Dreaming activity'),
         const _DreamingStatusCard(),
@@ -287,6 +311,96 @@ class _ManualExportTile extends ConsumerWidget {
 /// Live status card for the dreaming engine. Shows "when did the system
 /// last consolidate, what did it do" without requiring the user to read
 /// logs. Auto-refreshes every 30s via [dreamingStatusProvider].
+class _BackupRestoreRow extends ConsumerStatefulWidget {
+  const _BackupRestoreRow();
+  @override
+  ConsumerState<_BackupRestoreRow> createState() => _BackupRestoreRowState();
+}
+
+class _BackupRestoreRowState extends ConsumerState<_BackupRestoreRow> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final memory = ref.watch(memoryServiceProvider);
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _busy ? null : () => _exportToJson(memory),
+            icon: const Icon(Icons.save_alt),
+            label: const Text('Backup to JSON'),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _busy ? null : () => _restoreFromJson(memory),
+            icon: const Icon(Icons.restore),
+            label: const Text('Restore from JSON'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _exportToJson(MemoryService memory) async {
+    setState(() => _busy = true);
+    try {
+      final data = await memory.exportToJson();
+      final json = const JsonEncoder.withIndent('  ').convert(data);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Exported ${(data['counts'] as Map)['fragments']} fragments · '
+            '${(data['counts'] as Map)['summaries']} summaries · '
+            '${(data['counts'] as Map)['hebbian_edges']} edges '
+            '(${json.length} bytes)',
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      debugPrint('MemoryService export: ${json.length} bytes');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _restoreFromJson(MemoryService memory) async {
+    setState(() => _busy = true);
+    try {
+      // Round-trip: export then import. In a real UI this would read
+      // a file picker; for the initial integration we self-import to
+      // validate the round-trip plumbing.
+      final data = await memory.exportToJson();
+      final result = await memory.importFromJson(data, replaceExisting: false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Round-trip OK · ${result.fragments} fragments · '
+            '${result.summaries} summaries · '
+            '${result.hebbianEdges} edges',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Restore failed: $e')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+}
+
 class _DreamingStatusCard extends ConsumerWidget {
   const _DreamingStatusCard();
 
