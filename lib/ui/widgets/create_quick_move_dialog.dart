@@ -50,7 +50,7 @@ void showCreateQuickMoveDialog(
       builder: (ctx, setDialogState) {
         final l = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Create Quick Move'),
+          title: Text(l.createQuickMove),
           contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
           content: SingleChildScrollView(
             child: SizedBox(
@@ -62,7 +62,7 @@ void showCreateQuickMoveDialog(
                   TextField(
                     controller: nameController,
                     decoration: InputDecoration(
-                      labelText: 'Command Name',
+                      labelText: l.commandName,
                       hintText: l.quickMoveExampleHint,
                       prefixText: '/',
                     ),
@@ -71,8 +71,8 @@ void showCreateQuickMoveDialog(
                   TextField(
                     controller: promptController,
                     maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Prompt Template',
+                    decoration: InputDecoration(
+                      labelText: l.promptTemplate,
                       hintText: 'Translate to English:\n\n{input}',
                       helperText:
                           'Supported: {input}, {pageContent}, {selectedText}, {pageUrl}, {noteContent}',
@@ -81,7 +81,7 @@ void showCreateQuickMoveDialog(
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Icon',
+                    l.iconLabel,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).hintColor,
                     ),
@@ -190,7 +190,7 @@ void showCreateQuickMoveDialog(
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(l.cancel),
             ),
             FilledButton(
               onPressed: () {
@@ -208,7 +208,7 @@ void showCreateQuickMoveDialog(
                     );
                 Navigator.pop(ctx);
               },
-              child: const Text('Create'),
+              child: Text(l.create),
             ),
           ],
         );

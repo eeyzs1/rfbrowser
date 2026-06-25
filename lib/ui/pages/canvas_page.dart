@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/canvas_service.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/browser_service.dart';
@@ -18,19 +19,43 @@ import '../../data/models/canvas_model.dart';
 import '../../data/models/note.dart';
 import '../../data/stores/vault_store.dart';
 import '../../core/link/link_resolver.dart';
+import '../../core/logging/app_logger.dart';
+import '../../core/graph/canvas_geometry.dart';
 import '../../l10n/app_localizations.dart';
 import '../widgets/canvas_painter.dart';
 import '../layout/keyboard_util.dart';
 import '../widgets/canvas/hover_popup_menu.dart';
 import '../widgets/canvas/minimap_painter.dart';
+import 'canvas/dialogs/add_tag_dialog.dart';
+import 'canvas/dialogs/background_color_picker_dialog.dart';
+import 'canvas/dialogs/color_picker_dialog.dart';
+import 'canvas/dialogs/layer_panel_dialog.dart';
+import 'canvas/dialogs/move_to_layer_dialog.dart';
+import 'canvas/dialogs/remove_tag_dialog.dart';
+import 'canvas/dialogs/scratchpad_dialog.dart';
 
 part 'canvas/canvas_input_handlers.dart';
+part 'canvas/canvas_input_hittest.dart';
+part 'canvas/canvas_alignment_guides.dart';
+part 'canvas/canvas_input_gestures_scale.dart';
+part 'canvas/canvas_input_gestures_tap.dart';
+part 'canvas/canvas_input_gestures_pointer.dart';
 part 'canvas/canvas_toolbar.dart';
+part 'canvas/canvas_toolbar_popups.dart';
+part 'canvas/canvas_toolbar_popups_more.dart';
 part 'canvas/canvas_panels.dart';
 part 'canvas/canvas_canvas_mgmt.dart';
 part 'canvas/canvas_context_menus.dart';
+part 'canvas/canvas_context_menu_cards.dart';
+part 'canvas/canvas_context_menu_card_ops.dart';
 part 'canvas/canvas_dialogs.dart';
+part 'canvas/canvas_dialogs_connections.dart';
+part 'canvas/canvas_dialogs_edit.dart';
+part 'canvas/canvas_dialogs_edit_rich.dart';
+part 'canvas/canvas_dialogs_settings.dart';
 part 'canvas/canvas_export_panels.dart';
+part 'canvas/canvas_state_base.dart';
+part 'canvas/canvas_view_build.dart';
 
 enum _ResizeEdge { none, right, bottom, corner }
 
@@ -45,285 +70,29 @@ class CanvasView extends ConsumerStatefulWidget {
   ConsumerState<CanvasView> createState() => _CanvasViewState();
 }
 
-abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
-    with TickerProviderStateMixin {
-  late AnimationController _animController;
-  final _CameraNotifier _cameraNotifier = _CameraNotifier();
-  bool _isFreehandDrawing = false;
-  String? _freehandCardId;
-  List<Offset> _freehandPoints = [];
-  double _cameraX = 0;
-  double _cameraY = 0;
-  double _scale = 1.0;
-
-  List<String> get _selectedCardIds => ref.read(canvasProvider).selectedCardIds;
-  String? get _inlineEditingCardId =>
-      ref.read(canvasProvider).inlineEditingCardId;
-  String? _connectingFromCardId;
-  String? _draggingCardId;
-  _ResizeEdge _resizeEdge = _ResizeEdge.none;
-  Offset? _connectingPreviewEnd;
-  ConnectionSide? _connectingFromSide;
-  double _connectingFromSideOffset = 0.5;
-  ConnectionSide? _hoveredConnectionSide;
-  bool _hoveringConnectionLine = false;
-  bool _isDraggingFromPort = false;
-  bool _isClickingConnection = false;
-  String? _clickedConnectionId;
-
-  String? _draggingWaypointConnId;
-  int _draggingWaypointIndex = -1;
-
-  _ResizeEdge _hoverResizeEdge = _ResizeEdge.none;
-  String? _hoverCardId;
-
-  CanvasCard? _resizeStartCard;
-  Offset? _resizeStartLocalPoint;
-  CanvasCard? _dragStartCard;
-  Offset? _dragStartLocalPoint;
-
-  bool _styleBrushMode = false;
-  CanvasCardStyle? _copiedStyle;
-
-  late TextEditingController _inlineTitleCtrl;
-  late TextEditingController _inlineContentCtrl;
-  FocusNode? _inlineTitleFocus;
-  FocusNode? _inlineContentFocus;
-
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-  List<String> _searchMatchedIds = [];
-  int _searchActiveIndex = 0;
-  Timer? _searchDebounceTimer;
-  bool _searchVisible = false;
-
-  Offset? _lastLocalFocalPoint;
-  double? _lastScale;
-
-  List<CanvasConnection> _cachedAutoConnections = [];
-  List<CanvasCard>? _lastCards;
-  List<Note>? _lastNotes;
-  bool _lastAutoEnabled = false;
-  LinkResolver? _lastLinkResolver;
-
-  bool _isBoxSelecting = false;
-  Offset? _boxSelectStart;
-  Rect? _selectionRect;
-  List<AlignmentGuide> _alignmentGuides = [];
-  Map<String, (double, double)> _multiDragStarts = {};
-  bool _altKeyPressed = false;
-  bool _hadFlowAnimation = false;
-
-  final Map<String, ui.Image> _imageCache = {};
-
-  Future<void> _loadImageCards(List<CanvasCard> cards) async {
-    final imageCards = cards.where(
-      (c) => c.type == CanvasCardType.image && c.imagePath != null,
-    );
-    for (final card in imageCards) {
-      final path = card.imagePath!;
-      if (_imageCache.containsKey(path)) continue;
-      try {
-        final file = File(path);
-        if (!await file.exists()) continue;
-        final bytes = await file.readAsBytes();
-        final codec = await ui.instantiateImageCodec(bytes);
-        final frame = await codec.getNextFrame();
-        _imageCache[path] = frame.image;
-      } catch (_) {
-        // Ignore load errors for invalid/missing images
-      }
-    }
-    if (mounted) setState(() {});
-  }
-
-  final GlobalKey _canvasPaintKey = GlobalKey();
-
-  static const double _gridSize = 20;
-  static const double _minScale = 0.05;
-  static const double _maxScale = 8.0;
-  static const double _toolbarHeight = 36;
-  static const double _resizeHandleSize = 20;
-  static const double _edgeHitWidth = 14;
-  static const double _alignmentThreshold = 5.0;
-
-  double _canvasW = 800;
-  double _canvasH = 600;
-  double get _viewW => _canvasW;
-  double get _viewH => _canvasH;
-
-  static const List<Color> _cardColorPresets = [
-    Color(0xFFFFFFFF),
-    Color(0xFFE3F2FD),
-    Color(0xFFE8F5E9),
-    Color(0xFFFFF3E0),
-    Color(0xFFFCE4EC),
-    Color(0xFFF3E5F5),
-    Color(0xFFE0F7FA),
-    Color(0xFFFFEBEE),
-    Color(0xFFF1F8E9),
-    Color(0xFFEDE7F6),
-  ];
-
-  void _initCanvas();
-  void _centerOrFitView();
-  void _startInlineEditing(String cardId);
-  void _finishInlineEditing();
-  Offset _screenToWorld(Offset screenPos);
-  double _snapToGrid(double value);
-  _ResizeEdge _hitTestResizeHandle(Offset worldPos, CanvasCard card);
-  CanvasCard? _hitTestCardWithResize(Offset worldPos);
-  CanvasCard? _hitTestCard(Offset worldPos);
-  (String, int)? _hitTestWaypoint(Offset worldPos);
-  (String, double)? _hitTestConnectionLine(Offset worldPos);
-  List<Offset> _connectionPathPoints(
-    Offset fromPoint,
-    Offset toPoint,
-    List<Offset> waypoints,
-    ConnectionPath pathType,
-  );
-  Offset _cubicBezierPoint(
-    Offset p0,
-    Offset p1,
-    Offset p2,
-    Offset p3,
-    double t,
-  );
-  (String, ConnectionSide, double)? _hitTestConnectionPoint(Offset worldPos);
-  (Offset, int) _snapWaypointToConnection(String connId, Offset worldPos);
-  Offset _projectPointOnSegment(Offset p, Offset a, Offset b);
-  double _pointToSegmentDist(Offset p, Offset a, Offset b);
-  List<AlignmentGuide> _computeAlignmentGuides(
-    CanvasCard draggedCard,
-    List<CanvasCard> allCards,
-  );
-  double? _getSnapOffset(CanvasCard draggedCard, List<CanvasCard> allCards);
-  double? _getSnapOffsetY(CanvasCard draggedCard, List<CanvasCard> allCards);
-  void _onScaleStart(ScaleStartDetails details);
-  void _onScaleUpdate(ScaleUpdateDetails details);
-  void _onScaleEnd(ScaleEndDetails details);
-  void _onTapUp(TapUpDetails details);
-  void _onDoubleTapDown(TapDownDetails details);
-  void _onSecondaryTapUp(TapUpDetails details);
-  void _onPointerSignal(PointerSignalEvent event);
-  void _onHover(PointerHoverEvent event);
-  MouseCursor _getCursor();
-  void _zoomIn();
-  void _zoomOut();
-  void _zoomReset();
-  void _onSearchChanged(String query);
-  void _onSearchSubmit(String query);
-  void _clearSearch();
-  void _toggleSearch();
-  void _searchNext();
-  void _searchPrev();
-  void _panToFirstMatch();
-  void _panToMatch(int index);
-  void _deleteSelectedCards();
-  void _undo();
-  void _redo();
-  void _selectAll();
-  void _groupSelected();
-  void _ungroupSelected();
-  Widget _buildToolbar(
-    ThemeData theme,
-    CanvasData canvasData,
-    bool autoEnabled,
-    CanvasNotifier notifier,
-    AppLocalizations l,
-  );
-  Widget _toolbarDivider(ThemeData theme);
-  Widget _popupRow(IconData icon, String text, {String? tooltip});
-  Widget _toolbarButton(
-    ThemeData theme,
-    IconData icon,
-    String tooltip,
-    VoidCallback onTap, {
-    bool enabled = true,
-    bool highlight = false,
-  });
-  Widget _buildZoomControls(ThemeData theme);
-  Widget _buildMinimap(ThemeData theme, CanvasData canvasData);
-  Widget _buildInlineEditor(
-    ThemeData theme,
-    CanvasData canvasData,
-    AppSettings settings,
-  );
-  Offset _w2s(double wx, double wy);
-  Widget _buildCanvasSwitcher(ThemeData theme);
-  void _showCanvasSelector(BuildContext context, ThemeData theme);
-  void _showCreateCanvasDialog();
-  void _showRenameDialog(String oldName);
-  void _confirmDeleteCanvas(String name);
-  void _showWaypointContextMenu(
-    Offset position,
-    String connId,
-    int waypointIndex,
-  );
-  void _showContextMenu(
-    BuildContext context,
-    TapUpDetails details,
-    CanvasData canvasData,
-    Offset worldPos,
-  );
-  void _showConnectionContextMenu(
-    Offset position,
-    String connId,
-    Offset worldPos,
-  );
-  void _showCardContextMenu(Offset position, CanvasCard card);
-  void _showColorPicker(CanvasCard card);
-  void _showConnectionListDialog(
-    CanvasCard card,
-    List<({CanvasConnection conn, bool isAuto})> allConns,
-  );
-  void _showConnectionStyleDialog(CanvasConnection conn);
-  void _duplicateCard(String cardId, Offset pos);
-  Future<void> _addCardAt(
-    Offset pos, {
-    CanvasCardType type = CanvasCardType.note,
-  });
-  void _addContainerAt(Offset pos);
-  void _toggleContainerCollapse(String cardId);
-  void _saveCardToScratchpad(CanvasCard card);
-  void _promoteCardToNote(CanvasCard card);
-  void _showMoveToLayerDialog(CanvasCard card);
-  void _showBackgroundColorPicker();
-  void _showDefaultStyleDialog();
-  void _showAddTagDialog(CanvasCard card);
-  void _showRemoveTagDialog(CanvasCard card);
-  void _showImportDialog(String format);
-  void _shareViaUrl();
-  void _addCardFromNote(Offset pos);
-  void _openCardContent(CanvasCard card);
-  void _editCard(String cardId);
-  void _createConnection(String fromId, String toId);
-  void _createConnectionWithSides(
-    String fromId,
-    String toId,
-    ConnectionSide? fromSide,
-    ConnectionSide? toSide, [
-    double fromSideOffset,
-    double toSideOffset,
-  ]);
-  void _fitToContent();
-  void _handleExport(String format);
-  Future<void> _exportToPng();
-  void _saveExportFile(String filename, String content);
-  void _showLayerPanel();
-  void _showScratchpad();
-  Widget _buildActiveFilterBanner(ThemeData theme, CanvasData canvasData);
-}
-
 class _CanvasViewState extends _CanvasViewStateBase
     with
         _CanvasInputHandlersMixin,
+        _CanvasInputHitTestMixin,
+        _CanvasAlignmentGuidesMixin,
+        _CanvasScaleGesturesMixin,
+        _CanvasTapGesturesMixin,
+        _CanvasPointerGesturesMixin,
         _CanvasToolbarMixin,
+        _CanvasToolbarPopupsMixin,
+        _CanvasToolbarPopupsMoreMixin,
         _CanvasPanelsMixin,
         _CanvasCanvasMgmtMixin,
         _CanvasContextMenusMixin,
+        _CanvasContextMenuCardsMixin,
+        _CanvasContextMenuCardOpsMixin,
         _CanvasDialogsMixin,
-        _CanvasExportPanelsMixin {
+        _CanvasDialogsConnectionsMixin,
+        _CanvasDialogsEditRichMixin,
+        _CanvasDialogsEditMixin,
+        _CanvasDialogsSettingsMixin,
+        _CanvasExportPanelsMixin,
+        _CanvasViewBuildMixin {
   @override
   void initState() {
     super.initState();
@@ -343,6 +112,30 @@ class _CanvasViewState extends _CanvasViewStateBase
     if (mounted) {
       _centerOrFitView();
       _loadImageCards(ref.read(canvasProvider).cards);
+      // 检查是否首次打开画布，决定是否显示交互引导。
+      await _checkCanvasGuide();
+    }
+  }
+
+  Future<void> _checkCanvasGuide() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final seen = prefs.getBool('hasSeenCanvasGuide') ?? false;
+      if (!seen && mounted) {
+        setState(() => _showCanvasGuide = true);
+      }
+    } catch (_) {
+      // 读取失败时不显示引导，避免阻塞画布初始化。
+    }
+  }
+
+  Future<void> _dismissCanvasGuide() async {
+    setState(() => _showCanvasGuide = false);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasSeenCanvasGuide', true);
+    } catch (_) {
+      // 持久化失败不影响关闭引导。
     }
   }
 
@@ -369,6 +162,10 @@ class _CanvasViewState extends _CanvasViewStateBase
     _inlineContentFocus?.dispose();
     _searchController.dispose();
     _searchDebounceTimer?.cancel();
+    for (final image in _imageCache.values) {
+      image.dispose();
+    }
+    _imageCache.clear();
     super.dispose();
   }
 
@@ -403,6 +200,94 @@ class _CanvasViewState extends _CanvasViewStateBase
       }
     }
     ref.read(canvasProvider.notifier).finishInlineEditing();
+  }
+
+  /// 构建首次打开画布时的交互引导浮层。
+  /// 半透明背景 + 居中卡片，说明画布的基本操作方式。
+  Widget _buildCanvasGuideOverlay(ThemeData theme, AppLocalizations l) {
+    return Positioned.fill(
+      child: Material(
+        color: Colors.black54,
+        child: Center(
+          child: Container(
+            margin: const EdgeInsets.all(32),
+            constraints: const BoxConstraints(maxWidth: 420),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.tips_and_updates_outlined,
+                        color: theme.colorScheme.primary,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l.canvasGuideTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _GuideItem(
+                    icon: Icons.pan_tool_outlined,
+                    title: l.canvasGuidePanTitle,
+                    desc: l.canvasGuidePanDesc,
+                    theme: theme,
+                  ),
+                  const SizedBox(height: 12),
+                  _GuideItem(
+                    icon: Icons.zoom_in_outlined,
+                    title: l.canvasGuideZoomTitle,
+                    desc: l.canvasGuideZoomDesc,
+                    theme: theme,
+                  ),
+                  const SizedBox(height: 12),
+                  _GuideItem(
+                    icon: Icons.add_box_outlined,
+                    title: l.canvasGuideAddCardTitle,
+                    desc: l.canvasGuideAddCardDesc,
+                    theme: theme,
+                  ),
+                  const SizedBox(height: 12),
+                  _GuideItem(
+                    icon: Icons.timeline,
+                    title: l.canvasGuideConnectTitle,
+                    desc: l.canvasGuideConnectDesc,
+                    theme: theme,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _dismissCanvasGuide,
+                      child: Text(l.canvasGuideDismiss),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -450,74 +335,7 @@ class _CanvasViewState extends _CanvasViewStateBase
       });
     }
 
-    final shortcutSvc = ref.read(shortcutServiceProvider);
-    final undoActivator = parseShortcut(
-      shortcutSvc.getShortcut('canvas_undo') ?? 'Ctrl+Z',
-    );
-    final redoActivator = parseShortcut(
-      shortcutSvc.getShortcut('canvas_redo') ?? 'Ctrl+Y',
-    );
-    final deleteActivator = parseShortcut(
-      shortcutSvc.getShortcut('canvas_delete') ?? 'Delete',
-    );
-    final selectAllActivator = parseShortcut(
-      shortcutSvc.getShortcut('canvas_select_all') ?? 'Ctrl+A',
-    );
-    final groupActivator = parseShortcut(
-      shortcutSvc.getShortcut('canvas_group') ?? 'Ctrl+G',
-    );
-    final ungroupActivator = parseShortcut(
-      shortcutSvc.getShortcut('canvas_ungroup') ?? 'Ctrl+Shift+U',
-    );
-
-    final Map<ShortcutActivator, VoidCallback> canvasBindings = {};
-    canvasBindings[const SingleActivator(LogicalKeyboardKey.f3)] = _searchNext;
-    canvasBindings[const SingleActivator(LogicalKeyboardKey.f3, shift: true)] =
-        _searchPrev;
-    if (undoActivator != null) canvasBindings[undoActivator] = _undo;
-    if (redoActivator != null) canvasBindings[redoActivator] = _redo;
-    canvasBindings[const SingleActivator(
-          LogicalKeyboardKey.keyZ,
-          control: true,
-          shift: true,
-        )] =
-        _redo;
-    canvasBindings[const SingleActivator(LogicalKeyboardKey.escape)] = () {
-      if (_styleBrushMode) {
-        setState(() {
-          _styleBrushMode = false;
-          _copiedStyle = null;
-        });
-        return;
-      }
-      if (_connectingFromCardId != null) {
-        setState(() {
-          _connectingFromCardId = null;
-          _connectingFromSide = null;
-          _isDraggingFromPort = false;
-          _connectingPreviewEnd = null;
-          _hoveredConnectionSide = null;
-        });
-        return;
-      }
-      if (ref.read(canvasProvider).selectedConnectionId != null) {
-        ref.read(canvasProvider.notifier).selectConnection(null);
-        return;
-      }
-      _finishInlineEditing();
-    };
-    if (deleteActivator != null) {
-      canvasBindings[deleteActivator] = _deleteSelectedCards;
-    }
-    if (selectAllActivator != null) {
-      canvasBindings[selectAllActivator] = _selectAll;
-    }
-    if (groupActivator != null) {
-      canvasBindings[groupActivator] = _groupSelected;
-    }
-    if (ungroupActivator != null) {
-      canvasBindings[ungroupActivator] = _ungroupSelected;
-    }
+    final canvasBindings = _buildCanvasBindings();
 
     return CallbackShortcuts(
       bindings: canvasBindings,
@@ -680,6 +498,8 @@ class _CanvasViewState extends _CanvasViewStateBase
                               ),
                               if (_inlineEditingCardId != null)
                                 _buildInlineEditor(theme, canvasData, settings),
+                              if (_showCanvasGuide)
+                                _buildCanvasGuideOverlay(theme, l),
                             ],
                           );
                         },
@@ -702,5 +522,58 @@ class CanvasPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return const CanvasView();
+  }
+}
+
+/// 交互引导浮层中的单条说明项（图标 + 标题 + 描述）。
+class _GuideItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String desc;
+  final ThemeData theme;
+  const _GuideItem({
+    required this.icon,
+    required this.title,
+    required this.desc,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 18, color: theme.colorScheme.primary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                desc,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }

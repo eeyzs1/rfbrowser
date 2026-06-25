@@ -2,16 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// ignore: unused_import
-import 'package:rfbrowser/l10n/app_localizations.dart' as _;
 import 'package:rfbrowser/services/quick_move_service.dart';
 import 'package:rfbrowser/data/models/quick_move.dart';
 import 'package:rfbrowser/data/stores/quick_move_store.dart';
-// ignore: unused_import
-import 'package:rfbrowser/ui/widgets/command_bar.dart' as _;
+import 'package:rfbrowser/l10n/app_localizations.dart';
+import 'package:rfbrowser/ui/widgets/command_bar.dart';
 import 'package:rfbrowser/ui/pages/settings/quick_moves_settings_section.dart';
-// ignore: unused_import
-import 'package:rfbrowser/ui/widgets/create_quick_move_dialog.dart' as _;
 
 void main() {
   group('US-1: 创建我的第一条快捷命令', () {
@@ -48,31 +44,28 @@ void main() {
     });
 
     testWidgets('AC-1-2: /nonexistent prompts create dialog', (tester) async {
-      // SKIP (TODO: re-enable): pumpWidget triggers 19+ framework exceptions
-      // (likely AppLocalizations lookup or provider-init side effect). The
-      // /nonexistent path is also covered at the unit level by
-      // create_quick_move_dialog_test.dart if you need behaviour coverage.
-      // Original body kept below as a comment for the day someone fixes
-      // the test environment.
-      // await tester.pumpWidget(
-      //   ProviderScope(
-      //     child: MaterialApp(
-      //       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      //       supportedLocales: AppLocalizations.supportedLocales,
-      //       locale: const Locale('zh'),
-      //       home: Scaffold(
-      //         body: CommandBar(onCommand: (s) {}, onClose: () {}),
-      //       ),
-      //     ),
-      //   ),
-      // );
-      // await tester.enterText(find.byType(TextField), '/nonexistent');
-      // await tester.pumpAndSettle(const Duration(milliseconds: 500));
-      // await tester.testTextInput.receiveAction(TextInputAction.done);
-      // await tester.pumpAndSettle();
-      // expect(find.text('Command not found'), findsOneWidget);
-      // expect(find.text('Create'), findsOneWidget);
-    }, skip: true);
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: CommandBar(onCommand: (s) {}, onClose: () {}),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '/nonexistent');
+      await tester.pumpAndSettle();
+
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Command not found'), findsOneWidget);
+      expect(find.text('Create'), findsOneWidget);
+    });
   });
 
   group('US-2: 浏览和使用已有命令', () {
@@ -132,33 +125,51 @@ void main() {
     });
 
     testWidgets('AC-2-1: / shows only Quick Moves', (tester) async {
-      // SKIP — see AC-1-2 for explanation.
-      // Body preserved as comment for the day someone re-enables.
-      // await tester.pumpWidget(
-      //   ProviderScope(
-      //     child: MaterialApp(
-      //       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      //       supportedLocales: AppLocalizations.supportedLocales,
-      //       locale: const Locale('zh'),
-      //       home: Scaffold(
-      //         body: CommandBar(onCommand: (s) {}, onClose: () {}),
-      //       ),
-      //     ),
-      //   ),
-      // );
-      // await tester.enterText(find.byType(TextField), '/');
-      // await tester.pumpAndSettle(const Duration(milliseconds: 500));
-      // expect(find.text('/翻译'), findsOneWidget);
-      // expect(find.text('/总结'), findsOneWidget);
-      // expect(find.text('/解释'), findsOneWidget);
-      // expect(find.text('/邮件'), findsOneWidget);
-      // expect(find.text('/语法'), findsOneWidget);
-      // expect(find.text('Command'), findsNothing);
-    }, skip: true);
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: CommandBar(onCommand: (s) {}, onClose: () {}),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '/');
+      await tester.pumpAndSettle();
+
+      expect(find.text('/翻译'), findsOneWidget);
+      expect(find.text('/总结'), findsOneWidget);
+      expect(find.text('/解释'), findsOneWidget);
+      expect(find.text('/邮件'), findsOneWidget);
+      expect(find.text('/语法'), findsOneWidget);
+      expect(find.text('Command'), findsNothing);
+    });
 
     testWidgets('AC-2-3: select command appends space', (tester) async {
-      // SKIP — see AC-1-2 for explanation.
-    }, skip: true);
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: CommandBar(onCommand: (s) {}, onClose: () {}),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '/');
+      await tester.pumpAndSettle();
+
+      // 点击第一个 Quick Move tile（/翻译）
+      await tester.tap(find.text('/翻译'));
+      await tester.pumpAndSettle();
+
+      // 验证 TextField 文本变为 '/翻译 '（末尾有空格）
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.controller!.text, '/翻译 ');
+    });
   });
 
   group('US-3: 管理我的命令列表', () {

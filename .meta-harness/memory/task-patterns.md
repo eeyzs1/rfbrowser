@@ -45,3 +45,18 @@ and generate a better harness faster.
 - Template: content-system
 - Typical topology: three-agent (researcher/writer/editor)
 - Common pitfalls: hallucination, style inconsistency, missing fact-check
+
+### Pattern: Desktop UI Performance / Gesture
+- Domain: software_development
+- Signals: "卡顿", "lag", "slow", "freeze", "crash on scroll", "VSCode-like", "tab", "scroll", "drag", "middle-click", "AXTree", "Lost connection to device"
+- Template: bugfix (no new generation — apply to existing Flutter desktop project)
+- Typical topology: single-agent (investigate → fix → verify)
+- Common pitfalls:
+  - Nested Scrollable (ReorderableListView+shrinkWrap in parent ListView) → Windows AXTree crash
+  - TextField(maxLines:null, expands:true) on large content → UI freeze
+  - Synchronous regex in buildTextSpan → keystroke lag
+  - Horizontal ListView without PointerScrollEvent → wheel doesn't work on Windows
+  - onSecondaryTapUp used for middle-click (actually right-click)
+- Required checks: flutter analyze + real-device smoke test (scroll settings, open >20KB note, switch view modes, split, gestures)
+- Success rate: N/A (new pattern, first seen 2026-06-25)
+- Key files: lib/ui/widgets/split_pane*.dart, lib/core/editor/highlighted_text_editing_controller.dart, lib/ui/widgets/note_pane_view.dart, lib/ui/pages/settings/*

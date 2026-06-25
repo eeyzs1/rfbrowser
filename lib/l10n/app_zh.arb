@@ -46,10 +46,14 @@
   "toggleDarkLight": "切换深色/浅色主题",
   "lightMode": "浅色模式",
   "theme": "主题",
+  "themeModeLabel": "主题模式",
   "accentColor": "强调色",
   "themeColor": "主题色",
   "backgroundColor": "背景色",
   "surfaceColor": "面板色",
+  "fontColor": "字体颜色",
+  "fontColorAuto": "自动",
+  "fontColorAutoDesc": "根据面板色自动推导",
   "customColor": "自定义颜色",
   "opacity": "透明度",
   "themeTintOpacity": "主题色着色强度",
@@ -132,6 +136,7 @@
   "askAnything": "问任何事... (Ctrl+K)",
   "noResults": "未找到结果",
   "loading": "加载中...",
+  "largeFileSourceNotice": "大文件以源码视图打开（编辑可能较慢）",
   "error": "错误",
   "confirm": "确认",
   "warning": "警告",
@@ -1069,5 +1074,159 @@
   "agentGoalHint": "输入目标，如：研究量子计算最新进展",
   "agentQuickResearch": "研究",
   "agentQuickSummarize": "总结",
-  "agentQuickOrganize": "整理"
+  "agentQuickOrganize": "整理",
+  "contextTruncatedToFitTokenLimit": "上下文已截断以适应 token 限制",
+  "savedAsNoteToast": "已保存为笔记",
+  "savedToMemory": "已保存到记忆",
+  "removedFromMemory": "已从记忆移除",
+  "memoryNetwork": "记忆网络",
+  "failedToLoad": "加载失败：{error}",
+  "@failedToLoad": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "memoryBrowser": "记忆浏览器",
+  "tapNodeToInspect": "点击节点查看详情",
+  "noMemoryConnectionsYet": "暂无记忆连接 — 继续对话吧！",
+  "solidManualLink": "实线 = 手动链接",
+  "smallFewLinks": "小 = 少量链接",
+  "largeManyLinks": "大 = 大量链接",
+  "switchToCircular": "切换到环形布局",
+  "fullGraph": "完整图谱",
+  "toggleStatistics": "切换统计信息",
+  "toggleLegend": "切换图例",
+  "selectFragmentToSeeLinks": "选择一个片段查看其链接",
+  "noHebbianLinks": "此片段无赫布链接",
+  "changeViewMode": "更改视图模式",
+  "viewMode": "视图模式",
+  "syncConflict": "同步冲突",
+  "keepLocal": "保留本地",
+  "keepRemote": "保留远程",
+  "keepBoth": "两者都保留",
+  "createQuickMove": "创建快速移动",
+  "commandNotFound": "未找到命令",
+  "commandDoesNotExist": "命令 \"/{cmdName}\" 不存在。是否创建？",
+  "@commandDoesNotExist": {
+    "placeholders": {
+      "cmdName": {"type": "String"}
+    }
+  },
+  "newTabGroup": "新建标签组",
+  "pendingCount": "{count} 待处理",
+  "@pendingCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "git": "Git",
+  "errorWithMessage": "错误：{error}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "noFragmentsMatch": "没有匹配的片段。尝试其他查询，或等待下一次梦境周期提取新事实。",
+  "memorySettingsTitle": "记忆",
+  "ambientContext": "环境上下文",
+  "progressiveForgetting": "渐进式遗忘",
+  "hebbianConnections": "赫布连接",
+  "autoExport": "自动导出",
+  "backupAndRestore": "备份与恢复",
+  "dreamingActivity": "梦境活动",
+  "exportCurrentChatToMarkdown": "导出当前对话为 Markdown",
+  "noActiveChatSessionToExport": "没有可导出的活跃对话",
+  "backupToJson": "备份到 JSON",
+  "restoreFromJson": "从 JSON 恢复",
+  "restoreFailed": "恢复失败：{error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "statusUnavailable": "状态不可用：{error}",
+  "@statusUnavailable": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "commandName": "命令名称",
+  "promptTemplate": "提示词模板",
+  "iconLabel": "图标",
+  "groupName": "分组名称",
+  "memoryGuideTitle": "关于记忆系统",
+  "memoryGuideDesc": "记忆系统会自动从你的对话中提取重要信息，并在未来对话中引用，帮助你延续上下文。",
+  "memoryGuideFragments": "片段 — 自动提取的记忆碎片，按重要性分层",
+  "memoryGuideSummaries": "摘要 — 定期整合的阶段性总结",
+  "memoryGuideHebbian": "连接 — 记忆间的关联强度",
+  "memoryGuideInsights": "洞察 — 系统自动生成的发现",
+  "memoryGuideDismiss": "知道了",
+  "syncing": "同步中...",
+  "syncedAgo": "上次同步: {time}",
+  "@syncedAgo": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "restoreSuccess": "恢复成功 · {fragments} 片段 · {summaries} 摘要 · {edges} 连接",
+  "@restoreSuccess": {
+    "placeholders": {
+      "fragments": {"type": "int"},
+      "summaries": {"type": "int"},
+      "edges": {"type": "int"}
+    }
+  },
+  "restoreCancelled": "已取消恢复",
+  "restoreInvalidFile": "所选文件不是有效的 JSON 备份",
+  "testConnection": "测试连接",
+  "testing": "测试中...",
+  "testConnectionSuccess": "连接成功",
+  "testConnectionFailed": "连接失败：{error}",
+  "@testConnectionFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "copiedToClipboard": "已复制到剪贴板",
+  "regenerate": "重新生成",
+  "sessions": "会话列表",
+  "newSession": "新建会话",
+  "renameSession": "重命名会话",
+  "deleteSession": "删除会话",
+  "deleteSessionConfirm": "删除此会话？",
+  "sessionTitle": "会话标题",
+  "noSessions": "暂无会话",
+  "enterToSendHint": "Enter 发送，Shift+Enter 换行",
+  "defaultSessionTitle": "新对话",
+  "memoryAdvancedSettings": "高级设置",
+  "consolidateNow": "立即整理",
+  "dreamingInProgress": "正在整理…",
+  "noDreamsYet": "尚未整理",
+  "lastDream": "上次整理：{time}",
+  "@lastDream": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "canvasGuideTitle": "画布操作指南",
+  "canvasGuidePanTitle": "平移画布",
+  "canvasGuidePanDesc": "拖拽空白处即可平移画布视图",
+  "canvasGuideZoomTitle": "缩放视图",
+  "canvasGuideZoomDesc": "使用鼠标滚轮缩放画布",
+  "canvasGuideAddCardTitle": "添加卡片",
+  "canvasGuideAddCardDesc": "点击工具栏按钮或双击空白处添加卡片",
+  "canvasGuideConnectTitle": "连接卡片",
+  "canvasGuideConnectDesc": "从卡片边缘拖拽以创建连线",
+  "canvasGuideDismiss": "知道了",
+  "sendToAi": "发送到 AI",
+  "sendingToAi": "正在发送页面到 AI…",
+  "sendToAiEmpty": "没有可发送的页面内容",
+  "sendToAiSent": "页面已发送到 AI",
+  "openAiChat": "打开 AI",
+  "sendToAiFailed": "发送到 AI 失败：{error}",
+  "@sendToAiFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  }
 }

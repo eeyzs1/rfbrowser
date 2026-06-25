@@ -8,15 +8,37 @@ abstract class ContentSource {
 
 class NoteContentSource extends ContentSource {
   final List<Note> notes;
+  final Note? currentNote;
 
-  NoteContentSource(this.notes);
+  NoteContentSource(this.notes, {this.currentNote});
 
   @override
   Future<ContextItem?> resolve(ParsedReference ref) async {
     if (ref.type != ContextRefType.note) return null;
 
     if (ref.target == 'current') {
-      return null;
+      if (currentNote == null) {
+        return ContextItem(
+          type: ContextType.note,
+          id: 'current',
+          content: '',
+          metadata: {'error': 'no_active_note'},
+        );
+      }
+      String content = currentNote!.content;
+      if (ref.selector != null) {
+        final section = _extractSection(content, ref.selector!);
+        if (section != null) content = section;
+      }
+      return ContextItem(
+        type: ContextType.note,
+        id: currentNote!.id,
+        content: content,
+        metadata: {
+          'title': currentNote!.title,
+          'filePath': currentNote!.filePath,
+        },
+      );
     }
 
     final note = notes

@@ -118,7 +118,10 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                   onToggleLeftPanel: _toggleLeftPanel,
                   onToggleRightPanel: _toggleRightPanel,
                 ),
-                statusBar: const StatusBar(),
+                statusBar: StatusBar(
+                  onCommandBar: () =>
+                      setState(() => _showCommandBar = true),
+                ),
                 onSceneChanged: _switchScene,
               ),
               if (_showCommandBar)

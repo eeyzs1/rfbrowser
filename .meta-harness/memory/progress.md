@@ -203,3 +203,186 @@ Enables resumption after interruption.
   - MODIFIED: docs/design/10-roadmap.md (Phase 4/5 status, batch descriptions, dependency chains)
   - REWRITTEN: docs/design/feature-plans/phase4.md (all 7 features ✅)
   - REWRITTEN: docs/design/feature-plans/phase5.md (all 11 features ✅)
+
+### 2026-06-24 — 补齐 AI 插件沙盒所有缺失部分 (Harness Pipeline v2.4)
+- Status: Completed
+- Agent: main
+- Harness: v2.0.0 → v2.4.0 (submodule updated), pipeline INTERPRET→GENERATE→FACTORY→PROVE→JUDGE→EVOLVE 全部执行
+- What was done:
+  - **第1轮**: 修复 check-version.ps1 的 Get-Content 缺少 -Raw 参数导致数组插值崩溃（后由 v2.4.0 上游修复覆盖）
+  - **第2轮**: 创建 plugin_api_impl.dart（PluginApiImpl + 5 个子 API 实现）和 plugin_ui_notifier.dart；Sandbox 用 CapabilityChecker 替换 PermissionChecker
+  - **第3轮**: 引入 flutter_js 0.8.7，PluginManifest 添加 entryPoint 字段，_pluginEntryPoint 重写为 JS 运行时（_runJsPlugin 用 QuickJS 引擎，_runEchoLoop 保持回显向后兼容），PluginHostNotifier 添加 _readEntryPointCode 读取 JS 文件
+  - **第4轮**: 添加 ResourceQuota 类（maxMessagesPerSecond=100, maxMessageSizeBytes=1MB, maxExecutionDuration=30s, maxConsecutiveErrors=10）和 ResourceQuotaExceededError；Sandbox.callApi 集成滑动窗口限流、消息大小检查、可配置超时、连续错误自动停止
+  - **Harness 流程**: 正确执行 PRE-FLIGHT bootstrap → --interpret-intent 锁定验收标准 → --advance 推进 6 phases → --verify-criterion 标记证据 → evolve.py 评估（fitness 0.8，稳定）
+- What's next: 后续每次交互都应从 PRE-FLIGHT 开始（读 PHASE_BRIEF.md），遵循 harness pipeline
+- Files changed:
+  - MODIFIED: lib/plugins/host/plugin_host.dart (PluginManifest.entryPoint, ResourceQuota, ResourceQuotaExceededError)
+  - MODIFIED: lib/plugins/host/plugin_sandbox.dart (_runJsPlugin, _runEchoLoop, ResourceQuota 集成)
+  - MODIFIED: lib/plugins/host/plugin_host_notifier.dart (_readEntryPointCode, entryPointCode 传递)
+  - MODIFIED: lib/plugins/plugin_registry.dart (entryPoint 字段读取)
+  - NEW: lib/plugins/api/plugin_api_impl.dart (PluginApiImpl + 5 子 API)
+  - NEW: lib/plugins/api/plugin_ui_notifier.dart (PluginUiNotifier)
+  - MODIFIED: pubspec.yaml (flutter_js: ^0.8.7)
+- Verification: flutter analyze 0 issues, flutter test 1872 pass/20 skip/1 flaky(HNSW), integration 20/20 pass
+
+### 2026-06-24 — 补齐项目测试覆盖缺口 (Harness Pipeline v2.4 — PROVE phase)
+- Status: Completed
+- Agent: main
+- Harness: v2.4.0, pipeline PROVE phase (测试覆盖补齐)
+- What was done:
+  - **评估**: 3 个并行 search agent 评估项目缺口 — 功能完整(33/33 ✅)、零 TODO、但 ~90+ 源文件缺单元测试
+  - **新增测试**: 4 个并行 subagent 编写 8 个测试文件，共 ~199 个新测试用例
+    - test/plugins/plugin_api_impl_test.dart (32+ tests: dispatch 路由 + 5 子 API + 权限检查)
+    - test/plugins/plugin_ui_notifier_test.dart (19 tests: notify/showPanel/dismiss/closePanel/clearForPlugin)
+    - test/plugins/resource_quota_test.dart (12 tests: 频率/大小/超时/连续错误)
+    - test/services/ai_stream_accumulator_test.dart (25 tests: 流式累积 + SSE 解析)
+    - test/services/ai_protocol_strategy_test.dart (30 tests: 协议策略选择/buildRequest/parseResponse/extractErrorMessage)
+    - test/services/memory_database_test.dart (17 tests: 初始化/表结构/CRUD/事务/合并锁)
+    - test/services/fragment_repository_test.dart (18 tests: CRUD/过滤/批量操作)
+    - test/services/task_execution_strategy_test.dart (46 tests: AgentToolRegistry/ManualExecutionStrategy/ReactLoop/Factory)
+  - **修复 3 个源代码 bug** (测试发现的真实缺陷):
+    - lib/plugins/api/plugin_ui_notifier.dart: notify() ID 用 millisecondsSinceEpoch 导致同毫秒内 ID 碰撞 → 改用 microsecondsSinceEpoch + 静态计数器
+    - lib/services/ai/ai_protocol_strategy.dart: extractStreamDelta 对空 choices 列表用 `[]?[0]` 抛 RangeError（?[] 只防 null 接收者不防越界）→ 改为显式 isNotEmpty 检查
+    - lib/services/memory/memory_database.dart: database getter 并发竞态 — 多个调用同时进入 init 块各自调用 _initDb() → 改为标准 single-flight 模式（先检查 completer 是否存在）
+- What's next: 后续可继续补齐剩余 ~80 源文件的单元测试（当前已覆盖核心模块）
+- Files changed:
+  - NEW: test/plugins/plugin_api_impl_test.dart
+  - NEW: test/plugins/plugin_ui_notifier_test.dart
+  - NEW: test/plugins/resource_quota_test.dart
+  - NEW: test/services/ai_stream_accumulator_test.dart
+  - NEW: test/services/ai_protocol_strategy_test.dart
+  - NEW: test/services/memory_database_test.dart
+  - NEW: test/services/fragment_repository_test.dart
+  - NEW: test/services/task_execution_strategy_test.dart
+  - MODIFIED: lib/plugins/api/plugin_ui_notifier.dart (ID 唯一性修复)
+  - MODIFIED: lib/services/ai/ai_protocol_strategy.dart (空列表越界修复)
+  - MODIFIED: lib/services/memory/memory_database.dart (并发竞态修复)
+- Verification: flutter analyze 0 issues, flutter test +2125 ~20 All passed (0 failures), integration 20/20 passed
+
+### 2026-06-24 — 修复功能缺陷和改进点 (Harness Pipeline v2.4)
+- Status: Completed
+- Agent: main
+- Harness: v2.4.0, pipeline INTERPRET→...→EVOLVE 全部执行
+- What was done:
+  - **评估**: 3 个并行 search agent 全面评估项目，发现 12 类问题（功能缺陷/性能/资源泄漏/UI/错误处理）
+  - **资源泄漏修复 (4处)**:
+    - webdav_sync_service.dart: 添加 ref.onDispose 清理 _dio 和 _autoSyncTimer，secureStorage.read 添加 catchError
+    - plugin_host_notifier.dart: 添加 ref.onDispose 调用所有 sandbox.stop()
+    - webhook_server.dart: 添加 ref.onDispose 关闭 HttpServer
+    - canvas_page.dart: dispose 中释放 _imageCache 的 ui.Image (GPU 资源)
+  - **功能缺陷修复**: content_extractor.dart NoteContentSource 添加 currentNote 字段，实现 'current' 引用返回当前笔记内容（与 WebContentSource 风格一致），assembler.dart 传入 currentNote
+  - **性能优化 (Hebbian N+1)**:
+    - hebbian_service.dart recordCoAccess: 双重循环内独立事务 → 收集所有 pair 后单事务批量 upsert
+    - hebbian_service.dart expandByHebbianLinks: 逐条查询 → IN 查询批量获取边和 fragment
+    - hebbian_edge_repository.dart findCrossSessionAssociates: 主 isolate 关键词匹配 → compute() 移到 worker isolate
+    - 新增批量方法: upsertHebbianEdgesBatch, getHebbianEdgesForBatch, getFragmentsBatch
+  - **国际化补齐**: 49 个新 l10n key 添加到 app_en.arb 和 app_zh.arb，20+ UI 文件硬编码英文替换为 AppLocalizations 引用
+- What's next: 项目核心功能完整，后续可继续补齐剩余 UI 文件的 tooltip 和 l10n
+- Files changed:
+  - MODIFIED: lib/services/webdav_sync_service.dart (ref.onDispose + catchError)
+  - MODIFIED: lib/plugins/host/plugin_host_notifier.dart (ref.onDispose)
+  - MODIFIED: lib/services/webhook_server.dart (ref.onDispose)
+  - MODIFIED: lib/ui/pages/canvas_page.dart (ui.Image 释放)
+  - MODIFIED: lib/core/context/content_extractor.dart (NoteContentSource current 实现)
+  - MODIFIED: lib/core/context/assembler.dart (传入 currentNote)
+  - MODIFIED: lib/services/hebbian_service.dart (批量 upsert + IN 查询)
+  - MODIFIED: lib/services/memory/hebbian_edge_repository.dart (批量方法 + compute)
+  - MODIFIED: lib/services/memory/fragment_repository.dart (getFragmentsBatch)
+  - MODIFIED: lib/services/memory_service.dart (批量方法委托)
+  - MODIFIED: lib/l10n/app_en.arb, app_zh.arb (49 个新 key)
+  - MODIFIED: 20+ UI 文件 (硬编码英文 → l10n 引用)
+  - MODIFIED: test/acceptance/quick_moves_acceptance_test.dart (添加 l10n delegates)
+  - MODIFIED: test/core/context/content_extractor_test.dart (更新 current 引用测试)
+- Verification: flutter analyze 0 issues, flutter test +2127 ~20 All passed (0 failures), integration 20/20 passed
+
+### 2026-06-24 — 从用户角度的 18 项体验改进 (Harness Pipeline v2.4)
+- Status: Completed
+- Agent: main
+- Harness: v2.4.0, pipeline INTERPRET→...→EVOLVE 全部执行
+- What was done:
+  - **评估**: 3 个并行 search agent 从核心流程体验/新用户引导/交互视觉三个维度评估，发现 20+ 改进点，按 P0/P1/中/低分级，最终选定 18 项
+  - **P0 新用户上手 (5项)**:
+    - vault_store.dart: createVault() 后自动生成 Welcome.md（功能导览+快捷键+Markdown 语法示例）
+    - status_bar.dart + main_layout.dart: 状态栏右侧添加放大镜图标按钮快速打开命令栏
+    - ai_chat_panel.dart: 空状态添加 4 个示例提示词卡片（"总结我的笔记"等），点击填入输入框
+    - settings_service.dart + theme_settings_section.dart + app.dart: 新增 themeMode 字段（system/light/dark 三态），SegmentedButton 三选一，system 时跟随系统亮度自动切换
+    - sidebar_note_actions.dart: 删除笔记后弹出带"撤销"按钮的 SnackBar，5 秒内可恢复
+  - **P1 体验优化 (5项)**:
+    - quick_search_bar.dart: 从内存 title.contains 改为调用 SearchService.hybridSearch，添加 200ms debounce、loading 状态、匹配片段预览，结果区分笔记和记忆片段
+    - ai_service.dart: 新增 retryLastMessage() 方法（找到最后一条用户消息，移除并重新发送）
+    - memory_browser_page.dart: 首次进入显示概念引导卡片（SharedPreferences hasSeenMemoryGuide），Info 风格卡片+4 个标签页说明芯片+"知道了"按钮
+    - memory_settings_widgets.dart: _restoreFromJson 重写使用 FilePicker.platform.pickFiles 选择 JSON 文件
+    - status_bar.dart: 从 ConsumerWidget 改为 ConsumerStatefulWidget，四种同步状态（离线/同步中/同步失败/上次同步时间），SharedPreferences 持久化 lastSyncTime，相对时间格式化
+  - **AI对话增强 (4项)**:
+    - ai_models.dart: ChatMessage 添加 toJson/fromJson，新增 ChatSession 类（id/title/messages/createdAt + copyWith/toJson/fromJson），AIState 新增 sessions 和 currentSessionId 字段
+    - ai_service.dart: 新增会话管理方法（createSession/switchSession/renameSession/deleteSession）+ _syncedSessions/_persistSessions/_loadSessions/_ensureDefaultSession + regenerateLastResponse
+    - ai_chat_panel.dart: build 从 Column 重构为 Row（会话侧栏 + Expanded(Column)），新增 _buildSessionSidebar/_buildSessionTile/_showSessionContextMenu，TextField 改为多行（maxLines:5, minLines:1），CallbackShortcuts 拦截 Enter 发送
+    - ai_chat_model_selector.dart: 添加"测试连接"按钮（创建临时 AIProvider，Dio GET modelsEndpoint），测试状态 idle/testing/success/fail 显示 ✓/✗ + 错误信息
+    - ai_chat_messages.dart: 新增"复制"按钮（Icons.copy + Clipboard.setData + SnackBar）和"重新生成"按钮（Icons.refresh，调用 regenerateLastResponse()）
+  - **功能完善 (4项)**:
+    - memory_settings_section.dart: 从 ConsumerWidget 改为 ConsumerStatefulWidget，基础设置（始终显示）vs 高级参数（默认折叠，AnimatedCrossFade），折叠状态持久化到 SharedPreferences
+    - memory_settings_widgets.dart: _DreamingStatusBody 添加"立即整理"按钮（TextButton.icon + Icons.bolt），loading 状态 _triggering 或 status.isConsolidating
+    - canvas_page.dart + canvas_state_base.dart: 新增 _showCanvasGuide 状态，首次打开显示引导浮层（半透明背景 + 居中卡片 + 4 条操作说明）
+    - browser_page.dart + browser_actions.dart: 浏览器工具栏添加"发送到 AI"按钮（Icons.smart_toy_outlined），_sendToAi 提取网页正文 → 截断 8000 字符 → sendMessage
+  - **测试适配**:
+    - settings_service_test.dart: 2 个 isDarkMode 测试更新为基于 themeMode
+    - quick_moves_acceptance_test.dart: MaterialApp 添加 localizationsDelegates 和 supportedLocales
+    - ai_chat_test.dart: 新对话按钮图标 Icons.refresh → Icons.add_comment_outlined
+    - quick_search_test.dart: 添加 _TestSearchNotifier 覆盖 searchServiceProvider，做简单 title/content 过滤
+    - theme_settings_test.dart: isDarkMode 测试改用 setThemeMode(ThemeMode.dark/light)
+- What's next: 18 项用户角度改进全部完成，软件体验显著提升。后续可考虑：键盘快捷键体系化、移动端适配、辅助功能（语义标签）、性能监控面板
+- Files changed:
+  - MODIFIED: lib/data/stores/vault_store.dart (Welcome.md 自动生成)
+  - MODIFIED: lib/ui/widgets/status_bar.dart (命令栏按钮 + 同步状态)
+  - MODIFIED: lib/ui/layout/main_layout.dart (onCommandBar 回调)
+  - MODIFIED: lib/ui/pages/ai_chat_panel.dart (示例提示词 + 会话侧栏 + 多行输入)
+  - MODIFIED: lib/services/settings_service.dart (themeMode 字段)
+  - MODIFIED: lib/ui/pages/settings/theme_settings_section.dart (ThemeMode 选择器)
+  - MODIFIED: lib/app.dart (system 亮度依赖)
+  - MODIFIED: lib/ui/widgets/note_sidebar/sidebar_note_actions.dart (撤销 SnackBar)
+  - MODIFIED: lib/ui/widgets/quick_search_bar.dart (hybridSearch + debounce)
+  - MODIFIED: lib/services/ai_service.dart (retryLastMessage + 会话管理)
+  - MODIFIED: lib/ui/pages/memory_browser_page.dart (概念引导卡片)
+  - MODIFIED: lib/ui/pages/settings/memory_settings_widgets.dart (FilePicker + 立即整理)
+  - MODIFIED: lib/services/ai/ai_models.dart (ChatSession 类)
+  - MODIFIED: lib/ui/pages/ai_chat/ai_chat_model_selector.dart (测试连接)
+  - MODIFIED: lib/ui/pages/ai_chat/ai_chat_messages.dart (复制 + 重新生成)
+  - MODIFIED: lib/ui/pages/settings/memory_settings_section.dart (折叠高级参数)
+  - MODIFIED: lib/ui/pages/canvas_page.dart, canvas_state_base.dart (引导浮层)
+  - MODIFIED: lib/ui/pages/browser_page.dart, browser_actions.dart (发送到 AI)
+  - MODIFIED: test/services/settings_service_test.dart (themeMode 测试)
+  - MODIFIED: test/acceptance/quick_moves_acceptance_test.dart (l10n delegates)
+  - MODIFIED: integration_test/ai_chat_test.dart (图标变更)
+  - MODIFIED: integration_test/quick_search_test.dart (_TestSearchNotifier)
+  - MODIFIED: integration_test/theme_settings_test.dart (themeMode 测试)
+- Verification: flutter analyze 0 issues, flutter test +2127 ~20 All passed (0 failures), integration 20/20 passed
+
+### 2026-06-25 — Think page performance + VSCode-like tab UX + Settings crash fix
+- Status: Completed
+- Agent: main
+- What was done:
+  - Removed startup log spam from OnnxEmbedding/EmbeddingService (4 appLog.debug calls)
+  - Added mouse-wheel horizontal scrolling for tab bar (Listener + PointerScrollEvent, dy+dx)
+  - Added left-mouse-drag scrolling for tab bar (GestureDetector.onHorizontalDragUpdate + NeverScrollableScrollPhysics)
+  - Added middle-mouse-click tab closing (onTertiaryTapDown)
+  - Fixed split-pane tab disappearance bug: original leaf now retains tabs + activeTabIndex, new leaf starts with active tab only
+  - Optimized MarkdownHighlighter: buildTextSpan returns plain text immediately, schedules debounced async computation (compute() for >2000 chars)
+  - Added _lastSeenText tracking in editor listeners to prevent false dirty-marking from async highlight rebuilds
+  - Optimized NotePaneView Source view: SelectionArea + ListView.builder for viewport lazy rendering (100k-line files open instantly)
+  - Added large-file (>20KB) Edit view fallback: immediately shows Source view with [编辑] button to manually enter edit mode
+  - Fixed settings page crash on scroll: replaced nested ReorderableListView.builder(shrinkWrap+NeverScrollable) with Column + up/down IconButtons — eliminates Windows AXTree corruption
+- What's next:
+  - User to verify settings page fix with `flutter run -d windows`
+  - Remaining VSCode-like features: tab drag reordering, cross-pane tab drag, overflow arrows, Ctrl+Tab shortcut, split makes new pane active
+  - Root fix for Edit view large-file performance: switch to viewport-aware editor (super_editor)
+- Files changed:
+  - MODIFIED: lib/services/onnx_embedding_service.dart (removed 3 appLog.debug)
+  - MODIFIED: lib/services/embedding_service.dart (removed TF-IDF built log)
+  - MODIFIED: lib/ui/widgets/split_pane.dart (added gestures import)
+  - MODIFIED: lib/ui/widgets/split_pane_tab.dart (scroll controller, wheel/drag handlers, middle-click close, handleSplit fix)
+  - MODIFIED: lib/core/editor/highlighted_text_editing_controller.dart (async debounced highlight)
+  - MODIFIED: lib/ui/pages/editor_page.dart (_lastSeenText tracking)
+  - MODIFIED: lib/ui/widgets/note_pane_view.dart (Source ListView.builder, large-file fallback, _lastSeenText)
+  - MODIFIED: lib/ui/pages/settings/quick_moves_settings_section.dart (Column + up/down buttons replacing ReorderableListView)
+  - MODIFIED: 4× l10n files (largeFileSourceNotice string)
+- Verification: flutter analyze 0 issues; flutter test + integration tests skipped per user instruction (focus on real-device verification)

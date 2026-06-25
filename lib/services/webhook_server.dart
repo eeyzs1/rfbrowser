@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/logging/app_logger.dart';
 import '../data/models/agent_task.dart';
 import '../services/agent_service.dart';
 import '../services/ai_service.dart';
@@ -16,7 +16,7 @@ class WebhookServer {
   HttpServer? _server;
   final Ref _ref;
   String _apiKey;
-  final int port;
+  int port;
   bool _isRunning = false;
 
   WebhookServer({required Ref ref, String? apiKey, this.port = 18765})
@@ -57,7 +57,7 @@ class WebhookServer {
           logRequests(
             logger: (msg, isError) {
               if (isError) {
-                debugPrint('WebhookServer: $msg');
+                appLog.error('WebhookServer: $msg');
               }
             },
           ),
@@ -72,11 +72,15 @@ class WebhookServer {
         InternetAddress.loopbackIPv4,
         port,
       );
+      // When port is 0, the OS assigns a free port; reflect the actual
+      // port so callers (and tests) can connect.
+      port = _server!.port;
       _isRunning = true;
-      debugPrint('WebhookServer running on $baseUrl (API key: $_apiKey)');
+      appLog.debug('WebhookServer running on $baseUrl (API key: $_apiKey)');
     } catch (e) {
-      debugPrint('WebhookServer failed to start: $e');
+      appLog.error('WebhookServer failed to start', error: e);
       _isRunning = false;
+      rethrow;
     }
   }
 
@@ -84,7 +88,7 @@ class WebhookServer {
     await _server?.close(force: true);
     _server = null;
     _isRunning = false;
-    debugPrint('WebhookServer stopped');
+    appLog.debug('WebhookServer stopped');
   }
 
   Middleware _authMiddleware() {
@@ -326,7 +330,13 @@ class WebhookServer {
 
 class WebhookServerNotifier extends Notifier<WebhookServerState> {
   @override
-  WebhookServerState build() => WebhookServerState();
+  WebhookServerState build() {
+    ref.onDispose(() {
+      // Stop the HTTP server if still running when the provider is disposed.
+      state.server?.stop();
+    });
+    return WebhookServerState();
+  }
 
   Future<void> start({int? port}) async {
     if (state.isRunning) return;

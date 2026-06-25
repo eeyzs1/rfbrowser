@@ -116,7 +116,7 @@ void main() {
       final server = WebhookServer(
         ref: _createTestRef(container),
         apiKey: 'test',
-        port: 19878,
+        port: 0,
       );
       await server.start();
       expect(server.isRunning, true);
@@ -157,7 +157,7 @@ void main() {
       server = WebhookServer(
         ref: _createTestRef(container),
         apiKey: 'test_key_123',
-        port: 19876,
+        port: 0,
       );
       await server.start();
     });
@@ -168,7 +168,7 @@ void main() {
     });
 
     test('GET /api/status — 返回服务状态', () async {
-      final response = await _httpGet('/api/status', 'test_key_123');
+      final response = await _httpGet('/api/status', 'test_key_123', server.port);
       expect(response.statusCode, 200);
       final body = await _readBody(response);
       final json = jsonDecode(body) as Map<String, dynamic>;
@@ -178,7 +178,7 @@ void main() {
     });
 
     test('GET /api/status — 无认证返回 403', () async {
-      final response = await _httpGet('/api/status', null);
+      final response = await _httpGet('/api/status', null, server.port);
       expect(response.statusCode, 403);
       final body = await _readBody(response);
       final json = jsonDecode(body) as Map<String, dynamic>;
@@ -186,7 +186,7 @@ void main() {
     });
 
     test('GET /api/status — 错误 Key 返回 403', () async {
-      final response = await _httpGet('/api/status', 'wrong_key');
+      final response = await _httpGet('/api/status', 'wrong_key', server.port);
       expect(response.statusCode, 403);
     });
 
@@ -195,7 +195,7 @@ void main() {
       try {
         final request = await client.openUrl(
           'OPTIONS',
-          Uri.parse('http://localhost:19876/api/status'),
+          Uri.parse('http://localhost:${server.port}/api/status'),
         );
         final response = await request.close();
         expect(response.statusCode, 200);
@@ -210,7 +210,7 @@ void main() {
     });
 
     test('GET /api/tools — 返回工具列表', () async {
-      final response = await _httpGet('/api/tools', 'test_key_123');
+      final response = await _httpGet('/api/tools', 'test_key_123', server.port);
       expect(response.statusCode, 200);
       final body = await _readBody(response);
       final json = jsonDecode(body) as Map<String, dynamic>;
@@ -219,7 +219,7 @@ void main() {
     });
 
     test('GET /api/agent/tasks — 返回任务列表', () async {
-      final response = await _httpGet('/api/agent/tasks', 'test_key_123');
+      final response = await _httpGet('/api/agent/tasks', 'test_key_123', server.port);
       expect(response.statusCode, 200);
       final body = await _readBody(response);
       final json = jsonDecode(body) as Map<String, dynamic>;
@@ -230,7 +230,7 @@ void main() {
       final client = HttpClient();
       try {
         final request = await client.postUrl(
-          Uri.parse('http://localhost:19876/api/agent/plan'),
+          Uri.parse('http://localhost:${server.port}/api/agent/plan'),
         );
         request.headers.set('Authorization', 'Bearer test_key_123');
         request.headers.contentType = ContentType.json;
@@ -252,11 +252,11 @@ Ref _createTestRef(ProviderContainer container) {
   return container.read(_testRefProvider);
 }
 
-Future<HttpClientResponse> _httpGet(String path, String? apiKey) async {
+Future<HttpClientResponse> _httpGet(String path, String? apiKey, int port) async {
   final client = HttpClient();
   try {
     final request = await client.getUrl(
-      Uri.parse('http://localhost:19876$path'),
+      Uri.parse('http://localhost:$port$path'),
     );
     if (apiKey != null) {
       request.headers.set('Authorization', 'Bearer $apiKey');

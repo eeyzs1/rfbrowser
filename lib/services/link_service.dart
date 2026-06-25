@@ -25,12 +25,29 @@ class LinkState {
 }
 
 class LinkNotifier extends Notifier<LinkState> {
+  // Cache for getUnlinkedMentions. BacklinksPanel calls this on every build
+  // (which fires on every keystroke via knowledgeProvider state updates),
+  // so without caching the O(n_titles * content) regex scan would freeze
+  // the editor. The cache is keyed by (noteId, activeNote.content) and is
+  // invalidated whenever the note set changes (rename/create/delete) via
+  // rebuildAllLinks / updateLinksForNote / linkMention.
+  String? _unlinkedCacheNoteId;
+  String? _unlinkedCacheContent;
+  List<UnlinkedMentionResult> _unlinkedCacheResult = const [];
+
   @override
   LinkState build() {
     return const LinkState();
   }
 
+  void _invalidateUnlinkedMentionsCache() {
+    _unlinkedCacheNoteId = null;
+    _unlinkedCacheContent = null;
+    _unlinkedCacheResult = const [];
+  }
+
   void rebuildAllLinks(List<Note> notes) {
+    _invalidateUnlinkedMentionsCache();
     final allLinks = <Link>[];
     final resolver = LinkResolver('');
     resolver.rebuildTitleIndex(notes);
@@ -64,6 +81,7 @@ class LinkNotifier extends Notifier<LinkState> {
   }
 
   void updateLinksForNote(Note changedNote, List<Note> allNotes) {
+    _invalidateUnlinkedMentionsCache();
     final existingLinks = state.links.toList();
     existingLinks.removeWhere((l) => l.sourceId == changedNote.id);
 
@@ -109,11 +127,18 @@ class LinkNotifier extends Notifier<LinkState> {
     List<Note> allNotes,
   ) {
     final note = allNotes.where((n) => n.id == noteId).firstOrNull;
-    if (note == null) return [];
+    if (note == null) return const [];
+
+    // Cache hit: same active note and unchanged content → return cached
+    // result without re-running the expensive regex scan.
+    if (_unlinkedCacheNoteId == noteId &&
+        _unlinkedCacheContent == note.content) {
+      return _unlinkedCacheResult;
+    }
 
     final titles = allNotes.map((n) => n.title).toList();
     final extractor = LinkExtractor();
-    return extractor
+    final result = extractor
         .findUnlinkedMentions(note.content, titles)
         .map(
           (m) => UnlinkedMentionResult(
@@ -124,6 +149,11 @@ class LinkNotifier extends Notifier<LinkState> {
           ),
         )
         .toList();
+
+    _unlinkedCacheNoteId = noteId;
+    _unlinkedCacheContent = note.content;
+    _unlinkedCacheResult = result;
+    return result;
   }
 
   List<Map<String, dynamic>> getGraphData(List<Note> notes) {
@@ -169,6 +199,7 @@ class LinkNotifier extends Notifier<LinkState> {
     int position,
     List<Note> allNotes,
   ) async {
+    _invalidateUnlinkedMentionsCache();
     final targetNote = allNotes
         .where((n) => n.title == targetTitle)
         .firstOrNull;

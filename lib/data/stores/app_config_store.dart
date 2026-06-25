@@ -3,8 +3,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-
-// ignore_for_file: avoid_print
+import '../../core/logging/app_logger.dart';
 
 class AppConfigStore {
   static AppConfigStore? _instance;
@@ -41,7 +40,7 @@ class AppConfigStore {
           jsonDecode(await file.readAsString()) as Map,
         );
       } catch (_) {
-        print('AppConfigStore: failed to read config file');
+        appLog.warning('AppConfigStore: failed to read config file');
       }
     }
     return {};

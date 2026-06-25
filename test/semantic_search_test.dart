@@ -5,6 +5,16 @@ import 'package:rfbrowser/services/embedding_service.dart';
 import 'package:rfbrowser/data/models/note.dart';
 import 'package:rfbrowser/data/models/ai_provider.dart';
 
+/// Builds an EmbeddingService configured for tests: the local provider
+/// (Ollama) is skipped so tests never depend on an external model server.
+/// Embeddings fall back to the deterministic n-gram hasher (128-dim), which
+/// keeps the suite fast and reproducible across environments.
+EmbeddingService _makeService() {
+  final service = EmbeddingService();
+  service.skipLocalProviderForTesting = true;
+  return service;
+}
+
 void main() {
   group('VectorStore', () {
     test('AC-P4-3-1: insert and exists', () {
@@ -47,14 +57,14 @@ void main() {
     test(
       'AC-P4-3-2: local embedding returns vector of correct dimensions',
       () async {
-        final service = EmbeddingService();
+        final service = _makeService();
         final embedding = await service.embed('测试文本');
         expect(embedding.length, 128);
       },
     );
 
     test('AC-P4-3-2: API embedding returns 1536-dim vector (mocked)', () async {
-      final service = EmbeddingService();
+      final service = _makeService();
       final provider = AIProvider(
         id: 'test',
         name: 'Test',
@@ -71,7 +81,7 @@ void main() {
     });
 
     test('AC-P4-3-3: similar texts produce similar embeddings', () async {
-      final service = EmbeddingService();
+      final service = _makeService();
       final e1 = await service.embed('机器学习基础');
       final e2 = await service.embed('深度学习入门');
       final e3 = await service.embed('烹饪食谱大全');
@@ -82,7 +92,7 @@ void main() {
     });
 
     test('AC-IMP-4-1: related terms have high similarity (>0.35)', () async {
-      final service = EmbeddingService();
+      final service = _makeService();
       final emb1 = await service.embed('机器学习');
       final emb2 = await service.embed('深度学习');
 
@@ -91,7 +101,7 @@ void main() {
     });
 
     test('AC-IMP-4-3: unrelated terms have low similarity (<0.3)', () async {
-      final service = EmbeddingService();
+      final service = _makeService();
       final emb1 = await service.embed('机器学习');
       final emb2 = await service.embed('周末计划');
 
@@ -102,7 +112,7 @@ void main() {
     test(
       'AC-IMP-4-4: same text produces identical embeddings (deterministic)',
       () async {
-        final service = EmbeddingService();
+        final service = _makeService();
         final emb1 = await service.embed('机器学习 with some extra words');
         final emb2 = await service.embed('机器学习 with some extra words');
 
@@ -112,7 +122,7 @@ void main() {
     );
 
     test('AC-P4-3-5: onNoteSaved inserts into store', () async {
-      final service = EmbeddingService();
+      final service = _makeService();
       final note = Note(
         id: 'test-1',
         title: '测试笔记',
@@ -129,7 +139,7 @@ void main() {
     });
 
     test('AC-P4-3-6: batchEmbed processes all notes', () async {
-      final service = EmbeddingService();
+      final service = _makeService();
       final notes = List.generate(
         10,
         (i) => Note(
@@ -152,7 +162,7 @@ void main() {
 
   group('SemanticSearch', () {
     test('AC-P4-3-3: semantic search finds related notes', () async {
-      final service = EmbeddingService();
+      final service = _makeService();
       final notes = [
         Note(
           id: '1',
@@ -203,7 +213,7 @@ void main() {
     test(
       'AC-P4-3-4: results have source field marking fts/semantic/both',
       () async {
-        final service = EmbeddingService();
+        final service = _makeService();
         await service.onNoteSaved(
           Note(
             id: '1',
@@ -229,7 +239,7 @@ void main() {
     test(
       'AC-P4-3-4: hybrid search merges FTS and semantic results with RRF',
       () async {
-        final service = EmbeddingService();
+        final service = _makeService();
         await service.onNoteSaved(
           Note(
             id: '1',
@@ -282,7 +292,7 @@ void main() {
     );
 
     test('AC-P4-3-4: FTS-only results have source=fts', () async {
-      final service = EmbeddingService();
+      final service = _makeService();
       await service.onNoteSaved(
         Note(
           id: '1',
@@ -319,7 +329,7 @@ void main() {
     test(
       'AC-P4-3-7: hybrid search performance for 20 notes',
       () async {
-        final service = EmbeddingService();
+        final service = _makeService();
         final notes = List.generate(
           20,
           (i) => Note(
@@ -350,7 +360,7 @@ void main() {
     );
 
     test('without FTS function, hybrid degrades to semantic-only', () async {
-      final service = EmbeddingService();
+      final service = _makeService();
       await service.onNoteSaved(
         Note(
           id: '1',

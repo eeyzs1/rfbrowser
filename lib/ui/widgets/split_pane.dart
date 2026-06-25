@@ -1,62 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import '../../data/models/split_pane_node.dart';
 
-enum ViewType { browser, editor, graph, ai, backlinks, notes, tabs, canvas }
+part 'split_pane_node.dart';
+part 'split_pane_divider.dart';
+part 'split_pane_tab.dart';
 
-enum SplitDirection { horizontal, vertical }
-
-class SplitNode {
-  final String id;
-  final SplitDirection? direction;
-  final List<SplitNode> children;
-  final double? flex;
-  final ViewType? viewType;
-
-  const SplitNode.leaf({required this.id, required this.viewType, this.flex})
-    : direction = null,
-      children = const [];
-
-  const SplitNode.split({
-    required this.id,
-    required this.direction,
-    required this.children,
-    this.flex,
-  }) : viewType = null;
-
-  bool get isLeaf => viewType != null;
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    if (direction != null) 'direction': direction!.index,
-    if (viewType != null) 'viewType': viewType!.index,
-    if (flex != null) 'flex': flex,
-    if (children.isNotEmpty)
-      'children': children.map((c) => c.toJson()).toList(),
-  };
-
-  factory SplitNode.fromJson(Map<String, dynamic> json) {
-    if (json['viewType'] != null) {
-      return SplitNode.leaf(
-        id: json['id'] as String,
-        viewType: ViewType.values[json['viewType'] as int],
-        flex: (json['flex'] as num?)?.toDouble(),
-      );
-    }
-    return SplitNode.split(
-      id: json['id'] as String,
-      direction: SplitDirection.values[json['direction'] as int],
-      flex: (json['flex'] as num?)?.toDouble(),
-      children: (json['children'] as List)
-          .map((c) => SplitNode.fromJson(c as Map<String, dynamic>))
-          .toList(),
-    );
-  }
-}
-
-typedef ViewBuilder = Widget Function(BuildContext context, ViewType viewType);
+/// Builds a widget for a leaf pane showing [noteId] in [viewMode].
+/// [leafId] identifies the pane within the split tree, so the built
+/// widget can report focus back to the split-pane store.
+typedef NotePaneViewBuilder = Widget Function(
+  BuildContext context,
+  String leafId,
+  String noteId,
+  NoteViewMode viewMode,
+);
 
 class SplitPane extends StatefulWidget {
   final SplitNode node;
-  final ViewBuilder viewBuilder;
+  final NotePaneViewBuilder viewBuilder;
+
+  /// Returns the display title for the note shown in a leaf pane's tab.
+  /// If null, the tab falls back to a generic label.
+  final String Function(String noteId)? noteTitleOf;
   final ValueChanged<SplitNode> onChanged;
   final VoidCallback? onClose;
 
@@ -65,6 +31,7 @@ class SplitPane extends StatefulWidget {
     required this.node,
     required this.viewBuilder,
     required this.onChanged,
+    this.noteTitleOf,
     this.onClose,
   });
 
@@ -72,7 +39,7 @@ class SplitPane extends StatefulWidget {
   State<SplitPane> createState() => _SplitPaneState();
 }
 
-class _SplitPaneState extends State<SplitPane> {
+class _SplitPaneState extends State<SplitPane> with _SplitPaneTabMixin {
   double _cachedAvailableSize = 0;
   List<double> _dragStartFlexValues = [];
   double _dragStartGlobal = 0;
@@ -86,185 +53,21 @@ class _SplitPaneState extends State<SplitPane> {
   }
 
   Widget _buildLeaf() {
+    final activeTab = widget.node.activeTab;
     return Column(
       children: [
-        _buildTabBar(),
-        Expanded(child: widget.viewBuilder(context, widget.node.viewType!)),
-      ],
-    );
-  }
-
-  Widget _buildTabBar() {
-    final theme = Theme.of(context);
-    final vt = widget.node.viewType!;
-
-    return GestureDetector(
-      onSecondaryTapUp: (details) =>
-          _showTabContextMenu(details.globalPosition),
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: Container(
-          height: 30,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: theme.appBarTheme.backgroundColor,
-            border: Border(bottom: BorderSide(color: theme.dividerColor)),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                _viewTypeIcon(vt),
-                size: 13,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  _viewTypeLabel(vt),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.primary,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+        buildTabBar(),
+        Expanded(
+          child: activeTab == null
+              ? const SizedBox.shrink()
+              : widget.viewBuilder(
+                  context,
+                  widget.node.id,
+                  activeTab.noteId,
+                  activeTab.viewMode,
                 ),
-              ),
-              const SizedBox(width: 4),
-              if (widget.onClose != null)
-                SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: IconButton(
-                    icon: Icon(Icons.close, size: 12, color: theme.hintColor),
-                    onPressed: widget.onClose,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 18,
-                      minHeight: 18,
-                    ),
-                    tooltip: 'Close',
-                  ),
-                ),
-            ],
-          ),
         ),
-      ),
-    );
-  }
-
-  void _showTabContextMenu(Offset position) {
-    final overlay = Overlay.of(context);
-    final overlayBox = overlay.context.findRenderObject() as RenderBox;
-
-    showMenu<String>(
-      context: context,
-      position: RelativeRect.fromRect(
-        Rect.fromLTWH(position.dx, position.dy, 0, 0),
-        Offset.zero & overlayBox.size,
-      ),
-      items: [
-        const PopupMenuItem(value: 'split_right', child: Text('Split Right')),
-        const PopupMenuItem(value: 'split_left', child: Text('Split Left')),
-        const PopupMenuItem(value: 'split_up', child: Text('Split Up')),
-        const PopupMenuItem(value: 'split_down', child: Text('Split Down')),
-        const PopupMenuDivider(),
-        const PopupMenuItem(value: 'change_view', child: Text('Change View')),
-        if (widget.onClose != null)
-          const PopupMenuItem(value: 'close', child: Text('Close')),
       ],
-    ).then((action) {
-      if (action == null) return;
-      _handleTabAction(action);
-    });
-  }
-
-  void _handleTabAction(String action) {
-    if (action == 'close') {
-      widget.onClose?.call();
-      return;
-    }
-    if (action == 'change_view') {
-      _showViewTypePicker().then((vt) {
-        if (vt != null) {
-          widget.onChanged(
-            SplitNode.leaf(
-              id: widget.node.id,
-              viewType: vt,
-              flex: widget.node.flex,
-            ),
-          );
-        }
-      });
-      return;
-    }
-    _handleSplit(action);
-  }
-
-  void _handleSplit(String action) {
-    final node = widget.node;
-    if (!node.isLeaf) return;
-
-    SplitDirection newDirection;
-    bool insertBefore;
-    switch (action) {
-      case 'split_right':
-        newDirection = SplitDirection.horizontal;
-        insertBefore = false;
-      case 'split_left':
-        newDirection = SplitDirection.horizontal;
-        insertBefore = true;
-      case 'split_up':
-        newDirection = SplitDirection.vertical;
-        insertBefore = true;
-      case 'split_down':
-        newDirection = SplitDirection.vertical;
-        insertBefore = false;
-      default:
-        return;
-    }
-
-    final currentLeaf = SplitNode.leaf(
-      id: '${node.id}_a',
-      viewType: node.viewType,
-      flex: 1,
-    );
-    final newLeaf = SplitNode.leaf(
-      id: '${node.id}_b',
-      viewType: node.viewType,
-      flex: 1,
-    );
-
-    final children = insertBefore
-        ? [newLeaf, currentLeaf]
-        : [currentLeaf, newLeaf];
-
-    widget.onChanged(
-      SplitNode.split(
-        id: node.id,
-        direction: newDirection,
-        children: children,
-        flex: node.flex,
-      ),
-    );
-  }
-
-  Future<ViewType?> _showViewTypePicker() {
-    return showDialog<ViewType>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Change View'),
-        children: ViewType.values.map((vt) {
-          return SimpleDialogOption(
-            onPressed: () => Navigator.pop(ctx, vt),
-            child: Row(
-              children: [
-                Icon(_viewTypeIcon(vt), size: 16),
-                const SizedBox(width: 8),
-                Text(_viewTypeLabel(vt)),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
     );
   }
 
@@ -310,6 +113,7 @@ class _SplitPaneState extends State<SplitPane> {
                 key: ValueKey('pane_${children[i].id}'),
                 node: children[i],
                 viewBuilder: widget.viewBuilder,
+                noteTitleOf: widget.noteTitleOf,
                 onChanged: (updated) => _handleChildChanged(i, updated),
                 onClose: () => _handleChildClose(i),
               ),
@@ -412,7 +216,8 @@ class _SplitPaneState extends State<SplitPane> {
         widget.onChanged(
           SplitNode.leaf(
             id: remaining.id,
-            viewType: remaining.viewType,
+            tabs: remaining.tabs,
+            activeTabIndex: remaining.activeTabIndex,
             flex: widget.node.flex,
           ),
         );
@@ -440,93 +245,18 @@ class _SplitPaneState extends State<SplitPane> {
 
   SplitNode _copyWithFlex(SplitNode node, double flex) {
     if (node.isLeaf) {
-      return SplitNode.leaf(id: node.id, viewType: node.viewType, flex: flex);
+      return SplitNode.leaf(
+        id: node.id,
+        tabs: node.tabs,
+        activeTabIndex: node.activeTabIndex,
+        flex: flex,
+      );
     }
     return SplitNode.split(
       id: node.id,
       direction: node.direction,
       children: node.children,
       flex: flex,
-    );
-  }
-
-  String _viewTypeLabel(ViewType vt) => switch (vt) {
-    ViewType.browser => 'Browser',
-    ViewType.editor => 'Editor',
-    ViewType.graph => 'Graph',
-    ViewType.ai => 'AI Chat',
-    ViewType.backlinks => 'Backlinks',
-    ViewType.notes => 'Notes',
-    ViewType.tabs => 'Tabs',
-    ViewType.canvas => 'Canvas',
-  };
-
-  IconData _viewTypeIcon(ViewType vt) => switch (vt) {
-    ViewType.browser => Icons.language,
-    ViewType.editor => Icons.edit_note,
-    ViewType.graph => Icons.hub,
-    ViewType.ai => Icons.smart_toy,
-    ViewType.backlinks => Icons.link,
-    ViewType.notes => Icons.description,
-    ViewType.tabs => Icons.tab,
-    ViewType.canvas => Icons.dashboard,
-  };
-}
-
-class _Divider extends StatefulWidget {
-  final bool isHorizontal;
-  final ValueChanged<double> onDragStart;
-  final ValueChanged<double> onDragUpdate;
-  final VoidCallback onDoubleTap;
-
-  const _Divider({
-    super.key,
-    required this.isHorizontal,
-    required this.onDragStart,
-    required this.onDragUpdate,
-    required this.onDoubleTap,
-  });
-
-  @override
-  State<_Divider> createState() => _DividerState();
-}
-
-class _DividerState extends State<_Divider> {
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onHorizontalDragStart: widget.isHorizontal
-          ? (details) => widget.onDragStart(details.globalPosition.dx)
-          : null,
-      onHorizontalDragUpdate: widget.isHorizontal
-          ? (details) => widget.onDragUpdate(details.globalPosition.dx)
-          : null,
-      onVerticalDragStart: !widget.isHorizontal
-          ? (details) => widget.onDragStart(details.globalPosition.dy)
-          : null,
-      onVerticalDragUpdate: !widget.isHorizontal
-          ? (details) => widget.onDragUpdate(details.globalPosition.dy)
-          : null,
-      onDoubleTap: widget.onDoubleTap,
-      child: MouseRegion(
-        cursor: widget.isHorizontal
-            ? SystemMouseCursors.resizeColumn
-            : SystemMouseCursors.resizeRow,
-        child: SizedBox(
-          width: widget.isHorizontal ? 12 : double.infinity,
-          height: widget.isHorizontal ? double.infinity : 12,
-          child: Center(
-            child: Container(
-              width: widget.isHorizontal ? 1 : double.infinity,
-              height: widget.isHorizontal ? double.infinity : 1,
-              color: theme.dividerColor,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

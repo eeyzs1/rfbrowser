@@ -46,10 +46,14 @@
   "toggleDarkLight": "Toggle dark/light theme",
   "lightMode": "Light Mode",
   "theme": "Theme",
+  "themeModeLabel": "Theme Mode",
   "accentColor": "Accent Color",
   "themeColor": "Theme Color",
   "backgroundColor": "Background",
   "surfaceColor": "Surface",
+  "fontColor": "Font Color",
+  "fontColorAuto": "Auto",
+  "fontColorAutoDesc": "Derive from surface color",
   "customColor": "Custom Color",
   "opacity": "Opacity",
   "themeTintOpacity": "Theme Tint Intensity",
@@ -132,6 +136,7 @@
   "askAnything": "Ask anything... (Ctrl+K)",
   "noResults": "No results found",
   "loading": "Loading...",
+  "largeFileSourceNotice": "Large file opened in source view (editing may be slow)",
   "error": "Error",
   "confirm": "Confirm",
   "warning": "Warning",
@@ -1083,5 +1088,159 @@
   "agentGoalHint": "Enter a goal, e.g.: Research latest quantum computing advances",
   "agentQuickResearch": "Research",
   "agentQuickSummarize": "Summarize",
-  "agentQuickOrganize": "Organize"
+  "agentQuickOrganize": "Organize",
+  "contextTruncatedToFitTokenLimit": "Context truncated to fit token limit",
+  "savedAsNoteToast": "Saved as note",
+  "savedToMemory": "Saved to memory",
+  "removedFromMemory": "Removed from memory",
+  "memoryNetwork": "Memory Network",
+  "failedToLoad": "Failed to load: {error}",
+  "@failedToLoad": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "memoryBrowser": "Memory Browser",
+  "tapNodeToInspect": "Tap a node to inspect",
+  "noMemoryConnectionsYet": "No memory connections yet — keep chatting!",
+  "solidManualLink": "Solid = manual link",
+  "smallFewLinks": "Small = few links",
+  "largeManyLinks": "Large = many links",
+  "switchToCircular": "Switch to circular",
+  "fullGraph": "Full graph",
+  "toggleStatistics": "Toggle statistics",
+  "toggleLegend": "Toggle legend",
+  "selectFragmentToSeeLinks": "Select a fragment to see its links",
+  "noHebbianLinks": "No Hebbian links for this fragment",
+  "changeViewMode": "Change View Mode",
+  "viewMode": "View Mode",
+  "syncConflict": "Sync Conflict",
+  "keepLocal": "Keep Local",
+  "keepRemote": "Keep Remote",
+  "keepBoth": "Keep Both",
+  "createQuickMove": "Create Quick Move",
+  "commandNotFound": "Command not found",
+  "commandDoesNotExist": "Command \"/{cmdName}\" does not exist. Create it?",
+  "@commandDoesNotExist": {
+    "placeholders": {
+      "cmdName": {"type": "String"}
+    }
+  },
+  "newTabGroup": "New Tab Group",
+  "pendingCount": "{count} pending",
+  "@pendingCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "git": "Git",
+  "errorWithMessage": "Error: {error}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "noFragmentsMatch": "No fragments match. Try a different query or wait for the next dreaming cycle to extract new facts.",
+  "memorySettingsTitle": "Memory",
+  "ambientContext": "Ambient context",
+  "progressiveForgetting": "Progressive forgetting",
+  "hebbianConnections": "Hebbian connections",
+  "autoExport": "Auto-export",
+  "backupAndRestore": "Backup & restore",
+  "dreamingActivity": "Dreaming activity",
+  "exportCurrentChatToMarkdown": "Export current chat to Markdown",
+  "noActiveChatSessionToExport": "No active chat session to export",
+  "backupToJson": "Backup to JSON",
+  "restoreFromJson": "Restore from JSON",
+  "restoreFailed": "Restore failed: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "statusUnavailable": "Status unavailable: {error}",
+  "@statusUnavailable": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "commandName": "Command Name",
+  "promptTemplate": "Prompt Template",
+  "iconLabel": "Icon",
+  "groupName": "Group name",
+  "testConnection": "Test Connection",
+  "testing": "Testing...",
+  "testConnectionSuccess": "Connection successful",
+  "testConnectionFailed": "Connection failed: {error}",
+  "@testConnectionFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "copiedToClipboard": "Copied to clipboard",
+  "regenerate": "Regenerate",
+  "sessions": "Sessions",
+  "newSession": "New Session",
+  "renameSession": "Rename Session",
+  "deleteSession": "Delete Session",
+  "deleteSessionConfirm": "Delete this session?",
+  "sessionTitle": "Session Title",
+  "noSessions": "No sessions",
+  "enterToSendHint": "Enter to send, Shift+Enter for new line",
+  "defaultSessionTitle": "New Conversation",
+  "memoryGuideTitle": "About Memory System",
+  "memoryGuideDesc": "The memory system automatically extracts important information from your conversations and references it in future chats to help maintain context.",
+  "memoryGuideFragments": "Fragments — Auto-extracted memory pieces, tiered by importance",
+  "memoryGuideSummaries": "Summaries — Periodically consolidated summaries",
+  "memoryGuideHebbian": "Hebbian — Connection strengths between memories",
+  "memoryGuideInsights": "Insights — Auto-generated discoveries",
+  "memoryGuideDismiss": "Got it",
+  "syncing": "Syncing...",
+  "syncedAgo": "Last sync: {time}",
+  "@syncedAgo": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "restoreSuccess": "Restore OK · {fragments} fragments · {summaries} summaries · {edges} edges",
+  "@restoreSuccess": {
+    "placeholders": {
+      "fragments": {"type": "int"},
+      "summaries": {"type": "int"},
+      "edges": {"type": "int"}
+    }
+  },
+  "restoreCancelled": "Restore cancelled",
+  "restoreInvalidFile": "Selected file is not a valid JSON backup",
+  "memoryAdvancedSettings": "Advanced settings",
+  "consolidateNow": "Consolidate now",
+  "dreamingInProgress": "Dreaming in progress…",
+  "noDreamsYet": "No dreams yet",
+  "lastDream": "Last dream: {time}",
+  "@lastDream": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "canvasGuideTitle": "Canvas guide",
+  "canvasGuidePanTitle": "Pan canvas",
+  "canvasGuidePanDesc": "Drag empty space to pan the canvas view",
+  "canvasGuideZoomTitle": "Zoom",
+  "canvasGuideZoomDesc": "Use the mouse wheel to zoom the canvas",
+  "canvasGuideAddCardTitle": "Add card",
+  "canvasGuideAddCardDesc": "Click a toolbar button or double-click to add a card",
+  "canvasGuideConnectTitle": "Connect cards",
+  "canvasGuideConnectDesc": "Drag from a card edge to create a connection",
+  "canvasGuideDismiss": "Got it",
+  "sendToAi": "Send to AI",
+  "sendingToAi": "Sending page to AI…",
+  "sendToAiEmpty": "No page content to send",
+  "sendToAiSent": "Page sent to AI",
+  "openAiChat": "Open AI",
+  "sendToAiFailed": "Failed to send to AI: {error}",
+  "@sendToAiFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  }
 }

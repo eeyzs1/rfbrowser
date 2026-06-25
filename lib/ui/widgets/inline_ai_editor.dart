@@ -79,9 +79,10 @@ class _InlineAIEditorState extends ConsumerState<InlineAIEditor> {
     return Stack(
       children: [
         widget.child,
+        // FABs at bottom-right so they don't overlap the tab bar at the top.
         Positioned(
           right: DesignSpacing.md,
-          top: DesignSpacing.md,
+          bottom: DesignSpacing.md,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -104,7 +105,7 @@ class _InlineAIEditorState extends ConsumerState<InlineAIEditor> {
         if (_showSuggestions)
           Positioned(
             right: 56,
-            bottom: DesignSpacing.lg,
+            bottom: 100,
             child: _wikilinkMode
                 ? _buildWikilinkPanel(theme, l)
                 : _buildSuggestionPanel(theme, l),

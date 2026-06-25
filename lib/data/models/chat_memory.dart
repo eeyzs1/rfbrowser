@@ -300,3 +300,45 @@ class FragmentMatch {
   double get tokenCoverage =>
       totalTokens == 0 ? 0.0 : matchedTokens / totalTokens;
 }
+
+/// A single Hebbian edge between two memory fragments.
+///
+/// Mirrors `insightConnections` in OpenLoomi's `hebbian.ts`.
+class HebbianEdge {
+  final String id;
+  final String fragmentA;
+  final String fragmentB;
+  final double strength;
+  final double stability;
+  final int coAccessCount;
+  final DateTime lastStrengthenedAt;
+
+  const HebbianEdge({
+    required this.id,
+    required this.fragmentA,
+    required this.fragmentB,
+    required this.strength,
+    required this.stability,
+    required this.coAccessCount,
+    required this.lastStrengthenedAt,
+  });
+
+  factory HebbianEdge.fromRow(Map<String, Object?> r) => HebbianEdge(
+    id: r['id']! as String,
+    fragmentA: r['fragment_a']! as String,
+    fragmentB: r['fragment_b']! as String,
+    strength: (r['strength'] as num).toDouble(),
+    stability: (r['stability'] as num).toDouble(),
+    coAccessCount: r['co_access_count']! as int,
+    lastStrengthenedAt: DateTime.parse(r['last_strengthened_at']! as String),
+  );
+
+  /// The fragment on the *other* end of this edge from the perspective of
+  /// the given fragment id. Returns null if `self` is not actually an
+  /// endpoint of this edge.
+  String? otherEnd(String self) {
+    if (self == fragmentA) return fragmentB;
+    if (self == fragmentB) return fragmentA;
+    return null;
+  }
+}

@@ -49,21 +49,28 @@ class AppTheme {
         : s.surfaceColor.withValues(alpha: s.surfaceOpacity);
     final surfaceIsLight = !highContrast && _isLight(surfaceC);
     final tintAlpha = s.themeTintOpacity;
+    // Use custom font color if set; otherwise auto-derive from surface.
+    final customFontColor = highContrast ? null : s.fontColor;
     final onSurface = highContrast
         ? const Color(0xFFFFFFFF)
-        : (surfaceIsLight
-              ? DesignColors.lightSurfaceText
-              : DesignColors.darkSurfaceText);
+        : (customFontColor ??
+              (surfaceIsLight
+                  ? DesignColors.lightSurfaceText
+                  : DesignColors.darkSurfaceText));
     final onSurfaceVariant = highContrast
         ? const Color(0xFFE0E0E0)
-        : (surfaceIsLight
-              ? DesignColors.lightSurfaceTextSecondary
-              : DesignColors.darkSurfaceTextSecondary);
+        : (customFontColor != null
+              ? customFontColor.withValues(alpha: 0.7)
+              : (surfaceIsLight
+                    ? DesignColors.lightSurfaceTextSecondary
+                    : DesignColors.darkSurfaceTextSecondary));
     final muted = highContrast
         ? const Color(0xFFBDBDBD)
-        : (surfaceIsLight
-              ? DesignColors.lightSurfaceTextSecondary
-              : DesignColors.textMuted);
+        : (customFontColor != null
+              ? customFontColor.withValues(alpha: 0.5)
+              : (surfaceIsLight
+                    ? DesignColors.lightSurfaceTextSecondary
+                    : DesignColors.textMuted));
     final divider = highContrast
         ? const Color(0xFF444444)
         : (surfaceIsLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B));
@@ -107,6 +114,24 @@ class AppTheme {
         hintStyle: TextStyle(color: muted, fontSize: fs * 0.875),
       ),
       textTheme: TextTheme(
+        displayLarge: TextStyle(
+          color: onSurface,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+          fontSize: fs * 3.0,
+        ),
+        displayMedium: TextStyle(
+          color: onSurface,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+          fontSize: fs * 2.5,
+        ),
+        displaySmall: TextStyle(
+          color: onSurface,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.3,
+          fontSize: fs * 2.0,
+        ),
         headlineLarge: TextStyle(
           color: onSurface,
           fontWeight: FontWeight.w700,

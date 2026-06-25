@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../core/logging/app_logger.dart';
 import '../../data/models/agent_task.dart';
 
 class AgentPersistence {
@@ -35,13 +35,13 @@ class AgentPersistence {
           try {
             tasks.add(AgentTask.fromJson(e));
           } catch (ex) {
-            debugPrint('AgentPersistence: failed to deserialize task: $ex');
+            appLog.error('AgentPersistence: failed to deserialize task', error: ex);
           }
         }
       }
       return tasks;
     } catch (e) {
-      debugPrint('AgentPersistence.loadTasks error: $e');
+      appLog.error('AgentPersistence.loadTasks error', error: e);
       return [];
     }
   }
@@ -53,7 +53,7 @@ class AgentPersistence {
       final taskMaps = tasks.map((t) => t.toJson()).toList();
       await file.writeAsString(jsonEncode(taskMaps));
     } catch (e) {
-      debugPrint('AgentPersistence.saveTasks error: $e');
+      appLog.error('AgentPersistence.saveTasks error', error: e);
     }
   }
 
@@ -64,7 +64,7 @@ class AgentPersistence {
         await file.delete();
       }
     } catch (e) {
-      debugPrint('AgentPersistence.clearTasks error: $e');
+      appLog.error('AgentPersistence.clearTasks error', error: e);
     }
   }
 }

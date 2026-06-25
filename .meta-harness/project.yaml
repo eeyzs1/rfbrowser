@@ -40,6 +40,18 @@ quality_gates:
   - name: build
     repo: "rfbrowser"
     command: "flutter build windows --debug"
+  # 真机冒烟测试（2026-06-25 新增）：3 步静态门通过后强制执行
+  # 详见 .trae/rules/project_rules.md 规则 5
+  - name: runtime_smoke_test
+    repo: "rfbrowser"
+    command: "flutter run -d windows"
+    type: manual
+    checklist:
+      - "滚动设置页每个 section 至底部（验证无 AXTree 崩溃）"
+      - "打开一个 >20KB 的 markdown 笔记（验证无卡顿，<2s 打开）"
+      - "切换 edit/source/rendered 视图模式（验证切换正常）"
+      - "分屏操作 + 标签栏滚轮/拖拽/中键关闭（验证手势正常）"
+    note: "AI 必须在 3 步静态门通过后主动提醒用户执行此 checklist"
 
 # === 技能-Phase 映射 ===
 phase_skills:
@@ -84,8 +96,23 @@ evidence:
     - "flutter analyze"
     - "flutter test"
     - "flutter build windows --debug"
+    - "runtime smoke test checklist (manual)"
   quality_gate: "meta-harness/seeds/verification/quality-gate.py"
   required_kinds: [screenshot, log, test-report]
+  # 运行时陷阱清单（2026-06-25 新增）：基于历史崩溃/卡顿教训
+  runtime_pitfalls:
+    - pattern: "ReorderableListView.builder + shrinkWrap:true + NeverScrollableScrollPhysics in parent Scrollable"
+      impact: "Windows AXTree corruption → process crash"
+      fix: "Column + up/down IconButtons"
+    - pattern: "TextField(maxLines: null, expands: true) on >20KB content"
+      impact: "UI thread layout freeze"
+      fix: "ListView.builder viewport rendering"
+    - pattern: "Synchronous regex scan in buildTextSpan/build"
+      impact: "UI blocks on every keystroke"
+      fix: "Return plain text immediately, async debounced scan"
+    - pattern: "Horizontal ListView without PointerScrollEvent handling on Windows"
+      impact: "Mouse wheel does not scroll"
+      fix: "Listener(onPointerSignal) + scrollDelta.dy→jumpTo"
 
 # === 记忆 ===
 memory:

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models/sync_conflict.dart';
+import '../../l10n/app_localizations.dart';
 
 class SyncConflictDialog extends StatelessWidget {
   final SyncConflict conflict;
@@ -14,6 +15,7 @@ class SyncConflictDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return AlertDialog(
       title: Row(
@@ -24,7 +26,7 @@ class SyncConflictDialog extends StatelessWidget {
             size: 20,
           ),
           const SizedBox(width: 8),
-          const Text('Sync Conflict'),
+          Text(l.syncConflict),
         ],
       ),
       content: SizedBox(
@@ -61,15 +63,15 @@ class SyncConflictDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => onResolve(ConflictResolution.keepLocal),
-          child: const Text('Keep Local'),
+          child: Text(l.keepLocal),
         ),
         TextButton(
           onPressed: () => onResolve(ConflictResolution.keepRemote),
-          child: const Text('Keep Remote'),
+          child: Text(l.keepRemote),
         ),
         FilledButton(
           onPressed: () => onResolve(ConflictResolution.keepBoth),
-          child: const Text('Keep Both'),
+          child: Text(l.keepBoth),
         ),
       ],
     );

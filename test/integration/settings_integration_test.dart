@@ -143,7 +143,7 @@ void main() {
       },
     );
 
-    test('SettingsNotifier setOpacityValues changes theme opacity', () async {
+    test('SettingsNotifier theme opacity setters change theme opacity', () async {
       final notifier = container.read(settingsProvider.notifier);
       await notifier.loadSettings();
 

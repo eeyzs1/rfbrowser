@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
+import '../../core/logging/app_logger.dart';
 import '../../data/models/canvas_model.dart';
 
 class CanvasScratchpadService {
@@ -45,7 +46,7 @@ class CanvasScratchpadService {
         jsonEncode(items.map((i) => i.toJson()).toList()),
       );
     } catch (_) {
-      debugPrint('Canvas: failed to save scratchpad');
+      appLog.error('Canvas: failed to save scratchpad');
     }
   }
 

@@ -5,7 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:rfbrowser/data/models/chat_memory.dart';
 import 'package:rfbrowser/services/memory_service.dart';
 import 'package:rfbrowser/services/memory_stats_service.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../helpers/sqflite_test_setup.dart';
 
 MemoryFragment _fragment({
   String id = 'f1',
@@ -37,10 +37,7 @@ MemoryFragment _fragment({
 }
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
+  setUpAll(setupSqfliteForTests);
 
   group('MemoryStatsService', () {
     late MemoryService memory;

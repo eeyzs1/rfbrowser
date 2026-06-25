@@ -1,7 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
+import '../../core/logging/app_logger.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/note.dart';
@@ -53,12 +54,20 @@ class IndexStore {
 
   Future<Database> get database async {
     if (_db != null) return _db!;
-    _initCompleter ??= Completer<Database>();
-    if (!_initCompleter!.isCompleted) {
+    // If initialization is already in progress, wait for the pending future
+    // instead of racing into _initDb() a second time (which would throw
+    // "Bad state: Future already completed").
+    if (_initCompleter != null) return _initCompleter!.future;
+    _initCompleter = Completer<Database>();
+    try {
       _db = await _initDb();
       _initCompleter!.complete(_db!);
+      return _db!;
+    } catch (e) {
+      // Allow a subsequent call to retry initialization.
+      _initCompleter = null;
+      rethrow;
     }
-    return _initCompleter!.future;
   }
 
   Future<Database> _initDb() async {
@@ -68,7 +77,7 @@ class IndexStore {
     }
     return openDatabase(
       _dbPath,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE notes (
@@ -106,6 +115,15 @@ class IndexStore {
             count INTEGER DEFAULT 1
           )
         ''');
+        await db.execute('''
+          CREATE TABLE note_embeddings (
+            note_id TEXT PRIMARY KEY,
+            embedding TEXT NOT NULL,
+            dim INTEGER NOT NULL,
+            metadata TEXT,
+            updated_at INTEGER NOT NULL
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 3) {
@@ -114,6 +132,17 @@ class IndexStore {
             CREATE VIRTUAL TABLE notes_fts USING fts5(
               id UNINDEXED, title, content, tags,
               tokenize=porter
+            )
+          ''');
+        }
+        if (oldVersion < 4) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS note_embeddings (
+              note_id TEXT PRIMARY KEY,
+              embedding TEXT NOT NULL,
+              dim INTEGER NOT NULL,
+              metadata TEXT,
+              updated_at INTEGER NOT NULL
             )
           ''');
         }
@@ -155,6 +184,7 @@ class IndexStore {
       where: 'source_id = ? OR target_id = ?',
       whereArgs: [noteId, noteId],
     );
+    await db.delete('note_embeddings', where: 'note_id = ?', whereArgs: [noteId]);
   }
 
   Future<void> updateNote(Note note) async {
@@ -198,7 +228,7 @@ class IndexStore {
         [tokenized, limit],
       );
     } catch (e) {
-      debugPrint('FTS search error for "$tokenized": $e');
+      appLog.warning('FTS search error for "$tokenized"', error: e);
       return [];
     }
   }
@@ -249,6 +279,7 @@ class IndexStore {
       await txn.delete('notes_fts');
       await txn.delete('links');
       await txn.delete('tags');
+      await txn.delete('note_embeddings');
       final batch = txn.batch();
       for (final note in notes) {
         batch.insert('notes', {
@@ -277,11 +308,86 @@ class IndexStore {
     });
   }
 
+  // --- Note embedding persistence -----------------------------------------
+
+  Future<void> upsertEmbedding(
+    String noteId,
+    List<double> embedding, {
+    Map<String, dynamic>? metadata,
+  }) async {
+    final db = await database;
+    await db.insert(
+      'note_embeddings',
+      {
+        'note_id': noteId,
+        'embedding': jsonEncode(embedding),
+        'dim': embedding.length,
+        'metadata': metadata != null ? jsonEncode(metadata) : null,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<NoteEmbeddingRecord>> getAllEmbeddings() async {
+    final db = await database;
+    final rows = await db.query('note_embeddings');
+    final result = <NoteEmbeddingRecord>[];
+    for (final row in rows) {
+      try {
+        final embedding = (jsonDecode(row['embedding'] as String) as List)
+            .map((e) => (e as num).toDouble())
+            .toList();
+        final metaRaw = row['metadata'] as String?;
+        final metadata = (metaRaw != null && metaRaw.isNotEmpty)
+            ? Map<String, dynamic>.from(jsonDecode(metaRaw) as Map)
+            : <String, dynamic>{};
+        result.add(NoteEmbeddingRecord(
+          noteId: row['note_id'] as String,
+          embedding: embedding,
+          metadata: metadata,
+        ));
+      } catch (e) {
+        appLog.warning('Failed to decode embedding for ${row['note_id']}', error: e);
+      }
+    }
+    return result;
+  }
+
+  Future<Set<String>> getEmbeddingNoteIds() async {
+    final db = await database;
+    final rows = await db.query('note_embeddings', columns: ['note_id']);
+    return rows.map((r) => r['note_id'] as String).toSet();
+  }
+
+  Future<void> deleteEmbedding(String noteId) async {
+    final db = await database;
+    await db.delete('note_embeddings', where: 'note_id = ?', whereArgs: [noteId]);
+  }
+
+  Future<void> clearEmbeddings() async {
+    final db = await database;
+    await db.delete('note_embeddings');
+  }
+
   Future<void> close() async {
     await _db?.close();
     _db = null;
     _initCompleter = null;
   }
+}
+
+/// A persisted note embedding record loaded from the `note_embeddings` table.
+class NoteEmbeddingRecord {
+  final String noteId;
+  final List<double> embedding;
+  final Map<String, dynamic> metadata;
+
+  const NoteEmbeddingRecord({
+    required this.noteId,
+    required this.embedding,
+    this.metadata = const {},
+  });
 }
 
 final indexStoreProvider = Provider<IndexStore>((ref) {

@@ -7,13 +7,10 @@ import 'package:rfbrowser/data/stores/vault_store.dart';
 import 'package:rfbrowser/services/note_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../helpers/sqflite_test_setup.dart';
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
+  setUpAll(setupSqfliteForTests);
 
   group('NoteState', () {
     test('initial state has empty notes and null activeNoteId', () {

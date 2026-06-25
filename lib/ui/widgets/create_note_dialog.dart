@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
 Future<String?> showCreateNoteDialog(BuildContext context) {
+  final l = AppLocalizations.of(context)!;
   return showDialog<String>(
     context: context,
     builder: (ctx) {
       final controller = TextEditingController();
       return AlertDialog(
-        title: const Text('New Note'),
+        title: Text(l.newNote),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(hintText: 'Note title'),
+          decoration: InputDecoration(hintText: l.noteTitle),
           onSubmitted: (v) => Navigator.pop(ctx, v),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text),
-            child: const Text('Create'),
+            child: Text(l.create),
           ),
         ],
       );

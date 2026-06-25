@@ -1,11 +1,14 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../data/models/ai_provider.dart';
-import '../core/color_extensions.dart';
 import '../core/shared_prefs_aware.dart';
+import '../data/models/memory_settings.dart';
+
+// Re-export AI config types so existing imports of `settings_service.dart`
+// continue to work after the AI config code was extracted to its own file.
+export 'ai_config_service.dart';
+
+part 'settings_memory_setters.dart';
 
 enum AppButtonStyle { rounded, sharp, pill }
 
@@ -34,6 +37,9 @@ class AppSettings {
   final int accentColorValue;
   final int scaffoldBgColorValue;
   final int surfaceColorValue;
+  /// Custom font/text color. When null, text color is auto-derived from the
+  /// surface color (light text on dark surfaces, dark text on light surfaces).
+  final int? fontColorValue;
   final AppButtonStyle buttonStyle;
   final ComponentDensity density;
   final int iconSize;
@@ -44,65 +50,13 @@ class AppSettings {
   final double surfaceOpacity;
   final double backgroundOpacity;
   final String searchEngine;
+  final ThemeMode themeMode;
 
   // ── Memory subsystem (progressive forgetting + Hebbian) ──────────
-  /// Whether the ambient [RequestContext] is injected into AI prompts.
-  final bool memoryInjectContext;
-
-  /// Threshold below which a `short`-tier fragment is migrated to `mid`.
-  final double memoryShortToMidThreshold;
-
-  /// Threshold below which a `mid`-tier fragment is migrated to `long`.
-  final double memoryMidToLongThreshold;
-
-  /// Number of days a fragment must live in `short` tier before being
-  /// considered for migration to `mid`. Mirrors the OpenLoomi policy.
-  final int memoryShortMaxAgeDays;
-
-  /// Number of days a fragment must live in `mid` tier before being
-  /// considered for migration to `long`.
-  final int memoryMidMaxAgeDays;
-
-  /// Co-access window for Hebbian edge reinforcement (minutes).
-  final int memoryHebbianCoAccessMinutes;
-
-  /// Hebbian edge decay constant (days to fall to 1/e).
-  final int memoryHebbianDecayDays;
-
-  /// How many chat messages between auto-Markdown exports. 0 disables.
-  final int memoryAutoExportEveryNMessages;
-
-  /// Whether the dreaming engine runs in the background automatically.
-  final bool memoryDreamingEnabled;
-
-  /// Half-life of the createdAt recency signal (days). Longer = facts
-  /// are treated as "still fresh" for longer. Default 180.
-  final int memoryCreatedRecencyHalfLifeDays;
-
-  /// Half-life of the lastAccessAt recency signal (days). Shorter than
-  /// the created half-life so that "actively used" is a sharper signal.
-  /// Default 30.
-  final int memoryAccessRecencyHalfLifeDays;
-
-  /// Master switch for the dual-time-signal scoring. When false the
-  /// scorer falls back to the original createdAt-only behavior.
-  final bool memoryUseLastAccessForRecency;
-
-  /// Maximum approximate token count the memory subsystem will inject
-  /// into the AI's system prompt. Fragments are dropped in
-  /// importance-ascending order until the budget is met. Default 800
-  /// (≈ 3200 characters), which is roughly 5 short fragments.
-  final int memoryContextBudget;
-
-  /// When true, the LLM is asked to summarize fragments during
-  /// dreaming cycles (requires a configured AI provider). When false
-  /// the system uses the rule-based summarizer which has zero cost.
-  final bool memoryUseLlmSummarizer;
-
-  /// When true, recall is re-ranked by the LLM after the FTS+Hebbian
-  /// pass. Disabled by default since it adds latency to every AI
-  /// request.
-  final bool memoryUseLlmRerank;
+  /// All memory-related configuration. See [MemorySettings] for the
+  /// individual field docs. Persisted to SharedPreferences with the
+  /// legacy `memory*` key names for backward compatibility.
+  final MemorySettings memory;
 
   AppSettings({
     this.locale = 'system',
@@ -112,6 +66,7 @@ class AppSettings {
     this.accentColorValue = 0xFF0EA5E9,
     this.scaffoldBgColorValue = 0xFF0F172A,
     this.surfaceColorValue = 0xFF1E293B,
+    this.fontColorValue,
     this.buttonStyle = AppButtonStyle.rounded,
     this.density = ComponentDensity.comfortable,
     this.iconSize = 18,
@@ -122,21 +77,8 @@ class AppSettings {
     this.surfaceOpacity = 1.0,
     this.backgroundOpacity = 1.0,
     this.searchEngine = 'bing',
-    this.memoryInjectContext = true,
-    this.memoryShortToMidThreshold = 0.65,
-    this.memoryMidToLongThreshold = 0.45,
-    this.memoryShortMaxAgeDays = 7,
-    this.memoryMidMaxAgeDays = 30,
-    this.memoryHebbianCoAccessMinutes = 5,
-    this.memoryHebbianDecayDays = 30,
-    this.memoryAutoExportEveryNMessages = 16,
-    this.memoryDreamingEnabled = true,
-    this.memoryCreatedRecencyHalfLifeDays = 180,
-    this.memoryAccessRecencyHalfLifeDays = 30,
-    this.memoryUseLastAccessForRecency = true,
-    this.memoryContextBudget = 800,
-    this.memoryUseLlmSummarizer = false,
-    this.memoryUseLlmRerank = false,
+    this.themeMode = ThemeMode.system,
+    this.memory = const MemorySettings(),
   });
 
   Color get accentColor => Color(accentColorValue);
@@ -145,7 +87,25 @@ class AppSettings {
 
   Color get surfaceColor => Color(surfaceColorValue);
 
-  bool get isDarkMode => scaffoldBgColor.isDark;
+  /// Returns the custom font color if set, otherwise null (auto-derive).
+  Color? get fontColor => fontColorValue != null ? Color(fontColorValue!) : null;
+
+  /// 根据 [themeMode] 判断是否为暗色模式：
+  /// - [ThemeMode.system]：跟随系统亮度
+  /// - [ThemeMode.light]：始终返回 false
+  /// - [ThemeMode.dark]：始终返回 true
+  bool get isDarkMode {
+    switch (themeMode) {
+      case ThemeMode.light:
+        return false;
+      case ThemeMode.dark:
+        return true;
+      case ThemeMode.system:
+        return WidgetsBinding
+                .instance.platformDispatcher.platformBrightness ==
+            Brightness.dark;
+    }
+  }
 
   double get effectiveBorderRadius {
     switch (buttonStyle) {
@@ -177,6 +137,8 @@ class AppSettings {
     int? accentColorValue,
     int? scaffoldBgColorValue,
     int? surfaceColorValue,
+    int? fontColorValue,
+    bool clearFontColor = false,
     AppButtonStyle? buttonStyle,
     ComponentDensity? density,
     int? iconSize,
@@ -187,21 +149,8 @@ class AppSettings {
     double? surfaceOpacity,
     double? backgroundOpacity,
     String? searchEngine,
-    bool? memoryInjectContext,
-    double? memoryShortToMidThreshold,
-    double? memoryMidToLongThreshold,
-    int? memoryShortMaxAgeDays,
-    int? memoryMidMaxAgeDays,
-    int? memoryHebbianCoAccessMinutes,
-    int? memoryHebbianDecayDays,
-    int? memoryAutoExportEveryNMessages,
-    bool? memoryDreamingEnabled,
-    int? memoryCreatedRecencyHalfLifeDays,
-    int? memoryAccessRecencyHalfLifeDays,
-    bool? memoryUseLastAccessForRecency,
-    int? memoryContextBudget,
-    bool? memoryUseLlmSummarizer,
-    bool? memoryUseLlmRerank,
+    ThemeMode? themeMode,
+    MemorySettings? memory,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
@@ -211,6 +160,7 @@ class AppSettings {
       accentColorValue: accentColorValue ?? this.accentColorValue,
       scaffoldBgColorValue: scaffoldBgColorValue ?? this.scaffoldBgColorValue,
       surfaceColorValue: surfaceColorValue ?? this.surfaceColorValue,
+      fontColorValue: clearFontColor ? null : (fontColorValue ?? this.fontColorValue),
       buttonStyle: buttonStyle ?? this.buttonStyle,
       density: density ?? this.density,
       iconSize: iconSize ?? this.iconSize,
@@ -222,39 +172,14 @@ class AppSettings {
       surfaceOpacity: surfaceOpacity ?? this.surfaceOpacity,
       backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
       searchEngine: searchEngine ?? this.searchEngine,
-      memoryInjectContext: memoryInjectContext ?? this.memoryInjectContext,
-      memoryShortToMidThreshold:
-          memoryShortToMidThreshold ?? this.memoryShortToMidThreshold,
-      memoryMidToLongThreshold:
-          memoryMidToLongThreshold ?? this.memoryMidToLongThreshold,
-      memoryShortMaxAgeDays:
-          memoryShortMaxAgeDays ?? this.memoryShortMaxAgeDays,
-      memoryMidMaxAgeDays: memoryMidMaxAgeDays ?? this.memoryMidMaxAgeDays,
-      memoryHebbianCoAccessMinutes:
-          memoryHebbianCoAccessMinutes ?? this.memoryHebbianCoAccessMinutes,
-      memoryHebbianDecayDays:
-          memoryHebbianDecayDays ?? this.memoryHebbianDecayDays,
-      memoryAutoExportEveryNMessages:
-          memoryAutoExportEveryNMessages ?? this.memoryAutoExportEveryNMessages,
-      memoryDreamingEnabled:
-          memoryDreamingEnabled ?? this.memoryDreamingEnabled,
-      memoryCreatedRecencyHalfLifeDays:
-          memoryCreatedRecencyHalfLifeDays ??
-          this.memoryCreatedRecencyHalfLifeDays,
-      memoryAccessRecencyHalfLifeDays:
-          memoryAccessRecencyHalfLifeDays ??
-          this.memoryAccessRecencyHalfLifeDays,
-      memoryUseLastAccessForRecency:
-          memoryUseLastAccessForRecency ?? this.memoryUseLastAccessForRecency,
-      memoryContextBudget: memoryContextBudget ?? this.memoryContextBudget,
-      memoryUseLlmSummarizer:
-          memoryUseLlmSummarizer ?? this.memoryUseLlmSummarizer,
-      memoryUseLlmRerank: memoryUseLlmRerank ?? this.memoryUseLlmRerank,
+      themeMode: themeMode ?? this.themeMode,
+      memory: memory ?? this.memory,
     );
   }
 }
 
-class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
+class SettingsNotifier extends Notifier<AppSettings>
+    with SharedPrefsAware, _MemorySettersMixin {
   @override
   AppSettings build() => AppSettings();
 
@@ -263,6 +188,9 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
     final preset = prefs.getString('themePreset') ?? 'sky';
     final savedColor = prefs.getInt('accentColorValue');
     final colorValue = savedColor ?? getPresetColor(preset).toARGB32();
+    // 读取持久化的 themeMode，默认跟随系统
+    final savedThemeMode = prefs.getString('themeMode') ?? 'system';
+    final themeMode = _parseThemeMode(savedThemeMode);
     state = AppSettings(
       locale: prefs.getString('locale') ?? 'system',
       editorFontSize: prefs.getDouble('editorFontSize') ?? 14.0,
@@ -271,6 +199,7 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
       accentColorValue: colorValue,
       scaffoldBgColorValue: prefs.getInt('scaffoldBgColorValue') ?? 0xFF0F172A,
       surfaceColorValue: prefs.getInt('surfaceColorValue') ?? 0xFF1E293B,
+      fontColorValue: prefs.getInt('fontColorValue'),
       buttonStyle: AppButtonStyle.values[prefs.getInt('buttonStyle') ?? 0],
       density: ComponentDensity.values[prefs.getInt('density') ?? 1],
       iconSize: (prefs.getInt('iconSize') ?? 18).clamp(12, 36),
@@ -281,31 +210,24 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
       surfaceOpacity: prefs.getDouble('surfaceOpacity') ?? 1.0,
       backgroundOpacity: prefs.getDouble('backgroundOpacity') ?? 1.0,
       searchEngine: prefs.getString('searchEngine') ?? 'bing',
-      memoryInjectContext: prefs.getBool('memoryInjectContext') ?? true,
-      memoryShortToMidThreshold:
-          prefs.getDouble('memoryShortToMidThreshold') ?? 0.65,
-      memoryMidToLongThreshold:
-          prefs.getDouble('memoryMidToLongThreshold') ?? 0.45,
-      memoryShortMaxAgeDays: prefs.getInt('memoryShortMaxAgeDays') ?? 7,
-      memoryMidMaxAgeDays: prefs.getInt('memoryMidMaxAgeDays') ?? 30,
-      memoryHebbianCoAccessMinutes:
-          prefs.getInt('memoryHebbianCoAccessMinutes') ?? 5,
-      memoryHebbianDecayDays: prefs.getInt('memoryHebbianDecayDays') ?? 30,
-      memoryAutoExportEveryNMessages:
-          prefs.getInt('memoryAutoExportEveryNMessages') ?? 16,
-      memoryDreamingEnabled: prefs.getBool('memoryDreamingEnabled') ?? true,
-      memoryCreatedRecencyHalfLifeDays:
-          prefs.getInt('memoryCreatedRecencyHalfLifeDays') ?? 180,
-      memoryAccessRecencyHalfLifeDays:
-          prefs.getInt('memoryAccessRecencyHalfLifeDays') ?? 30,
-      memoryUseLastAccessForRecency:
-          prefs.getBool('memoryUseLastAccessForRecency') ?? true,
-      memoryContextBudget: prefs.getInt('memoryContextBudget') ?? 800,
-      memoryUseLlmSummarizer: prefs.getBool('memoryUseLlmSummarizer') ?? false,
-      memoryUseLlmRerank: prefs.getBool('memoryUseLlmRerank') ?? false,
+      themeMode: themeMode,
+      memory: MemorySettings.fromPrefs(prefs),
     );
   }
 
+  /// 将字符串解析为 [ThemeMode]，默认返回 [ThemeMode.system]。
+  ThemeMode _parseThemeMode(String value) {
+    switch (value) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
+  }
+
+  @override
   Future<void> _updateSetting<T>({
     required String key,
     required T value,
@@ -333,6 +255,13 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
       persist: (p, k, v) => p.setDouble(k, v),
       update: (s, v) => s.copyWith(editorFontSize: v),
     );
+  }
+
+  /// Live update for slider dragging — updates state immediately without
+  /// disk I/O so the UI stays responsive. Call [setEditorFontSize] on
+  /// drag end to persist.
+  void setEditorFontSizeLive(double size) {
+    state = state.copyWith(editorFontSize: size);
   }
 
   Future<void> setThemePreset(String preset) async {
@@ -374,6 +303,21 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
     );
   }
 
+  Future<void> setFontColor(Color color) async {
+    await _updateSetting(
+      key: 'fontColorValue',
+      value: color.toARGB32(),
+      persist: (p, k, v) => p.setInt(k, v),
+      update: (s, v) => s.copyWith(fontColorValue: v),
+    );
+  }
+
+  Future<void> clearFontColor() async {
+    final prefs = await ensurePrefs;
+    await prefs.remove('fontColorValue');
+    state = state.copyWith(clearFontColor: true);
+  }
+
   Future<void> setButtonStyle(AppButtonStyle style) async {
     await _updateSetting(
       key: 'buttonStyle',
@@ -401,6 +345,11 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
     );
   }
 
+  /// Live update for icon size slider — no disk I/O during drag.
+  void setIconSizeLive(int size) {
+    state = state.copyWith(iconSize: size);
+  }
+
   Future<void> setBorderRadius(double r) async {
     await _updateSetting(
       key: 'borderRadius',
@@ -408,6 +357,11 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
       persist: (p, k, v) => p.setDouble(k, v),
       update: (s, v) => s.copyWith(borderRadius: v),
     );
+  }
+
+  /// Live update for border radius slider — no disk I/O during drag.
+  void setBorderRadiusLive(double r) {
+    state = state.copyWith(borderRadius: r);
   }
 
   Future<void> setAlwaysShowWelcomePage(bool value) async {
@@ -437,6 +391,11 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
     );
   }
 
+  /// Live update for theme tint opacity slider — no disk I/O during drag.
+  void setThemeTintOpacityLive(double value) {
+    state = state.copyWith(themeTintOpacity: value);
+  }
+
   Future<void> setSurfaceOpacity(double value) async {
     await _updateSetting(
       key: 'surfaceOpacity',
@@ -444,6 +403,11 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
       persist: (p, k, v) => p.setDouble(k, v),
       update: (s, v) => s.copyWith(surfaceOpacity: v),
     );
+  }
+
+  /// Live update for surface opacity slider — no disk I/O during drag.
+  void setSurfaceOpacityLive(double value) {
+    state = state.copyWith(surfaceOpacity: value);
   }
 
   Future<void> setBackgroundOpacity(double value) async {
@@ -455,6 +419,11 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
     );
   }
 
+  /// Live update for background opacity slider — no disk I/O during drag.
+  void setBackgroundOpacityLive(double value) {
+    state = state.copyWith(backgroundOpacity: value);
+  }
+
   Future<void> setSearchEngine(String engine) async {
     await _updateSetting(
       key: 'searchEngine',
@@ -464,140 +433,18 @@ class SettingsNotifier extends Notifier<AppSettings> with SharedPrefsAware {
     );
   }
 
-  // ── Memory setters ───────────────────────────────────────────────
-
-  Future<void> setMemoryInjectContext(bool v) async {
+  /// 设置主题模式（system/light/dark），持久化到 SharedPreferences。
+  Future<void> setThemeMode(ThemeMode mode) async {
+    final modeString = switch (mode) {
+      ThemeMode.system => 'system',
+      ThemeMode.light => 'light',
+      ThemeMode.dark => 'dark',
+    };
     await _updateSetting(
-      key: 'memoryInjectContext',
-      value: v,
-      persist: (p, k, val) => p.setBool(k, val),
-      update: (s, val) => s.copyWith(memoryInjectContext: val),
-    );
-  }
-
-  Future<void> setMemoryShortToMidThreshold(double v) async {
-    await _updateSetting(
-      key: 'memoryShortToMidThreshold',
-      value: v,
-      persist: (p, k, val) => p.setDouble(k, val),
-      update: (s, val) => s.copyWith(memoryShortToMidThreshold: val),
-    );
-  }
-
-  Future<void> setMemoryMidToLongThreshold(double v) async {
-    await _updateSetting(
-      key: 'memoryMidToLongThreshold',
-      value: v,
-      persist: (p, k, val) => p.setDouble(k, val),
-      update: (s, val) => s.copyWith(memoryMidToLongThreshold: val),
-    );
-  }
-
-  Future<void> setMemoryShortMaxAgeDays(int v) async {
-    await _updateSetting(
-      key: 'memoryShortMaxAgeDays',
-      value: v,
-      persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) => s.copyWith(memoryShortMaxAgeDays: val),
-    );
-  }
-
-  Future<void> setMemoryMidMaxAgeDays(int v) async {
-    await _updateSetting(
-      key: 'memoryMidMaxAgeDays',
-      value: v,
-      persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) => s.copyWith(memoryMidMaxAgeDays: val),
-    );
-  }
-
-  Future<void> setMemoryHebbianCoAccessMinutes(int v) async {
-    await _updateSetting(
-      key: 'memoryHebbianCoAccessMinutes',
-      value: v,
-      persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) => s.copyWith(memoryHebbianCoAccessMinutes: val),
-    );
-  }
-
-  Future<void> setMemoryHebbianDecayDays(int v) async {
-    await _updateSetting(
-      key: 'memoryHebbianDecayDays',
-      value: v,
-      persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) => s.copyWith(memoryHebbianDecayDays: val),
-    );
-  }
-
-  Future<void> setMemoryAutoExportEveryNMessages(int v) async {
-    await _updateSetting(
-      key: 'memoryAutoExportEveryNMessages',
-      value: v,
-      persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) => s.copyWith(memoryAutoExportEveryNMessages: val),
-    );
-  }
-
-  Future<void> setMemoryDreamingEnabled(bool v) async {
-    await _updateSetting(
-      key: 'memoryDreamingEnabled',
-      value: v,
-      persist: (p, k, val) => p.setBool(k, val),
-      update: (s, val) => s.copyWith(memoryDreamingEnabled: val),
-    );
-  }
-
-  Future<void> setMemoryCreatedRecencyHalfLifeDays(int v) async {
-    await _updateSetting(
-      key: 'memoryCreatedRecencyHalfLifeDays',
-      value: v,
-      persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) => s.copyWith(memoryCreatedRecencyHalfLifeDays: val),
-    );
-  }
-
-  Future<void> setMemoryAccessRecencyHalfLifeDays(int v) async {
-    await _updateSetting(
-      key: 'memoryAccessRecencyHalfLifeDays',
-      value: v,
-      persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) => s.copyWith(memoryAccessRecencyHalfLifeDays: val),
-    );
-  }
-
-  Future<void> setMemoryUseLastAccessForRecency(bool v) async {
-    await _updateSetting(
-      key: 'memoryUseLastAccessForRecency',
-      value: v,
-      persist: (p, k, val) => p.setBool(k, val),
-      update: (s, val) => s.copyWith(memoryUseLastAccessForRecency: val),
-    );
-  }
-
-  Future<void> setMemoryContextBudget(int v) async {
-    await _updateSetting(
-      key: 'memoryContextBudget',
-      value: v,
-      persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) => s.copyWith(memoryContextBudget: val),
-    );
-  }
-
-  Future<void> setMemoryUseLlmSummarizer(bool v) async {
-    await _updateSetting(
-      key: 'memoryUseLlmSummarizer',
-      value: v,
-      persist: (p, k, val) => p.setBool(k, val),
-      update: (s, val) => s.copyWith(memoryUseLlmSummarizer: val),
-    );
-  }
-
-  Future<void> setMemoryUseLlmRerank(bool v) async {
-    await _updateSetting(
-      key: 'memoryUseLlmRerank',
-      value: v,
-      persist: (p, k, val) => p.setBool(k, val),
-      update: (s, val) => s.copyWith(memoryUseLlmRerank: val),
+      key: 'themeMode',
+      value: modeString,
+      persist: (p, k, v) => p.setString(k, v),
+      update: (s, v) => s.copyWith(themeMode: mode),
     );
   }
 }
@@ -606,271 +453,3 @@ final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
   SettingsNotifier.new,
 );
 
-class AIConfigState {
-  final List<AIProvider> providers;
-  final List<AIModel> models;
-  final ActiveAIConfig? activeConfig;
-
-  AIConfigState({
-    this.providers = const [],
-    this.models = const [],
-    this.activeConfig,
-  });
-
-  AIProvider? get activeProvider {
-    if (activeConfig == null) return null;
-    try {
-      return providers.firstWhere((p) => p.id == activeConfig!.providerId);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  AIModel? get activeModel {
-    if (activeConfig == null) return null;
-    try {
-      return models.firstWhere(
-        (m) =>
-            m.id == activeConfig!.modelId &&
-            m.providerId == activeConfig!.providerId,
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
-  List<AIModel> modelsForProvider(String providerId) =>
-      models.where((m) => m.providerId == providerId).toList();
-
-  AIProvider? providerById(String id) {
-    try {
-      return providers.firstWhere((p) => p.id == id);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  AIConfigState copyWith({
-    List<AIProvider>? providers,
-    List<AIModel>? models,
-    ActiveAIConfig? activeConfig,
-    bool clearActiveConfig = false,
-  }) {
-    return AIConfigState(
-      providers: providers ?? this.providers,
-      models: models ?? this.models,
-      activeConfig: clearActiveConfig
-          ? null
-          : (activeConfig ?? this.activeConfig),
-    );
-  }
-}
-
-class AIConfigNotifier extends Notifier<AIConfigState> with SharedPrefsAware {
-  final _secureStorage = const FlutterSecureStorage();
-
-  @override
-  AIConfigState build() => AIConfigState();
-
-  Future<void> loadConfig() async {
-    final prefs = await ensurePrefs;
-    await _loadProviders(prefs);
-    await _loadModels(prefs);
-    await _loadActiveConfig(prefs);
-    await _loadApiKeys();
-  }
-
-  Future<void> _loadProviders(SharedPreferences prefs) async {
-    final json = prefs.getString('ai_providers');
-    if (json != null) {
-      try {
-        final list = jsonDecode(json) as List;
-        final providers = list
-            .map((e) => AIProvider.fromJson(e as Map<String, dynamic>))
-            .toList();
-        state = state.copyWith(providers: providers);
-      } catch (_) {
-        debugPrint('AI config: failed to parse providers JSON');
-      }
-    }
-  }
-
-  Future<void> _loadModels(SharedPreferences prefs) async {
-    final json = prefs.getString('ai_models');
-    if (json != null) {
-      try {
-        final list = jsonDecode(json) as List;
-        final models = list
-            .map((e) => AIModel.fromJson(e as Map<String, dynamic>))
-            .toList();
-        state = state.copyWith(models: models);
-      } catch (_) {
-        debugPrint('AI config: failed to parse models JSON');
-      }
-    }
-  }
-
-  Future<void> _loadActiveConfig(SharedPreferences prefs) async {
-    final json = prefs.getString('ai_active_config');
-    if (json != null) {
-      try {
-        final config = ActiveAIConfig.fromJson(
-          jsonDecode(json) as Map<String, dynamic>,
-        );
-        state = state.copyWith(activeConfig: config);
-      } catch (_) {
-        debugPrint('AI config: failed to parse active config JSON');
-      }
-    }
-  }
-
-  Future<void> _loadApiKeys() async {
-    final updatedProviders = <AIProvider>[];
-    for (final provider in state.providers) {
-      if (provider.requiresApiKey) {
-        final key = await _secureStorage.read(key: 'ai_key_${provider.id}');
-        updatedProviders.add(provider.copyWith(apiKey: key));
-      } else {
-        updatedProviders.add(provider);
-      }
-    }
-    state = state.copyWith(providers: updatedProviders);
-  }
-
-  Future<void> _saveProviders() async {
-    final prefs = await ensurePrefs;
-    final json = jsonEncode(state.providers.map((p) => p.toJson()).toList());
-    await prefs.setString('ai_providers', json);
-  }
-
-  Future<void> _saveModels() async {
-    final prefs = await ensurePrefs;
-    final json = jsonEncode(state.models.map((m) => m.toJson()).toList());
-    await prefs.setString('ai_models', json);
-  }
-
-  Future<void> _saveActiveConfig() async {
-    final prefs = await ensurePrefs;
-    if (state.activeConfig != null) {
-      await prefs.setString(
-        'ai_active_config',
-        jsonEncode(state.activeConfig!.toJson()),
-      );
-    } else {
-      await prefs.remove('ai_active_config');
-    }
-  }
-
-  Future<String?> getApiKeyForProvider(String providerId) async {
-    return await _secureStorage.read(key: 'ai_key_$providerId');
-  }
-
-  Future<void> addProvider(AIProvider provider) async {
-    var providers = List<AIProvider>.from(state.providers);
-    providers.removeWhere((p) => p.id == provider.id);
-    if (provider.requiresApiKey && provider.apiKey != null) {
-      await _secureStorage.write(
-        key: 'ai_key_${provider.id}',
-        value: provider.apiKey,
-      );
-    }
-    providers.add(provider.copyWith(apiKey: null));
-    state = state.copyWith(providers: providers);
-    await _saveProviders();
-  }
-
-  Future<void> updateProvider(AIProvider provider) async {
-    final idx = state.providers.indexWhere((p) => p.id == provider.id);
-    if (idx >= 0) {
-      if (provider.requiresApiKey && provider.apiKey != null) {
-        await _secureStorage.write(
-          key: 'ai_key_${provider.id}',
-          value: provider.apiKey,
-        );
-      }
-      final providers = List<AIProvider>.from(state.providers);
-      providers[idx] = provider.copyWith(apiKey: null);
-      state = state.copyWith(providers: providers);
-      await _saveProviders();
-    }
-  }
-
-  Future<void> removeProvider(String providerId) async {
-    final providers = state.providers.where((p) => p.id != providerId).toList();
-    final models = state.models
-        .where((m) => m.providerId != providerId)
-        .toList();
-    try {
-      await _secureStorage.delete(key: 'ai_key_$providerId');
-    } catch (_) {
-      // Secure storage may not be available (e.g., in tests)
-    }
-    final clearActive = state.activeConfig?.providerId == providerId;
-    state = state.copyWith(
-      providers: providers,
-      models: models,
-      clearActiveConfig: clearActive,
-    );
-    if (clearActive) await _saveActiveConfig();
-    await _saveProviders();
-    await _saveModels();
-  }
-
-  Future<void> setProviderEnabled(String providerId, bool enabled) async {
-    final idx = state.providers.indexWhere((p) => p.id == providerId);
-    if (idx >= 0) {
-      final providers = List<AIProvider>.from(state.providers);
-      providers[idx] = providers[idx].copyWith(isEnabled: enabled);
-      state = state.copyWith(providers: providers);
-      await _saveProviders();
-    }
-  }
-
-  Future<void> setModelsForProvider(
-    String providerId,
-    List<AIModel> newModels,
-  ) async {
-    var models = state.models
-        .where((m) => m.providerId != providerId || m.isCustom)
-        .toList();
-    models.addAll(newModels);
-    state = state.copyWith(models: models);
-    await _saveModels();
-  }
-
-  Future<void> addCustomModel(AIModel model) async {
-    var models = List<AIModel>.from(state.models);
-    models.removeWhere(
-      (m) => m.id == model.id && m.providerId == model.providerId,
-    );
-    models.add(model);
-    state = state.copyWith(models: models);
-    await _saveModels();
-  }
-
-  Future<void> removeModel(String modelId, String providerId) async {
-    final models = state.models
-        .where((m) => !(m.id == modelId && m.providerId == providerId))
-        .toList();
-    final clearActive =
-        state.activeConfig?.modelId == modelId &&
-        state.activeConfig?.providerId == providerId;
-    state = state.copyWith(models: models, clearActiveConfig: clearActive);
-    if (clearActive) await _saveActiveConfig();
-    await _saveModels();
-  }
-
-  Future<void> setActiveConfig(ActiveAIConfig config) async {
-    state = state.copyWith(activeConfig: config);
-    await _saveActiveConfig();
-  }
-
-  Future<void> clearActiveConfig() async {
-    state = state.copyWith(clearActiveConfig: true);
-    await _saveActiveConfig();
-  }
-}
-
-final aiConfigProvider = NotifierProvider<AIConfigNotifier, AIConfigState>(
-  AIConfigNotifier.new,
-);

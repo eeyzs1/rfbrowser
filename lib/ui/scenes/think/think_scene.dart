@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/knowledge_service.dart';
+import '../../../data/stores/split_pane_store.dart';
 import '../../widgets/note_sidebar.dart';
 import '../../widgets/backlinks_panel.dart';
 import '../../widgets/inline_ai_editor.dart';
 import '../../widgets/quick_search_bar.dart';
 import '../../widgets/resizable_panel.dart';
-import '../../pages/editor_page.dart';
+import '../../widgets/split_pane.dart';
+import '../../widgets/note_pane_view.dart';
 import '../../../data/models/note.dart';
 
 class ThinkScene extends ConsumerWidget {
@@ -34,8 +36,6 @@ class ThinkScene extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final knowledgeState = ref.watch(knowledgeProvider);
-    final hasActiveNote = knowledgeState.activeNote != null;
     final theme = Theme.of(context);
 
     return Column(
@@ -74,11 +74,7 @@ class ThinkScene extends ConsumerWidget {
                         ),
                       ),
                     ),
-                  Expanded(
-                    child: hasActiveNote
-                        ? InlineAIEditor(child: const EditorView())
-                        : _buildThinkEmptyState(context, ref),
-                  ),
+                  Expanded(child: _buildCenter(context, ref)),
                   if (!rightPanelExpanded)
                     MouseRegion(
                       cursor: SystemMouseCursors.click,
@@ -115,6 +111,37 @@ class ThinkScene extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  /// Center region: multi-pane split view, or empty state when no pane
+  /// is open. Wrapped in [InlineAIEditor] so the AI suggestion / wikilink
+  /// FABs float over the whole split area.
+  Widget _buildCenter(BuildContext context, WidgetRef ref) {
+    final splitState = ref.watch(splitPaneProvider);
+    final root = splitState.root;
+    if (root == null) return _buildThinkEmptyState(context, ref);
+    return InlineAIEditor(
+      child: SplitPane(
+        node: root,
+        viewBuilder: (context, leafId, noteId, viewMode) => NotePaneView(
+          leafId: leafId,
+          noteId: noteId,
+          viewMode: viewMode,
+        ),
+        noteTitleOf: (noteId) => _noteTitle(ref, noteId),
+        onChanged: (newRoot) =>
+            ref.read(splitPaneProvider.notifier).replaceRoot(newRoot),
+        onClose: () => ref.read(splitPaneProvider.notifier).closeRoot(),
+      ),
+    );
+  }
+
+  String _noteTitle(WidgetRef ref, String noteId) {
+    final notes = ref.read(knowledgeProvider).notes;
+    for (final n in notes) {
+      if (n.id == noteId) return n.title;
+    }
+    return 'Note';
   }
 
   Widget _buildThinkEmptyState(BuildContext context, WidgetRef ref) {

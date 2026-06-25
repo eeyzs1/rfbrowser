@@ -12,10 +12,12 @@ cmake_policy(VERSION 3.14...3.25)
 
 # Suppress CMP0175 deprecation warning emitted by some Flutter plugins
 # (e.g. flutter_inappwebview_windows) that still use the legacy
-# add_custom_command(TARGET) DEPENDS pattern. Keep this for as long as those
-# plugins haven't migrated to the new signature.
+# add_custom_command(TARGET) DEPENDS pattern. CMAKE_POLICY_DEFAULT_CMP0175
+# propagates to child scopes created by add_subdirectory() in
+# generated_plugins.cmake, where the policy would otherwise be unset.
 if(POLICY CMP0175)
   cmake_policy(SET CMP0175 OLD)
+  set(CMAKE_POLICY_DEFAULT_CMP0175 OLD)
 endif()
 
 # Define build configuration option.

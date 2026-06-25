@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import '../../core/logging/app_logger.dart';
 import '../../data/models/agent_task.dart';
 import 'agent_tool_registry.dart';
 
@@ -153,7 +153,7 @@ What should I do next?''';
         try {
           args = jsonDecode(argsMatch.group(1)!) as Map<String, dynamic>;
         } catch (ex) {
-          debugPrint('PlanGenerator: failed to parse tool args: $ex');
+          appLog.error('PlanGenerator: failed to parse tool args', error: ex);
         }
       }
 

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import '../core/logging/app_logger.dart';
 
 class PluginMarketEntry {
   final String id;
@@ -74,7 +74,7 @@ class PluginMarketplaceClient {
           .map((e) => PluginMarketEntry.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      debugPrint('MarketplaceClient: failed to fetch index: $e');
+      appLog.error('MarketplaceClient: failed to fetch index', error: e);
       rethrow;
     } finally {
       client.close();

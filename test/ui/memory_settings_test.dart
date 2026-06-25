@@ -6,40 +6,39 @@ import 'package:path/path.dart' as p;
 import 'package:rfbrowser/services/dreaming_service.dart';
 import 'package:rfbrowser/services/memory_service.dart';
 import 'package:rfbrowser/services/settings_service.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../helpers/sqflite_test_setup.dart';
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
+  setUpAll(setupSqfliteForTests);
 
   group('AppSettings memory fields', () {
     test('defaults match the OpenLoomi policy', () {
       final s = AppSettings();
-      expect(s.memoryInjectContext, isTrue);
-      expect(s.memoryShortToMidThreshold, 0.65);
-      expect(s.memoryMidToLongThreshold, 0.45);
-      expect(s.memoryShortMaxAgeDays, 7);
-      expect(s.memoryMidMaxAgeDays, 30);
-      expect(s.memoryHebbianCoAccessMinutes, 5);
-      expect(s.memoryHebbianDecayDays, 30);
-      expect(s.memoryAutoExportEveryNMessages, 16);
-      expect(s.memoryDreamingEnabled, isTrue);
+      expect(s.memory.injectContext, isTrue);
+      expect(s.memory.shortToMidThreshold, 0.65);
+      expect(s.memory.midToLongThreshold, 0.45);
+      expect(s.memory.shortMaxAgeDays, 7);
+      expect(s.memory.midMaxAgeDays, 30);
+      expect(s.memory.hebbianCoAccessMinutes, 5);
+      expect(s.memory.hebbianDecayDays, 30);
+      expect(s.memory.autoExportEveryNMessages, 16);
+      expect(s.memory.dreamingEnabled, isTrue);
     });
 
     test('copyWith round-trips memory fields', () {
       final s = AppSettings();
       final s2 = s.copyWith(
-        memoryInjectContext: false,
-        memoryShortToMidThreshold: 0.5,
-        memoryDreamingEnabled: false,
+        memory: s.memory.copyWith(
+          injectContext: false,
+          shortToMidThreshold: 0.5,
+          dreamingEnabled: false,
+        ),
       );
-      expect(s2.memoryInjectContext, isFalse);
-      expect(s2.memoryShortToMidThreshold, 0.5);
-      expect(s2.memoryDreamingEnabled, isFalse);
+      expect(s2.memory.injectContext, isFalse);
+      expect(s2.memory.shortToMidThreshold, 0.5);
+      expect(s2.memory.dreamingEnabled, isFalse);
       // Untouched fields keep their previous value.
-      expect(s2.memoryMidToLongThreshold, s.memoryMidToLongThreshold);
+      expect(s2.memory.midToLongThreshold, s.memory.midToLongThreshold);
     });
   });
 

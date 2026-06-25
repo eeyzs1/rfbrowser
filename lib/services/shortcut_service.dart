@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/logging/app_logger.dart';
 
 class ShortcutConflictError implements Exception {
   final String message;
@@ -156,8 +157,17 @@ class ShortcutService {
     _prefs ??= await SharedPreferences.getInstance();
     final json = _prefs!.getString('rfbrowser_shortcuts');
     if (json != null) {
-      final decoded = jsonDecode(json) as Map<String, dynamic>;
-      _bindings = decoded.map((k, v) => MapEntry(k, v as String));
+      try {
+        final decoded = jsonDecode(json) as Map<String, dynamic>;
+        _bindings = decoded.map((k, v) => MapEntry(k, v as String));
+      } catch (e, st) {
+        // Corrupt JSON in prefs should not abort app startup. Reset to
+        // defaults and persist so the next launch is clean.
+        appLog.error('ShortcutService: failed to parse stored shortcuts JSON',
+            error: e, stackTrace: st);
+        _bindings = Map.fromEntries(_defaults.entries);
+        await persist();
+      }
     }
   }
 }

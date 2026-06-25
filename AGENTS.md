@@ -78,6 +78,40 @@ All rules are unified in `meta-harness/meta/rules/absolute-rules.md`. Load the r
 | Self-check (suspect heuristic trap) | `absolute-rules.md` Appendix D |
 | Any rule conflict or uncertainty | `absolute-rules.md` full text |
 
+## Technical Conventions (accumulated)
+
+These conventions encode lessons from prior sessions. Follow them when touching related code.
+
+**Split pane / tabs**
+- `SplitNode.leaf` holds `List<SplitTab> tabs` + `int activeTabIndex`; `noteId`/`viewMode` are getters on the active tab.
+- `SplitPaneStore.openNoteInActiveLeaf` adds a new tab per note, activating existing tabs for the same note to prevent duplicates.
+- `handleSplit`: original leaf retains `tabs` + `activeTabIndex` (not rebuilt from `noteId`/`viewMode`); new leaf starts with only the currently active tab.
+- Tab bar scrolling (Windows): `Listener(onPointerSignal)` converts vertical wheel `dy` + trackpad `dx` to horizontal `jumpTo`; `ListView` physics set to `NeverScrollableScrollPhysics`.
+- Tab bar drag-scroll: `GestureDetector.onHorizontalDragUpdate` + `NeverScrollableScrollPhysics` (gesture arena disambiguates tap vs drag via kTouchSlop).
+- Middle-click tab close: `GestureDetector.onTertiaryTapDown` → `closeTab(index)`.
+
+**Editor / highlighting**
+- `MarkdownHighlighter.buildTextSpan` returns plain text immediately; schedules debounced (120ms) async computation. Notes >2000 chars use `compute()` (worker isolate); shorter notes use post-frame timer.
+- Editor content-changed listeners in `editor_page.dart` and `note_pane_view.dart` track `_lastSeenText` to skip dirty-marking when text hasn't changed (async highlight rebuilds fire spurious change notifications).
+
+**Note rendering**
+- Source view: `SelectionArea` + `ListView.builder` for viewport-based lazy rendering (100k-line files open instantly).
+- Edit view: files >20KB fall back to Source view immediately with a top notice bar offering an [编辑] button to manually enter edit mode.
+- `BacklinksPanel`: `ConsumerStatefulWidget` computes unlinked mentions asynchronously via microtask.
+
+**Sidebar**
+- `NoteSidebar`/`SidebarNotesTree`: trie caching based on reference consistency (notes/links/noteFilter/searchQuery/diskFolders) — prevents full tree rebuild on `activeNoteId` change.
+
+## Known Pitfalls (Windows desktop)
+
+These patterns have caused real crashes or severe lag. See `.trae/rules/project_rules.md` Rule 4 for the full spec.
+
+1. **Nested `ReorderableListView` in parent `ListView`** → `accessibility_bridge.cc` AXTree corruption → process crash (`Lost connection to device`). Use `Column` + up/down buttons instead.
+2. **`TextField(maxLines: null, expands: true)` on >20KB content** → UI thread layout freeze. Use `ListView.builder` viewport rendering.
+3. **Synchronous regex scan in `buildTextSpan` / `build`** → UI thread blocks on every keystroke. Return plain text immediately, scan async with debounce.
+4. **Horizontal `ListView` + vertical mouse wheel on Windows** → no scroll response. Wrap in `Listener(onPointerSignal)` and convert `scrollDelta.dy`.
+5. **`onSecondaryTapUp` for middle-click** → that's right-click, not middle-click. Use `onTertiaryTapDown` for middle-click.
+
 ## Configuration
 
 Edit `.meta-harness/project.yaml` for project-specific settings.

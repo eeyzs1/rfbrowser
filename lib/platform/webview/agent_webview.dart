@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+import '../../core/logging/app_logger.dart';
 import '../../platform/webview/headless_manager.dart';
 
 class AgentWebView {
@@ -16,7 +16,7 @@ class AgentWebView {
     final uri = Uri.tryParse(url);
     if (uri == null) return true;
     if (!_allowedSchemes.contains(uri.scheme)) {
-      print('AgentWebView: blocked non-HTTP URL scheme: ${uri.scheme}');
+      appLog.warning('AgentWebView: blocked non-HTTP URL scheme: ${uri.scheme}');
       return true;
     }
     return false;

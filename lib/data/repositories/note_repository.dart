@@ -1,40 +1,19 @@
-// ignore_for_file: avoid_print
 import 'dart:io';
+import '../../core/logging/app_logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:yaml/yaml.dart';
 import '../models/note.dart';
+import '../models/skill.dart';
+import '../models/web_clip.dart';
 import '../stores/vault_store.dart';
+import 'repository_base.dart';
 
-class PathTraversalException implements Exception {
-  final String message;
-  PathTraversalException(this.message);
-  @override
-  String toString() => 'PathTraversalException: $message';
-}
+export 'repository_base.dart' show PathTraversalException;
 
-class NoteRepository {
-  final String vaultPath;
-
-  NoteRepository(this.vaultPath);
-
-  void _validatePath(String relativePath) {
-    final normalized = p.normalize(relativePath);
-    final combined = p.normalize(p.join(vaultPath, normalized));
-    final vaultCanonical = Directory(vaultPath).absolute.path;
-    if (!combined.startsWith(vaultCanonical)) {
-      throw PathTraversalException('Path traversal detected: $relativePath');
-    }
-  }
-
-  String _normalizeRelativePath(String relativePath) {
-    var normalized = p.normalize(relativePath);
-    if (normalized == '.' || normalized == './') normalized = '';
-    if (normalized.startsWith('..') || p.isAbsolute(normalized)) {
-      throw PathTraversalException('Invalid relative path: $relativePath');
-    }
-    return normalized;
-  }
+class NoteRepository extends RepositoryBase {
+  NoteRepository(super.vaultPath);
 
   Future<List<Note>> getAllNotes() async {
     final notes = <Note>[];
@@ -53,7 +32,7 @@ class NoteRepository {
           final note = Note.fromMarkdown(relativePath, content);
           notes.add(note);
         } catch (_) {
-          print('NoteRepo: failed to parse note file: ${entity.path}');
+          appLog.warning('NoteRepo: failed to parse note file: ${entity.path}');
         }
       }
     }
@@ -61,8 +40,8 @@ class NoteRepository {
   }
 
   Future<Note?> getNoteByPath(String relativePath) async {
-    final safePath = _normalizeRelativePath(relativePath);
-    _validatePath(safePath);
+    final safePath = safeRelativePath(relativePath);
+    validatePath(safePath);
     final filePath = p.join(vaultPath, safePath);
     final file = File(filePath);
     if (!await file.exists()) return null;
@@ -76,11 +55,11 @@ class NoteRepository {
     String? template,
   }) async {
     final fileName = _sanitizeFileName(title);
-    final safeFolder = _normalizeRelativePath(folder);
+    final safeFolder = safeRelativePath(folder);
     final relativePath = safeFolder.isEmpty
         ? '$fileName.md'
         : p.join(safeFolder, '$fileName.md');
-    _validatePath(relativePath);
+    validatePath(relativePath);
     final filePath = p.join(vaultPath, relativePath);
 
     final dir = Directory(p.dirname(filePath));
@@ -100,16 +79,21 @@ class NoteRepository {
   }
 
   Future<void> saveNote(Note note) async {
-    _validatePath(note.filePath);
+    validatePath(note.filePath);
     final filePath = p.join(vaultPath, note.filePath);
     final file = File(filePath);
     final updatedNote = note.copyWith(modified: DateTime.now());
+    // Ensure parent directory exists (e.g. `clippings/`, `daily-notes/`).
+    final parent = Directory(p.dirname(filePath));
+    if (!await parent.exists()) {
+      await parent.create(recursive: true);
+    }
     await file.writeAsString(updatedNote.toMarkdown());
   }
 
   Future<void> deleteNote(String relativePath) async {
-    final safePath = _normalizeRelativePath(relativePath);
-    _validatePath(safePath);
+    final safePath = safeRelativePath(relativePath);
+    validatePath(safePath);
     final filePath = p.join(vaultPath, safePath);
     final file = File(filePath);
     if (await file.exists()) {
@@ -132,7 +116,7 @@ class NoteRepository {
     );
 
     final filePath = p.join(vaultPath, relativePath);
-    _validatePath(relativePath);
+    validatePath(relativePath);
     final dir = Directory(p.dirname(filePath));
     if (!await dir.exists()) {
       await dir.create(recursive: true);
@@ -151,7 +135,7 @@ class NoteRepository {
     final fileName = _sanitizeFileName(title);
     final dateStr = DateTime.now().toIso8601String().substring(0, 10);
     final relativePath = p.join('clippings', '$fileName-$dateStr.md');
-    _validatePath(relativePath);
+    validatePath(relativePath);
 
     final note = Note(
       title: title,
@@ -190,15 +174,183 @@ class NoteRepository {
     return sanitized;
   }
 
-  @visibleForTesting
+  /// Public wrapper around [_sanitizeFileName] for callers (e.g. [NoteNotifier])
+  /// that need to derive a safe filename without writing a file.
   String sanitizeFileName(String name) => _sanitizeFileName(name);
+
+  /// Renames the file backing [oldPath] to a new path derived from [newName],
+  /// preserving the existing folder. Returns the new relative path.
+  Future<String> renameNoteFile(String oldPath, String newName) async {
+    final safeOld = safeRelativePath(oldPath);
+    validatePath(safeOld);
+    final newFileName = _sanitizeFileName(newName);
+    final dirName = p.dirname(safeOld);
+    final newPath = dirName == '.'
+        ? '$newFileName.md'
+        : p.join(dirName, '$newFileName.md');
+    validatePath(newPath);
+
+    final oldFile = File(p.join(vaultPath, safeOld));
+    final newFile = File(p.join(vaultPath, newPath));
+    if (await oldFile.exists() && !await newFile.exists()) {
+      await oldFile.rename(newFile.path);
+    }
+    return newPath;
+  }
+
+  /// Moves the note file at [noteFilePath] into [folder], returning the new
+  /// relative path. Does nothing and returns the original path if the move
+  /// would be a no-op.
+  Future<String> moveNoteFile(String noteFilePath, String folder) async {
+    final safeOld = safeRelativePath(noteFilePath);
+    validatePath(safeOld);
+    final fileName = p.basename(safeOld);
+    final safeFolder = safeRelativePath(folder);
+    final newPath = safeFolder.isEmpty ? fileName : p.join(safeFolder, fileName);
+    if (newPath == safeOld) return safeOld;
+    validatePath(newPath);
+
+    final oldFile = File(p.join(vaultPath, safeOld));
+    final newFile = File(p.join(vaultPath, newPath));
+    if (await oldFile.exists()) {
+      final newDir = Directory(p.dirname(newFile.path));
+      if (!await newDir.exists()) {
+        await newDir.create(recursive: true);
+      }
+      await oldFile.rename(newFile.path);
+    }
+    return newPath;
+  }
+
+  /// Ensures the attachments directory exists and returns it.
+  Future<Directory> ensureAttachmentsDir() async {
+    final dir = Directory(p.join(vaultPath, 'attachments'));
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return dir;
+  }
+
+  /// Saves raw HTML to the attachments directory, returning the relative path
+  /// (or null on failure / empty input).
+  Future<String?> saveRawHtml(String htmlContent, String fileName) async {
+    if (htmlContent.isEmpty) return null;
+    try {
+      final dateStr = DateTime.now().toIso8601String().substring(0, 10);
+      final attachDir = await ensureAttachmentsDir();
+      final htmlFileName = '$fileName-$dateStr.html';
+      final htmlFile = File(p.join(attachDir.path, htmlFileName));
+      await htmlFile.writeAsString(htmlContent);
+      return 'attachments/$htmlFileName';
+    } catch (e) {
+      appLog.warning('NoteRepo: failed to save raw HTML', error: e);
+      return null;
+    }
+  }
+
+  /// Saves screenshot bytes to the attachments directory, returning the
+  /// relative path (or null on failure).
+  Future<String?> saveScreenshot(
+    Uint8List screenshotData,
+    String fileName,
+  ) async {
+    try {
+      final dateStr = DateTime.now().toIso8601String().substring(0, 10);
+      final attachDir = await ensureAttachmentsDir();
+      final imgFileName = '$fileName-$dateStr.jpg';
+      final imgFile = File(p.join(attachDir.path, imgFileName));
+      await imgFile.writeAsBytes(screenshotData);
+      return 'attachments/$imgFileName';
+    } catch (e) {
+      appLog.warning('NoteRepo: failed to save screenshot', error: e);
+      return null;
+    }
+  }
+
+  /// Persists [clip] metadata as JSON under `.rfbrowser/clips/`.
+  Future<void> saveWebClipMeta(WebClip clip) async {
+    try {
+      final clipDir = Directory(p.join(vaultPath, '.rfbrowser', 'clips'));
+      if (!await clipDir.exists()) {
+        await clipDir.create(recursive: true);
+      }
+      final metaFile = File(p.join(clipDir.path, '${clip.id}.json'));
+      await metaFile.writeAsString(clip.toJsonString());
+    } catch (e) {
+      appLog.warning('NoteRepo: failed to save web clip meta', error: e);
+    }
+  }
+
+  /// Loads all skill YAML files from `.rfbrowser/skills/`.
+  Future<List<Skill>> loadVaultSkills() async {
+    final skills = <Skill>[];
+    final skillDir = Directory(p.join(vaultPath, '.rfbrowser', 'skills'));
+    if (!await skillDir.exists()) return skills;
+    await for (final entity in skillDir.list()) {
+      if (entity is File && entity.path.endsWith('.yaml')) {
+        try {
+          final content = await entity.readAsString();
+          final yml = loadYaml(content);
+          skills.add(
+            Skill(
+              id: yml['id'] ?? p.basenameWithoutExtension(entity.path),
+              name: yml['name'] ?? 'Unnamed',
+              description: yml['description'] ?? '',
+              prompt: yml['prompt'] ?? '',
+              isBuiltin: false,
+            ),
+          );
+        } catch (e) {
+          appLog.warning('NoteRepo: failed to load skill ${entity.path}', error: e);
+        }
+      }
+    }
+    return skills;
+  }
+
+  /// Writes [skill] to `.rfbrowser/skills/<id>.yaml`.
+  Future<void> saveSkill(Skill skill) async {
+    final skillDir = Directory(p.join(vaultPath, '.rfbrowser', 'skills'));
+    if (!await skillDir.exists()) {
+      await skillDir.create(recursive: true);
+    }
+    final buffer = StringBuffer();
+    buffer.writeln('id: ${skill.id}');
+    buffer.writeln('name: ${skill.name}');
+    buffer.writeln('description: ${skill.description}');
+    buffer.writeln('prompt: |');
+    for (final line in skill.prompt.split('\n')) {
+      buffer.writeln('  $line');
+    }
+    if (skill.params.isNotEmpty) {
+      buffer.writeln('params:');
+      for (final param in skill.params.values) {
+        buffer.writeln('  ${param.name}:');
+        buffer.writeln('    type: ${param.type}');
+        buffer.writeln('    description: ${param.description}');
+        buffer.writeln('    required: ${param.required}');
+        if (param.defaultValue != null) {
+          buffer.writeln('    default: ${param.defaultValue}');
+        }
+      }
+    }
+    final file = File(p.join(skillDir.path, '${skill.id}.yaml'));
+    await file.writeAsString(buffer.toString());
+  }
+
+  /// Deletes `.rfbrowser/skills/<skillId>.yaml` if it exists.
+  Future<void> deleteSkill(String skillId) async {
+    final file = File(
+      p.join(vaultPath, '.rfbrowser', 'skills', '$skillId.yaml'),
+    );
+    if (await file.exists()) {
+      await file.delete();
+    }
+  }
 
   @visibleForTesting
   String normalizeRelativePath(String relativePath) =>
-      _normalizeRelativePath(relativePath);
-
-  @visibleForTesting
-  void validatePath(String relativePath) => _validatePath(relativePath);
+      safeRelativePath(relativePath);
 }
 
 final noteRepositoryProvider = Provider<NoteRepository?>((ref) {

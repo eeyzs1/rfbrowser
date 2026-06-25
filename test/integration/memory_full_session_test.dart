@@ -12,7 +12,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:rfbrowser/core/memory/summary_rollup.dart';
@@ -23,6 +22,7 @@ import 'package:rfbrowser/services/hebbian_service.dart';
 import 'package:rfbrowser/services/memory_service.dart';
 import 'package:rfbrowser/services/search_service.dart';
 import 'package:rfbrowser/services/settings_service.dart';
+import '../helpers/sqflite_test_setup.dart';
 
 class TestVaultNotifier extends VaultNotifier {
   final VaultState _state;
@@ -33,8 +33,7 @@ class TestVaultNotifier extends VaultNotifier {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
+  setupSqfliteForTests();
 
   test(
     'full user session: chat → memory → recall → dreaming → backup',
@@ -205,7 +204,7 @@ void main() {
       //             budget drops from 800 to 400 tokens.
       final notifier = container.read(settingsProvider.notifier);
       await notifier.setMemoryContextBudget(400);
-      expect(container.read(settingsProvider).memoryContextBudget, 400);
+      expect(container.read(settingsProvider).memory.contextBudget, 400);
 
       // ── Step 11: User runs dreaming manually (simulated by directly
       //             invoking the L2 rollup on pre-seeded L1 summaries).

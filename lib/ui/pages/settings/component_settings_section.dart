@@ -57,7 +57,10 @@ class ComponentSettingsSection extends ConsumerWidget {
               max: 50,
               divisions: 50,
               label: '${settings.borderRadius.toInt()}px',
-              onChanged: (v) =>
+              onChanged: (v) => ref
+                  .read(settingsProvider.notifier)
+                  .setBorderRadiusLive(v),
+              onChangeEnd: (v) =>
                   ref.read(settingsProvider.notifier).setBorderRadius(v),
             ),
           ),
@@ -79,8 +82,12 @@ class ComponentSettingsSection extends ConsumerWidget {
               max: 36,
               divisions: 24,
               label: '${settings.iconSize}px',
-              onChanged: (v) =>
-                  ref.read(settingsProvider.notifier).setIconSize(v.round()),
+              onChanged: (v) => ref
+                  .read(settingsProvider.notifier)
+                  .setIconSizeLive(v.round()),
+              onChangeEnd: (v) => ref
+                  .read(settingsProvider.notifier)
+                  .setIconSize(v.round()),
             ),
           ),
         ),

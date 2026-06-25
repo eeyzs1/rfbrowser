@@ -18,6 +18,7 @@ void main() {
             knowledgeProvider.overrideWith(
               () => _TestKnowledgeNotifier(notes: []),
             ),
+            searchServiceProvider.overrideWith(() => _TestSearchNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -44,6 +45,7 @@ void main() {
             knowledgeProvider.overrideWith(
               () => _TestKnowledgeNotifier(notes: notes),
             ),
+            searchServiceProvider.overrideWith(() => _TestSearchNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -70,6 +72,7 @@ void main() {
             knowledgeProvider.overrideWith(
               () => _TestKnowledgeNotifier(notes: notes),
             ),
+            searchServiceProvider.overrideWith(() => _TestSearchNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -101,6 +104,7 @@ void main() {
             knowledgeProvider.overrideWith(
               () => _TestKnowledgeNotifier(notes: notes),
             ),
+            searchServiceProvider.overrideWith(() => _TestSearchNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -128,6 +132,7 @@ void main() {
             knowledgeProvider.overrideWith(
               () => _TestKnowledgeNotifier(notes: notes),
             ),
+            searchServiceProvider.overrideWith(() => _TestSearchNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -154,6 +159,7 @@ void main() {
             knowledgeProvider.overrideWith(
               () => _TestKnowledgeNotifier(notes: notes),
             ),
+            searchServiceProvider.overrideWith(() => _TestSearchNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -180,6 +186,7 @@ void main() {
             knowledgeProvider.overrideWith(
               () => _TestKnowledgeNotifier(notes: notes),
             ),
+            searchServiceProvider.overrideWith(() => _TestSearchNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -213,6 +220,7 @@ void main() {
             knowledgeProvider.overrideWith(
               () => _TestKnowledgeNotifier(notes: notes),
             ),
+            searchServiceProvider.overrideWith(() => _TestSearchNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -243,6 +251,7 @@ void main() {
             knowledgeProvider.overrideWith(
               () => _TestKnowledgeNotifier(notes: notes),
             ),
+            searchServiceProvider.overrideWith(() => _TestSearchNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -273,6 +282,7 @@ void main() {
             knowledgeProvider.overrideWith(
               () => _TestKnowledgeNotifier(notes: notes),
             ),
+            searchServiceProvider.overrideWith(() => _TestSearchNotifier()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -298,4 +308,25 @@ class _TestKnowledgeNotifier extends KnowledgeNotifier {
 
   @override
   KnowledgeState build() => KnowledgeState(notes: _notes);
+}
+
+/// 测试用搜索 Notifier：从 knowledgeProvider 读取笔记做简单标题/内容过滤。
+class _TestSearchNotifier extends SearchNotifier {
+  @override
+  SearchState build() => const SearchState();
+
+  @override
+  Future<List<Map<String, dynamic>>> hybridSearch(String query) async {
+    if (query.isEmpty) return [];
+    final notes = ref.read(knowledgeProvider).notes;
+    final q = query.toLowerCase();
+    return notes
+        .where(
+          (n) =>
+              n.title.toLowerCase().contains(q) ||
+              n.content.toLowerCase().contains(q),
+        )
+        .map((n) => {'kind': 'note', 'noteId': n.id, 'title': n.title})
+        .toList();
+  }
 }

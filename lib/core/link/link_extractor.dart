@@ -78,14 +78,30 @@ class LinkExtractor {
     List<String> noteTitles,
   ) {
     final mentions = <UnlinkedMention>[];
+    // Pre-compute wikilink/embed match ranges ONCE so we can skip any
+    // title occurrence that falls inside an already-linked span. The
+    // previous implementation re-scanned the whole content with
+    // _wikilinkRegex.allMatches for every single candidate match, making
+    // this O(n_titles * content * wikilinks) — catastrophic for large
+    // vaults (caused the editor to freeze on every keystroke because
+    // BacklinksPanel recomputes this on each build).
+    final linkedRanges = <List<int>>[
+      for (final m in _wikilinkRegex.allMatches(content)) [m.start, m.end],
+      for (final m in _embedRegex.allMatches(content)) [m.start, m.end],
+    ];
+
+    bool isInsideLinkedRange(int start, int end) {
+      for (final r in linkedRanges) {
+        if (r[0] <= start && r[1] >= end) return true;
+      }
+      return false;
+    }
+
     for (final title in noteTitles) {
       if (title.length < 3) continue;
       final regex = RegExp(RegExp.escape(title));
       for (final match in regex.allMatches(content)) {
-        final alreadyLinked = _wikilinkRegex
-            .allMatches(content)
-            .any((lm) => lm.start <= match.start && lm.end >= match.end);
-        if (!alreadyLinked) {
+        if (!isInsideLinkedRange(match.start, match.end)) {
           mentions.add(
             UnlinkedMention(
               noteId: '',

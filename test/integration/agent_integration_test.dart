@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../helpers/sqflite_test_setup.dart';
 import 'package:rfbrowser/data/models/agent_task.dart';
 import 'package:rfbrowser/data/stores/vault_store.dart';
 import 'package:rfbrowser/data/repositories/note_repository.dart';
@@ -18,10 +18,7 @@ class TestVaultNotifier extends VaultNotifier {
 }
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
+  setUpAll(setupSqfliteForTests);
 
   group('AgentNotifier Create note (P0-2 ACs)', () {
     test(

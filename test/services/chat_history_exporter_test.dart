@@ -5,13 +5,10 @@ import 'package:path/path.dart' as p;
 import 'package:rfbrowser/data/models/chat_memory.dart';
 import 'package:rfbrowser/services/chat_history_exporter.dart';
 import 'package:rfbrowser/services/memory_service.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../helpers/sqflite_test_setup.dart';
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
+  setUpAll(setupSqfliteForTests);
 
   late MemoryService memory;
   late ChatHistoryExporter exporter;
@@ -23,8 +20,10 @@ void main() {
     exporter = ChatHistoryExporter(memory);
   });
 
-  tearDown(() {
-    memory.close();
+  tearDown(() async {
+    await memory.close();
+    // Give Windows time to release file handles before deletion
+    await Future.delayed(const Duration(milliseconds: 50));
     tempDir.deleteSync(recursive: true);
   });
 

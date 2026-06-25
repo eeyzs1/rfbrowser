@@ -1,12 +1,22 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/logging/app_logger.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/dreaming_service.dart';
 import '../../../services/memory_service.dart';
 import '../../../services/settings_service.dart';
 import '../../widgets/settings_section.dart';
+
+part 'memory_settings_widgets.dart';
+
+/// SharedPreferences key 用于持久化高级参数区域的展开状态。
+const _kAdvancedExpandedKey = 'memory_settings_advanced_expanded';
 
 /// Settings panel for the memory subsystem (progressive forgetting,
 /// Hebbian connections, and auto-export).
@@ -14,53 +24,71 @@ import '../../widgets/settings_section.dart';
 /// Values are written through to [settingsProvider], which the dreaming
 /// service and Hebbian service read on every rebuild — so changes take
 /// effect immediately.
-class MemorySettingsSection extends ConsumerWidget {
+///
+/// 设置项分为两类：
+///   - 基础设置（始终显示）：环境上下文注入、自动记忆、Dreaming 开关
+///   - 高级参数（默认折叠）：阈值、半衰期、衰减常数等专业参数
+class MemorySettingsSection extends ConsumerStatefulWidget {
   const MemorySettingsSection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MemorySettingsSection> createState() =>
+      _MemorySettingsSectionState();
+}
+
+class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
+  /// 高级参数区域是否展开。从 SharedPreferences 读取初始值。
+  bool _advancedExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExpansionState();
+  }
+
+  Future<void> _loadExpansionState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) {
+        setState(() {
+          _advancedExpanded = prefs.getBool(_kAdvancedExpandedKey) ?? false;
+        });
+      }
+    } catch (e) {
+      appLog.debug('MemorySettings: failed to load expansion state: $e');
+    }
+  }
+
+  Future<void> _toggleAdvanced() async {
+    final next = !_advancedExpanded;
+    setState(() => _advancedExpanded = next);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_kAdvancedExpandedKey, next);
+    } catch (e) {
+      appLog.debug('MemorySettings: failed to persist expansion state: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final l = AppLocalizations.of(context)!;
 
     return SettingsSection(
-      title: 'Memory',
+      title: l.memorySettingsTitle,
       children: [
-        const _SectionHeader(label: 'Ambient context'),
+        // ── 基础设置（始终显示）──────────────────────────────────────
+        _SectionHeader(label: l.ambientContext),
         SwitchListTile(
           title: const Text('Inject request context into AI prompts'),
           subtitle: const Text(
             'Send the current vault, active note, selection, and scene as '
             'part of every AI request. Disable for fully isolated chats.',
           ),
-          value: settings.memoryInjectContext,
+          value: settings.memory.injectContext,
           onChanged: notifier.setMemoryInjectContext,
-        ),
-        _IntSlider(
-          label: 'Memory context budget',
-          suffix: 'tokens',
-          value: settings.memoryContextBudget,
-          min: 200,
-          max: 4000,
-          divisions: 38,
-          onChanged: notifier.setMemoryContextBudget,
-        ),
-        SwitchListTile(
-          title: const Text('Use LLM summarizer'),
-          subtitle: const Text(
-            'Ask the configured AI to summarize fragments during dreaming. '
-            'Higher quality but slower; requires an AI provider.',
-          ),
-          value: settings.memoryUseLlmSummarizer,
-          onChanged: notifier.setMemoryUseLlmSummarizer,
-        ),
-        SwitchListTile(
-          title: const Text('Use LLM re-ranking'),
-          subtitle: const Text(
-            'Re-rank recall hits with the LLM after FTS+Hebbian. Slower '
-            'first-token time; off by default.',
-          ),
-          value: settings.memoryUseLlmRerank,
-          onChanged: notifier.setMemoryUseLlmRerank,
         ),
         const Divider(height: 1),
         const _SectionHeader(label: 'Progressive forgetting'),
@@ -72,105 +100,196 @@ class MemorySettingsSection extends ConsumerWidget {
             'When off, the score uses the createdAt timestamp only '
             '(OpenLoomi original behavior).',
           ),
-          value: settings.memoryUseLastAccessForRecency,
+          value: settings.memory.useLastAccessForRecency,
           onChanged: notifier.setMemoryUseLastAccessForRecency,
         ),
-        _ThresholdSlider(
-          label: 'Short → Mid threshold',
-          value: settings.memoryShortToMidThreshold,
-          min: 0.1,
-          max: 0.95,
-          onChanged: notifier.setMemoryShortToMidThreshold,
-        ),
-        _ThresholdSlider(
-          label: 'Mid → Long threshold',
-          value: settings.memoryMidToLongThreshold,
-          min: 0.05,
-          max: 0.9,
-          onChanged: notifier.setMemoryMidToLongThreshold,
-        ),
-        _IntSlider(
-          label: 'Short-tier max age',
-          suffix: 'days',
-          value: settings.memoryShortMaxAgeDays,
-          min: 1,
-          max: 30,
-          onChanged: notifier.setMemoryShortMaxAgeDays,
-        ),
-        _IntSlider(
-          label: 'Mid-tier max age',
-          suffix: 'days',
-          value: settings.memoryMidMaxAgeDays,
-          min: 7,
-          max: 180,
-          onChanged: notifier.setMemoryMidMaxAgeDays,
-        ),
-        _IntSlider(
-          label: 'Created recency half-life',
-          suffix: 'days',
-          value: settings.memoryCreatedRecencyHalfLifeDays,
-          min: 30,
-          max: 730,
-          divisions: 70,
-          onChanged: notifier.setMemoryCreatedRecencyHalfLifeDays,
-        ),
-        _IntSlider(
-          label: 'Last-access recency half-life',
-          suffix: 'days',
-          value: settings.memoryAccessRecencyHalfLifeDays,
-          min: 1,
-          max: 90,
-          divisions: 89,
-          onChanged: notifier.setMemoryAccessRecencyHalfLifeDays,
-        ),
         const Divider(height: 1),
-        const _SectionHeader(label: 'Hebbian connections'),
-        _IntSlider(
-          label: 'Co-access window',
-          suffix: 'minutes',
-          value: settings.memoryHebbianCoAccessMinutes,
-          min: 1,
-          max: 60,
-          onChanged: notifier.setMemoryHebbianCoAccessMinutes,
-        ),
-        _IntSlider(
-          label: 'Edge decay constant',
-          suffix: 'days',
-          value: settings.memoryHebbianDecayDays,
-          min: 1,
-          max: 365,
-          onChanged: notifier.setMemoryHebbianDecayDays,
-        ),
-        const Divider(height: 1),
-        const _SectionHeader(label: 'Auto-export'),
+        _SectionHeader(label: l.autoExport),
         SwitchListTile(
           title: const Text('Enable background dreaming'),
           subtitle: const Text(
             'If disabled, the engine stops scoring and tier-transitioning '
             'fragments until you re-enable it.',
           ),
-          value: settings.memoryDreamingEnabled,
+          value: settings.memory.dreamingEnabled,
           onChanged: notifier.setMemoryDreamingEnabled,
         ),
-        _IntSlider(
-          label: 'Export chat to Markdown every',
-          suffix: settings.memoryAutoExportEveryNMessages == 0
-              ? 'disabled'
-              : 'messages',
-          value: settings.memoryAutoExportEveryNMessages,
-          min: 0,
-          max: 64,
-          divisions: 16,
-          onChanged: notifier.setMemoryAutoExportEveryNMessages,
+
+        // ── 高级参数（默认折叠）──────────────────────────────────────
+        _AdvancedSettingsToggle(
+          expanded: _advancedExpanded,
+          onTap: _toggleAdvanced,
         ),
+        // AnimatedCrossFade 控制高级参数的显示/隐藏
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 200),
+          crossFadeState: _advancedExpanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          firstChild: const SizedBox(width: double.infinity, height: 0),
+          secondChild: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _IntSlider(
+                label: 'Memory context budget',
+                suffix: 'tokens',
+                value: settings.memory.contextBudget,
+                min: 200,
+                max: 4000,
+                divisions: 38,
+                onChanged: notifier.setMemoryContextBudget,
+              ),
+              SwitchListTile(
+                title: const Text('Use LLM summarizer'),
+                subtitle: const Text(
+                  'Ask the configured AI to summarize fragments during dreaming. '
+                  'Higher quality but slower; requires an AI provider.',
+                ),
+                value: settings.memory.useLlmSummarizer,
+                onChanged: notifier.setMemoryUseLlmSummarizer,
+              ),
+              SwitchListTile(
+                title: const Text('Use LLM re-ranking'),
+                subtitle: const Text(
+                  'Re-rank recall hits with the LLM after FTS+Hebbian. Slower '
+                  'first-token time; off by default.',
+                ),
+                value: settings.memory.useLlmRerank,
+                onChanged: notifier.setMemoryUseLlmRerank,
+              ),
+              const Divider(height: 1),
+              const _SectionHeader(label: 'Thresholds'),
+              _ThresholdSlider(
+                label: 'Short → Mid threshold',
+                value: settings.memory.shortToMidThreshold,
+                min: 0.1,
+                max: 0.95,
+                onChanged: notifier.setMemoryShortToMidThreshold,
+              ),
+              _ThresholdSlider(
+                label: 'Mid → Long threshold',
+                value: settings.memory.midToLongThreshold,
+                min: 0.05,
+                max: 0.9,
+                onChanged: notifier.setMemoryMidToLongThreshold,
+              ),
+              _IntSlider(
+                label: 'Short-tier max age',
+                suffix: 'days',
+                value: settings.memory.shortMaxAgeDays,
+                min: 1,
+                max: 30,
+                onChanged: notifier.setMemoryShortMaxAgeDays,
+              ),
+              _IntSlider(
+                label: 'Mid-tier max age',
+                suffix: 'days',
+                value: settings.memory.midMaxAgeDays,
+                min: 7,
+                max: 180,
+                onChanged: notifier.setMemoryMidMaxAgeDays,
+              ),
+              _IntSlider(
+                label: 'Created recency half-life',
+                suffix: 'days',
+                value: settings.memory.createdRecencyHalfLifeDays,
+                min: 30,
+                max: 730,
+                divisions: 70,
+                onChanged: notifier.setMemoryCreatedRecencyHalfLifeDays,
+              ),
+              _IntSlider(
+                label: 'Last-access recency half-life',
+                suffix: 'days',
+                value: settings.memory.accessRecencyHalfLifeDays,
+                min: 1,
+                max: 90,
+                divisions: 89,
+                onChanged: notifier.setMemoryAccessRecencyHalfLifeDays,
+              ),
+              const Divider(height: 1),
+              const _SectionHeader(label: 'Hebbian connections'),
+              _IntSlider(
+                label: 'Co-access window',
+                suffix: 'minutes',
+                value: settings.memory.hebbianCoAccessMinutes,
+                min: 1,
+                max: 60,
+                onChanged: notifier.setMemoryHebbianCoAccessMinutes,
+              ),
+              _IntSlider(
+                label: 'Edge decay constant',
+                suffix: 'days',
+                value: settings.memory.hebbianDecayDays,
+                min: 1,
+                max: 365,
+                onChanged: notifier.setMemoryHebbianDecayDays,
+              ),
+              _IntSlider(
+                label: 'Export chat to Markdown every',
+                suffix: settings.memory.autoExportEveryNMessages == 0
+                    ? 'disabled'
+                    : 'messages',
+                value: settings.memory.autoExportEveryNMessages,
+                min: 0,
+                max: 64,
+                divisions: 16,
+                onChanged: notifier.setMemoryAutoExportEveryNMessages,
+              ),
+            ],
+          ),
+        ),
+
+        // ── 操作与状态（始终显示）────────────────────────────────────
+        const Divider(height: 1),
         const _ManualExportTile(),
         const Divider(height: 1),
-        const _SectionHeader(label: 'Backup & restore'),
+        _SectionHeader(label: l.backupAndRestore),
         const _BackupRestoreRow(),
         const Divider(height: 1),
-        const _SectionHeader(label: 'Dreaming activity'),
+        _SectionHeader(label: l.dreamingActivity),
         const _DreamingStatusCard(),
       ],
+    );
+  }
+}
+
+/// 高级参数区域的展开/折叠切换按钮。
+class _AdvancedSettingsToggle extends StatelessWidget {
+  final bool expanded;
+  final VoidCallback onTap;
+  const _AdvancedSettingsToggle({required this.expanded, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(
+              Icons.tune,
+              size: 18,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              l.memoryAdvancedSettings,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            Icon(
+              expanded ? Icons.expand_less : Icons.expand_more,
+              color: theme.colorScheme.primary,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -187,7 +306,6 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label,
         style: theme.textTheme.labelMedium?.copyWith(
-          color: theme.colorScheme.primary,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -262,280 +380,6 @@ class _IntSlider extends StatelessWidget {
           label: '$value $suffix',
           onChanged: (v) => onChanged(v.round()),
         ),
-      ),
-    );
-  }
-}
-
-class _ManualExportTile extends ConsumerWidget {
-  const _ManualExportTile();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ListTile(
-      leading: const Icon(Icons.file_download),
-      title: const Text('Export current chat to Markdown'),
-      subtitle: const Text(
-        'Writes the active chat session to <vault>/.rfbrowser/chats/ '
-        'with YAML frontmatter. The next dreaming cycle will then keep '
-        'it in sync.',
-      ),
-      onTap: () => _run(context, ref),
-    );
-  }
-
-  Future<void> _run(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final path = await ref
-          .read(dreamingServiceProvider)
-          .exportCurrentSession();
-      if (path == null) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('No active chat session to export')),
-        );
-        return;
-      }
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Exported to $path'),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Export failed: $e')));
-    }
-  }
-}
-
-/// Live status card for the dreaming engine. Shows "when did the system
-/// last consolidate, what did it do" without requiring the user to read
-/// logs. Auto-refreshes every 30s via [dreamingStatusProvider].
-class _BackupRestoreRow extends ConsumerStatefulWidget {
-  const _BackupRestoreRow();
-  @override
-  ConsumerState<_BackupRestoreRow> createState() => _BackupRestoreRowState();
-}
-
-class _BackupRestoreRowState extends ConsumerState<_BackupRestoreRow> {
-  bool _busy = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final memory = ref.watch(memoryServiceProvider);
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: _busy ? null : () => _exportToJson(memory),
-            icon: const Icon(Icons.save_alt),
-            label: const Text('Backup to JSON'),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: _busy ? null : () => _restoreFromJson(memory),
-            icon: const Icon(Icons.restore),
-            label: const Text('Restore from JSON'),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _exportToJson(MemoryService memory) async {
-    setState(() => _busy = true);
-    try {
-      final data = await memory.exportToJson();
-      final json = const JsonEncoder.withIndent('  ').convert(data);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Exported ${(data['counts'] as Map)['fragments']} fragments · '
-            '${(data['counts'] as Map)['summaries']} summaries · '
-            '${(data['counts'] as Map)['hebbian_edges']} edges '
-            '(${json.length} bytes)',
-          ),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-      debugPrint('MemoryService export: ${json.length} bytes');
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<void> _restoreFromJson(MemoryService memory) async {
-    setState(() => _busy = true);
-    try {
-      // Round-trip: export then import. In a real UI this would read
-      // a file picker; for the initial integration we self-import to
-      // validate the round-trip plumbing.
-      final data = await memory.exportToJson();
-      final result = await memory.importFromJson(data, replaceExisting: false);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Round-trip OK · ${result.fragments} fragments · '
-            '${result.summaries} summaries · '
-            '${result.hebbianEdges} edges',
-          ),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Restore failed: $e')));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-}
-
-class _DreamingStatusCard extends ConsumerWidget {
-  const _DreamingStatusCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final asyncStatus = ref.watch(dreamingStatusProvider);
-
-    return asyncStatus.when(
-      data: (s) => _DreamingStatusBody(status: s, theme: theme),
-      loading: () => const Padding(
-        padding: EdgeInsets.all(16),
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (e, _) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          'Status unavailable: $e',
-          style: TextStyle(color: theme.colorScheme.error),
-        ),
-      ),
-    );
-  }
-}
-
-class _DreamingStatusBody extends StatelessWidget {
-  final DreamingStatus status;
-  final ThemeData theme;
-  const _DreamingStatusBody({required this.status, required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    final df = _relativeDateFormat(status.lastConsolidationAt);
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                status.isConsolidating ? Icons.sync : Icons.auto_awesome,
-                size: 16,
-                color: status.isConsolidating
-                    ? theme.colorScheme.tertiary
-                    : theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                status.isConsolidating
-                    ? 'Dreaming in progress…'
-                    : (status.lastConsolidationAt == null
-                          ? 'No dreams yet'
-                          : 'Last dream: $df'),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          if (status.lastConsolidationAt != null) ...[
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 12,
-              runSpacing: 4,
-              children: [
-                _StatusChip(
-                  icon: Icons.add_circle_outline,
-                  label: '${status.lastNewFragments} extracted',
-                ),
-                _StatusChip(
-                  icon: Icons.notes,
-                  label: '${status.lastSummariesCreated} summaries',
-                ),
-                _StatusChip(
-                  icon: Icons.swap_vert,
-                  label: '${status.lastRecordsTransitioned} transitioned',
-                ),
-                if (status.lastStaleEdgesPruned > 0)
-                  _StatusChip(
-                    icon: Icons.cleaning_services,
-                    label: '${status.lastStaleEdgesPruned} edges pruned',
-                  ),
-                if (status.lastExportAt != null)
-                  _StatusChip(
-                    icon: Icons.save_alt,
-                    label:
-                        'last export ${_relativeDateFormat(status.lastExportAt)}',
-                  ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  static String _relativeDateFormat(DateTime? t) {
-    if (t == null) return 'never';
-    final d = DateTime.now().difference(t);
-    if (d.inSeconds < 5) return 'just now';
-    if (d.inMinutes < 1) return '${d.inSeconds}s ago';
-    if (d.inHours < 1) return '${d.inMinutes}m ago';
-    if (d.inDays < 1) return '${d.inHours}h ago';
-    return '${d.inDays}d ago';
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _StatusChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: theme.colorScheme.outlineVariant, width: 0.5),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: theme.colorScheme.primary),
-          const SizedBox(width: 4),
-          Text(label, style: theme.textTheme.bodySmall),
-        ],
       ),
     );
   }

@@ -237,7 +237,8 @@ class _ClipButton extends StatelessWidget {
       ),
       label: Text(
         label,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        style: TextStyle(
+          fontSize: Theme.of(context).textTheme.bodySmall?.fontSize,
           color: onPressed != null ? null : Theme.of(context).disabledColor,
         ),
       ),

@@ -133,6 +133,79 @@ void main() {
     });
   });
 
+  group('HnswIndex dimension mismatch handling', () {
+    test(
+        'inserting 384-dim vector after 128-dim vectors does not throw '
+        'RangeError (regression test for ONNX vs local-fallback crash)', () {
+      final index = HnswIndex(M: 8, efConstruction: 50);
+
+      // Simulate old persisted vectors from local fallback (128-dim).
+      for (var i = 0; i < 5; i++) {
+        index.insert('old_$i', List.generate(128, (j) => j * 0.01 + i));
+      }
+      expect(index.size, 5);
+
+      // Now insert a 384-dim vector (ONNX output). Before the fix, this
+      // threw RangeError in _distance because b[128] was out of bounds.
+      expect(
+        () => index.insert('new_onnx', List.generate(384, (j) => j * 0.001)),
+        returnsNormally,
+      );
+
+      // Index should have been cleared and rebuilt with the new dimension.
+      // Only the new 384-dim vector should remain.
+      expect(index.size, 1);
+
+      // Search with 384-dim query should work.
+      final results = index.search(
+        List.generate(384, (j) => j * 0.001),
+        k: 1,
+      );
+      expect(results.length, 1);
+      expect(results.first.id, 'new_onnx');
+    });
+
+    test('_distance handles vectors of different lengths without throwing', () {
+      final index = HnswIndex();
+      // This indirectly tests _distance via search on an index with
+      // same-dimension vectors, but we also verify that mixed-dimension
+      // insert (which calls _distance internally) doesn't throw.
+      index.insert('a', [1.0, 0.0, 0.0]);
+      // Inserting a different-dimension vector triggers _distance call
+      // internally during graph traversal.
+      expect(
+        () => index.insert('b', [1.0, 0.0, 0.0, 0.0, 0.0]),
+        returnsNormally,
+      );
+    });
+
+    test('clear resets dimension tracking', () {
+      final index = HnswIndex();
+      index.insert('n1', [1.0, 0.0, 0.0]);
+      index.clear();
+      // After clear, a different dimension should be accepted as the new norm.
+      index.insert('n2', [1.0, 0.0, 0.0, 0.0]);
+      expect(index.size, 1);
+      final results = index.search([1.0, 0.0, 0.0, 0.0], k: 1);
+      expect(results.first.id, 'n2');
+    });
+
+    test('same-dimension inserts are not affected by dimension tracking', () {
+      final index = HnswIndex(M: 8, efConstruction: 50);
+      final rng = Random(42);
+      for (var i = 0; i < 100; i++) {
+        index.insert('n$i', List.generate(384, (_) => rng.nextDouble()));
+      }
+      expect(index.size, 100);
+      // Search should still work correctly.
+      final results = index.search(
+        List.generate(384, (_) => rng.nextDouble()),
+        k: 5,
+      );
+      expect(results.length, 5);
+    });
+  });
+
   group('HnswIndex recall', () {
     test('AC-1.8 recall >= 80% against brute-force baseline', () {
       final index = HnswIndex(M: 16, efConstruction: 200);

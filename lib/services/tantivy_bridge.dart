@@ -1,5 +1,5 @@
-// ignore_for_file: avoid_print
 import 'dart:convert';
+import '../core/logging/app_logger.dart';
 import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
@@ -181,7 +181,7 @@ class TantivyBridge {
       _remove(_handle, idPtr);
       calloc.free(idPtr);
     } catch (_) {
-      print('Tantivy: failed to remove note "$noteId"');
+      appLog.warning('Tantivy: failed to remove note "$noteId"');
     }
   }
 
@@ -208,7 +208,7 @@ class TantivyBridge {
     try {
       _close(_handle);
     } catch (_) {
-      print('Tantivy: failed to close bridge');
+      appLog.warning('Tantivy: failed to close bridge');
     }
   }
 }

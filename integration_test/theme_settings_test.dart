@@ -97,7 +97,7 @@ void main() {
     testWidgets('renders custom color button for each section', (tester) async {
       await pumpThemeSettings(tester);
 
-      expect(find.text('Custom Color'), findsNWidgets(3));
+      expect(find.text('Custom Color'), findsNWidgets(4));
     });
 
     testWidgets('renders opacity sliders section', (tester) async {
@@ -149,16 +149,14 @@ void main() {
       );
     });
 
-    testWidgets('isDarkMode computed from background luminance (A-11)', (
-      tester,
-    ) async {
+    testWidgets('isDarkMode controlled by themeMode (A-11)', (tester) async {
       await pumpThemeSettings(tester);
 
-      testNotifier.setScaffoldBgColor(const Color(0xFF0F172A));
+      testNotifier.setThemeMode(ThemeMode.dark);
       await tester.pumpAndSettle();
       expect(testNotifier.state.isDarkMode, isTrue);
 
-      testNotifier.setScaffoldBgColor(const Color(0xFFD6D3D1));
+      testNotifier.setThemeMode(ThemeMode.light);
       await tester.pumpAndSettle();
       expect(testNotifier.state.isDarkMode, isFalse);
     });

@@ -147,6 +147,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get theme => '主题';
 
   @override
+  String get themeModeLabel => '主题模式';
+
+  @override
   String get accentColor => '强调色';
 
   @override
@@ -157,6 +160,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get surfaceColor => '面板色';
+
+  @override
+  String get fontColor => '字体颜色';
+
+  @override
+  String get fontColorAuto => '自动';
+
+  @override
+  String get fontColorAutoDesc => '根据面板色自动推导';
 
   @override
   String get customColor => '自定义颜色';
@@ -377,6 +389,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get loading => '加载中...';
+
+  @override
+  String get largeFileSourceNotice => '大文件以源码视图打开（编辑可能较慢）';
 
   @override
   String get error => '错误';
@@ -2551,4 +2566,317 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get agentQuickOrganize => '整理';
+
+  @override
+  String get contextTruncatedToFitTokenLimit => '上下文已截断以适应 token 限制';
+
+  @override
+  String get savedAsNoteToast => '已保存为笔记';
+
+  @override
+  String get savedToMemory => '已保存到记忆';
+
+  @override
+  String get removedFromMemory => '已从记忆移除';
+
+  @override
+  String get memoryNetwork => '记忆网络';
+
+  @override
+  String failedToLoad(String error) {
+    return '加载失败：$error';
+  }
+
+  @override
+  String get memoryBrowser => '记忆浏览器';
+
+  @override
+  String get tapNodeToInspect => '点击节点查看详情';
+
+  @override
+  String get noMemoryConnectionsYet => '暂无记忆连接 — 继续对话吧！';
+
+  @override
+  String get solidManualLink => '实线 = 手动链接';
+
+  @override
+  String get smallFewLinks => '小 = 少量链接';
+
+  @override
+  String get largeManyLinks => '大 = 大量链接';
+
+  @override
+  String get switchToCircular => '切换到环形布局';
+
+  @override
+  String get fullGraph => '完整图谱';
+
+  @override
+  String get toggleStatistics => '切换统计信息';
+
+  @override
+  String get toggleLegend => '切换图例';
+
+  @override
+  String get selectFragmentToSeeLinks => '选择一个片段查看其链接';
+
+  @override
+  String get noHebbianLinks => '此片段无赫布链接';
+
+  @override
+  String get changeViewMode => '更改视图模式';
+
+  @override
+  String get viewMode => '视图模式';
+
+  @override
+  String get syncConflict => '同步冲突';
+
+  @override
+  String get keepLocal => '保留本地';
+
+  @override
+  String get keepRemote => '保留远程';
+
+  @override
+  String get keepBoth => '两者都保留';
+
+  @override
+  String get createQuickMove => '创建快速移动';
+
+  @override
+  String get commandNotFound => '未找到命令';
+
+  @override
+  String commandDoesNotExist(String cmdName) {
+    return '命令 \"/$cmdName\" 不存在。是否创建？';
+  }
+
+  @override
+  String get newTabGroup => '新建标签组';
+
+  @override
+  String pendingCount(int count) {
+    return '$count 待处理';
+  }
+
+  @override
+  String get git => 'Git';
+
+  @override
+  String errorWithMessage(String error) {
+    return '错误：$error';
+  }
+
+  @override
+  String get noFragmentsMatch => '没有匹配的片段。尝试其他查询，或等待下一次梦境周期提取新事实。';
+
+  @override
+  String get memorySettingsTitle => '记忆';
+
+  @override
+  String get ambientContext => '环境上下文';
+
+  @override
+  String get progressiveForgetting => '渐进式遗忘';
+
+  @override
+  String get hebbianConnections => '赫布连接';
+
+  @override
+  String get autoExport => '自动导出';
+
+  @override
+  String get backupAndRestore => '备份与恢复';
+
+  @override
+  String get dreamingActivity => '梦境活动';
+
+  @override
+  String get exportCurrentChatToMarkdown => '导出当前对话为 Markdown';
+
+  @override
+  String get noActiveChatSessionToExport => '没有可导出的活跃对话';
+
+  @override
+  String get backupToJson => '备份到 JSON';
+
+  @override
+  String get restoreFromJson => '从 JSON 恢复';
+
+  @override
+  String restoreFailed(String error) {
+    return '恢复失败：$error';
+  }
+
+  @override
+  String statusUnavailable(String error) {
+    return '状态不可用：$error';
+  }
+
+  @override
+  String get commandName => '命令名称';
+
+  @override
+  String get promptTemplate => '提示词模板';
+
+  @override
+  String get iconLabel => '图标';
+
+  @override
+  String get groupName => '分组名称';
+
+  @override
+  String get testConnection => '测试连接';
+
+  @override
+  String get testing => '测试中...';
+
+  @override
+  String get testConnectionSuccess => '连接成功';
+
+  @override
+  String testConnectionFailed(String error) {
+    return '连接失败：$error';
+  }
+
+  @override
+  String get copiedToClipboard => '已复制到剪贴板';
+
+  @override
+  String get regenerate => '重新生成';
+
+  @override
+  String get sessions => '会话列表';
+
+  @override
+  String get newSession => '新建会话';
+
+  @override
+  String get renameSession => '重命名会话';
+
+  @override
+  String get deleteSession => '删除会话';
+
+  @override
+  String get deleteSessionConfirm => '删除此会话？';
+
+  @override
+  String get sessionTitle => '会话标题';
+
+  @override
+  String get noSessions => '暂无会话';
+
+  @override
+  String get enterToSendHint => 'Enter 发送，Shift+Enter 换行';
+
+  @override
+  String get defaultSessionTitle => '新对话';
+
+  @override
+  String get memoryGuideTitle => '关于记忆系统';
+
+  @override
+  String get memoryGuideDesc => '记忆系统会自动从你的对话中提取重要信息，并在未来对话中引用，帮助你延续上下文。';
+
+  @override
+  String get memoryGuideFragments => '片段 — 自动提取的记忆碎片，按重要性分层';
+
+  @override
+  String get memoryGuideSummaries => '摘要 — 定期整合的阶段性总结';
+
+  @override
+  String get memoryGuideHebbian => '连接 — 记忆间的关联强度';
+
+  @override
+  String get memoryGuideInsights => '洞察 — 系统自动生成的发现';
+
+  @override
+  String get memoryGuideDismiss => '知道了';
+
+  @override
+  String get syncing => '同步中...';
+
+  @override
+  String syncedAgo(String time) {
+    return '上次同步: $time';
+  }
+
+  @override
+  String restoreSuccess(int fragments, int summaries, int edges) {
+    return '恢复成功 · $fragments 片段 · $summaries 摘要 · $edges 连接';
+  }
+
+  @override
+  String get restoreCancelled => '已取消恢复';
+
+  @override
+  String get restoreInvalidFile => '所选文件不是有效的 JSON 备份';
+
+  @override
+  String get memoryAdvancedSettings => '高级设置';
+
+  @override
+  String get consolidateNow => '立即整理';
+
+  @override
+  String get dreamingInProgress => '正在整理…';
+
+  @override
+  String get noDreamsYet => '尚未整理';
+
+  @override
+  String lastDream(String time) {
+    return '上次整理：$time';
+  }
+
+  @override
+  String get canvasGuideTitle => '画布操作指南';
+
+  @override
+  String get canvasGuidePanTitle => '平移画布';
+
+  @override
+  String get canvasGuidePanDesc => '拖拽空白处即可平移画布视图';
+
+  @override
+  String get canvasGuideZoomTitle => '缩放视图';
+
+  @override
+  String get canvasGuideZoomDesc => '使用鼠标滚轮缩放画布';
+
+  @override
+  String get canvasGuideAddCardTitle => '添加卡片';
+
+  @override
+  String get canvasGuideAddCardDesc => '点击工具栏按钮或双击空白处添加卡片';
+
+  @override
+  String get canvasGuideConnectTitle => '连接卡片';
+
+  @override
+  String get canvasGuideConnectDesc => '从卡片边缘拖拽以创建连线';
+
+  @override
+  String get canvasGuideDismiss => '知道了';
+
+  @override
+  String get sendToAi => '发送到 AI';
+
+  @override
+  String get sendingToAi => '正在发送页面到 AI…';
+
+  @override
+  String get sendToAiEmpty => '没有可发送的页面内容';
+
+  @override
+  String get sendToAiSent => '页面已发送到 AI';
+
+  @override
+  String get openAiChat => '打开 AI';
+
+  @override
+  String sendToAiFailed(String error) {
+    return '发送到 AI 失败：$error';
+  }
 }

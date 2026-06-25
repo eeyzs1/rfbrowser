@@ -9,17 +9,37 @@ import '../data/models/note.dart';
 import '../data/stores/vault_store.dart';
 import '../core/link/link_resolver.dart';
 import '../core/shared_prefs_aware.dart';
+import '../core/logging/app_logger.dart';
 import 'canvas/canvas_layout_service.dart';
 import 'canvas/canvas_export_service.dart';
 import 'canvas/canvas_layers_service.dart';
 import 'canvas/canvas_scratchpad_service.dart';
+import 'canvas/canvas_style_service.dart';
 import 'canvas/canvas_templates_service.dart';
 
-class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
+part 'canvas_card_operations.dart';
+part 'canvas_connection_operations.dart';
+part 'canvas_selection_batch_operations.dart';
+part 'canvas_layer_operations.dart';
+part 'canvas_canvas_management.dart';
+part 'canvas_export_operations.dart';
+part 'canvas_layout_settings_operations.dart';
+part 'canvas_scratchpad_template_operations.dart';
+part 'canvas_style_operations.dart';
+
+/// Base class holding core infrastructure: fields, constructor, getters,
+/// undo/redo, file I/O, mutation helpers, and lookup helpers.
+///
+/// Mixins (in part files) use `on CanvasNotifierBase` to access these
+/// private members within the same library. [CanvasNotifier] extends this
+/// base and mixes in all operation mixins.
+class CanvasNotifierBase extends Notifier<CanvasData>
+    with SharedPrefsAware {
   final CanvasLayoutService _layoutService;
   final CanvasExportService _exportService;
   final CanvasLayersService _layersService;
   final CanvasScratchpadService _scratchpadService;
+  final CanvasStyleService _styleService;
 
   Timer? _debounceTimer;
   List<String> _canvasNames = ['default'];
@@ -28,24 +48,40 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
   final List<CanvasData> _redoStack = [];
   static const int _maxHistory = 50;
 
-  CanvasNotifier({
+  CanvasNotifierBase({
     CanvasLayoutService? layoutService,
     CanvasExportService? exportService,
     CanvasLayersService? layersService,
     CanvasScratchpadService? scratchpadService,
+    CanvasStyleService? styleService,
   }) : _layoutService = layoutService ?? const CanvasLayoutService(),
        _exportService = exportService ?? const CanvasExportService(),
        _layersService = layersService ?? const CanvasLayersService(),
        _scratchpadService =
-           scratchpadService ?? const CanvasScratchpadService();
+           scratchpadService ?? const CanvasScratchpadService(),
+       _styleService = styleService ?? const CanvasStyleService();
+
+  // === Public getters ===
 
   String get activeCanvasName => _activeCanvasName;
   List<String> get canvasNames => List.unmodifiable(_canvasNames);
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
+  bool get autoConnectionsEnabled => state.settings.autoConnectionsEnabled;
+  int get unassignedCardCount =>
+      state.cards.where((c) => c.layerId == null).length;
+
+  // === Lifecycle ===
 
   @override
   CanvasData build() => CanvasData();
+
+  Future<void> initialize() async {
+    await _loadCanvasList();
+    await _loadFromFile();
+  }
+
+  // === Undo / Redo ===
 
   void _pushUndo() {
     _undoStack.add(state);
@@ -67,10 +103,7 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
     _debouncedSave();
   }
 
-  Future<void> initialize() async {
-    await _loadCanvasList();
-    await _loadFromFile();
-  }
+  // === Canvas-list I/O ===
 
   Future<void> _loadCanvasList() async {
     try {
@@ -109,398 +142,11 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
         jsonEncode({'canvases': _canvasNames, 'active': _activeCanvasName}),
       );
     } catch (_) {
-      debugPrint('Canvas: failed to save canvas list');
+      appLog.error('Canvas: failed to save canvas list');
     }
   }
 
-  bool get autoConnectionsEnabled => state.settings.autoConnectionsEnabled;
-
-  void toggleAutoConnections() {
-    final newSettings = state.settings.copyWith(
-      autoConnectionsEnabled: !state.settings.autoConnectionsEnabled,
-    );
-    state = state.copyWith(settings: newSettings);
-    _debouncedSave();
-  }
-
-  void toggleSnapToGrid() {
-    final newSettings = state.settings.copyWith(
-      snapToGrid: !state.settings.snapToGrid,
-    );
-    state = state.copyWith(settings: newSettings);
-    _debouncedSave();
-  }
-
-  void toggleGridVisible() {
-    final newSettings = state.settings.copyWith(
-      gridVisible: !state.settings.gridVisible,
-    );
-    state = state.copyWith(settings: newSettings);
-    _debouncedSave();
-  }
-
-  void selectCard(String? cardId, {bool additive = false}) {
-    if (cardId == null) {
-      state = state.copyWith(clearSelectedCardIds: true);
-    } else if (additive) {
-      final ids = List<String>.from(state.selectedCardIds);
-      if (ids.contains(cardId)) {
-        ids.remove(cardId);
-      } else {
-        ids.add(cardId);
-      }
-      state = state.copyWith(
-        selectedCardIds: ids,
-        clearSelectedConnectionId: true,
-      );
-    } else {
-      state = state.copyWith(
-        selectedCardIds: [cardId],
-        clearSelectedConnectionId: true,
-      );
-    }
-  }
-
-  void selectCards(List<String> cardIds) {
-    state = state.copyWith(
-      selectedCardIds: cardIds,
-      clearSelectedConnectionId: true,
-    );
-  }
-
-  void addToSelection(String cardId) {
-    final ids = List<String>.from(state.selectedCardIds);
-    if (!ids.contains(cardId)) ids.add(cardId);
-    state = state.copyWith(selectedCardIds: ids);
-  }
-
-  void removeFromSelection(String cardId) {
-    final ids = List<String>.from(state.selectedCardIds);
-    ids.remove(cardId);
-    state = state.copyWith(selectedCardIds: ids);
-  }
-
-  void selectAll() {
-    state = state.copyWith(
-      selectedCardIds: state.cards.map((c) => c.id).toList(),
-    );
-  }
-
-  void clearSelection() {
-    state = state.copyWith(
-      clearSelectedCardIds: true,
-      clearSelectedConnectionId: true,
-    );
-  }
-
-  void selectConnection(String? connId) {
-    if (connId == null) {
-      state = state.copyWith(clearSelectedConnectionId: true);
-    } else {
-      state = state.copyWith(
-        selectedConnectionId: connId,
-        clearSelectedCardIds: true,
-      );
-    }
-  }
-
-  void startInlineEditing(String cardId) {
-    state = state.copyWith(
-      selectedCardIds: [cardId],
-      inlineEditingCardId: cardId,
-    );
-  }
-
-  void finishInlineEditing() {
-    state = state.copyWith(clearInlineEditingCardId: true);
-  }
-
-  Future<void> batchDeleteCards(List<String> cardIds) async {
-    if (cardIds.isEmpty) return;
-    final cardIdSet = cardIds.toSet();
-    await _mutateAndPersist(
-      () => state.copyWith(
-        cards: state.cards.where((c) => !cardIdSet.contains(c.id)).toList(),
-        connections: state.connections
-            .where(
-              (c) =>
-                  !cardIdSet.contains(c.fromCardId) &&
-                  !cardIdSet.contains(c.toCardId),
-            )
-            .toList(),
-        groups: state.groups
-            .map((g) {
-              final remaining = g.cardIds
-                  .where((id) => !cardIdSet.contains(id))
-                  .toList();
-              return g.copyWith(cardIds: remaining);
-            })
-            .where((g) => g.cardIds.isNotEmpty)
-            .toList(),
-        clearSelectedCardIds: true,
-      ),
-    );
-  }
-
-  void batchUpdateCardColor(List<String> cardIds, int colorValue) {
-    final cardIdSet = cardIds.toSet();
-    _mutateAndDebounce(() {
-      final newCards = state.cards.map((c) {
-        if (cardIdSet.contains(c.id)) {
-          return c.copyWith(colorValue: colorValue);
-        }
-        return c;
-      }).toList();
-      return state.copyWith(cards: newCards);
-    });
-  }
-
-  void batchMoveCards(Map<String, (double, double)> moves) {
-    final newCards = state.cards.map((c) {
-      final move = moves[c.id];
-      if (move != null) {
-        return c.copyWith(x: move.$1, y: move.$2);
-      }
-      return c;
-    }).toList();
-    state = state.copyWith(cards: newCards);
-    _debouncedSave();
-  }
-
-  Future<void> groupCards(List<String> cardIds, {String? name}) async {
-    if (cardIds.length < 2) return;
-    final group = CanvasGroup(
-      id: 'group_${DateTime.now().millisecondsSinceEpoch}',
-      name: name ?? 'Group ${state.groups.length + 1}',
-      cardIds: cardIds,
-    );
-    await _mutateAndPersist(
-      () => state.copyWith(groups: [...state.groups, group]),
-    );
-  }
-
-  Future<void> ungroupCards(String groupId) async {
-    await _mutateAndPersist(
-      () => state.copyWith(
-        groups: state.groups.where((g) => g.id != groupId).toList(),
-      ),
-    );
-  }
-
-  Future<void> renameGroup(String groupId, String name) async {
-    _mutateAndDebounce(() {
-      final groups = state.groups.map((g) {
-        if (g.id == groupId) return g.copyWith(name: name);
-        return g;
-      }).toList();
-      return state.copyWith(groups: groups);
-    });
-  }
-
-  void alignCards(List<String> cardIds, AlignmentType type) {
-    if (cardIds.length < 2) return;
-    final selectedCards = state.cards
-        .where((c) => cardIds.contains(c.id))
-        .toList();
-    if (selectedCards.isEmpty) return;
-
-    final newCards = List<CanvasCard>.from(state.cards);
-    switch (type) {
-      case AlignmentType.left:
-        final minX = selectedCards
-            .map((c) => c.x)
-            .reduce((a, b) => a < b ? a : b);
-        for (int i = 0; i < newCards.length; i++) {
-          if (cardIds.contains(newCards[i].id)) {
-            newCards[i] = newCards[i].copyWith(x: minX);
-          }
-        }
-      case AlignmentType.centerH:
-        final avgCenterX =
-            selectedCards.map((c) => c.center.dx).reduce((a, b) => a + b) /
-            selectedCards.length;
-        for (int i = 0; i < newCards.length; i++) {
-          if (cardIds.contains(newCards[i].id)) {
-            newCards[i] = newCards[i].copyWith(
-              x: avgCenterX - newCards[i].width / 2,
-            );
-          }
-        }
-      case AlignmentType.right:
-        final maxRight = selectedCards
-            .map((c) => c.x + c.width)
-            .reduce((a, b) => a > b ? a : b);
-        for (int i = 0; i < newCards.length; i++) {
-          if (cardIds.contains(newCards[i].id)) {
-            newCards[i] = newCards[i].copyWith(x: maxRight - newCards[i].width);
-          }
-        }
-      case AlignmentType.top:
-        final minY = selectedCards
-            .map((c) => c.y)
-            .reduce((a, b) => a < b ? a : b);
-        for (int i = 0; i < newCards.length; i++) {
-          if (cardIds.contains(newCards[i].id)) {
-            newCards[i] = newCards[i].copyWith(y: minY);
-          }
-        }
-      case AlignmentType.centerV:
-        final avgCenterY =
-            selectedCards.map((c) => c.center.dy).reduce((a, b) => a + b) /
-            selectedCards.length;
-        for (int i = 0; i < newCards.length; i++) {
-          if (cardIds.contains(newCards[i].id)) {
-            newCards[i] = newCards[i].copyWith(
-              y: avgCenterY - newCards[i].height / 2,
-            );
-          }
-        }
-      case AlignmentType.bottom:
-        final maxBottom = selectedCards
-            .map((c) => c.y + c.height)
-            .reduce((a, b) => a > b ? a : b);
-        for (int i = 0; i < newCards.length; i++) {
-          if (cardIds.contains(newCards[i].id)) {
-            newCards[i] = newCards[i].copyWith(
-              y: maxBottom - newCards[i].height,
-            );
-          }
-        }
-    }
-    _mutateAndDebounce(() => state.copyWith(cards: newCards));
-  }
-
-  void distributeCards(List<String> cardIds, DistributeType type) {
-    if (cardIds.length < 3) return;
-    final selectedCards = state.cards
-        .where((c) => cardIds.contains(c.id))
-        .toList();
-    if (selectedCards.length < 3) return;
-
-    final newCards = List<CanvasCard>.from(state.cards);
-    switch (type) {
-      case DistributeType.horizontal:
-        final sorted = List<CanvasCard>.from(selectedCards)
-          ..sort((a, b) => a.x.compareTo(b.x));
-        final minX = sorted.first.x;
-        final maxX = sorted.last.x;
-        final totalWidth = sorted.fold(0.0, (sum, c) => sum + c.width);
-        final totalGap = maxX - minX - totalWidth;
-        final gapCount = sorted.length - 1;
-        final gap = gapCount > 0 ? totalGap / gapCount : 0.0;
-        double currentX = minX;
-        for (final card in sorted) {
-          final idx = newCards.indexWhere((c) => c.id == card.id);
-          if (idx >= 0) {
-            newCards[idx] = newCards[idx].copyWith(x: currentX);
-            currentX += newCards[idx].width + gap;
-          }
-        }
-      case DistributeType.vertical:
-        final sorted = List<CanvasCard>.from(selectedCards)
-          ..sort((a, b) => a.y.compareTo(b.y));
-        final minY = sorted.first.y;
-        final maxY = sorted.last.y;
-        final totalHeight = sorted.fold(0.0, (sum, c) => sum + c.height);
-        final totalGap = maxY - minY - totalHeight;
-        final gapCount = sorted.length - 1;
-        final gap = gapCount > 0 ? totalGap / gapCount : 0.0;
-        double currentY = minY;
-        for (final card in sorted) {
-          final idx = newCards.indexWhere((c) => c.id == card.id);
-          if (idx >= 0) {
-            newCards[idx] = newCards[idx].copyWith(y: currentY);
-            currentY += newCards[idx].height + gap;
-          }
-        }
-    }
-    _mutateAndDebounce(() => state.copyWith(cards: newCards));
-  }
-
-  List<CanvasConnection> deriveAutoConnections(
-    List<Note> notes,
-    LinkResolver? linkResolver,
-  ) {
-    if (!autoConnectionsEnabled) return [];
-    if (linkResolver == null) return [];
-
-    final cardsWithNoteIds = state.cards
-        .where((c) => c.noteId != null)
-        .toList();
-    if (cardsWithNoteIds.length < 2) return [];
-
-    final noteMap = <String, Note>{};
-    for (final note in notes) {
-      noteMap[note.id] = note;
-    }
-
-    final autoConns = <CanvasConnection>[];
-
-    for (int i = 0; i < cardsWithNoteIds.length; i++) {
-      for (int j = 0; j < cardsWithNoteIds.length; j++) {
-        if (i == j) continue;
-        final cardA = cardsWithNoteIds[i];
-        final cardB = cardsWithNoteIds[j];
-        final noteA = noteMap[cardA.noteId];
-        final noteB = noteMap[cardB.noteId];
-        if (noteA == null || noteB == null) continue;
-
-        final extractedLinks = linkResolver.extractLinksFromContent(
-          noteA.content,
-        );
-        final hasLink = extractedLinks.any((link) {
-          final resolvedPath = linkResolver.resolveTitleToPath(link.target);
-          if (resolvedPath == null) return false;
-          final targetId = resolvedPath
-              .replaceAll(RegExp(r'[/\\]'), '_')
-              .replaceAll('.md', '');
-          return targetId == noteB.id;
-        });
-
-        if (hasLink) {
-          final (fromSide, toSide) = CanvasConnection.computeSides(
-            cardA,
-            cardB,
-          );
-
-          autoConns.add(
-            CanvasConnection(
-              id: 'auto_${cardA.id}_${cardB.id}',
-              fromCardId: cardA.id,
-              toCardId: cardB.id,
-              fromSide: fromSide,
-              toSide: toSide,
-              isAuto: true,
-            ),
-          );
-        }
-      }
-    }
-
-    final manualPairs = <String>{};
-    for (final conn in state.connections) {
-      if (!conn.isAuto) {
-        manualPairs.add('${conn.fromCardId}->${conn.toCardId}');
-      }
-    }
-
-    return autoConns.where((c) {
-      final key = '${c.fromCardId}->${c.toCardId}';
-      return !manualPairs.contains(key);
-    }).toList();
-  }
-
-  List<CanvasCard> searchCards(String query) {
-    if (query.isEmpty) return state.cards.toList();
-    final lower = query.toLowerCase();
-    return state.cards
-        .where(
-          (c) =>
-              c.title.toLowerCase().contains(lower) ||
-              c.content.toLowerCase().contains(lower),
-        )
-        .toList();
-  }
+  // === File I/O (persistence core) ===
 
   Future<String> _canvasFilePath() async {
     final vaultPath = ref.read(vaultProvider).currentVault?.path;
@@ -523,7 +169,7 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
       final path = await _canvasFilePath();
       await File(path).writeAsString(state.toJsonString());
     } catch (e) {
-      debugPrint('Canvas save failed: $e');
+      appLog.error('Canvas save failed', error: e);
     }
   }
 
@@ -548,7 +194,7 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
         return;
       }
     } catch (_) {
-      debugPrint('Canvas: failed to load canvas from file');
+      appLog.error('Canvas: failed to load canvas from file');
     }
     await _migrateFromSharedPrefs();
   }
@@ -562,10 +208,12 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
         await prefs.remove('canvas_data');
         await _saveToFile();
       } catch (_) {
-        debugPrint('Canvas: migration from SharedPrefs failed');
+        appLog.error('Canvas: migration from SharedPrefs failed');
       }
     }
   }
+
+  // === Core mutation helpers ===
 
   void updateCardInMemory(CanvasCard card) {
     final cards = state.cards.map((c) => c.id == card.id ? card : c).toList();
@@ -589,303 +237,7 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
     _debouncedSave();
   }
 
-  Future<void> addCard(CanvasCard card) async {
-    await _mutateAndPersist(
-      () => state.copyWith(cards: [...state.cards, card]),
-    );
-  }
-
-  Future<void> updateCard(CanvasCard card) async {
-    await _mutateAndPersist(() {
-      final cards = state.cards.map((c) => c.id == card.id ? card : c).toList();
-      return state.copyWith(cards: cards);
-    });
-  }
-
-  Future<void> removeCard(String cardId) async {
-    await _mutateAndPersist(
-      () => state.copyWith(
-        cards: state.cards.where((c) => c.id != cardId).toList(),
-        connections: state.connections
-            .where((c) => c.fromCardId != cardId && c.toCardId != cardId)
-            .toList(),
-        groups: state.groups
-            .map((g) {
-              final remaining = g.cardIds.where((id) => id != cardId).toList();
-              return g.copyWith(cardIds: remaining);
-            })
-            .where((g) => g.cardIds.isNotEmpty)
-            .toList(),
-      ),
-    );
-  }
-
-  Future<void> addConnection(CanvasConnection conn) async {
-    await _mutateAndPersist(
-      () => state.copyWith(connections: [...state.connections, conn]),
-    );
-  }
-
-  Future<void> removeConnection(String connId) async {
-    await _mutateAndPersist(
-      () => state.copyWith(
-        connections: state.connections.where((c) => c.id != connId).toList(),
-      ),
-    );
-  }
-
-  void updateConnection(CanvasConnection conn) {
-    _mutateAndDebounce(() {
-      final conns = state.connections
-          .map((c) => c.id == conn.id ? conn : c)
-          .toList();
-      return state.copyWith(connections: conns);
-    });
-  }
-
-  void addWaypoint(String connId, Offset position, {int? insertIndex}) {
-    final conns = state.connections.map((c) {
-      if (c.id == connId) {
-        if (insertIndex != null &&
-            insertIndex >= 0 &&
-            insertIndex <= c.waypoints.length) {
-          final newWaypoints = List<Offset>.from(c.waypoints)
-            ..insert(insertIndex, position);
-          return c.copyWith(waypoints: newWaypoints);
-        }
-        return c.copyWith(waypoints: [...c.waypoints, position]);
-      }
-      return c;
-    }).toList();
-    state = state.copyWith(connections: conns);
-    _debouncedSave();
-  }
-
-  void removeWaypoint(String connId, int index) {
-    final conns = state.connections.map((c) {
-      if (c.id == connId && index >= 0 && index < c.waypoints.length) {
-        final newWaypoints = List<Offset>.from(c.waypoints)..removeAt(index);
-        return c.copyWith(waypoints: newWaypoints);
-      }
-      return c;
-    }).toList();
-    state = state.copyWith(connections: conns);
-    _debouncedSave();
-  }
-
-  void moveWaypoint(String connId, int index, Offset newPosition) {
-    final conns = state.connections.map((c) {
-      if (c.id == connId && index >= 0 && index < c.waypoints.length) {
-        final newWaypoints = List<Offset>.from(c.waypoints);
-        newWaypoints[index] = newPosition;
-        return c.copyWith(waypoints: newWaypoints);
-      }
-      return c;
-    }).toList();
-    state = state.copyWith(connections: conns);
-    _debouncedSave();
-  }
-
-  Future<void> clearCanvas() async {
-    await _mutateAndPersist(() => CanvasData());
-  }
-
-  void addTag(String cardId, String tag) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    if (card.tags.contains(tag)) return;
-    updateCardInMemory(card.copyWith(tags: [...card.tags, tag]));
-    _debouncedSave();
-  }
-
-  void removeTag(String cardId, String tag) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(
-      card.copyWith(tags: card.tags.where((t) => t != tag).toList()),
-    );
-    _debouncedSave();
-  }
-
-  void setDefaultCardStyle(CanvasCardStyle? style) {
-    state = state.copyWith(
-      settings: state.settings.copyWith(
-        defaultCardStyle: style,
-        clearDefaultCardStyle: style == null,
-      ),
-    );
-    _debouncedSave();
-  }
-
-  void setDefaultConnectionStyle(CanvasConnectionStyle? style) {
-    state = state.copyWith(
-      settings: state.settings.copyWith(
-        defaultConnectionStyle: style,
-        clearDefaultConnectionStyle: style == null,
-      ),
-    );
-    _debouncedSave();
-  }
-
-  void setBackgroundColor(int? colorValue) {
-    state = state.copyWith(
-      settings: state.settings.copyWith(
-        backgroundColorValue: colorValue,
-        clearBackgroundColor: colorValue == null,
-      ),
-    );
-    _debouncedSave();
-  }
-
-  void toggleRulers() {
-    state = state.copyWith(
-      settings: state.settings.copyWith(
-        rulersVisible: !state.settings.rulersVisible,
-      ),
-    );
-    _debouncedSave();
-  }
-
-  CanvasCard createCard(
-    CanvasCardType type,
-    Offset position, {
-    String? title,
-    String? noteId,
-  }) {
-    final defaultStyle = state.settings.defaultCardStyle;
-    return CanvasCard(
-      id: 'card_${DateTime.now().millisecondsSinceEpoch}',
-      type: type,
-      x: position.dx,
-      y: position.dy,
-      width: type.defaultWidth,
-      height: type.defaultHeight,
-      title: title ?? type.label,
-      noteId: noteId,
-      style: defaultStyle,
-    );
-  }
-
-  CanvasConnection createConnection(
-    String fromId,
-    String toId, {
-    String? label,
-  }) {
-    final from = cardById(fromId);
-    final to = cardById(toId);
-    if (from == null || to == null) {
-      return CanvasConnection(id: '', fromCardId: fromId, toCardId: toId);
-    }
-    final (fromSide, toSide) = CanvasConnection.computeSides(from, to);
-    final defaultStyle = state.settings.defaultConnectionStyle;
-    return CanvasConnection(
-      id: 'conn_${DateTime.now().millisecondsSinceEpoch}',
-      fromCardId: fromId,
-      toCardId: toId,
-      fromSide: fromSide,
-      toSide: toSide,
-      label: label ?? '',
-      style: defaultStyle,
-    );
-  }
-
-  void setMetadata(String cardId, CanvasCardMetadata metadata) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(card.copyWith(metadata: metadata));
-    _debouncedSave();
-  }
-
-  void setHyperlink(String cardId, String? url) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    final meta = card.metadata ?? const CanvasCardMetadata();
-    updateCardInMemory(
-      card.copyWith(
-        metadata: meta.copyWith(hyperlink: url, clearHyperlink: url == null),
-      ),
-    );
-    _debouncedSave();
-  }
-
-  void setTextAlign(String cardId, {TextAlignH? h, TextAlignV? v}) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(
-      card.copyWith(
-        textAlignH: h ?? card.textAlignH,
-        textAlignV: v ?? card.textAlignV,
-      ),
-    );
-    _debouncedSave();
-  }
-
-  void setRichContent(String cardId, List<RichTextSegment> segments) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(card.copyWith(richContent: segments));
-    _debouncedSave();
-  }
-
-  void toggleAutoNumber(String cardId) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(card.copyWith(autoNumber: !card.autoNumber));
-    _debouncedSave();
-  }
-
-  void setFreehandPoints(String cardId, List<Offset> points) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(card.copyWith(freehandPoints: points));
-    _debouncedSave();
-  }
-
-  void setTableSize(String cardId, int rows, int cols) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    final cells = List<CanvasTableCell>.generate(rows * cols, (i) {
-      if (i < card.tableCells.length) return card.tableCells[i];
-      return const CanvasTableCell();
-    });
-    updateCardInMemory(
-      card.copyWith(tableRows: rows, tableCols: cols, tableCells: cells),
-    );
-    _debouncedSave();
-  }
-
-  void setTableCell(String cardId, int row, int col, String text) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    final idx = row * card.tableCols + col;
-    if (idx < 0 || idx >= card.tableCells.length) return;
-    final cells = List<CanvasTableCell>.from(card.tableCells);
-    cells[idx] = CanvasTableCell(text: text);
-    updateCardInMemory(card.copyWith(tableCells: cells));
-    _debouncedSave();
-  }
-
-  void toggleVerticalText(String cardId) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(card.copyWith(verticalText: !card.verticalText));
-    _debouncedSave();
-  }
-
-  void enumerateAllCards() {
-    int counter = 1;
-    final updatedCards = state.cards.map((card) {
-      if (card.autoNumber) {
-        return card.copyWith(
-          title:
-              '${counter++}. ${card.title.replaceAll(RegExp(r'^\d+\.\s*'), '')}',
-        );
-      }
-      return card;
-    }).toList();
-    state = state.copyWith(cards: updatedCards);
-    _debouncedSave();
-  }
+  // === Lookup helpers ===
 
   CanvasCard? cardById(String id) {
     try {
@@ -906,118 +258,44 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
     final group = state.groups.where((g) => g.id == groupId).firstOrNull;
     return group?.cardIds.toList() ?? [];
   }
+}
 
-  Future<bool> createCanvas(String name) async {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty || _canvasNames.contains(trimmed)) return false;
-    _canvasNames.add(trimmed);
-    await _saveCanvasList();
-    return true;
-  }
+/// Manages canvas state (cards, connections, groups, layers, settings) and
+/// delegates to specialized services for layout, export, layers, scratchpad,
+/// style, and templates.
+///
+/// The class is split across multiple part files using mixins to keep each
+/// concern in its own file while sharing private infrastructure via
+/// [CanvasNotifierBase]:
+/// - [CanvasCardOperations]: card CRUD, tags, factory, per-card style setters
+/// - [CanvasConnectionOperations]: connection CRUD, waypoints, auto-conn, search
+/// - [CanvasSelectionBatchOperations]: selection, inline editing, batch ops
+/// - [CanvasLayerOperations]: layer add/remove/rename/visibility/lock/reorder
+/// - [CanvasCanvasManagement]: multi-canvas create/switch/delete/rename
+/// - [CanvasExportOperations]: export delegation (non-static)
+/// - [CanvasLayoutSettingsOperations]: auto-layout + settings toggles
+/// - [CanvasScratchpadTemplateOperations]: scratchpad + templates
+/// - [CanvasStyleOperations]: default styles + background color
+class CanvasNotifier extends CanvasNotifierBase
+    with
+        CanvasCardOperations,
+        CanvasConnectionOperations,
+        CanvasSelectionBatchOperations,
+        CanvasLayerOperations,
+        CanvasCanvasManagement,
+        CanvasExportOperations,
+        CanvasLayoutSettingsOperations,
+        CanvasScratchpadTemplateOperations,
+        CanvasStyleOperations {
+  CanvasNotifier({
+    super.layoutService,
+    super.exportService,
+    super.layersService,
+    super.scratchpadService,
+    super.styleService,
+  });
 
-  Future<void> switchCanvas(String name) async {
-    if (!_canvasNames.contains(name) || name == _activeCanvasName) return;
-    await _save();
-    _activeCanvasName = name;
-    await _saveCanvasList();
-    await _loadFromFile();
-  }
-
-  Future<bool> deleteCanvas(String name) async {
-    if (_canvasNames.length <= 1) return false;
-    if (!_canvasNames.contains(name)) return false;
-    _canvasNames.remove(name);
-    if (_activeCanvasName == name) {
-      _activeCanvasName = _canvasNames.first;
-      await _loadFromFile();
-    }
-    await _saveCanvasList();
-    try {
-      final vaultPath = ref.read(vaultProvider).currentVault?.path;
-      if (vaultPath != null) {
-        final file = File(
-          p.join(vaultPath, '.rf', 'canvases', '$name.canvas.json'),
-        );
-        if (await file.exists()) await file.delete();
-      }
-    } catch (_) {
-      debugPrint('Canvas: failed to delete canvas file for "$name"');
-    }
-    return true;
-  }
-
-  Future<bool> renameCanvas(String oldName, String newName) async {
-    final trimmed = newName.trim();
-    if (trimmed.isEmpty || _canvasNames.contains(trimmed)) return false;
-    if (!_canvasNames.contains(oldName)) return false;
-    final index = _canvasNames.indexOf(oldName);
-    _canvasNames[index] = trimmed;
-    if (_activeCanvasName == oldName) {
-      _activeCanvasName = trimmed;
-    }
-    await _saveCanvasList();
-    try {
-      final vaultPath = ref.read(vaultProvider).currentVault?.path;
-      if (vaultPath != null) {
-        final oldFile = File(
-          p.join(vaultPath, '.rf', 'canvases', '$oldName.canvas.json'),
-        );
-        final newFile = File(
-          p.join(vaultPath, '.rf', 'canvases', '$trimmed.canvas.json'),
-        );
-        if (await oldFile.exists()) await oldFile.rename(newFile.path);
-      }
-    } catch (_) {
-      debugPrint(
-        'Canvas: failed to rename canvas file from "$oldName" to "$newName"',
-      );
-    }
-    return true;
-  }
-
-  // === Layout delegation ===
-
-  void autoLayout(AutoLayoutType type) {
-    if (state.cards.isEmpty) return;
-    final positions = _layoutService.computeLayout(
-      state.cards,
-      state.connections,
-      type,
-      snapToGrid: state.settings.snapToGrid,
-    );
-    _mutateAndDebounce(() {
-      final newCards = state.cards.map((card) {
-        final pos = positions[card.id];
-        if (pos != null) {
-          return card.copyWith(x: pos.dx, y: pos.dy);
-        }
-        return card;
-      }).toList();
-      return state.copyWith(cards: newCards);
-    });
-  }
-
-  // === Export delegation ===
-
-  String exportToSvg() => _exportService.exportToSvg(state, _activeCanvasName);
-
-  String exportToPdf() => _exportService.exportToPdf(state, _activeCanvasName);
-
-  String exportToMarkdown() =>
-      _exportService.exportToMarkdown(state, _activeCanvasName);
-
-  String exportToHtml() => _exportService.exportToHtml(state);
-
-  String exportToJpeg() =>
-      _exportService.exportToJpeg(state, _activeCanvasName);
-
-  String exportToWebp() =>
-      _exportService.exportToWebp(state, _activeCanvasName);
-
-  String encodeToUrl() => _exportService.encodeToUrl(state);
-
-  (String, String) exportWithEmbeddedData() =>
-      _exportService.exportWithEmbeddedData(state, _activeCanvasName);
+  // === Static import methods (cannot live in mixins) ===
 
   static CanvasData? decodeFromUrl(String url) =>
       CanvasExportService.decodeFromUrl(url);
@@ -1036,211 +314,6 @@ class CanvasNotifier extends Notifier<CanvasData> with SharedPrefsAware {
 
   static CanvasData? importFromVsdx(String vsdxPath) =>
       CanvasExportService.importFromVsdx(vsdxPath);
-
-  // === Layers delegation ===
-
-  Future<void> addLayer(String name) async {
-    _pushUndo();
-    final layer = _layersService.createLayer(name, state.layers.length);
-    state = state.copyWith(layers: [...state.layers, layer]);
-    await _save();
-  }
-
-  Future<void> removeLayer(String layerId) async {
-    _pushUndo();
-    final newLayers = _layersService.removeLayer(state.layers, layerId);
-    final cleanedCards = state.cards.map((c) {
-      if (c.layerId == layerId) return c.copyWith(clearLayerId: true);
-      return c;
-    }).toList();
-    state = state.copyWith(layers: newLayers, cards: cleanedCards);
-    await _save();
-  }
-
-  void renameLayer(String layerId, String name) {
-    final layers = _layersService.renameLayer(state.layers, layerId, name);
-    state = state.copyWith(layers: layers);
-    _debouncedSave();
-  }
-
-  void toggleLayerVisibility(String layerId) {
-    final layers = state.layers.map((l) {
-      if (l.id == layerId) return l.copyWith(visible: !l.visible);
-      return l;
-    }).toList();
-    state = state.copyWith(layers: layers);
-    _debouncedSave();
-  }
-
-  void setLayerVisible(String layerId, bool visible) {
-    final layers = state.layers.map((l) {
-      if (l.id == layerId) return l.copyWith(visible: visible);
-      return l;
-    }).toList();
-    state = state.copyWith(layers: layers);
-    _debouncedSave();
-  }
-
-  void toggleLayerLock(String layerId) {
-    final layers = state.layers.map((l) {
-      if (l.id == layerId) return l.copyWith(locked: !l.locked);
-      return l;
-    }).toList();
-    state = state.copyWith(layers: layers);
-    _debouncedSave();
-  }
-
-  void setLayerLocked(String layerId, bool locked) {
-    final layers = state.layers.map((l) {
-      if (l.id == layerId) return l.copyWith(locked: locked);
-      return l;
-    }).toList();
-    state = state.copyWith(layers: layers);
-    _debouncedSave();
-  }
-
-  void moveCardToLayer(String cardId, String? layerId) {
-    final cards = _layersService.moveCardToLayer(state.cards, cardId, layerId);
-    state = state.copyWith(cards: cards);
-    _debouncedSave();
-  }
-
-  void setSelectedLayer(String? layerId) {
-    state = state.copyWith(
-      selectedLayerId: layerId,
-      clearSelectedLayerId: layerId == null,
-    );
-    _debouncedSave();
-  }
-
-  bool isLayerLocked(String cardId) {
-    return false;
-  }
-
-  bool isLayerVisible(String cardId) {
-    return true;
-  }
-
-  void reorderLayer(String layerId, int newOrder) {
-    final layers = _layersService.reorderLayer(state.layers, layerId, newOrder);
-    state = state.copyWith(layers: layers);
-    _debouncedSave();
-  }
-
-  void moveLayerUp(String layerId) {
-    final layers = _layersService.moveLayerUp(state.layers, layerId);
-    state = state.copyWith(layers: layers);
-    _debouncedSave();
-  }
-
-  void moveLayerDown(String layerId) {
-    final layers = _layersService.moveLayerDown(state.layers, layerId);
-    state = state.copyWith(layers: layers);
-    _debouncedSave();
-  }
-
-  int cardCountForLayer(String layerId) {
-    return _layersService.cardCountForLayer(state.cards, layerId);
-  }
-
-  int get unassignedCardCount =>
-      state.cards.where((c) => c.layerId == null).length;
-
-  // === Scratchpad delegation ===
-
-  Future<List<ScratchpadItem>> loadScratchpad() async {
-    final vaultPath = ref.read(vaultProvider).currentVault?.path;
-    if (vaultPath == null) return [];
-    return _scratchpadService.loadScratchpad(vaultPath);
-  }
-
-  Future<void> saveScratchpadItem(ScratchpadItem item) async {
-    final vaultPath = ref.read(vaultProvider).currentVault?.path;
-    if (vaultPath == null) return;
-    await _scratchpadService.saveScratchpadItem(vaultPath, item);
-  }
-
-  Future<void> removeScratchpadItem(String itemId) async {
-    final vaultPath = ref.read(vaultProvider).currentVault?.path;
-    if (vaultPath == null) return;
-    await _scratchpadService.removeScratchpadItem(vaultPath, itemId);
-  }
-
-  CanvasCard createCardFromScratchpad(ScratchpadItem item, Offset pos) {
-    return _scratchpadService.createCardFromScratchpad(item, pos);
-  }
-
-  // === Templates delegation ===
-
-  void loadTemplate(String templateName) {
-    final template = CanvasTemplatesService.builtInTemplates[templateName];
-    if (template == null) return;
-    _mutateAndDebounce(() => template);
-  }
-
-  void loadFromData(CanvasData data) {
-    _mutateAndDebounce(() => data);
-  }
-
-  void setFontFamily(String cardId, String family) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(card.copyWith(fontFamily: family));
-    _debouncedSave();
-  }
-
-  void setTextColor(String cardId, int colorValue) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(card.copyWith(textColorValue: colorValue));
-    _debouncedSave();
-  }
-
-  void setLatexFormula(String cardId, String? formula) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(
-      card.copyWith(latexFormula: formula, clearLatex: formula == null),
-    );
-    _debouncedSave();
-  }
-
-  void setHtmlContent(String cardId, String? html) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(
-      card.copyWith(htmlContent: html, clearHtml: html == null),
-    );
-    _debouncedSave();
-  }
-
-  void setCustomSvg(String cardId, String? svgData) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(
-      card.copyWith(customSvgData: svgData, clearSvg: svgData == null),
-    );
-    _debouncedSave();
-  }
-
-  void addSvgAsCustomShape(String cardId, String svgData) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(card.copyWith(customSvgData: svgData));
-    _debouncedSave();
-  }
-
-  void setConnectionPointOffset(String cardId, double offsetX, double offsetY) {
-    final card = cardById(cardId);
-    if (card == null) return;
-    updateCardInMemory(
-      card.copyWith(
-        connectionPointOffsetX: offsetX.clamp(0.0, 1.0),
-        connectionPointOffsetY: offsetY.clamp(0.0, 1.0),
-      ),
-    );
-    _debouncedSave();
-  }
 }
 
 final canvasProvider = NotifierProvider<CanvasNotifier, CanvasData>(

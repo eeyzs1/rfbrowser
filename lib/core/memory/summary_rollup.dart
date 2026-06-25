@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:rfbrowser/data/models/chat_memory.dart';
 import 'package:rfbrowser/services/memory_service.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../logging/app_logger.dart';
 import 'memory_summarizer.dart';
 
 /// Builds L2 (per-week) and L3 (per-month) summaries on top of existing
@@ -112,7 +112,7 @@ class SummaryRollup {
       created++;
     }
     if (created > 0) {
-      debugPrint(
+      appLog.debug(
         'SummaryRollup: created $created $targetTier summaries from '
         '${children.length} $sourceTier children',
       );

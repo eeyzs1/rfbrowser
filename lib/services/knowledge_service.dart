@@ -7,8 +7,10 @@ import '../data/models/skill.dart';
 import '../data/models/unlinked_mention.dart';
 import '../data/stores/index_store.dart';
 import '../data/stores/vault_store.dart';
+import '../data/stores/split_pane_store.dart';
 import '../core/graph/filter_engine.dart';
 import '../core/active_note_mixin.dart';
+import '../core/logging/app_logger.dart';
 import 'note_service.dart';
 import 'link_service.dart';
 import 'search_service.dart';
@@ -109,7 +111,26 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
       _syncLinks();
       // Build TF-IDF corpus for better local semantic search
       ref.read(embeddingServiceProvider).buildTfidfFromNotes(noteState.notes);
+      // Load persisted note vectors, then backfill missing ones in background.
+      _loadEmbeddings(noteState.notes);
     }
+  }
+
+  /// Loads persisted embeddings into the in-memory HNSW index, then kicks off
+  /// a background backfill for any notes that do not yet have a vector.
+  Future<void> _loadEmbeddings(List<Note> notes) async {
+    final embeddingService = ref.read(embeddingServiceProvider);
+    try {
+      await embeddingService.loadPersistedEmbeddings();
+    } catch (e) {
+      appLog.warning('Failed to load persisted embeddings', error: e);
+    }
+    // Backfill missing vectors in the background (may hit Ollama/ONNX).
+    embeddingService.batchEmbedMissing(notes).catchError((e, st) {
+      appLog.warning('Failed to backfill note embeddings',
+          error: e, stackTrace: st);
+      return 0;
+    });
   }
 
   void setFilter(NoteFilter filter) {
@@ -123,6 +144,17 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
     _linkSvc.updateLinksForNote(note, state.notes);
     _syncLinks();
+    // Update the semantic index (fire-and-forget; failures are logged).
+    _indexNoteEmbedding(note);
+  }
+
+  /// Re-embeds a single note and persists its vector. Runs in the background
+  /// so note saving is never blocked by the embedding backend.
+  void _indexNoteEmbedding(Note note) {
+    ref.read(embeddingServiceProvider).onNoteSaved(note).catchError((e, st) {
+      appLog.warning('Failed to index embedding for note ${note.id}',
+          error: e, stackTrace: st);
+    });
   }
 
   Future<Note> createNote({required String title, String content = ''}) async {
@@ -141,6 +173,11 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     state = state.copyWith(notes: ref.read(noteServiceProvider).notes);
     _linkSvc.rebuildAllLinks(state.notes);
     _syncLinks();
+    // Remove the note's vector from the semantic index and persistence.
+    ref.read(embeddingServiceProvider).removeNoteEmbedding(id).catchError((e, st) {
+      appLog.warning('Failed to remove embedding for $id',
+          error: e, stackTrace: st);
+    });
   }
 
   Future<Note> renameNote(String oldPath, String newName) async {
@@ -258,10 +295,51 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
   }
 
   void openNote(String noteId) {
+    // Open in the active split pane (creates a pane if none exists).
+    ref.read(splitPaneProvider.notifier).openNoteInActiveLeaf(noteId);
+    // Skip the state update when the active note is already this one.
+    // Otherwise every click on the already-active note would trigger a
+    // knowledgeProvider rebuild (sidebar trie, backlinks panel, all
+    // panes) for no reason — a noticeable hitch on large vaults.
+    if (state.activeNoteId == noteId) return;
     state = state.copyWith(activeNoteId: noteId);
     ref.read(pluginHostProvider.notifier).dispatchHook('note.opened', {
       'noteId': noteId,
     });
+  }
+
+  /// Updates the in-memory content of the note identified by [noteId]
+  /// without persisting. Used by individual panes' autosave buffers.
+  void updateNoteContent(String noteId, String content) {
+    final notes = state.notes.toList();
+    final idx = notes.indexWhere((n) => n.id == noteId);
+    if (idx < 0) return;
+    final updated = notes[idx].copyWith(content: content);
+    notes[idx] = updated;
+    state = state.copyWith(notes: notes);
+  }
+
+  /// Persists the note identified by [noteId] using its current in-memory
+  /// content. Used by panes that edit a note which may not be the global
+  /// active note.
+  Future<void> saveNoteById(String noteId) async {
+    final note = _findNote(noteId);
+    if (note == null) return;
+    await saveNote(note);
+  }
+
+  /// Sets the global active note id (the focused note). Used by panes to
+  /// signal that they received focus, so backlinks/AI context follow.
+  void setActiveNoteId(String noteId) {
+    if (state.activeNoteId == noteId) return;
+    state = state.copyWith(activeNoteId: noteId);
+  }
+
+  Note? _findNote(String id) {
+    for (final n in state.notes) {
+      if (n.id == id) return n;
+    }
+    return null;
   }
 
   void updateActiveNoteContent(String content) {

@@ -2,17 +2,14 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'helpers/sqflite_test_setup.dart';
 import 'package:rfbrowser/plugins/host/plugin_host.dart';
 import 'package:rfbrowser/data/repositories/note_repository.dart';
 import 'package:rfbrowser/services/browser_service.dart';
 import 'package:rfbrowser/data/stores/index_store.dart';
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
+  setUpAll(setupSqfliteForTests);
 
   group('PluginHostNotifier API Bridge (P0-1 ACs)', () {
     test(

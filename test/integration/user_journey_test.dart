@@ -11,7 +11,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../helpers/sqflite_test_setup.dart';
 
 import 'package:rfbrowser/data/repositories/note_repository.dart';
 import 'package:rfbrowser/data/stores/index_store.dart';
@@ -64,10 +64,7 @@ _setupVault() async {
 }
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
+  setUpAll(setupSqfliteForTests);
 
   group('G15-B: 5 canonical user journeys (smoke)', () {
     test('Journey 1: note lifecycle — create / edit / save / rename', () async {

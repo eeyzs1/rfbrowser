@@ -1,4 +1,5 @@
 import 'dart:math';
+import '../../core/logging/app_logger.dart';
 
 class HnswIndex {
   final int M;
@@ -8,6 +9,12 @@ class HnswIndex {
 
   int _entryPoint = -1;
   int _maxLevel = -1;
+
+  /// Dimensionality of vectors in this index. -1 means uninitialized.
+  /// When a vector with a different dimension is inserted, the index is
+  /// cleared to avoid mixing incompatible vectors (e.g. 128-dim local
+  /// fallback vectors with 384-dim ONNX vectors).
+  int _dim = -1;
 
   final List<List<double>> _vectors = [];
   final List<String> _ids = [];
@@ -35,6 +42,19 @@ class HnswIndex {
     List<double> vector, {
     Map<String, dynamic>? metadata,
   }) {
+    // Detect dimension change (e.g. switching from 128-dim local fallback
+    // to 384-dim ONNX). Clear the index to avoid mixing incompatible vectors.
+    if (_dim == -1) {
+      _dim = vector.length;
+    } else if (_dim != vector.length) {
+      appLog.warning(
+        'HnswIndex: dimension changed from $_dim to ${vector.length}, '
+        'clearing index to rebuild with new dimensionality',
+      );
+      clear();
+      _dim = vector.length;
+    }
+
     final existingIndex = _ids.indexOf(id);
     if (existingIndex >= 0) {
       _vectors[existingIndex] = List.from(vector);
@@ -169,6 +189,7 @@ class HnswIndex {
   void clear() {
     _entryPoint = -1;
     _maxLevel = -1;
+    _dim = -1;
     _vectors.clear();
     _ids.clear();
     _metadata.clear();
@@ -197,8 +218,11 @@ class HnswIndex {
   }
 
   double _distance(List<double> a, List<double> b) {
+    // Use the shorter vector's length to avoid RangeError when vectors
+    // have different dimensions (e.g. during a dimension transition).
+    final len = a.length < b.length ? a.length : b.length;
     var sum = 0.0;
-    for (var i = 0; i < a.length; i++) {
+    for (var i = 0; i < len; i++) {
       final diff = a[i] - b[i];
       sum += diff * diff;
     }

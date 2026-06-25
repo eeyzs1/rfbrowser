@@ -1,195 +1,88 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+
+import '../core/logging/app_logger.dart';
+import '../core/ai/request_context.dart';
 import '../data/models/ai_provider.dart';
-import '../data/models/chat_memory.dart';
-import 'dio_factory.dart';
-import 'connectivity_service.dart';
-import 'settings_service.dart';
+import 'ai/ai_models.dart';
+import 'ai/ai_protocol_strategy.dart';
+import 'ai/ai_stream_accumulator.dart';
+import 'ai/memory_context_builder.dart';
+import 'active_memory_buffer.dart';
 import 'agent_chat_bridge.dart';
-import 'memory_service.dart';
+import 'connectivity_service.dart';
+import 'dio_factory.dart';
 import 'dreaming_service.dart';
 import 'hebbian_service.dart';
-import 'active_memory_buffer.dart';
-import '../core/ai/request_context.dart';
+import 'memory_service.dart';
+import 'settings_service.dart';
 
-class ToolCallInfo {
-  final String id;
-  final String name;
-  final Map<String, dynamic> args;
+// Re-export models for backward compatibility — historical callers
+// import them from ai_service.dart.
+export 'ai/ai_models.dart';
 
-  ToolCallInfo({required this.id, required this.name, required this.args});
-}
+part 'ai_service_tool_loop.dart';
 
-class ChatMessage {
-  final String role;
-  final String content;
-  final DateTime timestamp;
-  final bool isStreaming;
-  final List<ToolCallInfo> toolCalls;
-  final String? toolCallDisplay;
-  final String? toolResultDisplay;
-
-  /// Stable id used for cross-references (e.g. the "Remember this" button
-  /// links a memory fragment back to the originating message). Generated
-  /// on first access if the message was constructed without one.
-  final String? id;
-
-  /// Memory fragment ids that were injected into this response's context.
-  /// Lets the UI render a "memory footprint" so the user can see what the
-  /// model was thinking with.
-  final List<String> usedMemoryFragmentIds;
-
-  /// Memory summary ids that were injected as a fallback when no fragments
-  /// matched.
-  final List<String> usedMemorySummaryIds;
-
-  /// Approximate number of memory-context tokens consumed by this turn.
-  /// Tracked for the budget cap + UI display.
-  final int memoryContextTokens;
-
-  ChatMessage({
-    required this.role,
-    required this.content,
-    DateTime? timestamp,
-    this.isStreaming = false,
-    this.toolCalls = const [],
-    this.toolCallDisplay,
-    this.toolResultDisplay,
-    this.id,
-    this.usedMemoryFragmentIds = const [],
-    this.usedMemorySummaryIds = const [],
-    this.memoryContextTokens = 0,
-  }) : timestamp = timestamp ?? DateTime.now();
-
-  ChatMessage copyWith({
-    String? content,
-    bool? isStreaming,
-    List<ToolCallInfo>? toolCalls,
-    String? toolCallDisplay,
-    String? toolResultDisplay,
-    List<String>? usedMemoryFragmentIds,
-    List<String>? usedMemorySummaryIds,
-    int? memoryContextTokens,
-    bool clearToolCallDisplay = false,
-    bool clearToolResultDisplay = false,
-  }) {
-    return ChatMessage(
-      role: role,
-      content: content ?? this.content,
-      timestamp: timestamp,
-      isStreaming: isStreaming ?? this.isStreaming,
-      toolCalls: toolCalls ?? this.toolCalls,
-      toolCallDisplay: clearToolCallDisplay
-          ? null
-          : (toolCallDisplay ?? this.toolCallDisplay),
-      toolResultDisplay: clearToolResultDisplay
-          ? null
-          : (toolResultDisplay ?? this.toolResultDisplay),
-      usedMemoryFragmentIds:
-          usedMemoryFragmentIds ?? this.usedMemoryFragmentIds,
-      usedMemorySummaryIds: usedMemorySummaryIds ?? this.usedMemorySummaryIds,
-      memoryContextTokens: memoryContextTokens ?? this.memoryContextTokens,
-    );
-  }
-}
-
-/// What [_AiMemoryBrain.buildContext] (or equivalent) decided to put into
-/// the system prompt. Carries the formatted string plus the source rows
-/// and an approximate token cost so the chat panel can render a
-/// "memory footprint" beside the assistant's reply.
-class MemoryContextBundle {
-  /// Final prompt fragment injected into the system prompt.
-  final String? context;
-
-  /// Ids of the memory fragments that were picked.
-  final List<String> fragmentIds;
-
-  /// Ids of the summaries used as a fallback (when no fragments fit).
-  final List<String> summaryIds;
-
-  /// Approximate number of tokens the formatted context consumed. Tracked
-  /// for the user-facing budget display.
-  final int tokensUsed;
-
-  /// The budget the picker was targeting.
-  final int budget;
-  const MemoryContextBundle({
-    required this.context,
-    required this.fragmentIds,
-    required this.summaryIds,
-    required this.tokensUsed,
-    required this.budget,
-  });
-  const MemoryContextBundle.empty()
-    : context = null,
-      fragmentIds = const [],
-      summaryIds = const [],
-      tokensUsed = 0,
-      budget = 0;
-  bool get isEmpty =>
-      context == null && fragmentIds.isEmpty && summaryIds.isEmpty;
-}
-
-class AIState {
-  final List<ChatMessage> messages;
-  final bool isLoading;
-  final String? error;
-  final AIProvider? activeProvider;
-  final AIModel? activeModel;
-
-  AIState({
-    this.messages = const [],
-    this.isLoading = false,
-    this.error,
-    this.activeProvider,
-    this.activeModel,
-  });
-
-  AIState copyWith({
-    List<ChatMessage>? messages,
-    bool? isLoading,
-    String? error,
-    AIProvider? activeProvider,
-    AIModel? activeModel,
-    bool clearError = false,
-    bool clearProvider = false,
-    bool clearModel = false,
-  }) {
-    return AIState(
-      messages: messages ?? this.messages,
-      isLoading: isLoading ?? this.isLoading,
-      error: clearError ? null : (error ?? this.error),
-      activeProvider: clearProvider
-          ? null
-          : (activeProvider ?? this.activeProvider),
-      activeModel: clearModel ? null : (activeModel ?? this.activeModel),
-    );
-  }
-}
-
-class AINotifier extends Notifier<AIState> {
+class AINotifier extends Notifier<AIState> with _ToolCallLoopMixin {
   static final _dio = DioFactory.instance;
+  late final AiProtocolStrategy _protocol = AiProtocolStrategy(_dio);
+
+  /// 会话持久化的 SharedPreferences 键名
+  static const _sessionsStorageKey = 'ai_chat_sessions_v1';
 
   MemoryService get _memory => ref.read(memoryServiceProvider);
   DreamingService get _dreaming => ref.read(dreamingServiceProvider);
+
+  // ── Bridges for _ToolCallLoopMixin ──────────────────────────────
+  @override
+  AiProtocolStrategy get protocolStrategy => _protocol;
+
+  @override
+  void updateLastAssistantMessage(
+    String content, {
+    required bool isStreaming,
+    bool attachMemoryFootprint = false,
+  }) =>
+      _updateLastAssistantMessage(
+        content,
+        isStreaming: isStreaming,
+        attachMemoryFootprint: attachMemoryFootprint,
+      );
+
+  @override
+  void removeLastAssistantMessage() => _removeLastAssistantMessage();
+
+  @override
+  void persistMessage(String role, String content) =>
+      _persistMessage(role, content);
+  // ────────────────────────────────────────────────────────────────
 
   @override
   AIState build() {
     final aiConfig = ref.read(aiConfigProvider);
     final config = aiConfig.activeConfig;
+    AIState initialState;
     if (config != null) {
       final provider = aiConfig.activeProvider;
       final model = aiConfig.activeModel;
       if (provider != null && model != null) {
         _configureDreaming(provider, model);
-        return AIState(activeProvider: provider, activeModel: model);
+        initialState = AIState(activeProvider: provider, activeModel: model);
+      } else {
+        initialState = AIState();
       }
+    } else {
+      initialState = AIState();
     }
-    return AIState();
+
+    // 异步加载持久化的会话
+    _loadSessions();
+    return initialState;
   }
 
   void _configureDreaming(AIProvider provider, AIModel model) {
@@ -223,7 +116,7 @@ class AINotifier extends Notifier<AIState> {
     //    are layered onto whatever caller-supplied context exists, so
     //    AI services always know "what is the user doing right now".
     //    Honored only when the user has not disabled it in settings.
-    final injectContext = ref.read(settingsProvider).memoryInjectContext;
+    final injectContext = ref.read(settingsProvider).memory.injectContext;
     final ambient = injectContext ? ref.read(requestContextProvider) : null;
     final ambientBlock = ambient?.toSystemPromptBlock() ?? '';
     // ─────────────────────────────────────────────────────────────
@@ -289,8 +182,10 @@ class AINotifier extends Notifier<AIState> {
       isStreaming: true,
       id: const Uuid().v4(),
     );
+    final newMessages = [...state.messages, userMsg, streamingMsg];
     state = state.copyWith(
-      messages: [...state.messages, userMsg, streamingMsg],
+      messages: newMessages,
+      sessions: _syncedSessions(newMessages),
       isLoading: true,
       clearError: true,
     );
@@ -309,7 +204,7 @@ class AINotifier extends Notifier<AIState> {
 
       final hasTools = tools != null && tools.isNotEmpty && bridge != null;
 
-      final response = await _sendRequest(
+      final response = await _protocol.sendRequest(
         provider: provider,
         model: model,
         messages: messages,
@@ -319,7 +214,7 @@ class AINotifier extends Notifier<AIState> {
       );
 
       if (hasTools) {
-        await _handleToolCallLoop(
+        await handleToolCallLoop(
           response,
           provider,
           model,
@@ -340,7 +235,10 @@ class AINotifier extends Notifier<AIState> {
               if (data == '[DONE]') break;
               try {
                 final json = jsonDecode(data);
-                final delta = _extractStreamDelta(json, provider.protocol);
+                final delta = _protocol.extractStreamDelta(
+                  json,
+                  provider.protocol,
+                );
                 if (delta != null) {
                   buffer.write(delta);
                   _updateLastAssistantMessage(
@@ -349,7 +247,7 @@ class AINotifier extends Notifier<AIState> {
                   );
                 }
               } catch (e) {
-                debugPrint('Stream chunk parse error: $e');
+                appLog.warning('Stream chunk parse error', error: e);
               }
             }
           }
@@ -362,14 +260,18 @@ class AINotifier extends Notifier<AIState> {
         // ── Memory: persist assistant response ──────────────────
         _persistMessage('assistant', buffer.toString());
         // ─────────────────────────────────────────────────────────
+        // 持久化会话到本地存储
+        _persistSessions();
       }
     } on DioException catch (e) {
-      final errorMsg = _extractErrorMessage(e, provider.protocol);
+      final errorMsg = _protocol.extractErrorMessage(e, provider.protocol);
       _removeLastAssistantMessage();
       state = state.copyWith(isLoading: false, error: errorMsg);
+      _persistSessions();
     } catch (e) {
       _removeLastAssistantMessage();
       state = state.copyWith(isLoading: false, error: e.toString());
+      _persistSessions();
     }
   }
 
@@ -400,7 +302,11 @@ class AINotifier extends Notifier<AIState> {
         break;
       }
     }
-    state = state.copyWith(messages: messages, isLoading: isStreaming);
+    state = state.copyWith(
+      messages: messages,
+      sessions: _syncedSessions(messages),
+      isLoading: isStreaming,
+    );
   }
 
   void _removeLastAssistantMessage() {
@@ -411,214 +317,267 @@ class AINotifier extends Notifier<AIState> {
         break;
       }
     }
-    state = state.copyWith(messages: messages);
-  }
-
-  /// Process a streaming response that may contain tool calls.
-  /// When tool calls are detected, execute them and loop until
-  /// the AI returns a text-only response.
-  Future<void> _handleToolCallLoop(
-    Response<dynamic> firstResponse,
-    AIProvider provider,
-    AIModel model,
-    String? apiKey,
-    AgentChatBridge bridge,
-    List<Map<String, dynamic>> tools,
-    List<Map<String, dynamic>> apiMessages,
-  ) async {
-    const maxLoops = 10;
-    var currentMessages = List<Map<String, dynamic>>.from(apiMessages);
-    var loopCount = 0;
-
-    while (loopCount < maxLoops) {
-      final toolCallsByIndex = <int, _AccToolCall>{};
-      final textBuffer = StringBuffer();
-
-      // Read the stream
-      final stream = (loopCount == 0)
-          ? firstResponse.data.stream
-          : (await _sendRequest(
-              provider: provider,
-              model: model,
-              messages: currentMessages,
-              apiKey: apiKey,
-              stream: true,
-              tools: tools,
-            )).data.stream;
-
-      await for (final chunk in stream) {
-        final text = utf8.decode(chunk);
-        final lines = text.split('\n');
-        for (final line in lines) {
-          if (!line.startsWith('data: ')) continue;
-          final data = line.substring(6).trim();
-          if (data == '[DONE]') break;
-          try {
-            final json = jsonDecode(data);
-            _accumulateStreamChunk(
-              json,
-              provider.protocol,
-              toolCallsByIndex,
-              textBuffer,
-            );
-          } catch (e) {
-            debugPrint('Tool loop chunk parse error: $e');
-          }
-        }
-      }
-
-      // Update UI with accumulated text
-      final accumulatedText = textBuffer.toString();
-      if (accumulatedText.isNotEmpty) {
-        _updateLastAssistantMessage(accumulatedText, isStreaming: true);
-      }
-
-      // Check if we have tool calls to execute
-      if (toolCallsByIndex.isEmpty) {
-        _updateLastAssistantMessage(
-          accumulatedText,
-          isStreaming: false,
-          attachMemoryFootprint: true,
-        );
-        // ── Memory: persist final assistant response ────────────
-        if (accumulatedText.isNotEmpty) {
-          _persistMessage('assistant', accumulatedText);
-        }
-        // ─────────────────────────────────────────────────────────
-        return;
-      }
-
-      // Execute tool calls
-      final sortedCalls = toolCallsByIndex.entries.toList()
-        ..sort((a, b) => a.key.compareTo(b.key));
-      final toolCalls = sortedCalls.map((e) => e.value).toList();
-
-      // Build assistant message with tool_calls for the API
-      final assistantToolCalls = toolCalls.map((tc) {
-        return {
-          'id': tc.id,
-          'type': 'function',
-          'function': {'name': tc.name, 'arguments': tc.argsJson},
-        };
-      }).toList();
-
-      currentMessages.add({
-        'role': 'assistant',
-        'content': accumulatedText.isNotEmpty ? accumulatedText : null,
-        'tool_calls': assistantToolCalls,
-      });
-
-      // Display tool calls in UI
-      for (final tc in toolCalls) {
-        final args = _parseArgs(tc.argsJson);
-        final display = bridge.formatToolCallForDisplay(tc.name, args);
-
-        // Add a display-only message for the tool call
-        final callMsg = ChatMessage(
-          role: 'tool_call',
-          content: '',
-          toolCallDisplay: display,
-        );
-        state = state.copyWith(messages: [...state.messages, callMsg]);
-
-        // Execute the tool
-        final result = await bridge.executeTool(tc.name, args);
-        final resultDisplay = bridge.formatToolResultForDisplay(
-          tc.name,
-          result,
-        );
-
-        // Add tool result to API messages
-        currentMessages.add({
-          'role': 'tool',
-          'tool_call_id': tc.id,
-          'content': jsonEncode(result),
-        });
-
-        // Display tool result in UI
-        final resultMsg = ChatMessage(
-          role: 'tool_result',
-          content: '',
-          toolResultDisplay: resultDisplay,
-        );
-        state = state.copyWith(messages: [...state.messages, resultMsg]);
-      }
-
-      _removeLastAssistantMessage();
-      state = state.copyWith(isLoading: true);
-      loopCount++;
-    }
-
-    // Max loops exceeded
-    _updateLastAssistantMessage(
-      'Agent tool loop limit reached. Please simplify your request.',
-      isStreaming: false,
-      attachMemoryFootprint: true,
+    state = state.copyWith(
+      messages: messages,
+      sessions: _syncedSessions(messages),
     );
   }
 
-  /// Accumulate streaming chunks, separating text content and tool calls.
-  void _accumulateStreamChunk(
-    Map<String, dynamic> json,
-    ApiProtocol protocol,
-    Map<int, _AccToolCall> toolCallsByIndex,
-    StringBuffer textBuffer,
-  ) {
-    final choices = json['choices'] as List<dynamic>?;
-    if (choices == null || choices.isEmpty) return;
-
-    for (final choice in choices) {
-      final delta = choice['delta'] as Map<String, dynamic>?;
-      if (delta == null) continue;
-
-      // Text content
-      final content = delta['content'] as String?;
-      if (content != null) {
-        textBuffer.write(content);
-        // Update UI with both text and tool calls
-        _updateLastAssistantMessage(textBuffer.toString(), isStreaming: true);
-      }
-
-      // Tool calls (OpenAI format)
-      final tcItems = delta['tool_calls'] as List<dynamic>?;
-      if (tcItems == null) continue;
-
-      for (final tc in tcItems) {
-        final tcMap = tc as Map<String, dynamic>;
-        final index = tcMap['index'] as int? ?? 0;
-        final acc = toolCallsByIndex.putIfAbsent(index, () => _AccToolCall());
-        if (tcMap.containsKey('id') && tcMap['id'] != null) {
-          acc.id = tcMap['id'] as String;
-        }
-        final func = tcMap['function'] as Map<String, dynamic>?;
-        if (func != null) {
-          if (func.containsKey('name') && func['name'] != null) {
-            acc.name = func['name'] as String;
-          }
-          final argsDelta = func['arguments'] as String?;
-          if (argsDelta != null) {
-            acc.argsBuffer.write(argsDelta);
-          }
-        }
-      }
-    }
-  }
-
-  Map<String, dynamic> _parseArgs(String argsJson) {
-    try {
-      return jsonDecode(argsJson) as Map<String, dynamic>;
-    } catch (_) {
-      return {};
-    }
-  }
-
   void clearMessages() {
-    state = state.copyWith(messages: []);
+    // 清空当前会话的消息，并同步到 sessions
+    final sessions = List<ChatSession>.from(state.sessions);
+    final currentId = state.currentSessionId;
+    if (currentId != null) {
+      final idx = sessions.indexWhere((s) => s.id == currentId);
+      if (idx >= 0) {
+        sessions[idx] = sessions[idx].copyWith(messages: const []);
+      }
+    }
+    state = state.copyWith(messages: [], sessions: sessions);
     _memory.newSession();
+    _persistSessions();
   }
 
   void clearError() {
     state = state.copyWith(clearError: true);
+  }
+
+  // ─── 多会话管理 ───────────────────────────────────────────────────
+
+  /// 创建新会话并切换到该会话
+  void createSession() {
+    // 先持久化当前状态
+    _persistSessions();
+
+    final session = ChatSession(
+      id: const Uuid().v4(),
+      title: '',
+      messages: const [],
+      createdAt: DateTime.now(),
+    );
+    state = state.copyWith(
+      sessions: [...state.sessions, session],
+      currentSessionId: session.id,
+      messages: const [],
+      clearError: true,
+    );
+    _persistSessions();
+  }
+
+  /// 切换到指定会话
+  void switchSession(String sessionId) {
+    final session = state.sessions.where((s) => s.id == sessionId).firstOrNull;
+    if (session == null) return;
+    // 先同步当前消息到当前会话
+    final syncedSessions = _syncedSessions(state.messages);
+    state = state.copyWith(
+      sessions: syncedSessions,
+      currentSessionId: sessionId,
+      messages: session.messages,
+      clearError: true,
+    );
+    _persistSessions();
+  }
+
+  /// 重命名指定会话
+  void renameSession(String sessionId, String title) {
+    final sessions = List<ChatSession>.from(state.sessions);
+    final idx = sessions.indexWhere((s) => s.id == sessionId);
+    if (idx < 0) return;
+    sessions[idx] = sessions[idx].copyWith(title: title);
+    state = state.copyWith(sessions: sessions);
+    _persistSessions();
+  }
+
+  /// 删除指定会话
+  void deleteSession(String sessionId) {
+    final sessions = state.sessions.where((s) => s.id != sessionId).toList();
+    if (sessions.isEmpty) {
+      // 删除最后一个会话时，创建一个新的默认会话
+      final newSession = ChatSession(
+        id: const Uuid().v4(),
+        title: '',
+        messages: const [],
+        createdAt: DateTime.now(),
+      );
+      state = state.copyWith(
+        sessions: [newSession],
+        currentSessionId: newSession.id,
+        messages: const [],
+        clearError: true,
+      );
+    } else {
+      final wasCurrent = state.currentSessionId == sessionId;
+      if (wasCurrent) {
+        final newCurrent = sessions.first;
+        state = state.copyWith(
+          sessions: sessions,
+          currentSessionId: newCurrent.id,
+          messages: newCurrent.messages,
+          clearError: true,
+        );
+      } else {
+        state = state.copyWith(sessions: sessions);
+      }
+    }
+    _persistSessions();
+  }
+
+  // ─── 会话持久化辅助方法 ───────────────────────────────────────────
+
+  /// 从第一条用户消息生成会话标题（截取前 30 个字符）
+  String _generateTitle(String content) {
+    final trimmed = content.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (trimmed.length <= 30) return trimmed;
+    return '${trimmed.substring(0, 30)}...';
+  }
+
+  /// 将当前 messages 同步到 sessions 列表中的当前会话，返回更新后的 sessions
+  /// 如果当前会话还没有标题且 messages 中有用户消息，自动生成标题
+  List<ChatSession> _syncedSessions(List<ChatMessage> messages) {
+    final currentId = state.currentSessionId;
+    if (currentId == null) return state.sessions;
+    final sessions = List<ChatSession>.from(state.sessions);
+    final idx = sessions.indexWhere((s) => s.id == currentId);
+    if (idx < 0) return sessions;
+
+    var title = sessions[idx].title;
+    // 当前会话还没有消息且即将添加用户消息时，自动生成标题
+    if (sessions[idx].messages.isEmpty || title.isEmpty) {
+      final firstUser = messages
+          .where((m) => m.role == 'user' && !m.isStreaming)
+          .firstOrNull;
+      if (firstUser != null && firstUser.content.isNotEmpty) {
+        title = _generateTitle(firstUser.content);
+      }
+    }
+    sessions[idx] = sessions[idx].copyWith(title: title, messages: messages);
+    return sessions;
+  }
+
+  /// 持久化所有会话到 SharedPreferences
+  Future<void> _persistSessions() async {
+    try {
+      // 先同步当前消息到会话列表
+      final sessionsToSave = _syncedSessions(state.messages);
+      final prefs = await SharedPreferences.getInstance();
+      final json = jsonEncode(
+        sessionsToSave.map((s) => s.toJson()).toList(),
+      );
+      await prefs.setString(_sessionsStorageKey, json);
+    } catch (e) {
+      appLog.warning('Failed to persist AI sessions', error: e);
+    }
+  }
+
+  /// 从 SharedPreferences 加载持久化的会话
+  Future<void> _loadSessions() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final json = prefs.getString(_sessionsStorageKey);
+      if (json != null) {
+        final list = jsonDecode(json) as List;
+        final sessions = list
+            .map((s) => ChatSession.fromJson(s as Map<String, dynamic>))
+            .toList();
+        if (sessions.isNotEmpty) {
+          final current = sessions.first;
+          state = state.copyWith(
+            sessions: sessions,
+            currentSessionId: current.id,
+            messages: current.messages,
+          );
+          return;
+        }
+      }
+    } catch (e) {
+      appLog.warning('Failed to load AI sessions', error: e);
+    }
+    // 没有持久化会话，创建默认会话
+    _ensureDefaultSession();
+  }
+
+  /// 确保至少有一个默认会话
+  void _ensureDefaultSession() {
+    if (state.currentSessionId != null && state.sessions.isNotEmpty) return;
+    final session = ChatSession(
+      id: const Uuid().v4(),
+      title: '',
+      messages: const [],
+      createdAt: DateTime.now(),
+    );
+    state = state.copyWith(
+      sessions: [session],
+      currentSessionId: session.id,
+      messages: const [],
+    );
+  }
+
+  /// 重试发送上一条用户消息（用于错误 banner 的重试按钮）。
+  /// 会移除当前最后一条用户消息并重新发送，避免消息重复。
+  Future<void> retryLastMessage() async {
+    if (state.isLoading) return;
+
+    // 从消息列表中找到最后一条用户消息
+    final messages = List<ChatMessage>.from(state.messages);
+    String? lastUserContent;
+    for (int i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role == 'user') {
+        lastUserContent = messages[i].content;
+        messages.removeAt(i);
+        break;
+      }
+    }
+
+    if (lastUserContent == null || lastUserContent.isEmpty) return;
+
+    // 移除旧的用户消息并清除错误状态
+    state = state.copyWith(
+      messages: messages,
+      sessions: _syncedSessions(messages),
+      clearError: true,
+    );
+
+    // 重新发送
+    await sendMessage(lastUserContent);
+  }
+
+  /// 重新生成最后一条 AI 回复。
+  /// 删除最后一条 AI 回复和对应的用户消息，然后重新发送该用户消息。
+  Future<void> regenerateLastResponse() async {
+    if (state.isLoading) return;
+
+    final messages = List<ChatMessage>.from(state.messages);
+
+    // 找到并移除最后一条 assistant 消息
+    for (int i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role == 'assistant') {
+        messages.removeAt(i);
+        break;
+      }
+    }
+
+    // 找到最后一条 user 消息的内容并移除
+    String? lastUserContent;
+    for (int i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role == 'user') {
+        lastUserContent = messages[i].content;
+        messages.removeAt(i);
+        break;
+      }
+    }
+
+    if (lastUserContent == null || lastUserContent.isEmpty) return;
+
+    // 更新状态（移除旧消息并同步会话）
+    state = state.copyWith(
+      messages: messages,
+      sessions: _syncedSessions(messages),
+      clearError: true,
+    );
+
+    // 重新发送用户消息
+    await sendMessage(lastUserContent);
   }
 
   // ─── Memory helpers ────────────────────────────────────────────────
@@ -633,144 +592,22 @@ class AINotifier extends Notifier<AIState> {
   /// after the assistant's reply completes streaming.
   MemoryContextBundle get lastMemoryContext => _bundle;
 
-  /// Query relevant memory fragments and format them for the system prompt.
-  ///
-  /// Pipeline:
-  ///   1. FTS5 search → top-k fragments
-  ///   2. Hebbian expansion → related fragments that didn't match the query
-  ///   3. Record the union as a co-access group (so the next call sees
-  ///      stronger edges between them)
-  ///   4. Fall back to summary search when fragment results are sparse
-  ///   5. Trim to the user-configured token budget
-  ///
-  /// The result is cached in [_bundle] for the duration of the turn so the
-  /// chat panel can render the memory footprint after the assistant's
-  /// reply lands.
   Future<MemoryContextBundle> _buildMemoryContextBundle(
     String userMessage, {
     String? sessionId,
   }) async {
-    try {
-      final fragments = await _memory.searchFragments(userMessage, limit: 5);
-      final hebbian = ref.read(hebbianServiceProvider);
-      final neighbors = fragments.isEmpty
-          ? const <HebbianNeighbor>[]
-          : await hebbian.expandByHebbianLinks(
-              fragments.map((f) => f.id),
-              limit: 3,
-            );
-
-      // Record co-access for the union of primary + neighbors. Failures are
-      // logged but never block the response.
-      final coAccessIds = <String>[
-        ...fragments.map((f) => f.id),
-        ...neighbors.map((n) => n.fragment.id),
-      ];
-      if (coAccessIds.length > 1) {
-        unawaited(
-          hebbian.recordCoAccess(coAccessIds).catchError((Object e) {
-            debugPrint('AI: hebbian recordCoAccess error: $e');
-          }),
-        );
-      }
-      // On-retrieval Hebbian reinforcement: the network "votes" for the
-      // user's current focus. Strengthens the primary → neighbor edges.
-      if (fragments.isNotEmpty) {
-        unawaited(
-          hebbian.recordSearchAccess(fragments.map((f) => f.id)).catchError((
-            Object e,
-          ) {
-            debugPrint('AI: hebbian recordSearchAccess error: $e');
-          }),
-        );
-      }
-
-      // Active working memory: per-session pinned fragments that bypass
-      // the budget cap and are always included. Resolved via the buffer
-      // which is RAM-only.
-      final activeBuffer = ref.read(activeMemoryBufferProvider);
-      final activeIds = sessionId == null
-          ? const <String>[]
-          : activeBuffer.activeIds(sessionId);
-      final activeFragments = sessionId == null || activeIds.isEmpty
-          ? const <MemoryFragment>[]
-          : await activeBuffer.getActive(sessionId);
-
-      final allFragments = <MemoryFragment>[
-        ...activeFragments, // active first; will sort later
-        ...fragments,
-        ...neighbors.map((n) => n.fragment),
-      ];
-
-      // Token budget cap: drop low-score fragments until the formatted
-      // context fits within `memoryContextBudget` (approx 4 chars per token).
-      // Active fragments are pinned to the front and skip the cap.
-      final settings = ref.read(settingsProvider);
-      final budget = settings.memoryContextBudget;
-      final activeSet = activeIds.toSet();
-      final pinned = allFragments
-          .where((f) => activeSet.contains(f.id))
-          .toList();
-      final ordered =
-          allFragments.where((f) => !activeSet.contains(f.id)).toList()
-            ..sort((a, b) {
-              // Higher importance first, then higher recency.
-              final s = b.importanceScore.compareTo(a.importanceScore);
-              if (s != 0) return s;
-              return (b.lastAccessAt ?? b.createdAt).compareTo(
-                a.lastAccessAt ?? a.createdAt,
-              );
-            });
-      var picked = <MemoryFragment>[...pinned];
-      var used = pinned.fold<int>(
-        0,
-        (acc, f) => acc + (f.content.length / 4).ceil() + 20,
-      );
-      for (final f in ordered) {
-        // Approximate the formatted cost as 4× content length.
-        final cost = (f.content.length / 4).ceil() + 20;
-        if (used + cost > budget) continue;
-        picked.add(f);
-        used += cost;
-      }
-
-      String? ctx = picked.isEmpty
-          ? null
-          : MemoryService.formatFragmentsForContext(picked);
-
-      var summaryIds = const <String>[];
-      // Fallback: if nothing fit, look at summaries.
-      if (picked.isEmpty) {
-        final summaries = await _memory.searchSummaries(userMessage, limit: 3);
-        if (summaries.isNotEmpty) {
-          ctx = _formatSummariesForContext(summaries);
-          summaryIds = summaries.map((s) => s.summaryId).toList();
-        }
-      }
-      _bundle = MemoryContextBundle(
-        context: ctx,
-        fragmentIds: picked.map((f) => f.id).toList(),
-        summaryIds: summaryIds,
-        tokensUsed: used,
-        budget: budget,
-      );
-      return _bundle;
-    } catch (e) {
-      debugPrint('AI: memory context query failed: $e');
-      _bundle = const MemoryContextBundle.empty();
-      return _bundle;
-    }
-  }
-
-  static String _formatSummariesForContext(List<MemorySummary> summaries) {
-    final buffer = StringBuffer();
-    buffer.writeln('[Past conversation summaries — distilled knowledge:]');
-    for (final s in summaries) {
-      buffer.writeln(
-        '- [${s.summaryTier.name.toUpperCase()}] ${s.summaryText}',
-      );
-    }
-    return buffer.toString();
+    final builder = MemoryContextBuilder(
+      memory: _memory,
+      hebbian: ref.read(hebbianServiceProvider),
+      activeBuffer: ref.read(activeMemoryBufferProvider),
+    );
+    final budget = ref.read(settingsProvider).memory.contextBudget;
+    _bundle = await builder.buildContext(
+      userMessage,
+      sessionId: sessionId,
+      budget: budget,
+    );
+    return _bundle;
   }
 
   /// Merge caller-provided context with memory context.
@@ -808,104 +645,6 @@ class AINotifier extends Notifier<AIState> {
     }
     return messages;
   }
-
-  Future<Response<dynamic>> _sendRequest({
-    required AIProvider provider,
-    required AIModel model,
-    required List<Map<String, dynamic>> messages,
-    String? apiKey,
-    required bool stream,
-    List<Map<String, dynamic>>? tools,
-  }) async {
-    final headers = <String, String>{
-      'Content-Type': 'application/json',
-      ...provider.authHeaders(),
-    };
-
-    switch (provider.protocol) {
-      case ApiProtocol.openaiCompatible:
-        final body = <String, dynamic>{
-          'model': model.id,
-          'messages': messages,
-          'stream': stream,
-        };
-        if (tools != null && tools.isNotEmpty) {
-          body['tools'] = tools;
-        }
-        return _dio.post(
-          provider.chatEndpoint,
-          options: Options(
-            headers: headers,
-            responseType: stream ? ResponseType.stream : ResponseType.json,
-          ),
-          data: jsonEncode(body),
-        );
-
-      case ApiProtocol.anthropic:
-        final systemMsg = messages
-            .where((m) => m['role'] == 'system')
-            .map((m) => m['content'] as String)
-            .firstOrNull;
-        final chatMsgs = messages.where((m) => m['role'] != 'system').toList();
-
-        return _dio.post(
-          provider.chatEndpoint,
-          options: Options(
-            headers: headers,
-            responseType: stream ? ResponseType.stream : ResponseType.json,
-          ),
-          data: jsonEncode({
-            'model': model.id,
-            'max_tokens': 4096,
-            'system': systemMsg,
-            'messages': chatMsgs,
-            'stream': stream,
-          }),
-        );
-    }
-  }
-
-  String? _extractStreamDelta(dynamic json, ApiProtocol protocol) {
-    switch (protocol) {
-      case ApiProtocol.openaiCompatible:
-        return json['choices']?[0]?['delta']?['content'] as String?;
-      case ApiProtocol.anthropic:
-        final type = json['type'] as String?;
-        if (type == 'content_block_delta') {
-          return json['delta']?['text'] as String?;
-        }
-        return null;
-    }
-  }
-
-  String _extractErrorMessage(DioException e, ApiProtocol protocol) {
-    try {
-      final data = e.response?.data;
-      if (data is Map) {
-        switch (protocol) {
-          case ApiProtocol.openaiCompatible:
-            return data['error']?['message'] as String? ??
-                e.message ??
-                'Unknown error';
-          case ApiProtocol.anthropic:
-            return data['error']?['message'] as String? ??
-                e.message ??
-                'Unknown error';
-        }
-      }
-    } catch (_) {
-      debugPrint('AI: failed to extract error message from response');
-    }
-    return e.message ?? 'Unknown error';
-  }
-}
-
-class _AccToolCall {
-  String id = '';
-  String name = '';
-  final StringBuffer argsBuffer = StringBuffer();
-
-  String get argsJson => argsBuffer.toString();
 }
 
 final aiProvider = NotifierProvider<AINotifier, AIState>(AINotifier.new);

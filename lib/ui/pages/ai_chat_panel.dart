@@ -1,4 +1,7 @@
+// ignore_for_file: unused_element, unused_element_parameter
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../l10n/app_localizations.dart';
@@ -14,6 +17,13 @@ import '../../data/models/chat_memory.dart';
 import '../../core/context/assembler.dart';
 import '../../core/context/reference_parser.dart';
 
+part 'ai_chat/ai_chat_autocomplete.dart';
+part 'ai_chat/ai_chat_messages.dart';
+part 'ai_chat/ai_chat_model_selector.dart';
+part 'ai_chat/ai_chat_skills.dart';
+part 'ai_chat/ai_chat_actions.dart';
+part 'ai_chat/ai_chat_memory_widgets.dart';
+
 class AIChatPanel extends ConsumerStatefulWidget {
   const AIChatPanel({super.key});
 
@@ -21,13 +31,16 @@ class AIChatPanel extends ConsumerStatefulWidget {
   ConsumerState<AIChatPanel> createState() => _AIChatPanelState();
 }
 
-class _AIChatPanelState extends ConsumerState<AIChatPanel> {
+/// Base class holding shared state fields and core infrastructure.
+/// UI builders and action handlers live in mixins (part files).
+abstract class _AIChatPanelStateBase extends ConsumerState<AIChatPanel> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
   List<_AutocompleteItem> _autocompleteItems = [];
   bool _showAutocomplete = false;
   bool _agentMode = false;
+  bool _showSessionSidebar = false;
 
   @override
   void initState() {
@@ -44,108 +57,6 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
     super.dispose();
   }
 
-  void _onTextChanged() {
-    final text = _controller.text;
-    final cursorPos = _controller.selection.baseOffset;
-    if (cursorPos < 0) {
-      setState(() => _showAutocomplete = false);
-      return;
-    }
-
-    final textBeforeCursor = text.substring(0, cursorPos);
-    final atMatch = RegExp(r'@(\w*)$').firstMatch(textBeforeCursor);
-
-    if (atMatch != null) {
-      final query = atMatch.group(1) ?? '';
-      _updateAutocomplete(query);
-    } else {
-      setState(() => _showAutocomplete = false);
-    }
-  }
-
-  void _updateAutocomplete(String query) {
-    final items = <_AutocompleteItem>[];
-
-    items.add(
-      _AutocompleteItem(
-        label: '@note[...]',
-        description: 'Reference a note',
-        type: ContextRefType.note,
-        insertText: '@note[]',
-        cursorOffset: -1,
-      ),
-    );
-    items.add(
-      _AutocompleteItem(
-        label: '@web[current]',
-        description: 'Reference current web page',
-        type: ContextRefType.web,
-        insertText: '@web[current]',
-        cursorOffset: 0,
-      ),
-    );
-    items.add(
-      _AutocompleteItem(
-        label: '@clip[...]',
-        description: 'Reference a web clip',
-        type: ContextRefType.clip,
-        insertText: '@clip[]',
-        cursorOffset: -1,
-      ),
-    );
-
-    if (query.isNotEmpty) {
-      final knowledge = ref.read(knowledgeProvider);
-      final noteResults = knowledge.notes
-          .where((n) => n.title.toLowerCase().contains(query.toLowerCase()))
-          .take(10)
-          .toList();
-      for (final note in noteResults) {
-        items.add(
-          _AutocompleteItem(
-            label: '@note[${note.title}]',
-            description: note.content.length > 50
-                ? '${note.content.substring(0, 50)}...'
-                : note.content,
-            type: ContextRefType.note,
-            insertText: '@note[${note.title}]',
-            cursorOffset: 0,
-          ),
-        );
-      }
-    }
-
-    setState(() {
-      _autocompleteItems = items;
-      _showAutocomplete = items.isNotEmpty;
-    });
-  }
-
-  void _applyAutocomplete(_AutocompleteItem item) {
-    final text = _controller.text;
-    final cursorPos = _controller.selection.baseOffset;
-    final textBeforeCursor = text.substring(0, cursorPos);
-    final atMatch = RegExp(r'@\w*$').firstMatch(textBeforeCursor);
-
-    if (atMatch != null) {
-      final before = text.substring(0, atMatch.start);
-      final after = text.substring(cursorPos);
-      final newText = '$before${item.insertText}$after';
-      _controller.text = newText;
-      final newCursorPos =
-          atMatch.start + item.insertText.length + item.cursorOffset;
-      _controller.selection = TextSelection.collapsed(
-        offset: newCursorPos.clamp(0, newText.length),
-      );
-    }
-
-    setState(() {
-      _showAutocomplete = false;
-      _autocompleteItems = [];
-    });
-    _focusNode.requestFocus();
-  }
-
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 50), () {
       if (_scrollController.hasClients) {
@@ -158,6 +69,38 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
     });
   }
 
+  IconData _iconForRefType(ContextRefType type) {
+    switch (type) {
+      case ContextRefType.note:
+        return Icons.description;
+      case ContextRefType.web:
+        return Icons.language;
+      case ContextRefType.clip:
+        return Icons.content_cut;
+      case ContextRefType.file:
+        return Icons.insert_drive_file;
+      case ContextRefType.agent:
+        return Icons.smart_toy;
+    }
+  }
+
+  // --- Abstract declarations for cross-mixin method calls ---
+  void _onTextChanged();
+  void _applyAutocomplete(_AutocompleteItem item);
+  Widget _buildMessage(ThemeData theme, ChatMessage msg);
+  Widget _buildModelSelector(ThemeData theme, AIState aiState);
+  void _showSkillPicker(ThemeData theme);
+  void _sendMessage();
+  void _saveAsNote(String content);
+}
+
+class _AIChatPanelState extends _AIChatPanelStateBase
+    with
+        _AIChatAutocompleteMixin,
+        _AIChatMessagesMixin,
+        _AIChatModelSelectorMixin,
+        _AIChatSkillsMixin,
+        _AIChatActionsMixin {
   @override
   Widget build(BuildContext context) {
     final aiState = ref.watch(aiProvider);
@@ -173,46 +116,63 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
       }
     });
 
-    return Column(
+    return Row(
       children: [
+        // 会话列表侧栏（可折叠）
+        if (_showSessionSidebar) _buildSessionSidebar(theme, aiState),
         Expanded(
-          child: aiState.messages.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.08,
+          child: Column(
+            children: [
+              Expanded(
+                child: aiState.messages.isEmpty
+                    ? Center(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Icon(
+                                  Icons.psychology,
+                                  size: 28,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                l.aiAssistant,
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                l.askMeAnything,
+                                style: theme.textTheme.bodySmall,
+                              ),
+                              const SizedBox(height: 24),
+                              // 示例提示词卡片，点击后自动填入输入框
+                              _buildExamplePrompts(theme),
+                            ],
                           ),
-                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Icon(
-                          Icons.psychology,
-                          size: 28,
-                          color: theme.colorScheme.primary,
-                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(12),
+                        itemCount: aiState.messages.length,
+                        itemBuilder: (context, index) {
+                          final msg = aiState.messages[index];
+                          return _buildMessage(theme, msg);
+                        },
                       ),
-                      const SizedBox(height: 16),
-                      Text(l.aiAssistant, style: theme.textTheme.titleMedium),
-                      const SizedBox(height: 4),
-                      Text(l.askMeAnything, style: theme.textTheme.bodySmall),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(12),
-                  itemCount: aiState.messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = aiState.messages[index];
-                    return _buildMessage(theme, msg);
-                  },
-                ),
-        ),
+              ),
         if (aiState.error != null)
           Container(
             padding: const EdgeInsets.all(8),
@@ -233,6 +193,19 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                     ),
                   ),
                 ),
+                // 重试按钮：重新发送上一条用户消息
+                IconButton(
+                  icon: const Icon(Icons.refresh, size: 14),
+                  onPressed: aiState.isLoading
+                      ? null
+                      : () => ref.read(aiProvider.notifier).retryLastMessage(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 20,
+                  ),
+                  tooltip: l.retry,
+                ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 14),
                   onPressed: () => ref.read(aiProvider.notifier).clearError(),
@@ -252,6 +225,35 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
           ),
           child: Row(
             children: [
+              // 会话侧栏切换按钮
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: IconButton(
+                  icon: Icon(
+                    _showSessionSidebar
+                        ? Icons.view_quilt
+                        : Icons.view_quilt_outlined,
+                    size: 12,
+                  ),
+                  onPressed: () => setState(
+                    () => _showSessionSidebar = !_showSessionSidebar,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 24,
+                    minHeight: 24,
+                  ),
+                  tooltip: l.sessions,
+                  style: IconButton.styleFrom(
+                    backgroundColor: _showSessionSidebar
+                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                        : theme.colorScheme.surface,
+                    side: BorderSide(color: theme.dividerColor),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
               _buildModelSelector(theme, aiState),
               const SizedBox(width: 4),
               SizedBox(
@@ -277,15 +279,15 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                 width: 24,
                 height: 24,
                 child: IconButton(
-                  icon: const Icon(Icons.refresh, size: 12),
+                  icon: const Icon(Icons.add_comment_outlined, size: 12),
                   onPressed: () =>
-                      ref.read(aiProvider.notifier).clearMessages(),
+                      ref.read(aiProvider.notifier).createSession(),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
                     minWidth: 24,
                     minHeight: 24,
                   ),
-                  tooltip: l.newConversation,
+                  tooltip: l.newSession,
                   style: IconButton.styleFrom(
                     backgroundColor: theme.colorScheme.surface,
                     side: BorderSide(color: theme.dividerColor),
@@ -305,7 +307,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                     minWidth: 24,
                     minHeight: 24,
                   ),
-                  tooltip: 'Clear Chat',
+                  tooltip: l.clearChat,
                   style: IconButton.styleFrom(
                     backgroundColor: theme.colorScheme.surface,
                     side: BorderSide(color: theme.dividerColor),
@@ -344,30 +346,47 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
                     itemCount: _autocompleteItems.length,
                     itemBuilder: (context, index) {
                       final item = _autocompleteItems[index];
-                      return ListTile(
-                        dense: true,
-                        leading: Icon(
-                          _iconForRefType(item.type),
-                          size: 14,
-                          color: theme.colorScheme.primary,
-                        ),
-                        title: Text(
-                          item.label,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
+                      return InkWell(
+                        onTap: () => _applyAutocomplete(item),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _iconForRefType(item.type),
+                                size: 14,
+                                color: theme.colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      item.label,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    if (item.description.isNotEmpty)
+                                      Text(
+                                        item.description,
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: theme.hintColor,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        subtitle: item.description.isNotEmpty
-                            ? Text(
-                                item.description,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.hintColor,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              )
-                            : null,
-                        onTap: () => _applyAutocomplete(item),
                       );
                     },
                   ),
@@ -376,20 +395,30 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
               Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      style: theme.textTheme.bodyMedium,
-                      decoration: InputDecoration(
-                        hintText: l.enterMessage,
-                        hintStyle: theme.textTheme.bodySmall,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                    child: CallbackShortcuts(
+                      bindings: {
+                        // Enter 发送消息，Shift+Enter 换行（默认行为）
+                        const SingleActivator(LogicalKeyboardKey.enter):
+                            _sendMessage,
+                      },
+                      child: TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        style: theme.textTheme.bodyMedium,
+                        maxLines: 5,
+                        minLines: 1,
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        decoration: InputDecoration(
+                          hintText: l.enterMessage,
+                          hintStyle: theme.textTheme.bodySmall,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                         ),
                       ),
-                      onSubmitted: (_) => _sendMessage(),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -434,851 +463,359 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> {
             ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildMessage(ThemeData theme, ChatMessage msg) {
-    final l = AppLocalizations.of(context)!;
-    final isUser = msg.role == 'user';
-
-    if (msg.role == 'tool_call' && msg.toolCallDisplay != null) {
-      return _buildToolCallMessage(theme, msg.toolCallDisplay!);
-    }
-    if (msg.role == 'tool_result' && msg.toolResultDisplay != null) {
-      return _buildToolResultMessage(theme, msg.toolResultDisplay!);
-    }
-
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: isUser
-            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
-            : const EdgeInsets.all(8),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: isUser
-              ? theme.colorScheme.primary.withValues(alpha: 0.15)
-              : theme.cardColor,
-          borderRadius: BorderRadius.circular(12),
-          border: isUser
-              ? null
-              : Border.all(color: theme.dividerColor.withValues(alpha: 0.3)),
-        ),
-        child: isUser
-            ? SelectableText(msg.content, style: theme.textTheme.bodyMedium)
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  MarkdownBody(
-                    data: msg.content,
-                    selectable: true,
-                    styleSheet: MarkdownStyleSheet(
-                      p: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
-                      code: theme.textTheme.bodySmall?.copyWith(
-                        fontFamily: 'monospace',
-                        backgroundColor: theme.colorScheme.surface,
-                      ),
-                      codeblockDecoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: theme.dividerColor),
-                      ),
-                      a: TextStyle(
-                        color: theme.colorScheme.primary,
-                        decoration: TextDecoration.underline,
-                      ),
-                      listBullet: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                      ),
-                      blockquoteDecoration: BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            color: theme.colorScheme.primary,
-                            width: 3,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (msg.content.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextButton.icon(
-                            onPressed: () => _saveAsNote(msg.content),
-                            icon: const Icon(Icons.save, size: 12),
-                            label: Text(
-                              l.saveAsNote,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          _RememberForgetButton(message: msg),
-                        ],
-                      ),
-                    ),
-                  // Memory footprint — shows which memory fragments/summaries
-                  // influenced this reply. Only renders after streaming ends.
-                  if (!msg.isStreaming &&
-                      (msg.usedMemoryFragmentIds.isNotEmpty ||
-                          msg.usedMemorySummaryIds.isNotEmpty))
-                    _MemoryFootprint(message: msg),
-                  if (msg.isStreaming)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: 10,
-                            height: 10,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 1.5,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            l.generating,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.hintColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-      ),
-    );
-  }
-
-  Widget _buildToolCallMessage(ThemeData theme, String display) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: theme.colorScheme.primary.withValues(alpha: 0.2),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.build_outlined,
-              size: 14,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                display,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildToolResultMessage(ThemeData theme, String display) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.tertiary.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: theme.colorScheme.tertiary.withValues(alpha: 0.15),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              size: 14,
-              color: theme.colorScheme.tertiary,
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                display,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                  fontSize: 11,
-                ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildModelSelector(ThemeData theme, AIState aiState) {
-    final aiConfig = ref.read(aiConfigProvider);
-    final providers = aiConfig.providers.where((p) => p.isEnabled).toList();
-    final activeModel = aiState.activeModel ?? aiConfig.activeModel;
-    final activeProvider = aiState.activeProvider ?? aiConfig.activeProvider;
-
-    if (providers.isEmpty) {
-      return TextButton.icon(
-        onPressed: () => _showAddProviderDialog(theme),
-        icon: const Icon(Icons.add, size: 14),
-        label: Text('Add Provider', style: theme.textTheme.bodySmall),
-      );
-    }
-
-    final selectWidget = activeModel != null && activeProvider != null
-        ? _buildActiveModelChip(theme, activeProvider, activeModel)
-        : _buildSelectModelButton(theme);
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        selectWidget,
-        const SizedBox(width: 4),
-        SizedBox(
-          width: 24,
-          height: 24,
-          child: IconButton(
-            icon: const Icon(Icons.add, size: 12),
-            onPressed: () => _showAddProviderDialog(theme),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-            tooltip: 'Add Provider',
-            style: IconButton.styleFrom(
-              backgroundColor: theme.colorScheme.surface,
-              side: BorderSide(color: theme.dividerColor),
-            ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildActiveModelChip(
-    ThemeData theme,
-    AIProvider provider,
-    AIModel model,
-  ) {
-    return InkWell(
-      onTap: () => _showModelPicker(theme),
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: theme.dividerColor),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(provider.displayIcon, size: 12, color: theme.hintColor),
-            const SizedBox(width: 4),
-            Text(
-              model.displayName,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (model.supportsVision) ...[
-              const SizedBox(width: 2),
-              Icon(Icons.visibility, size: 10, color: theme.hintColor),
-            ],
-            const SizedBox(width: 2),
-            Icon(Icons.unfold_more, size: 12, color: theme.hintColor),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSelectModelButton(ThemeData theme) {
-    return InkWell(
-      onTap: () => _showModelPicker(theme),
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: theme.dividerColor),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Select', style: theme.textTheme.bodySmall),
-            const SizedBox(width: 4),
-            Icon(Icons.unfold_more, size: 12, color: theme.hintColor),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showModelPicker(ThemeData theme) {
-    final aiConfig = ref.read(aiConfigProvider);
-    final providers = aiConfig.providers.where((p) => p.isEnabled).toList();
-    final activeConfig = aiConfig.activeConfig;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Select Model'),
-        contentPadding: const EdgeInsets.only(top: 16),
-        content: SizedBox(
-          width: 320,
-          child: ListView(
-            shrinkWrap: true,
-            children: providers.map((provider) {
-              final models = aiConfig.modelsForProvider(provider.id);
-              final isActiveProvider = activeConfig?.providerId == provider.id;
-              return ExpansionTile(
-                initiallyExpanded: isActiveProvider,
-                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-                childrenPadding: const EdgeInsets.only(
-                  left: 8,
-                  right: 8,
-                  bottom: 4,
-                ),
-                leading: Icon(
-                  provider.displayIcon,
-                  size: 16,
-                  color: theme.hintColor,
-                ),
-                title: Text(
-                  provider.name,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: isActiveProvider
-                        ? FontWeight.w600
-                        : FontWeight.w400,
-                  ),
-                ),
-                trailing: models.isEmpty
-                    ? Text(
-                        '0 models',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.hintColor,
-                        ),
-                      )
-                    : null,
-                children: models.isEmpty
-                    ? [
-                        Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Text(
-                            'No models. Refresh in Settings.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.hintColor,
-                            ),
-                          ),
-                        ),
-                      ]
-                    : models.map((model) {
-                        final isActive =
-                            isActiveProvider &&
-                            activeConfig?.modelId == model.id;
-                        return ListTile(
-                          dense: true,
-                          leading: Icon(
-                            isActive
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            size: 16,
-                            color: isActive
-                                ? theme.colorScheme.primary
-                                : theme.hintColor,
-                          ),
-                          title: Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  model.displayName,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              ...model.capabilities.map(
-                                (cap) => Padding(
-                                  padding: const EdgeInsets.only(right: 2),
-                                  child: Icon(
-                                    cap == ModelCapability.vision
-                                        ? Icons.visibility
-                                        : Icons.text_fields,
-                                    size: 12,
-                                    color: theme.hintColor,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          onTap: () {
-                            ref
-                                .read(aiProvider.notifier)
-                                .setActiveModel(provider, model);
-                            Navigator.pop(ctx);
-                          },
-                        );
-                      }).toList(),
-              );
-            }).toList(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAddProviderDialog(ThemeData theme) {
-    final nameController = TextEditingController();
-    final baseUrlController = TextEditingController(
-      text: ApiProtocol.openaiCompatible.defaultBaseUrl,
-    );
-    final apiKeyController = TextEditingController();
-    ApiProtocol selectedProtocol = ApiProtocol.openaiCompatible;
-    bool requiresApiKey = true;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) {
-          return AlertDialog(
-            title: const Text('Add Provider'),
-            content: SingleChildScrollView(
-              child: SizedBox(
-                width: 360,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Provider Name',
-                        hintText: 'My OpenAI, Work Azure, etc.',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<ApiProtocol>(
-                      key: ValueKey(selectedProtocol),
-                      initialValue: selectedProtocol,
-                      decoration: const InputDecoration(labelText: 'Protocol'),
-                      items: ApiProtocol.values
-                          .map(
-                            (p) => DropdownMenuItem(
-                              value: p,
-                              child: Text(p.label),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (p) {
-                        if (p != null) {
-                          setState(() {
-                            selectedProtocol = p;
-                            if (baseUrlController.text.isEmpty ||
-                                ApiProtocol.values.any(
-                                  (proto) =>
-                                      baseUrlController.text ==
-                                      proto.defaultBaseUrl,
-                                )) {
-                              baseUrlController.text = p.defaultBaseUrl;
-                            }
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: baseUrlController,
-                      decoration: const InputDecoration(
-                        labelText: 'Base URL',
-                        hintText: 'https://api.example.com',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Require API Key'),
-                      value: requiresApiKey,
-                      onChanged: (val) {
-                        setState(() => requiresApiKey = val);
-                      },
-                    ),
-                    if (requiresApiKey) ...[
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: apiKeyController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: 'API Key',
-                          hintText:
-                              selectedProtocol == ApiProtocol.openaiCompatible
-                              ? 'sk-...'
-                              : '',
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  final name = nameController.text.trim();
-                  if (name.isEmpty) return;
-                  final provider = AIProvider(
-                    id: 'provider_${DateTime.now().millisecondsSinceEpoch}',
-                    name: name,
-                    protocol: selectedProtocol,
-                    baseUrl: baseUrlController.text.trim().replaceAll(
-                      RegExp(r'/$'),
-                      '',
-                    ),
-                    apiKey: requiresApiKey
-                        ? apiKeyController.text.trim()
-                        : null,
-                    requiresApiKey: requiresApiKey,
-                  );
-                  ref.read(aiConfigProvider.notifier).addProvider(provider);
-                  Navigator.pop(ctx);
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  void _sendMessage() async {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
-    _controller.clear();
-
-    final knowledge = ref.read(knowledgeProvider);
-    final browser = ref.read(browserProvider);
-    final assembler = ref.read(assemblerProvider);
-
-    final assembly = await assembler.assemble(
-      text,
-      currentNote: knowledge.activeNote,
-      currentWebUrl: browser.activeTab?.url,
-      currentWebTitle: browser.activeTab?.title,
-      allNotes: knowledge.notes,
-    );
-
-    final contextStr = assembly.toPrompt();
-    final effectiveContext = contextStr.isNotEmpty ? contextStr : null;
-
-    if (assembly.truncated && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Context truncated to fit token limit'),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Theme.of(context).colorScheme.tertiary,
-        ),
-      );
-    }
-
-    ref
-        .read(aiProvider.notifier)
-        .sendMessage(
-          text,
-          context: effectiveContext,
-          tools: _agentMode
-              ? ref.read(agentChatBridgeProvider).toOpenAITools()
-              : null,
-          bridge: _agentMode ? ref.read(agentChatBridgeProvider) : null,
-        );
-  }
-
-  void _showSkillPicker(ThemeData theme) async {
-    final knowledgeNotifier = ref.read(knowledgeProvider.notifier);
-
-    final skills = await knowledgeNotifier.getAllSkills();
-
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(
-              Icons.auto_awesome,
-              size: 18,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 8),
-            const Text('Skills'),
-          ],
-        ),
-        contentPadding: const EdgeInsets.only(top: 16),
-        content: SizedBox(
-          width: 360,
-          child: ListView(
-            shrinkWrap: true,
-            children: skills.map((skill) {
-              return ListTile(
-                dense: true,
-                leading: Icon(
-                  skill.isBuiltin ? Icons.bolt : Icons.extension,
-                  size: 16,
-                  color: skill.isBuiltin
-                      ? theme.colorScheme.primary
-                      : theme.hintColor,
-                ),
-                title: Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        skill.name,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    _skillSourceBadge(skill, theme),
-                  ],
-                ),
-                subtitle: skill.description.isNotEmpty
-                    ? Text(
-                        skill.description,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.hintColor,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      )
-                    : null,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _executeSkill(skill);
-                },
-              );
-            }).toList(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _skillSourceBadge(dynamic skill, ThemeData theme) {
+  /// 构建会话列表侧栏
+  Widget _buildSessionSidebar(ThemeData theme, AIState aiState) {
     final l = AppLocalizations.of(context)!;
-    final pluginId = skill.pluginId as String?;
-    final isBuiltin = skill.isBuiltin == true;
-
-    String label;
-    Color color;
-
-    if (pluginId != null && pluginId.isNotEmpty) {
-      label = l.extrazerodoSkillPlugin(pluginId);
-      color = const Color(0xFF8B5CF6);
-    } else if (isBuiltin) {
-      label = l.extrazerodoSkillBuiltin;
-      color = theme.colorScheme.primary;
-    } else {
-      label = l.extrazerodoSkillCustom;
-      color = const Color(0xFF10B981);
-    }
+    final sessions = aiState.sessions;
+    final currentId = aiState.currentSessionId;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      width: 200,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: theme.colorScheme.surface,
+        border: Border(
+          right: BorderSide(color: theme.dividerColor),
+        ),
       ),
-      child: Text(
-        label,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: color,
-          fontSize: 9,
-          fontWeight: FontWeight.w600,
+      child: Column(
+        children: [
+          // 侧栏标题栏
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: theme.dividerColor),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.chat_bubble_outline, size: 14, color: theme.hintColor),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l.sessions,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: IconButton(
+                    icon: const Icon(Icons.add, size: 12),
+                    onPressed: () =>
+                        ref.read(aiProvider.notifier).createSession(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 20,
+                      minHeight: 20,
+                    ),
+                    tooltip: l.newSession,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 会话列表
+          Expanded(
+            child: sessions.isEmpty
+                ? Center(
+                    child: Text(
+                      l.noSessions,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.hintColor,
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    itemCount: sessions.length,
+                    itemBuilder: (context, index) {
+                      final session = sessions[index];
+                      final isActive = session.id == currentId;
+                      final title = session.title.isEmpty
+                          ? l.defaultSessionTitle
+                          : session.title;
+                      return _buildSessionTile(
+                        theme,
+                        session.id,
+                        title,
+                        session.createdAt,
+                        isActive,
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建单个会话列表项
+  Widget _buildSessionTile(
+    ThemeData theme,
+    String sessionId,
+    String title,
+    DateTime createdAt,
+    bool isActive,
+  ) {
+    final l = AppLocalizations.of(context)!;
+    final now = DateTime.now();
+    final diff = now.difference(createdAt);
+    String timeLabel;
+    if (diff.inDays == 0) {
+      timeLabel = l.today;
+    } else if (diff.inDays == 1) {
+      timeLabel = l.yesterday;
+    } else {
+      timeLabel = l.daysAgo(diff.inDays);
+    }
+
+    return GestureDetector(
+      onTap: () => ref.read(aiProvider.notifier).switchSession(sessionId),
+      onSecondaryTapDown: (details) =>
+          _showSessionContextMenu(details.globalPosition, sessionId, title),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? theme.colorScheme.primary.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isActive ? Icons.chat_bubble : Icons.chat_bubble_outline,
+              size: 12,
+              color: isActive
+                  ? theme.colorScheme.primary
+                  : theme.hintColor,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                      color: isActive
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    timeLabel,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _executeSkill(dynamic skill) {
-    final knowledge = ref.read(knowledgeProvider);
-    final browser = ref.read(browserProvider);
-    final activeNote = knowledge.activeNote;
-    final activeTab = browser.activeTab;
+  /// 显示会话右键菜单（重命名/删除）
+  void _showSessionContextMenu(
+    Offset position,
+    String sessionId,
+    String currentTitle,
+  ) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
-    var prompt = skill.prompt as String;
-
-    prompt = prompt.replaceAll(
-      '@note[current]',
-      activeNote != null
-          ? 'Note "${activeNote.title}":\n${activeNote.content.length > 3000 ? '${activeNote.content.substring(0, 3000)}...(truncated)' : activeNote.content}'
-          : '(No note currently open)',
-    );
-
-    prompt = prompt.replaceAll(
-      '@web[current]',
-      activeTab != null && activeTab.url.isNotEmpty
-          ? 'Web page "${activeTab.title}" (${activeTab.url})'
-          : '(No web page currently open)',
-    );
-
-    prompt = prompt.replaceAll('@note[daily]', '(Daily note not loaded)');
-
-    if (skill.params != null && skill.params.isNotEmpty) {
-      _promptForParams(skill, prompt);
-    } else {
-      final contextBuffer = StringBuffer();
-      if (activeNote != null) {
-        contextBuffer.writeln('[Current Note: ${activeNote.title}]');
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx,
+        position.dy,
+      ),
+      items: [
+        PopupMenuItem(
+          value: 'rename',
+          child: Row(
+            children: [
+              Icon(Icons.edit, size: 14, color: theme.hintColor),
+              const SizedBox(width: 8),
+              Text(l.renameSession, style: theme.textTheme.bodySmall),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline, size: 14, color: theme.colorScheme.error),
+              const SizedBox(width: 8),
+              Text(l.deleteSession, style: theme.textTheme.bodySmall),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'rename') {
+        _showRenameSessionDialog(sessionId, currentTitle);
+      } else if (value == 'delete') {
+        _confirmDeleteSession(sessionId);
       }
-      if (activeTab != null && activeTab.url.isNotEmpty) {
-        contextBuffer.writeln('[Current Page: ${activeTab.title}]');
-      }
-      ref
-          .read(aiProvider.notifier)
-          .sendMessage(
-            prompt,
-            context: contextBuffer.isNotEmpty ? contextBuffer.toString() : null,
-          );
-    }
+    });
   }
 
-  void _saveAsNote(String content) async {
-    final browser = ref.read(browserProvider);
-    final activeTab = browser.activeTab;
-
-    await ref
-        .read(knowledgeProvider.notifier)
-        .clipToNote(
-          url: activeTab?.url ?? '',
-          title: 'AI Response — ${DateTime.now().toString().substring(0, 16)}',
-          content: content,
-        );
-
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Saved as note')));
-    }
-  }
-
-  void _promptForParams(dynamic skill, String basePrompt) {
-    final controllers = <String, TextEditingController>{};
-    for (final param in skill.params.values) {
-      controllers[param.name] = TextEditingController();
-    }
+  /// 显示重命名会话对话框
+  void _showRenameSessionDialog(String sessionId, String currentTitle) {
+    final l = AppLocalizations.of(context)!;
+    final controller = TextEditingController(text: currentTitle);
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(skill.name),
-        content: SizedBox(
-          width: 360,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: skill.params.values.map((param) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: TextField(
-                  controller: controllers[param.name],
-                  decoration: InputDecoration(
-                    labelText: param.name,
-                    hintText: param.description,
-                  ),
-                ),
-              );
-            }).toList(),
+        title: Text(l.renameSession),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: l.sessionTitle,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             onPressed: () {
-              var prompt = basePrompt;
-              controllers.forEach((key, controller) {
-                prompt = prompt.replaceAll('{{$key}}', controller.text.trim());
-              });
+              final newTitle = controller.text.trim();
+              if (newTitle.isNotEmpty) {
+                ref.read(aiProvider.notifier).renameSession(sessionId, newTitle);
+              }
               Navigator.pop(ctx);
-              ref.read(aiProvider.notifier).sendMessage(prompt);
             },
-            child: const Text('Run'),
+            child: Text(l.save),
           ),
         ],
       ),
     );
   }
 
-  IconData _iconForRefType(ContextRefType type) {
-    switch (type) {
-      case ContextRefType.note:
-        return Icons.description;
-      case ContextRefType.web:
-        return Icons.language;
-      case ContextRefType.clip:
-        return Icons.content_cut;
-      case ContextRefType.file:
-        return Icons.insert_drive_file;
-      case ContextRefType.agent:
-        return Icons.smart_toy;
-    }
+  /// 确认删除会话
+  void _confirmDeleteSession(String sessionId) {
+    final l = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.deleteSession),
+        content: Text(l.deleteSessionConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+            ),
+            onPressed: () {
+              ref.read(aiProvider.notifier).deleteSession(sessionId);
+              Navigator.pop(ctx);
+            },
+            child: Text(l.delete),
+          ),
+        ],
+      ),
+    );
   }
+
+  /// 构建示例提示词卡片，点击后自动填入输入框。
+  Widget _buildExamplePrompts(ThemeData theme) {
+    final prompts = <_ExamplePrompt>[
+      _ExamplePrompt(
+        icon: Icons.summarize,
+        text: '总结我的笔记',
+      ),
+      _ExamplePrompt(
+        icon: Icons.lightbulb_outline,
+        text: '解释这个概念',
+      ),
+      _ExamplePrompt(
+        icon: Icons.edit_note,
+        text: '帮我写一篇日记',
+      ),
+      _ExamplePrompt(
+        icon: Icons.analytics_outlined,
+        text: '分析网页内容',
+      ),
+    ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      children: prompts.map((p) {
+        return InkWell(
+          onTap: () {
+            _controller.text = p.text;
+            _controller.selection = TextSelection.fromPosition(
+              TextPosition(offset: p.text.length),
+            );
+            _focusNode.requestFocus();
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.5,
+              ),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: theme.dividerColor),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(p.icon, size: 14, color: theme.colorScheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  p.text,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+/// 示例提示词数据模型。
+class _ExamplePrompt {
+  final IconData icon;
+  final String text;
+  const _ExamplePrompt({required this.icon, required this.text});
 }
 
 class _AutocompleteItem {
@@ -1295,276 +832,4 @@ class _AutocompleteItem {
     required this.insertText,
     this.cursorOffset = 0,
   });
-}
-
-/// Per-message "Remember this" / "Forget" toggle. Looks up the
-/// fragment by the chat message id and switches the icon/label
-/// accordingly. Idempotent: clicking twice does no harm.
-class _RememberForgetButton extends ConsumerStatefulWidget {
-  final ChatMessage message;
-  const _RememberForgetButton({required this.message});
-
-  @override
-  ConsumerState<_RememberForgetButton> createState() =>
-      _RememberForgetButtonState();
-}
-
-class _RememberForgetButtonState extends ConsumerState<_RememberForgetButton> {
-  bool _busy = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final memory = ref.watch(memoryServiceProvider);
-
-    return FutureBuilder(
-      future: memory.getFragmentByMessageId(widget.message.id),
-      builder: (context, snap) {
-        final fragment = snap.data;
-        final isRemembered = fragment != null;
-        return TextButton.icon(
-          onPressed: _busy ? null : _onTap,
-          icon: Icon(
-            isRemembered ? Icons.bookmark : Icons.bookmark_outline,
-            size: 12,
-            color: isRemembered
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurfaceVariant,
-          ),
-          label: Text(
-            isRemembered ? 'Remembered' : 'Remember',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: isRemembered
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _onTap() async {
-    if (widget.message.id == null) return;
-    setState(() => _busy = true);
-    try {
-      final memory = ref.read(memoryServiceProvider);
-      final existing = await memory.getFragmentByMessageId(widget.message.id);
-      if (existing == null) {
-        await memory.addFragmentFromMessage(
-          sessionId: '',
-          messageId: widget.message.id!,
-          content: widget.message.content,
-          importance: 0.7,
-          source: 'manual',
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Saved to memory'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      } else if (existing.isActive) {
-        await memory.forgetFragment(existing.id);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Removed from memory'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      }
-      // Invalidate stats provider so the browser refreshes.
-      ref.invalidate(memoryStatsProvider);
-      if (mounted) setState(() {});
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-}
-
-/// "Memory footprint" — a small chip cloud below the assistant's reply
-/// that lists which memory fragments / summaries influenced the answer.
-/// Tapping a chip opens the fragment detail. Only renders after the
-/// assistant's reply completes streaming.
-class _MemoryFootprint extends ConsumerWidget {
-  final ChatMessage message;
-  const _MemoryFootprint({required this.message});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final memory = ref.watch(memoryServiceProvider);
-    final fragmentIds = message.usedMemoryFragmentIds;
-    final summaryIds = message.usedMemorySummaryIds;
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: FutureBuilder<_FootprintData>(
-        future: _load(memory),
-        builder: (context, snap) {
-          final data = snap.data ?? const _FootprintData.empty();
-          return Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 4,
-            runSpacing: 4,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.psychology_outlined,
-                    size: 11,
-                    color: theme.hintColor,
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    message.memoryContextTokens > 0
-                        ? 'used ${fragmentIds.length + summaryIds.length} '
-                              'memories (${message.memoryContextTokens} tok)'
-                        : 'used ${fragmentIds.length + summaryIds.length} memories',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-              for (final f in data.fragments.take(5))
-                _FragmentChip(
-                  fragment: f,
-                  onTap: () => _showDetail(context, ref, f),
-                ),
-              if (data.fragments.length > 5)
-                Text(
-                  '+${data.fragments.length - 5}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
-                    fontSize: 10,
-                  ),
-                ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Future<_FootprintData> _load(MemoryService memory) async {
-    final out = <MemoryFragment>[];
-    for (final id in message.usedMemoryFragmentIds) {
-      final f = await memory.getFragment(id);
-      if (f != null) out.add(f);
-    }
-    return _FootprintData(fragments: out);
-  }
-
-  void _showDetail(BuildContext context, WidgetRef ref, MemoryFragment f) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              f.isPinned ? Icons.push_pin : Icons.psychology,
-              size: 18,
-              color: Theme.of(ctx).colorScheme.primary,
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                f.tier.name.toUpperCase(),
-                style: Theme.of(ctx).textTheme.titleSmall,
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(f.content),
-              const SizedBox(height: 8),
-              Text(
-                'importance ${f.importanceScore.toStringAsFixed(2)} · '
-                'accesses ${f.accessCount} · ${f.source}',
-                style: Theme.of(
-                  ctx,
-                ).textTheme.bodySmall?.copyWith(color: Theme.of(ctx).hintColor),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FragmentChip extends StatelessWidget {
-  final MemoryFragment fragment;
-  final VoidCallback onTap;
-  const _FragmentChip({required this.fragment, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final preview = fragment.content.length > 36
-        ? '${fragment.content.substring(0, 36)}…'
-        : fragment.content;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.08),
-          border: Border.all(
-            color: theme.colorScheme.primary.withValues(alpha: 0.3),
-            width: 0.5,
-          ),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              fragment.isPinned ? Icons.push_pin : Icons.psychology,
-              size: 9,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 3),
-            Text(
-              preview,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 10,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FootprintData {
-  final List<MemoryFragment> fragments;
-  const _FootprintData({required this.fragments});
-  const _FootprintData.empty() : fragments = const [];
 }

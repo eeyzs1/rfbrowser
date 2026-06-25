@@ -122,7 +122,6 @@ class _CategoryHeader extends StatelessWidget {
           Text(
             title,
             style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.primary,
               fontWeight: FontWeight.w600,
             ),
           ),

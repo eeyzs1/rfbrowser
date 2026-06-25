@@ -6,7 +6,7 @@ import 'package:rfbrowser/data/models/chat_memory.dart';
 import 'package:rfbrowser/core/memory/summary_rollup.dart';
 import 'package:rfbrowser/services/active_memory_buffer.dart';
 import 'package:rfbrowser/services/memory_service.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../helpers/sqflite_test_setup.dart';
 
 MemoryFragment _frag({
   required String id,
@@ -29,10 +29,7 @@ MemoryFragment _frag({
 }
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
+  setUpAll(setupSqfliteForTests);
 
   group('MemoryService tokenizeForCrossSession', () {
     test('returns lowercase, stopword-filtered, length-sorted tokens', () {

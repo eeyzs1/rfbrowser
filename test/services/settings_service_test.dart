@@ -43,13 +43,13 @@ void main() {
       expect(settings.surfaceColor, const Color(0xFFCCCCCC));
     });
 
-    test('isDarkMode true for dark scaffold background', () {
-      final settings = AppSettings(scaffoldBgColorValue: 0xFF0F172A);
+    test('isDarkMode true when themeMode is dark', () {
+      final settings = AppSettings(themeMode: ThemeMode.dark);
       expect(settings.isDarkMode, isTrue);
     });
 
-    test('isDarkMode false for light scaffold background', () {
-      final settings = AppSettings(scaffoldBgColorValue: 0xFFFFFFFF);
+    test('isDarkMode false when themeMode is light', () {
+      final settings = AppSettings(themeMode: ThemeMode.light);
       expect(settings.isDarkMode, isFalse);
     });
 

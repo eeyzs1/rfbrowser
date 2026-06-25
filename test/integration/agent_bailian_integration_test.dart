@@ -9,7 +9,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:rfbrowser/data/models/agent_task.dart';
 import 'package:rfbrowser/data/models/ai_provider.dart';
@@ -21,6 +20,7 @@ import 'package:rfbrowser/services/ai_service.dart';
 import 'package:rfbrowser/services/connectivity_service.dart';
 import 'package:rfbrowser/services/dio_factory.dart';
 import 'package:rfbrowser/services/settings_service.dart';
+import '../helpers/sqflite_test_setup.dart';
 
 class _RealHttpOverrides extends HttpOverrides {}
 
@@ -154,8 +154,7 @@ Future<bool> _probeBailian() async {
 Future<void> main() async {
   HttpOverrides.global = _RealHttpOverrides();
 
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
+  setupSqfliteForTests();
 
   _cachedApiKey = await _loadApiKey();
   if (_cachedApiKey != null) {

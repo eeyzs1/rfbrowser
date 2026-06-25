@@ -374,6 +374,12 @@ abstract class AppLocalizations {
   /// **'Theme'**
   String get theme;
 
+  /// No description provided for @themeModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme Mode'**
+  String get themeModeLabel;
+
   /// No description provided for @accentColor.
   ///
   /// In en, this message translates to:
@@ -397,6 +403,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Surface'**
   String get surfaceColor;
+
+  /// No description provided for @fontColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Font Color'**
+  String get fontColor;
+
+  /// No description provided for @fontColorAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get fontColorAuto;
+
+  /// No description provided for @fontColorAutoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Derive from surface color'**
+  String get fontColorAutoDesc;
 
   /// No description provided for @customColor.
   ///
@@ -829,6 +853,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading...'**
   String get loading;
+
+  /// No description provided for @largeFileSourceNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Large file opened in source view (editing may be slow)'**
+  String get largeFileSourceNotice;
 
   /// No description provided for @error.
   ///
@@ -4961,6 +4991,588 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Organize'**
   String get agentQuickOrganize;
+
+  /// No description provided for @contextTruncatedToFitTokenLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Context truncated to fit token limit'**
+  String get contextTruncatedToFitTokenLimit;
+
+  /// No description provided for @savedAsNoteToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as note'**
+  String get savedAsNoteToast;
+
+  /// No description provided for @savedToMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to memory'**
+  String get savedToMemory;
+
+  /// No description provided for @removedFromMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from memory'**
+  String get removedFromMemory;
+
+  /// No description provided for @memoryNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory Network'**
+  String get memoryNetwork;
+
+  /// No description provided for @failedToLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load: {error}'**
+  String failedToLoad(String error);
+
+  /// No description provided for @memoryBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory Browser'**
+  String get memoryBrowser;
+
+  /// No description provided for @tapNodeToInspect.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a node to inspect'**
+  String get tapNodeToInspect;
+
+  /// No description provided for @noMemoryConnectionsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No memory connections yet — keep chatting!'**
+  String get noMemoryConnectionsYet;
+
+  /// No description provided for @solidManualLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid = manual link'**
+  String get solidManualLink;
+
+  /// No description provided for @smallFewLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Small = few links'**
+  String get smallFewLinks;
+
+  /// No description provided for @largeManyLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Large = many links'**
+  String get largeManyLinks;
+
+  /// No description provided for @switchToCircular.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to circular'**
+  String get switchToCircular;
+
+  /// No description provided for @fullGraph.
+  ///
+  /// In en, this message translates to:
+  /// **'Full graph'**
+  String get fullGraph;
+
+  /// No description provided for @toggleStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle statistics'**
+  String get toggleStatistics;
+
+  /// No description provided for @toggleLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle legend'**
+  String get toggleLegend;
+
+  /// No description provided for @selectFragmentToSeeLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a fragment to see its links'**
+  String get selectFragmentToSeeLinks;
+
+  /// No description provided for @noHebbianLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'No Hebbian links for this fragment'**
+  String get noHebbianLinks;
+
+  /// No description provided for @changeViewMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Change View Mode'**
+  String get changeViewMode;
+
+  /// No description provided for @viewMode.
+  ///
+  /// In en, this message translates to:
+  /// **'View Mode'**
+  String get viewMode;
+
+  /// No description provided for @syncConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Conflict'**
+  String get syncConflict;
+
+  /// No description provided for @keepLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Local'**
+  String get keepLocal;
+
+  /// No description provided for @keepRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Remote'**
+  String get keepRemote;
+
+  /// No description provided for @keepBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Both'**
+  String get keepBoth;
+
+  /// No description provided for @createQuickMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Quick Move'**
+  String get createQuickMove;
+
+  /// No description provided for @commandNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Command not found'**
+  String get commandNotFound;
+
+  /// No description provided for @commandDoesNotExist.
+  ///
+  /// In en, this message translates to:
+  /// **'Command \"/{cmdName}\" does not exist. Create it?'**
+  String commandDoesNotExist(String cmdName);
+
+  /// No description provided for @newTabGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New Tab Group'**
+  String get newTabGroup;
+
+  /// No description provided for @pendingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending'**
+  String pendingCount(int count);
+
+  /// No description provided for @git.
+  ///
+  /// In en, this message translates to:
+  /// **'Git'**
+  String get git;
+
+  /// No description provided for @errorWithMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String errorWithMessage(String error);
+
+  /// No description provided for @noFragmentsMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No fragments match. Try a different query or wait for the next dreaming cycle to extract new facts.'**
+  String get noFragmentsMatch;
+
+  /// No description provided for @memorySettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory'**
+  String get memorySettingsTitle;
+
+  /// No description provided for @ambientContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Ambient context'**
+  String get ambientContext;
+
+  /// No description provided for @progressiveForgetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Progressive forgetting'**
+  String get progressiveForgetting;
+
+  /// No description provided for @hebbianConnections.
+  ///
+  /// In en, this message translates to:
+  /// **'Hebbian connections'**
+  String get hebbianConnections;
+
+  /// No description provided for @autoExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-export'**
+  String get autoExport;
+
+  /// No description provided for @backupAndRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & restore'**
+  String get backupAndRestore;
+
+  /// No description provided for @dreamingActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Dreaming activity'**
+  String get dreamingActivity;
+
+  /// No description provided for @exportCurrentChatToMarkdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Export current chat to Markdown'**
+  String get exportCurrentChatToMarkdown;
+
+  /// No description provided for @noActiveChatSessionToExport.
+  ///
+  /// In en, this message translates to:
+  /// **'No active chat session to export'**
+  String get noActiveChatSessionToExport;
+
+  /// No description provided for @backupToJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup to JSON'**
+  String get backupToJson;
+
+  /// No description provided for @restoreFromJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from JSON'**
+  String get restoreFromJson;
+
+  /// No description provided for @restoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore failed: {error}'**
+  String restoreFailed(String error);
+
+  /// No description provided for @statusUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Status unavailable: {error}'**
+  String statusUnavailable(String error);
+
+  /// No description provided for @commandName.
+  ///
+  /// In en, this message translates to:
+  /// **'Command Name'**
+  String get commandName;
+
+  /// No description provided for @promptTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt Template'**
+  String get promptTemplate;
+
+  /// No description provided for @iconLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get iconLabel;
+
+  /// No description provided for @groupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupName;
+
+  /// No description provided for @testConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test Connection'**
+  String get testConnection;
+
+  /// No description provided for @testing.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing...'**
+  String get testing;
+
+  /// No description provided for @testConnectionSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection successful'**
+  String get testConnectionSuccess;
+
+  /// No description provided for @testConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed: {error}'**
+  String testConnectionFailed(String error);
+
+  /// No description provided for @copiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copiedToClipboard;
+
+  /// No description provided for @regenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate'**
+  String get regenerate;
+
+  /// No description provided for @sessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get sessions;
+
+  /// No description provided for @newSession.
+  ///
+  /// In en, this message translates to:
+  /// **'New Session'**
+  String get newSession;
+
+  /// No description provided for @renameSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Session'**
+  String get renameSession;
+
+  /// No description provided for @deleteSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Session'**
+  String get deleteSession;
+
+  /// No description provided for @deleteSessionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this session?'**
+  String get deleteSessionConfirm;
+
+  /// No description provided for @sessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Title'**
+  String get sessionTitle;
+
+  /// No description provided for @noSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions'**
+  String get noSessions;
+
+  /// No description provided for @enterToSendHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter to send, Shift+Enter for new line'**
+  String get enterToSendHint;
+
+  /// No description provided for @defaultSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Conversation'**
+  String get defaultSessionTitle;
+
+  /// No description provided for @memoryGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About Memory System'**
+  String get memoryGuideTitle;
+
+  /// No description provided for @memoryGuideDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The memory system automatically extracts important information from your conversations and references it in future chats to help maintain context.'**
+  String get memoryGuideDesc;
+
+  /// No description provided for @memoryGuideFragments.
+  ///
+  /// In en, this message translates to:
+  /// **'Fragments — Auto-extracted memory pieces, tiered by importance'**
+  String get memoryGuideFragments;
+
+  /// No description provided for @memoryGuideSummaries.
+  ///
+  /// In en, this message translates to:
+  /// **'Summaries — Periodically consolidated summaries'**
+  String get memoryGuideSummaries;
+
+  /// No description provided for @memoryGuideHebbian.
+  ///
+  /// In en, this message translates to:
+  /// **'Hebbian — Connection strengths between memories'**
+  String get memoryGuideHebbian;
+
+  /// No description provided for @memoryGuideInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights — Auto-generated discoveries'**
+  String get memoryGuideInsights;
+
+  /// No description provided for @memoryGuideDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get memoryGuideDismiss;
+
+  /// No description provided for @syncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing...'**
+  String get syncing;
+
+  /// No description provided for @syncedAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync: {time}'**
+  String syncedAgo(String time);
+
+  /// No description provided for @restoreSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore OK · {fragments} fragments · {summaries} summaries · {edges} edges'**
+  String restoreSuccess(int fragments, int summaries, int edges);
+
+  /// No description provided for @restoreCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore cancelled'**
+  String get restoreCancelled;
+
+  /// No description provided for @restoreInvalidFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected file is not a valid JSON backup'**
+  String get restoreInvalidFile;
+
+  /// No description provided for @memoryAdvancedSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced settings'**
+  String get memoryAdvancedSettings;
+
+  /// No description provided for @consolidateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Consolidate now'**
+  String get consolidateNow;
+
+  /// No description provided for @dreamingInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Dreaming in progress…'**
+  String get dreamingInProgress;
+
+  /// No description provided for @noDreamsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No dreams yet'**
+  String get noDreamsYet;
+
+  /// No description provided for @lastDream.
+  ///
+  /// In en, this message translates to:
+  /// **'Last dream: {time}'**
+  String lastDream(String time);
+
+  /// No description provided for @canvasGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas guide'**
+  String get canvasGuideTitle;
+
+  /// No description provided for @canvasGuidePanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pan canvas'**
+  String get canvasGuidePanTitle;
+
+  /// No description provided for @canvasGuidePanDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag empty space to pan the canvas view'**
+  String get canvasGuidePanDesc;
+
+  /// No description provided for @canvasGuideZoomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom'**
+  String get canvasGuideZoomTitle;
+
+  /// No description provided for @canvasGuideZoomDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the mouse wheel to zoom the canvas'**
+  String get canvasGuideZoomDesc;
+
+  /// No description provided for @canvasGuideAddCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add card'**
+  String get canvasGuideAddCardTitle;
+
+  /// No description provided for @canvasGuideAddCardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Click a toolbar button or double-click to add a card'**
+  String get canvasGuideAddCardDesc;
+
+  /// No description provided for @canvasGuideConnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect cards'**
+  String get canvasGuideConnectTitle;
+
+  /// No description provided for @canvasGuideConnectDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag from a card edge to create a connection'**
+  String get canvasGuideConnectDesc;
+
+  /// No description provided for @canvasGuideDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get canvasGuideDismiss;
+
+  /// No description provided for @sendToAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to AI'**
+  String get sendToAi;
+
+  /// No description provided for @sendingToAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending page to AI…'**
+  String get sendingToAi;
+
+  /// No description provided for @sendToAiEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No page content to send'**
+  String get sendToAiEmpty;
+
+  /// No description provided for @sendToAiSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Page sent to AI'**
+  String get sendToAiSent;
+
+  /// No description provided for @openAiChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Open AI'**
+  String get openAiChat;
+
+  /// No description provided for @sendToAiFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send to AI: {error}'**
+  String sendToAiFailed(String error);
 }
 
 class _AppLocalizationsDelegate

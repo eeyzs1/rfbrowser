@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../logging/app_logger.dart';
 import '../../data/models/ai_provider.dart';
 
 class ModelDiscovery {
@@ -23,7 +24,7 @@ class ModelDiscovery {
           return _fetchAnthropicModels(provider, apiKey);
       }
     } catch (e) {
-      debugPrint('Model discovery error: $e');
+      appLog.warning('Model discovery error', error: e);
       return [];
     }
   }

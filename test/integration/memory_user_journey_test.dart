@@ -27,7 +27,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:rfbrowser/core/memory/summary_rollup.dart';
 import 'package:rfbrowser/data/models/chat_memory.dart';
@@ -38,6 +37,7 @@ import 'package:rfbrowser/services/memory_service.dart';
 import 'package:rfbrowser/services/search_service.dart';
 import 'package:rfbrowser/services/settings_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../helpers/sqflite_test_setup.dart';
 
 class TestVaultNotifier extends VaultNotifier {
   final VaultState _state;
@@ -69,8 +69,7 @@ MemoryFragment _frag({
 void main() {
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    setupSqfliteForTests();
   });
 
   late Directory tempDir;
@@ -317,14 +316,20 @@ void main() {
       final settings = container.read(settingsProvider);
       final notifier = container.read(settingsProvider.notifier);
       await notifier.setMemoryContextBudget(1500);
-      expect(container.read(settingsProvider).memoryContextBudget, 1500);
+      expect(container.read(settingsProvider).memory.contextBudget, 1500);
       expect(settings, isNotNull);
     });
     test('LLM toggle defaults to off and can be flipped', () async {
       final notifier = container.read(settingsProvider.notifier);
-      expect(container.read(settingsProvider).memoryUseLlmSummarizer, isFalse);
+      expect(
+        container.read(settingsProvider).memory.useLlmSummarizer,
+        isFalse,
+      );
       await notifier.setMemoryUseLlmSummarizer(true);
-      expect(container.read(settingsProvider).memoryUseLlmSummarizer, isTrue);
+      expect(
+        container.read(settingsProvider).memory.useLlmSummarizer,
+        isTrue,
+      );
     });
   });
 

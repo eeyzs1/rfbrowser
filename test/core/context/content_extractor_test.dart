@@ -110,7 +110,7 @@ void main() {
       expect(result, isNull);
     });
 
-    test('returns null when target is "current"', () async {
+    test('returns error when no current note for "current"', () async {
       final source = NoteContentSource(testNotes);
       final ref = ParsedReference(
         type: ContextRefType.note,
@@ -119,7 +119,54 @@ void main() {
         rawText: '@note:current',
       );
       final result = await source.resolve(ref);
-      expect(result, isNull);
+      expect(result, isNotNull);
+      expect(result!.content, '');
+      expect(result.metadata['error'], 'no_active_note');
+    });
+
+    test('resolves current note when currentNote provided', () async {
+      final currentNote = Note(
+        id: 'current-1',
+        title: 'Current Note',
+        filePath: 'current.md',
+        content: '# Current Note\n\nThis is the current note.',
+      );
+      final source = NoteContentSource(testNotes, currentNote: currentNote);
+      final ref = ParsedReference(
+        type: ContextRefType.note,
+        target: 'current',
+        position: 0,
+        rawText: '@note:current',
+      );
+      final result = await source.resolve(ref);
+      expect(result, isNotNull);
+      expect(result!.type, ContextType.note);
+      expect(result.id, 'current-1');
+      expect(result.content, startsWith('# Current Note'));
+      expect(result.metadata['title'], 'Current Note');
+      expect(result.metadata['filePath'], 'current.md');
+    });
+
+    test('resolves current note section with selector', () async {
+      final currentNote = Note(
+        id: 'current-1',
+        title: 'Current Note',
+        filePath: 'current.md',
+        content:
+            '# Current Note\n\nintro\n\n## Setup\n\nInstall dependencies.\n\n## Usage\n\nRun the app.',
+      );
+      final source = NoteContentSource(testNotes, currentNote: currentNote);
+      final ref = ParsedReference(
+        type: ContextRefType.note,
+        target: 'current',
+        selector: 'Setup',
+        position: 0,
+        rawText: '@note:current#Setup',
+      );
+      final result = await source.resolve(ref);
+      expect(result, isNotNull);
+      expect(result!.id, 'current-1');
+      expect(result.content, 'Install dependencies.');
     });
 
     test('extracts section by heading selector', () async {

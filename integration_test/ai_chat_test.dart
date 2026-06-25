@@ -76,7 +76,7 @@ void main() {
     testWidgets('shows new conversation button', (tester) async {
       await pumpAIChatPanel(tester);
 
-      expect(find.byIcon(Icons.refresh), findsOneWidget);
+      expect(find.byIcon(Icons.add_comment_outlined), findsOneWidget);
     });
 
     testWidgets('shows model selector with provider chip', (tester) async {

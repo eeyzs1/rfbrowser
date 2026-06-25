@@ -150,6 +150,8 @@ class HelloWorldPlugin extends BuiltinPlugin {
 
   @override
   Future<void> onHookEvent(String event, Map<String, dynamic> data) async {
-    debugPrint('HelloWorldPlugin: hook event=$event data=$data');
+    // Demo plugin — hook registered to demonstrate the plugin system.
+    // No action needed; intentionally silent to avoid log spam on every
+    // note.opened / note.saved event.
   }
 }

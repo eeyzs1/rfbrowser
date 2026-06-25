@@ -187,4 +187,135 @@ class CanvasLayoutService {
     }
     return result;
   }
+
+  // ─── Alignment ──────────────────────────────────────────────────────
+
+  /// Returns a new card list with the specified [cardIds] aligned to [type].
+  ///
+  /// Pure function: does not mutate [cards]. Cards not in [cardIds] are
+  /// returned unchanged.
+  List<CanvasCard> alignCards(
+    List<CanvasCard> cards,
+    List<String> cardIds,
+    AlignmentType type,
+  ) {
+    if (cardIds.length < 2) return cards;
+    final selected = cards.where((c) => cardIds.contains(c.id)).toList();
+    if (selected.isEmpty) return cards;
+
+    final result = List<CanvasCard>.from(cards);
+    switch (type) {
+      case AlignmentType.left:
+        final minX = selected.map((c) => c.x).reduce((a, b) => a < b ? a : b);
+        for (int i = 0; i < result.length; i++) {
+          if (cardIds.contains(result[i].id)) {
+            result[i] = result[i].copyWith(x: minX);
+          }
+        }
+      case AlignmentType.centerH:
+        final avgCenterX =
+            selected.map((c) => c.center.dx).reduce((a, b) => a + b) /
+            selected.length;
+        for (int i = 0; i < result.length; i++) {
+          if (cardIds.contains(result[i].id)) {
+            result[i] = result[i].copyWith(
+              x: avgCenterX - result[i].width / 2,
+            );
+          }
+        }
+      case AlignmentType.right:
+        final maxRight = selected
+            .map((c) => c.x + c.width)
+            .reduce((a, b) => a > b ? a : b);
+        for (int i = 0; i < result.length; i++) {
+          if (cardIds.contains(result[i].id)) {
+            result[i] = result[i].copyWith(x: maxRight - result[i].width);
+          }
+        }
+      case AlignmentType.top:
+        final minY = selected.map((c) => c.y).reduce((a, b) => a < b ? a : b);
+        for (int i = 0; i < result.length; i++) {
+          if (cardIds.contains(result[i].id)) {
+            result[i] = result[i].copyWith(y: minY);
+          }
+        }
+      case AlignmentType.centerV:
+        final avgCenterY =
+            selected.map((c) => c.center.dy).reduce((a, b) => a + b) /
+            selected.length;
+        for (int i = 0; i < result.length; i++) {
+          if (cardIds.contains(result[i].id)) {
+            result[i] = result[i].copyWith(
+              y: avgCenterY - result[i].height / 2,
+            );
+          }
+        }
+      case AlignmentType.bottom:
+        final maxBottom = selected
+            .map((c) => c.y + c.height)
+            .reduce((a, b) => a > b ? a : b);
+        for (int i = 0; i < result.length; i++) {
+          if (cardIds.contains(result[i].id)) {
+            result[i] = result[i].copyWith(y: maxBottom - result[i].height);
+          }
+        }
+    }
+    return result;
+  }
+
+  // ─── Distribution ───────────────────────────────────────────────────
+
+  /// Returns a new card list with the specified [cardIds] evenly distributed
+  /// along [type] axis.
+  ///
+  /// Pure function: does not mutate [cards]. Requires at least 3 selected
+  /// cards to have an effect.
+  List<CanvasCard> distributeCards(
+    List<CanvasCard> cards,
+    List<String> cardIds,
+    DistributeType type,
+  ) {
+    if (cardIds.length < 3) return cards;
+    final selected = cards.where((c) => cardIds.contains(c.id)).toList();
+    if (selected.length < 3) return cards;
+
+    final result = List<CanvasCard>.from(cards);
+    switch (type) {
+      case DistributeType.horizontal:
+        final sorted = List<CanvasCard>.from(selected)
+          ..sort((a, b) => a.x.compareTo(b.x));
+        final minX = sorted.first.x;
+        final maxX = sorted.last.x;
+        final totalWidth = sorted.fold(0.0, (sum, c) => sum + c.width);
+        final totalGap = maxX - minX - totalWidth;
+        final gapCount = sorted.length - 1;
+        final gap = gapCount > 0 ? totalGap / gapCount : 0.0;
+        double currentX = minX;
+        for (final card in sorted) {
+          final idx = result.indexWhere((c) => c.id == card.id);
+          if (idx >= 0) {
+            result[idx] = result[idx].copyWith(x: currentX);
+            currentX += result[idx].width + gap;
+          }
+        }
+      case DistributeType.vertical:
+        final sorted = List<CanvasCard>.from(selected)
+          ..sort((a, b) => a.y.compareTo(b.y));
+        final minY = sorted.first.y;
+        final maxY = sorted.last.y;
+        final totalHeight = sorted.fold(0.0, (sum, c) => sum + c.height);
+        final totalGap = maxY - minY - totalHeight;
+        final gapCount = sorted.length - 1;
+        final gap = gapCount > 0 ? totalGap / gapCount : 0.0;
+        double currentY = minY;
+        for (final card in sorted) {
+          final idx = result.indexWhere((c) => c.id == card.id);
+          if (idx >= 0) {
+            result[idx] = result[idx].copyWith(y: currentY);
+            currentY += result[idx].height + gap;
+          }
+        }
+    }
+    return result;
+  }
 }

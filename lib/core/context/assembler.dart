@@ -31,7 +31,7 @@ class Assembler {
   }) async {
     final refs = _parser.parse(userInput);
     final sources = <ContentSource>[
-      NoteContentSource(allNotes ?? []),
+      NoteContentSource(allNotes ?? [], currentNote: currentNote),
       WebContentSource(
         currentUrl: currentWebUrl,
         currentTitle: currentWebTitle,

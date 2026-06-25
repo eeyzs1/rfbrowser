@@ -81,3 +81,15 @@ Meta-mistakes improve the generation pipeline, not individual projects.
 - Root cause: The provider template wired HybridSearch to SemanticSearch but forgot to inject the keyword/FTS search function. This was a missing dependency connection in the provider wiring.
 - Fix: Inject `ftsSearchFn: (query, {limit}) => indexStore.searchNotes(query, limit: limit)` into HybridSearch constructor. Update provider template to enforce all constructor dependencies are satisfied.
 - Status: Resolved
+
+### Meta-Mistake 9
+- Date: 2026-06-25
+- Trigger: Post-pipeline runtime bugs found by user after all 20 acceptance criteria verified (flutter analyze 0 issues + flutter test 0 failures + integration 20/20)
+- What went wrong: Harness marked pipeline "complete" with all quality gates green, but user immediately found multiple critical runtime bugs on the real device: (a) settings page crash on scroll due to nested Scrollable corrupting Windows AXTree (`Failed to update ui::AXTree, error: 690` → `Lost connection to device`), (b) severe lag opening notes >20KB (synchronous regex highlight + full-document TextField layout on UI thread), (c) tab bar UX gaps vs VSCode (no wheel/drag scroll, no middle-click close, split discards tabs). None were caught by the quality gates.
+- Root cause: Quality gates only cover static analysis (`flutter analyze`), unit tests (`flutter test`), and integration tests (`flutter test integration_test/`). They do NOT cover: (1) Windows-specific accessibility bridge behavior under nested Scrollables, (2) real-device scroll/gesture/open performance on large content, (3) UX parity with reference apps. The acceptance criteria were feature-completion-focused (20 functional features), not runtime-stability-focused. A pipeline can be "green" while the app is unusable.
+- Fix: (Proposed — pending implementation in meta-harness submodule)
+  1. Add a "real-device smoke test" quality gate: require manually running `flutter run -d windows` (or target_os equivalent) and exercising a checklist — scroll every settings page, open a >20KB note, switch tab view modes, split panes, drag tabs. Emit `runtime-smoke-checklist.md` artifact per project.
+  2. Add a "platform-specific runtime" criterion template: when `target_os` includes desktop platforms (windows/macos/linux), the interpreter auto-includes stability criteria for: nested Scrollable warnings, large-file open performance (<2s for 100KB), gesture parity (wheel/drag/middle-click).
+  3. Add a static-analysis lint rule (custom `dart_code_metrics` or analyzer plugin) that flags `ReorderableListView.builder` + `shrinkWrap: true` + `NeverScrollableScrollPhysics()` nested inside another `Scrollable` — this is a known Windows AXTree corruption pattern.
+  4. Update generator to emit a `runtime-pitfalls.md` per project enumerating platform-specific known-bad patterns (nested Scrollables, synchronous TextEditingController.buildTextSpan, full-document TextField on large content).
+- Status: Proposed (not yet implemented — requires changes to meta-harness submodule: interpreter.md criterion templates, generator templates, quality-gate.py)

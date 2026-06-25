@@ -1,5 +1,5 @@
-// ignore_for_file: avoid_print
 import 'package:uuid/uuid.dart';
+import '../../core/logging/app_logger.dart';
 import 'package:yaml/yaml.dart';
 
 class Note {
@@ -170,7 +170,7 @@ class Note {
             }
           }
         } catch (_) {
-          print('Note: failed to parse frontmatter');
+          appLog.warning('Note: failed to parse frontmatter');
         }
       }
     }

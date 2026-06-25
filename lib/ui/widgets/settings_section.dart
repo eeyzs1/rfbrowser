@@ -22,7 +22,7 @@ class SettingsSection extends StatelessWidget {
           child: Text(
             title,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),

@@ -7,9 +7,12 @@ import '../../data/models/note.dart';
 import '../../services/knowledge_service.dart';
 
 part 'canvas_painter/painter_connections.dart';
+part 'canvas_painter/painter_connection_paths.dart';
 part 'canvas_painter/painter_cards.dart';
+part 'canvas_painter/painter_cards_special.dart';
 part 'canvas_painter/painter_overlays.dart';
 part 'canvas_painter/painter_shapes.dart';
+part 'canvas_painter/painter_swimlane.dart';
 part 'canvas_painter/painter_special.dart';
 part 'canvas_painter/painter_effects.dart';
 
@@ -150,14 +153,16 @@ abstract class _CanvasPainterBase extends CustomPainter {
     Offset from,
     Offset to,
     Color color,
-    ArrowStyle style,
-  );
+    ArrowStyle style, [
+    double arrowSize = 8.0,
+  ]);
   void _drawCards(Canvas canvas);
   void _drawContainerCard(
     Canvas canvas,
     CanvasCard card,
     Map<String, Note> noteMap,
   );
+  void _drawImageCard(Canvas canvas, CanvasCard card);
   void _drawAlignmentGuides(Canvas canvas);
   void _drawSelectionRect(Canvas canvas);
   void _drawCardTypeIcon(
@@ -194,9 +199,12 @@ abstract class _CanvasPainterBase extends CustomPainter {
 class CanvasPainter extends _CanvasPainterBase
     with
         _CanvasConnectionPainterMixin,
+        _CanvasConnectionPathMixin,
         _CanvasCardPainterMixin,
+        _CanvasCardPainterSpecialMixin,
         _CanvasOverlayPainterMixin,
         _CanvasShapePainterMixin,
+        _CanvasSwimlanePainterMixin,
         _CanvasSpecialPainterMixin,
         _CanvasEffectsPainterMixin {
   CanvasPainter({

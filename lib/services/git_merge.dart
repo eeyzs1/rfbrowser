@@ -1,4 +1,3 @@
-// ignore_for_file: avoid_print
 import 'dart:io';
 
 /// G14-B: result of a 3-way merge attempt between [ours], [theirs] and

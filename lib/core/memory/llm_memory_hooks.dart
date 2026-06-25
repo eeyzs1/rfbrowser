@@ -1,7 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:rfbrowser/core/memory/memory_summarizer.dart';
 import 'package:rfbrowser/data/models/ai_provider.dart';
 import 'package:rfbrowser/data/models/chat_memory.dart';
+
+import '../logging/app_logger.dart';
 
 /// LLM-backed memory summarizer. Falls back to the rule-based
 /// implementation when no [LLMSummarizerConfig.provider] is wired.
@@ -22,7 +23,7 @@ class LlmMemorySummarizer implements MemorySummarizer {
     try {
       return _buildLlmSummary(group, now ?? DateTime.now());
     } catch (e) {
-      debugPrint('LlmMemorySummarizer: falling back to rule-based: $e');
+      appLog.warning('LlmMemorySummarizer: falling back to rule-based', error: e);
       return _fallback.buildSummary(group, now: now);
     }
   }
@@ -128,7 +129,7 @@ class LlmReranker implements MemoryReranker {
       // changing the call site.
       return fragments.take(topK).toList();
     } catch (e) {
-      debugPrint('LlmReranker: falling back: $e');
+      appLog.warning('LlmReranker: falling back', error: e);
       return fallback.rerank(query: query, fragments: fragments, topK: topK);
     }
   }

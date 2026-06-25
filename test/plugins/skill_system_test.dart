@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../helpers/sqflite_test_setup.dart';
 import 'package:rfbrowser/data/models/skill.dart';
 import 'package:rfbrowser/data/repositories/note_repository.dart';
 import 'package:rfbrowser/data/stores/index_store.dart';
@@ -10,10 +10,7 @@ import 'package:rfbrowser/plugins/plugin_registry.dart';
 import 'package:rfbrowser/plugins/builtin/hello_world/hello_world_plugin.dart';
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
+  setUpAll(setupSqfliteForTests);
 
   group('Skill System - All Sources', () {
     test('builtin skills include summarize-page', () {

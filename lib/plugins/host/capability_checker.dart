@@ -1,4 +1,3 @@
-// ignore_for_file: avoid_print
 import 'plugin_host.dart';
 
 /// Thrown when a plugin attempts to call a sandbox API for which it has not

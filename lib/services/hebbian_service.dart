@@ -108,18 +108,19 @@ class HebbianService {
       return;
     }
 
-    // Pair every combination with the others and upsert edges.
-    for (var i = 0; i < ids.length; i++) {
-      for (var j = i + 1; j < ids.length; j++) {
-        await _memory.upsertHebbianEdge(
-          ids[i],
-          ids[j],
-          strengthDelta: _reinforcementDelta(),
-          stability: _stabilityFromAge(now),
-          now: now,
-        );
-      }
-    }
+    // Pair every combination with the others and upsert all edges in a
+    // single transaction (batch) to avoid an N+1 write pattern — n=10
+    // fragments produce 45 pairs, previously 45 separate transactions.
+    final pairs = <(String, String)>[
+      for (var i = 0; i < ids.length; i++)
+        for (var j = i + 1; j < ids.length; j++) (ids[i], ids[j]),
+    ];
+    await _memory.upsertHebbianEdgesBatch(
+      pairs,
+      strengthDelta: _reinforcementDelta(),
+      stability: _stabilityFromAge(now),
+      now: now,
+    );
     _pendingGroups.add(_CoAccessGroup(ids, now));
     _trimPending(now);
   }
@@ -218,31 +219,38 @@ class HebbianService {
     final now = DateTime.now();
     final aggregated = <String, _AggregateEdge>{};
 
-    for (final id in primarySet) {
-      final edges = await _memory.getHebbianEdgesFor(id);
-      for (final edge in edges) {
-        final other = edge.otherEnd(id);
-        if (other == null) continue;
-        if (primarySet.contains(other)) continue;
+    // Fetch all edges incident on any primary id in a single batch
+    // query (chunked internally) instead of one round-trip per id.
+    final allEdges = await _memory.getHebbianEdgesForBatch(primarySet);
+    for (final edge in allEdges) {
+      final aInPrimary = primarySet.contains(edge.fragmentA);
+      final bInPrimary = primarySet.contains(edge.fragmentB);
+      // Skip edges where both ends are in the seed set — the original
+      // per-id loop skipped these too (the "other" end was always a
+      // primary id).
+      if (aInPrimary && bInPrimary) continue;
+      // At least one end is primary (guaranteed by the IN query); the
+      // neighbor is the non-primary end.
+      final other = aInPrimary ? edge.fragmentB : edge.fragmentA;
+      if (primarySet.contains(other)) continue;
 
-        final decayed = _applyDecay(
-          edge.strength,
-          edge.stability,
-          edge.lastStrengthenedAt,
-          now,
+      final decayed = _applyDecay(
+        edge.strength,
+        edge.stability,
+        edge.lastStrengthenedAt,
+        now,
+      );
+      if (decayed < minStrength) continue;
+
+      final prev = aggregated[other];
+      if (prev == null || decayed > prev.strength) {
+        aggregated[other] = _AggregateEdge(
+          fragmentId: other,
+          strength: decayed,
+          stability: edge.stability,
+          coAccessCount: edge.coAccessCount,
+          lastStrengthenedAt: edge.lastStrengthenedAt,
         );
-        if (decayed < minStrength) continue;
-
-        final prev = aggregated[other];
-        if (prev == null || decayed > prev.strength) {
-          aggregated[other] = _AggregateEdge(
-            fragmentId: other,
-            strength: decayed,
-            stability: edge.stability,
-            coAccessCount: edge.coAccessCount,
-            lastStrengthenedAt: edge.lastStrengthenedAt,
-          );
-        }
       }
     }
 
@@ -252,11 +260,15 @@ class HebbianService {
       ..sort((a, b) => b.strength.compareTo(a.strength));
     final top = sorted.take(limit);
 
-    // Hydrate fragments for the top neighbors. Missing rows are silently
+    // Hydrate fragments for the top neighbors in a single batch query
+    // instead of one round-trip per neighbor. Missing rows are silently
     // dropped (the edge is stale).
+    final topIds = top.map((a) => a.fragmentId).toSet();
+    final fragments = await _memory.getFragmentsBatch(topIds);
+    final fragById = {for (final f in fragments) f.id: f};
     final results = <HebbianNeighbor>[];
     for (final agg in top) {
-      final frag = await _memory.getFragment(agg.fragmentId);
+      final frag = fragById[agg.fragmentId];
       if (frag == null) continue;
       results.add(
         HebbianNeighbor(
@@ -344,8 +356,8 @@ final hebbianServiceProvider = Provider<HebbianService>((ref) {
   final memory = ref.watch(memoryServiceProvider);
   final settings = ref.watch(settingsProvider);
   final config = HebbianConfig(
-    coAccessWindow: Duration(minutes: settings.memoryHebbianCoAccessMinutes),
-    decayDaysConstant: settings.memoryHebbianDecayDays,
+    coAccessWindow: Duration(minutes: settings.memory.hebbianCoAccessMinutes),
+    decayDaysConstant: settings.memory.hebbianDecayDays,
   );
   return HebbianService(memory, config: config);
 });

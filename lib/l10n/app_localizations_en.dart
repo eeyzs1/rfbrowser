@@ -147,6 +147,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get theme => 'Theme';
 
   @override
+  String get themeModeLabel => 'Theme Mode';
+
+  @override
   String get accentColor => 'Accent Color';
 
   @override
@@ -157,6 +160,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get surfaceColor => 'Surface';
+
+  @override
+  String get fontColor => 'Font Color';
+
+  @override
+  String get fontColorAuto => 'Auto';
+
+  @override
+  String get fontColorAutoDesc => 'Derive from surface color';
 
   @override
   String get customColor => 'Custom Color';
@@ -379,6 +391,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loading => 'Loading...';
+
+  @override
+  String get largeFileSourceNotice =>
+      'Large file opened in source view (editing may be slow)';
 
   @override
   String get error => 'Error';
@@ -2608,4 +2624,326 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentQuickOrganize => 'Organize';
+
+  @override
+  String get contextTruncatedToFitTokenLimit =>
+      'Context truncated to fit token limit';
+
+  @override
+  String get savedAsNoteToast => 'Saved as note';
+
+  @override
+  String get savedToMemory => 'Saved to memory';
+
+  @override
+  String get removedFromMemory => 'Removed from memory';
+
+  @override
+  String get memoryNetwork => 'Memory Network';
+
+  @override
+  String failedToLoad(String error) {
+    return 'Failed to load: $error';
+  }
+
+  @override
+  String get memoryBrowser => 'Memory Browser';
+
+  @override
+  String get tapNodeToInspect => 'Tap a node to inspect';
+
+  @override
+  String get noMemoryConnectionsYet =>
+      'No memory connections yet — keep chatting!';
+
+  @override
+  String get solidManualLink => 'Solid = manual link';
+
+  @override
+  String get smallFewLinks => 'Small = few links';
+
+  @override
+  String get largeManyLinks => 'Large = many links';
+
+  @override
+  String get switchToCircular => 'Switch to circular';
+
+  @override
+  String get fullGraph => 'Full graph';
+
+  @override
+  String get toggleStatistics => 'Toggle statistics';
+
+  @override
+  String get toggleLegend => 'Toggle legend';
+
+  @override
+  String get selectFragmentToSeeLinks => 'Select a fragment to see its links';
+
+  @override
+  String get noHebbianLinks => 'No Hebbian links for this fragment';
+
+  @override
+  String get changeViewMode => 'Change View Mode';
+
+  @override
+  String get viewMode => 'View Mode';
+
+  @override
+  String get syncConflict => 'Sync Conflict';
+
+  @override
+  String get keepLocal => 'Keep Local';
+
+  @override
+  String get keepRemote => 'Keep Remote';
+
+  @override
+  String get keepBoth => 'Keep Both';
+
+  @override
+  String get createQuickMove => 'Create Quick Move';
+
+  @override
+  String get commandNotFound => 'Command not found';
+
+  @override
+  String commandDoesNotExist(String cmdName) {
+    return 'Command \"/$cmdName\" does not exist. Create it?';
+  }
+
+  @override
+  String get newTabGroup => 'New Tab Group';
+
+  @override
+  String pendingCount(int count) {
+    return '$count pending';
+  }
+
+  @override
+  String get git => 'Git';
+
+  @override
+  String errorWithMessage(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get noFragmentsMatch =>
+      'No fragments match. Try a different query or wait for the next dreaming cycle to extract new facts.';
+
+  @override
+  String get memorySettingsTitle => 'Memory';
+
+  @override
+  String get ambientContext => 'Ambient context';
+
+  @override
+  String get progressiveForgetting => 'Progressive forgetting';
+
+  @override
+  String get hebbianConnections => 'Hebbian connections';
+
+  @override
+  String get autoExport => 'Auto-export';
+
+  @override
+  String get backupAndRestore => 'Backup & restore';
+
+  @override
+  String get dreamingActivity => 'Dreaming activity';
+
+  @override
+  String get exportCurrentChatToMarkdown => 'Export current chat to Markdown';
+
+  @override
+  String get noActiveChatSessionToExport => 'No active chat session to export';
+
+  @override
+  String get backupToJson => 'Backup to JSON';
+
+  @override
+  String get restoreFromJson => 'Restore from JSON';
+
+  @override
+  String restoreFailed(String error) {
+    return 'Restore failed: $error';
+  }
+
+  @override
+  String statusUnavailable(String error) {
+    return 'Status unavailable: $error';
+  }
+
+  @override
+  String get commandName => 'Command Name';
+
+  @override
+  String get promptTemplate => 'Prompt Template';
+
+  @override
+  String get iconLabel => 'Icon';
+
+  @override
+  String get groupName => 'Group name';
+
+  @override
+  String get testConnection => 'Test Connection';
+
+  @override
+  String get testing => 'Testing...';
+
+  @override
+  String get testConnectionSuccess => 'Connection successful';
+
+  @override
+  String testConnectionFailed(String error) {
+    return 'Connection failed: $error';
+  }
+
+  @override
+  String get copiedToClipboard => 'Copied to clipboard';
+
+  @override
+  String get regenerate => 'Regenerate';
+
+  @override
+  String get sessions => 'Sessions';
+
+  @override
+  String get newSession => 'New Session';
+
+  @override
+  String get renameSession => 'Rename Session';
+
+  @override
+  String get deleteSession => 'Delete Session';
+
+  @override
+  String get deleteSessionConfirm => 'Delete this session?';
+
+  @override
+  String get sessionTitle => 'Session Title';
+
+  @override
+  String get noSessions => 'No sessions';
+
+  @override
+  String get enterToSendHint => 'Enter to send, Shift+Enter for new line';
+
+  @override
+  String get defaultSessionTitle => 'New Conversation';
+
+  @override
+  String get memoryGuideTitle => 'About Memory System';
+
+  @override
+  String get memoryGuideDesc =>
+      'The memory system automatically extracts important information from your conversations and references it in future chats to help maintain context.';
+
+  @override
+  String get memoryGuideFragments =>
+      'Fragments — Auto-extracted memory pieces, tiered by importance';
+
+  @override
+  String get memoryGuideSummaries =>
+      'Summaries — Periodically consolidated summaries';
+
+  @override
+  String get memoryGuideHebbian =>
+      'Hebbian — Connection strengths between memories';
+
+  @override
+  String get memoryGuideInsights => 'Insights — Auto-generated discoveries';
+
+  @override
+  String get memoryGuideDismiss => 'Got it';
+
+  @override
+  String get syncing => 'Syncing...';
+
+  @override
+  String syncedAgo(String time) {
+    return 'Last sync: $time';
+  }
+
+  @override
+  String restoreSuccess(int fragments, int summaries, int edges) {
+    return 'Restore OK · $fragments fragments · $summaries summaries · $edges edges';
+  }
+
+  @override
+  String get restoreCancelled => 'Restore cancelled';
+
+  @override
+  String get restoreInvalidFile => 'Selected file is not a valid JSON backup';
+
+  @override
+  String get memoryAdvancedSettings => 'Advanced settings';
+
+  @override
+  String get consolidateNow => 'Consolidate now';
+
+  @override
+  String get dreamingInProgress => 'Dreaming in progress…';
+
+  @override
+  String get noDreamsYet => 'No dreams yet';
+
+  @override
+  String lastDream(String time) {
+    return 'Last dream: $time';
+  }
+
+  @override
+  String get canvasGuideTitle => 'Canvas guide';
+
+  @override
+  String get canvasGuidePanTitle => 'Pan canvas';
+
+  @override
+  String get canvasGuidePanDesc => 'Drag empty space to pan the canvas view';
+
+  @override
+  String get canvasGuideZoomTitle => 'Zoom';
+
+  @override
+  String get canvasGuideZoomDesc => 'Use the mouse wheel to zoom the canvas';
+
+  @override
+  String get canvasGuideAddCardTitle => 'Add card';
+
+  @override
+  String get canvasGuideAddCardDesc =>
+      'Click a toolbar button or double-click to add a card';
+
+  @override
+  String get canvasGuideConnectTitle => 'Connect cards';
+
+  @override
+  String get canvasGuideConnectDesc =>
+      'Drag from a card edge to create a connection';
+
+  @override
+  String get canvasGuideDismiss => 'Got it';
+
+  @override
+  String get sendToAi => 'Send to AI';
+
+  @override
+  String get sendingToAi => 'Sending page to AI…';
+
+  @override
+  String get sendToAiEmpty => 'No page content to send';
+
+  @override
+  String get sendToAiSent => 'Page sent to AI';
+
+  @override
+  String get openAiChat => 'Open AI';
+
+  @override
+  String sendToAiFailed(String error) {
+    return 'Failed to send to AI: $error';
+  }
 }

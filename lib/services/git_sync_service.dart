@@ -1,10 +1,11 @@
-// ignore_for_file: avoid_print
 import 'dart:io';
+import '../core/logging/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import '../data/stores/vault_store.dart';
+import 'sync/models/sync_status.dart';
 
-enum SyncStatus { idle, syncing, success, conflict, error }
+export 'sync/models/sync_status.dart';
 
 class SyncState {
   final SyncStatus status;
@@ -96,7 +97,7 @@ class GitSyncService {
       try {
         await _runGit(['commit', '-m', message]);
       } catch (_) {
-        print('Git sync: no changes to commit');
+        appLog.info('Git sync: no changes to commit');
       }
       return SyncState(status: SyncStatus.success, lastSync: DateTime.now());
     } catch (e) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../core/color_extensions.dart';
+import '../../l10n/app_localizations.dart';
 
 class ColorPickerDialog extends StatefulWidget {
   final Color initialColor;
@@ -88,8 +89,9 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('Custom Accent Color'),
+      title: Text(l.customAccentColor),
       content: SingleChildScrollView(
         child: SizedBox(
           width: 280,
@@ -170,12 +172,12 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l.cancel),
         ),
         FilledButton(
           onPressed: () =>
               Navigator.pop(context, Color.fromARGB(255, _r, _g, _b)),
-          child: const Text('Apply'),
+          child: Text(l.apply),
         ),
       ],
     );

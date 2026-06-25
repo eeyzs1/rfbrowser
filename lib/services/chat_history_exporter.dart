@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import '../core/logging/app_logger.dart';
 import '../data/models/chat_memory.dart';
 import '../data/stores/vault_store.dart';
 import 'memory_service.dart';
@@ -90,7 +90,7 @@ class ChatHistoryExporter {
     final exportedAt = DateTime.now();
     final dir = targetDir ?? await _resolveExportDir();
     if (dir == null) {
-      debugPrint('ChatHistoryExporter: no vault open, skipping export');
+      appLog.debug('ChatHistoryExporter: no vault open, skipping export');
       return null;
     }
     final outDir = Directory(dir);
@@ -105,7 +105,7 @@ class ChatHistoryExporter {
     // from filling up. Best-effort: failures are logged but not rethrown.
     final rotated = await _rotateOldExports(dir: outDir, sessionId: session.id);
     if (rotated > 0) {
-      debugPrint(
+      appLog.debug(
         'ChatHistoryExporter: rotated $rotated old exports for session '
         '${session.id.substring(0, 8)}',
       );

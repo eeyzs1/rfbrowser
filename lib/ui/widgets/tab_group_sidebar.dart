@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/browser_service.dart';
 import '../../data/models/browser_tab.dart';
 
@@ -10,6 +11,7 @@ class TabGroupSidebar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final browserState = ref.watch(browserProvider);
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return Column(
       children: [
@@ -23,7 +25,7 @@ class TabGroupSidebar extends ConsumerWidget {
               Icon(Icons.tab, size: 18, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
               Text(
-                'Tab Groups',
+                l.tabGroups,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -32,7 +34,7 @@ class TabGroupSidebar extends ConsumerWidget {
               IconButton(
                 icon: const Icon(Icons.add, size: 18),
                 onPressed: () => _showNewGroupDialog(context, ref),
-                tooltip: 'New Group',
+                tooltip: l.newGroup,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               ),
@@ -61,12 +63,12 @@ class TabGroupSidebar extends ConsumerWidget {
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, size: 20),
                 onPressed: () => ref.read(browserProvider.notifier).createTab(),
-                tooltip: 'New Tab',
+                tooltip: l.newTab,
               ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  '${browserState.tabs.length} tab${browserState.tabs.length != 1 ? 's' : ''}',
+                  l.tabsCount(browserState.tabs.length),
                   style: theme.textTheme.bodySmall,
                 ),
               ),
@@ -216,15 +218,16 @@ class TabGroupSidebar extends ConsumerWidget {
   }
 
   void _showNewGroupDialog(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('New Tab Group'),
+        title: Text(l.newTabGroup),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(hintText: 'Group name'),
+          decoration: InputDecoration(hintText: l.groupName),
           onSubmitted: (_) {
             if (controller.text.isNotEmpty) {
               ref.read(browserProvider.notifier).createGroup(controller.text);

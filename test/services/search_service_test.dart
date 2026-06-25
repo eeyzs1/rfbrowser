@@ -7,7 +7,7 @@ import 'package:rfbrowser/data/stores/vault_store.dart';
 import 'package:rfbrowser/services/search_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../helpers/sqflite_test_setup.dart';
 
 class TestVaultNotifier extends VaultNotifier {
   final VaultState _state;
@@ -34,10 +34,7 @@ ProviderContainer createContainer(String vaultPath) {
 }
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
+  setUpAll(setupSqfliteForTests);
 
   group('SearchState', () {
     test('initial state has empty results and isSearching=false', () {

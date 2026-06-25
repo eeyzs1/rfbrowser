@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/logging/app_logger.dart';
 import '../data/models/ai_provider.dart';
 import 'dio_factory.dart';
 import '../data/stores/vector_store.dart' hide SearchResult;
@@ -14,121 +16,21 @@ import '../core/ai/embedding_document_builder.dart';
 import 'tantivy_bridge_stub.dart' if (dart.library.ffi) 'tantivy_bridge.dart';
 import 'onnx_embedding_service.dart';
 
-class TfidfVectorizer {
-  static const int _dimensions = 128;
-  static const int _hashSeed = 0x9E3779B9;
-
-  final Map<String, double> _idf = {};
-  final Map<String, int> _tokenDocCount = {};
-  int _totalDocs = 0;
-
-  bool get isBuilt => _idf.isNotEmpty;
-
-  void buildFromCorpus(List<String> documents) {
-    _tokenDocCount.clear();
-    _totalDocs = documents.length;
-
-    for (final doc in documents) {
-      final tokens = _tokenize(doc).toSet();
-      for (final token in tokens) {
-        _tokenDocCount[token] = (_tokenDocCount[token] ?? 0) + 1;
-      }
-    }
-
-    _idf.clear();
-    for (final entry in _tokenDocCount.entries) {
-      _idf[entry.key] = log((_totalDocs + 1) / (entry.value + 1)) + 1.0;
-    }
-  }
-
-  List<double> vectorize(String text) {
-    final tokens = _tokenize(text);
-    if (tokens.isEmpty) return List<double>.filled(_dimensions, 0.0);
-
-    final tf = <String, int>{};
-    for (final t in tokens) {
-      tf[t] = (tf[t] ?? 0) + 1;
-    }
-
-    final vec = List<double>.filled(_dimensions, 0.0);
-    for (final entry in tf.entries) {
-      final idf = _idf[entry.key] ?? 1.0;
-      final weight = entry.value * idf;
-      final idx = _hashToken(entry.key) % _dimensions;
-      vec[idx] += weight;
-    }
-
-    // L2 normalize
-    final norm = vec.fold(0.0, (sum, v) => sum + v * v);
-    if (norm > 0) {
-      final invNorm = 1.0 / sqrt(norm);
-      for (var i = 0; i < vec.length; i++) {
-        vec[i] *= invNorm;
-      }
-    }
-
-    return vec;
-  }
-
-  static List<String> _tokenize(String text) {
-    final tokens = <String>[];
-    final lower = text.toLowerCase();
-
-    // CJK character unigrams
-    final cjkPattern = RegExp(r'[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]');
-    final nonCjkPattern = RegExp(r'[a-zA-Z0-9]+');
-
-    // Extract non-CJK words
-    for (final match in nonCjkPattern.allMatches(lower)) {
-      final word = match.group(0)!;
-      tokens.add('w:$word');
-    }
-
-    // Extract CJK characters as unigrams
-    for (final match in cjkPattern.allMatches(lower)) {
-      tokens.add('c:${match.group(0)}');
-    }
-
-    // Character bigrams (across all text, no spaces)
-    final cleaned = lower.replaceAll(RegExp(r'\s+'), ' ');
-    for (var i = 0; i < cleaned.length - 1; i++) {
-      final bigram = cleaned.substring(i, i + 2);
-      if (!bigram.contains(' ')) {
-        tokens.add('b:$bigram');
-      }
-    }
-
-    // Character trigrams
-    for (var i = 0; i < cleaned.length - 2; i++) {
-      final trigram = cleaned.substring(i, i + 3);
-      if (!trigram.contains(' ') && !trigram.contains('  ')) {
-        tokens.add('t:$trigram');
-      }
-    }
-
-    return tokens;
-  }
-
-  static int _hashToken(String token) {
-    var hash = _hashSeed;
-    for (var i = 0; i < token.length; i++) {
-      hash ^= token.codeUnitAt(i);
-      hash = ((hash << 5) - hash + (hash >> 2)) & 0x7FFFFFFF;
-    }
-    return hash.abs();
-  }
-}
+part 'embedding_tfidf.dart';
 
 typedef FtsSearchFn =
     Future<List<Map<String, dynamic>>> Function(String query, {int limit});
 
 class EmbeddingService {
   final Dio _dio = DioFactory.instance;
+  final IndexStore? _indexStore;
   HnswIndex? _hnswIndex;
   VectorStore? _vectorStore;
   OnnxEmbeddingService? _onnxService;
   final TfidfVectorizer _tfidf = TfidfVectorizer();
   final EmbeddingDocumentBuilder _docBuilder = const EmbeddingDocumentBuilder();
+
+  EmbeddingService([this._indexStore]);
 
   HnswIndex get hnswIndex =>
       _hnswIndex ??= HnswIndex(M: 16, efConstruction: 200);
@@ -137,8 +39,23 @@ class EmbeddingService {
   String _localBaseUrl = 'http://localhost:11434';
   String _localEmbeddingModel = 'nomic-embed-text';
 
+  /// Cached reachability result for the local provider (Ollama). Probing the
+  /// port takes ~1s even on failure; without caching, batchEmbedMissing would
+  /// log "not reachable" once per note per run, flooding the console.
+  DateTime? _lastLocalProviderCheck;
+  bool _localProviderReachable = false;
+  static const _localProviderCacheTtl = Duration(minutes: 1);
+
+  /// When true, skips the local provider (Ollama) entirely and goes straight
+  /// to the deterministic local fallback (n-gram hash / TF-IDF). Used by
+  /// tests to avoid hitting external services and to keep embeddings
+  /// deterministic regardless of which backends are installed on the host.
+  @visibleForTesting
+  bool skipLocalProviderForTesting = false;
+
   void setLocalBaseUrl(String url) {
     _localBaseUrl = url;
+    _lastLocalProviderCheck = null; // invalidate cache
   }
 
   void setLocalEmbeddingModel(String model) {
@@ -191,7 +108,6 @@ class EmbeddingService {
   void buildTfidfFromNotes(List<Note> notes) {
     final docs = notes.map((n) => '${n.title} ${n.content}').toList();
     _tfidf.buildFromCorpus(docs);
-    debugPrint('EmbeddingService: TF-IDF built from ${notes.length} notes');
   }
 
   bool get isTfidfBuilt => _tfidf.isBuilt;
@@ -208,8 +124,13 @@ class EmbeddingService {
     if (_onnxService != null && _onnxService!.isAvailable) {
       try {
         return await _onnxService!.embed(text);
-      } catch (e) {
-        debugPrint('ONNX embedding failed, falling back: $e');
+      } catch (e, st) {
+        // Use debugPrint as a fallback in case the logger itself throws
+        // (which would prevent us from seeing the error).
+        debugPrint('ONNX embedding failed: $e');
+        debugPrint('ONNX stack: $st');
+        appLog.warning('ONNX embedding failed, falling back',
+            error: e, stackTrace: st);
       }
     }
     return _embedViaLocalProvider(text);
@@ -242,12 +163,30 @@ class EmbeddingService {
         return embedding.map((e) => (e as num).toDouble()).toList();
       }
     } catch (e) {
-      debugPrint('Embedding API error: $e');
+      appLog.warning('Embedding API error', error: e);
     }
     return _embedViaLocalProvider(text);
   }
 
   Future<List<double>> _embedViaLocalProvider(String text) async {
+    // Test mode: skip the local provider entirely and use the deterministic
+    // local fallback so tests never depend on Ollama/ONNX availability.
+    if (skipLocalProviderForTesting) {
+      return _embedLocally(text);
+    }
+    // Use cached reachability result to avoid probing the port (1s timeout)
+    // on every call. Without this, batchEmbedMissing floods the log with
+    // "not reachable" messages — one per note.
+    final now = DateTime.now();
+    final cacheValid = _lastLocalProviderCheck != null &&
+        now.difference(_lastLocalProviderCheck!) < _localProviderCacheTtl;
+    if (!cacheValid) {
+      _localProviderReachable = await _isLocalProviderReachable();
+      _lastLocalProviderCheck = now;
+    }
+    if (!_localProviderReachable) {
+      return _embedLocally(text);
+    }
     try {
       final baseUrl = _localBaseUrl.replaceAll(RegExp(r'/$'), '');
       String embeddingUrl;
@@ -272,9 +211,30 @@ class EmbeddingService {
         return embedding.map((e) => (e as num).toDouble()).toList();
       }
     } catch (e) {
-      debugPrint('Local provider embedding error: $e');
+      appLog.warning('Local provider embedding error', error: e);
     }
     return _embedLocally(text);
+  }
+
+  /// Probes the local provider (Ollama) by attempting a TCP connect with a
+  /// short timeout. Returns true if the port accepts connections. This is
+  /// much faster than waiting for Dio's connectTimeout when the service is
+  /// simply not running.
+  Future<bool> _isLocalProviderReachable() async {
+    try {
+      final uri = Uri.parse(_localBaseUrl);
+      final host = uri.host.isEmpty ? 'localhost' : uri.host;
+      final port = uri.port != 0 ? uri.port : 11434;
+      final socket = await Socket.connect(
+        host,
+        port,
+        timeout: const Duration(seconds: 1),
+      );
+      await socket.close();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   List<double> _embedLocally(String text) {
@@ -330,7 +290,7 @@ class EmbeddingService {
   void _warnLocalEmbedding() {
     if (!_hasWarnedLocalEmbedding) {
       _hasWarnedLocalEmbedding = true;
-      debugPrint(
+      appLog.warning(
         'EmbeddingService: WARNING - Using local embedding fallback. '
         'Semantic search quality will be degraded. '
         'Configure a local model provider (e.g. Ollama, LM Studio) or an API-based embedding model for accurate results. '
@@ -356,6 +316,11 @@ class EmbeddingService {
     final metadata = {'title': note.title};
     hnswIndex.insert(note.id, embedding, metadata: metadata);
     store.insert(note.id, embedding, metadata: metadata);
+    await _indexStore?.upsertEmbedding(
+      note.id,
+      embedding,
+      metadata: metadata,
+    );
   }
 
   Future<int> batchEmbed(
@@ -375,6 +340,73 @@ class EmbeddingService {
       count++;
     }
     return count;
+  }
+
+  /// Loads persisted embeddings from the [IndexStore] into the in-memory
+  /// HnswIndex and VectorStore. Returns the set of note ids that have a
+  /// persisted vector. Call this on startup so the semantic index does not
+  /// need to be rebuilt from scratch every launch.
+  ///
+  /// If persisted vectors have inconsistent dimensions (e.g. some are 128-dim
+  /// from a previous local-fallback run and others are 384-dim from ONNX),
+  /// all persisted vectors are deleted so [batchEmbedMissing] will re-embed
+  /// everything with the current backend.
+  Future<Set<String>> loadPersistedEmbeddings() async {
+    if (_indexStore == null) return {};
+    final records = await _indexStore.getAllEmbeddings();
+    if (records.isEmpty) return {};
+
+    // Check for dimension consistency among persisted vectors.
+    final firstDim = records.first.embedding.length;
+    var dimMismatch = records.any((r) => r.embedding.length != firstDim);
+    // If ONNX is available, the expected dimension is 384. Persisted vectors
+    // from a previous run (when ONNX was unavailable) may be 128-dim from
+    // the local fallback. Clear them so everything is re-embedded.
+    if (!dimMismatch && _onnxService != null && _onnxService!.isAvailable) {
+      const expectedOnnxDim = 384;
+      if (firstDim != expectedOnnxDim) {
+        appLog.warning(
+          'EmbeddingService: ONNX is available but persisted embeddings are '
+          '$firstDim-dim (expected $expectedOnnxDim), clearing to rebuild',
+        );
+        dimMismatch = true;
+      }
+    }
+    if (dimMismatch) {
+      appLog.warning(
+        'EmbeddingService: clearing all persisted vectors to rebuild',
+      );
+      for (final r in records) {
+        await _indexStore.deleteEmbedding(r.noteId);
+      }
+      return {};
+    }
+
+    for (final r in records) {
+      hnswIndex.insert(r.noteId, r.embedding, metadata: r.metadata);
+      store.insert(r.noteId, r.embedding, metadata: r.metadata);
+    }
+    return records.map((r) => r.noteId).toSet();
+  }
+
+  /// Embeds only the notes whose vectors are not yet persisted. Returns the
+  /// number of notes newly embedded. Used on startup to backfill missing
+  /// vectors incrementally.
+  Future<int> batchEmbedMissing(List<Note> notes) async {
+    if (_indexStore == null) {
+      return batchEmbed(notes);
+    }
+    final existing = await _indexStore.getEmbeddingNoteIds();
+    final missing = notes.where((n) => !existing.contains(n.id)).toList();
+    if (missing.isEmpty) return 0;
+    return batchEmbed(missing);
+  }
+
+  /// Removes a note's vector from the in-memory index and persistence.
+  Future<void> removeNoteEmbedding(String noteId) async {
+    hnswIndex.remove(noteId);
+    store.remove(noteId);
+    await _indexStore?.deleteEmbedding(noteId);
   }
 }
 
@@ -454,7 +486,7 @@ class HybridSearch {
           }
         }
       } catch (_) {
-        debugPrint('HybridSearch: tantivy search failed');
+        appLog.warning('HybridSearch: tantivy search failed');
       }
     } else {
       final ftsSearch = _ftsSearchFn;
@@ -484,7 +516,7 @@ class HybridSearch {
             }
           }
         } catch (_) {
-          debugPrint('HybridSearch: FTS search failed');
+          appLog.warning('HybridSearch: FTS search failed');
         }
       }
     }
@@ -510,7 +542,7 @@ class HybridSearchResult {
 }
 
 final embeddingServiceProvider = Provider<EmbeddingService>((ref) {
-  return EmbeddingService();
+  return EmbeddingService(ref.read(indexStoreProvider));
 });
 
 final semanticSearchProvider = Provider<SemanticSearch>((ref) {

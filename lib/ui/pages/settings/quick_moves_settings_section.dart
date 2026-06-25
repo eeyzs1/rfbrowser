@@ -8,6 +8,8 @@ import '../../../data/models/quick_move.dart';
 import '../../widgets/settings_section.dart';
 import '../../widgets/create_quick_move_dialog.dart';
 
+part 'quick_moves_settings_section_edit.dart';
+
 class QuickMovesSettingsSection extends ConsumerWidget {
   const QuickMovesSettingsSection({super.key});
 
@@ -163,26 +165,19 @@ class QuickMovesSettingsSection extends ConsumerWidget {
                   ),
                 )
               else
-                ReorderableListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: quickMoveState.moves.length,
-                  onReorderItem: (oldIndex, newIndex) {
-                    final move = quickMoveState.moves[oldIndex];
-                    ref
-                        .read(quickMoveProvider.notifier)
-                        .reorderMove(move.id, newIndex);
-                  },
-                  itemBuilder: (context, index) {
-                    final move = quickMoveState.moves[index];
-                    return _buildMoveTile(
-                      context,
-                      ref,
-                      theme,
-                      move,
-                      key: ValueKey(move.id),
-                    );
-                  },
+                Column(
+                  children: [
+                    for (var i = 0; i < quickMoveState.moves.length; i++)
+                      _buildMoveTile(
+                        context,
+                        ref,
+                        theme,
+                        quickMoveState.moves[i],
+                        index: i,
+                        total: quickMoveState.moves.length,
+                        key: ValueKey(quickMoveState.moves[i].id),
+                      ),
+                  ],
                 ),
             ],
           ),
@@ -196,9 +191,13 @@ class QuickMovesSettingsSection extends ConsumerWidget {
     WidgetRef ref,
     ThemeData theme,
     QuickMove move, {
+    required int index,
+    required int total,
     Key? key,
   }) {
     final l = AppLocalizations.of(context);
+    final canMoveUp = index > 0;
+    final canMoveDown = index < total - 1;
     return Dismissible(
       key: key ?? ValueKey(move.id),
       direction: DismissDirection.endToStart,
@@ -268,222 +267,32 @@ class QuickMovesSettingsSection extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.drag_handle, size: 16, color: theme.hintColor),
+            IconButton(
+              icon: const Icon(Icons.arrow_upward, size: 14),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+              tooltip: 'Move Up',
+              onPressed: canMoveUp
+                  ? () => ref
+                      .read(quickMoveProvider.notifier)
+                      .reorderMove(move.id, index - 1)
+                  : null,
+            ),
+            IconButton(
+              icon: const Icon(Icons.arrow_downward, size: 14),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+              tooltip: 'Move Down',
+              onPressed: canMoveDown
+                  ? () => ref
+                      .read(quickMoveProvider.notifier)
+                      .reorderMove(move.id, index + 1)
+                  : null,
+            ),
           ],
         ),
-        onTap: () => _editQuickMove(context, ref, move),
-      ),
-    );
-  }
-
-  void _editQuickMove(BuildContext context, WidgetRef ref, QuickMove move) {
-    final nameController = TextEditingController(text: move.name);
-    final promptController = TextEditingController(text: move.promptTemplate);
-    var iconCodePoint = move.iconCodePoint;
-    var colorValue = move.colorValue;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          final theme = Theme.of(context);
-          return AlertDialog(
-            title: const Text('Edit Quick Move'),
-            contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-            content: SingleChildScrollView(
-              child: SizedBox(
-                width: 420,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Command Name',
-                        prefixText: '/',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: promptController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: 'Prompt Template',
-                        helperText:
-                            'Supported: {input}, {pageContent}, {selectedText}, {pageUrl}, {noteContent}',
-                        helperMaxLines: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Icon',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.hintColor,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: _iconOptions.map((icon) {
-                        final isSelected = icon.codePoint == iconCodePoint;
-                        return GestureDetector(
-                          onTap: () {
-                            setDialogState(() {
-                              iconCodePoint = icon.codePoint;
-                            });
-                          },
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? Color(colorValue).withValues(alpha: 0.15)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(8),
-                              border: isSelected
-                                  ? Border.all(
-                                      color: Color(colorValue),
-                                      width: 2,
-                                    )
-                                  : Border.all(color: Colors.transparent),
-                            ),
-                            child: Icon(
-                              icon,
-                              size: 18,
-                              color: isSelected
-                                  ? Color(colorValue)
-                                  : theme.hintColor,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Color',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.hintColor,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: _colorOptions.map((colorVal) {
-                        final isSelected = colorVal == colorValue;
-                        return GestureDetector(
-                          onTap: () {
-                            setDialogState(() {
-                              colorValue = colorVal;
-                            });
-                          },
-                          child: Container(
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: Color(colorVal),
-                              shape: BoxShape.circle,
-                              border: isSelected
-                                  ? Border.all(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      width: 3,
-                                    )
-                                  : null,
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: Color(
-                                          colorVal,
-                                        ).withValues(alpha: 0.4),
-                                        blurRadius: 8,
-                                        spreadRadius: 1,
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                            child: isSelected
-                                ? Icon(
-                                    Icons.check,
-                                    size: 14,
-                                    color:
-                                        (Color(colorVal).r * 0.299 +
-                                                Color(colorVal).g * 0.587 +
-                                                Color(colorVal).b * 0.114) >
-                                            128
-                                        ? Colors.black
-                                        : Colors.white,
-                                  )
-                                : null,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  final name = nameController.text.trim();
-                  final prompt = promptController.text.trim();
-                  if (name.isEmpty || prompt.isEmpty) return;
-
-                  ref
-                      .read(quickMoveProvider.notifier)
-                      .updateMove(
-                        move.id,
-                        name: name,
-                        promptTemplate: prompt,
-                        iconCodePoint: iconCodePoint,
-                        colorValue: colorValue,
-                      );
-                  Navigator.pop(ctx);
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        },
+        onTap: () => _showEditQuickMoveDialog(context, ref, move),
       ),
     );
   }
 }
-
-const _iconOptions = [
-  Icons.translate,
-  Icons.summarize,
-  Icons.psychology,
-  Icons.mail,
-  Icons.spellcheck,
-  Icons.bolt,
-  Icons.star,
-  Icons.favorite,
-  Icons.lightbulb,
-  Icons.auto_awesome,
-  Icons.search,
-  Icons.code,
-  Icons.edit,
-  Icons.share,
-  Icons.bookmark,
-];
-
-const _colorOptions = [
-  0xFF0EA5E9,
-  0xFF8B5CF6,
-  0xFFF43F5E,
-  0xFF10B981,
-  0xFFF59E0B,
-  0xFF6366F1,
-  0xFF14B8A6,
-  0xFFF97316,
-  0xFF64748B,
-];

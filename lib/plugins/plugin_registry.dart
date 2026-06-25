@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:yaml/yaml.dart';
+import '../core/logging/app_logger.dart';
 import '../data/models/skill.dart';
 import 'builtin/builtin_plugin.dart';
 import 'builtin/hello_world/hello_world_plugin.dart';
@@ -80,12 +80,13 @@ class PluginRegistry {
               'author': yaml['author'] ?? '',
               'description': yaml['description'] ?? '',
               'permissions': yaml['permissions'] ?? [],
+              'entryPoint': yaml['entryPoint'],
             });
             if (manifest.id.isNotEmpty) {
               manifests.add(manifest);
             }
           } catch (e) {
-            debugPrint('PluginRegistry: failed to load ${yamlFile.path}: $e');
+            appLog.error('PluginRegistry: failed to load ${yamlFile.path}', error: e);
           }
         }
       }
@@ -152,6 +153,7 @@ class PluginRegistry {
       'author': yaml['author'] ?? '',
       'description': yaml['description'] ?? '',
       'permissions': yaml['permissions'] ?? [],
+      'entryPoint': yaml['entryPoint'],
     });
 
     return manifest;

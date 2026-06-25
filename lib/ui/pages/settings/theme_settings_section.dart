@@ -58,6 +58,17 @@ const _surfacePresets = [
   _PresetColor('pearl', 'Pearl', Icons.diamond, Color(0xFFD4CFC9)),
 ];
 
+const _fontPresets = [
+  _PresetColor('white', 'White', Icons.text_fields, Color(0xFFFFFFFF)),
+  _PresetColor('lightGray', 'Light Gray', Icons.text_fields, Color(0xFFE2E8F0)),
+  _PresetColor('gray', 'Gray', Icons.text_fields, Color(0xFF94A3B8)),
+  _PresetColor('darkGray', 'Dark Gray', Icons.text_fields, Color(0xFF475569)),
+  _PresetColor('black', 'Black', Icons.text_fields, Color(0xFF000000)),
+  _PresetColor('warm', 'Warm', Icons.text_fields, Color(0xFFF5F5DC)),
+  _PresetColor('sepia', 'Sepia', Icons.text_fields, Color(0xFF5C4B37)),
+  _PresetColor('honey', 'Honey', Icons.text_fields, Color(0xFFFFB74D)),
+];
+
 class ThemeSettingsSection extends ConsumerWidget {
   const ThemeSettingsSection({super.key});
 
@@ -71,6 +82,8 @@ class ThemeSettingsSection extends ConsumerWidget {
       title: l.theme,
       children: [
         const SizedBox(height: 8),
+        _buildThemeModeSelector(context, ref, settings, theme, l),
+        const Divider(height: 24),
         _buildColorSection(
           context,
           ref,
@@ -111,8 +124,61 @@ class ThemeSettingsSection extends ConsumerWidget {
           isAccent: false,
         ),
         const Divider(height: 24),
+        _buildFontColorSection(context, ref, settings, theme, l),
+        const Divider(height: 24),
         _buildOpacitySliders(context, ref, settings, theme, l),
         const SizedBox(height: 4),
+      ],
+    );
+  }
+
+  Widget _buildThemeModeSelector(
+    BuildContext context,
+    WidgetRef ref,
+    AppSettings settings,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: Text(
+            l.themeModeLabel,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SegmentedButton<ThemeMode>(
+            segments: [
+              ButtonSegment(
+                value: ThemeMode.system,
+                icon: const Icon(Icons.brightness_auto, size: 16),
+                label: Text(l.followSystem),
+              ),
+              ButtonSegment(
+                value: ThemeMode.light,
+                icon: const Icon(Icons.light_mode, size: 16),
+                label: Text(l.lightMode),
+              ),
+              ButtonSegment(
+                value: ThemeMode.dark,
+                icon: const Icon(Icons.dark_mode, size: 16),
+                label: Text(l.darkMode),
+              ),
+            ],
+            selected: {settings.themeMode},
+            onSelectionChanged: (modes) {
+              ref
+                  .read(settingsProvider.notifier)
+                  .setThemeMode(modes.first);
+            },
+          ),
+        ),
       ],
     );
   }
@@ -253,6 +319,182 @@ class ThemeSettingsSection extends ConsumerWidget {
 
   Color _contrastText(Color bg) => bg.contrastText;
 
+  Widget _buildFontColorSection(
+    BuildContext context,
+    WidgetRef ref,
+    AppSettings settings,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
+    final isAuto = settings.fontColorValue == null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: Text(
+            l.fontColor,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const itemSize = 56.0;
+              const gap = 6.0;
+              final cols = ((constraints.maxWidth + gap) / (itemSize + gap))
+                  .floor();
+              final cellWidth = (constraints.maxWidth - (cols - 1) * gap) / cols;
+              return Wrap(
+                alignment: WrapAlignment.start,
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  // Auto option as first grid item
+                  SizedBox(
+                    width: cellWidth,
+                    child: GestureDetector(
+                      onTap: () =>
+                          ref.read(settingsProvider.notifier).clearFontColor(),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: itemSize,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(10),
+                          border: isAuto
+                              ? Border.all(
+                                  color: theme.colorScheme.primary,
+                                  width: 2.5,
+                                )
+                              : Border.all(
+                                  color:
+                                      theme.colorScheme.onSurface.withValues(
+                                        alpha: 0.08,
+                                      ),
+                                  width: 1,
+                                ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.auto_awesome,
+                              size: 16,
+                              color: isAuto
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(height: 2),
+                            Flexible(
+                              child: Text(
+                                l.fontColorAuto,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  fontWeight: isAuto
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isAuto
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  ..._fontPresets.map((preset) {
+                    final isSelected =
+                        settings.fontColorValue == preset.color.toARGB32();
+                    return SizedBox(
+                      width: cellWidth,
+                      child: GestureDetector(
+                        onTap: () => ref
+                            .read(settingsProvider.notifier)
+                            .setFontColor(preset.color),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          height: itemSize,
+                          decoration: BoxDecoration(
+                            color: preset.color,
+                            borderRadius: BorderRadius.circular(10),
+                            border: isSelected
+                                ? Border.all(
+                                    color: theme.colorScheme.primary,
+                                    width: 2.5,
+                                  )
+                                : Border.all(
+                                    color:
+                                        theme.colorScheme.onSurface.withValues(
+                                          alpha: 0.08,
+                                        ),
+                                    width: 1,
+                                  ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                preset.icon,
+                                size: 16,
+                                color: _contrastText(preset.color),
+                              ),
+                              const SizedBox(height: 2),
+                              Flexible(
+                                child: Text(
+                                  preset.label,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: _contrastText(preset.color),
+                                    height: 1.2,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              );
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              final current =
+                  settings.fontColor ?? theme.colorScheme.onSurface;
+              final color = await ColorPickerDialog.show(context, current);
+              if (color != null) {
+                ref.read(settingsProvider.notifier).setFontColor(color);
+              }
+            },
+            icon: const Icon(Icons.palette, size: 16),
+            label: Text(l.customColor),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildOpacitySliders(
     BuildContext context,
     WidgetRef ref,
@@ -283,8 +525,12 @@ class ThemeSettingsSection extends ConsumerWidget {
               max: 1.0,
               divisions: 8,
               label: '${(settings.themeTintOpacity * 100).round()}%',
-              onChanged: (v) =>
-                  ref.read(settingsProvider.notifier).setThemeTintOpacity(v),
+              onChanged: (v) => ref
+                  .read(settingsProvider.notifier)
+                  .setThemeTintOpacityLive(v),
+              onChangeEnd: (v) => ref
+                  .read(settingsProvider.notifier)
+                  .setThemeTintOpacity(v),
             ),
           ),
         ),
@@ -299,8 +545,12 @@ class ThemeSettingsSection extends ConsumerWidget {
               max: 1.0,
               divisions: 9,
               label: '${(settings.surfaceOpacity * 100).round()}%',
-              onChanged: (v) =>
-                  ref.read(settingsProvider.notifier).setSurfaceOpacity(v),
+              onChanged: (v) => ref
+                  .read(settingsProvider.notifier)
+                  .setSurfaceOpacityLive(v),
+              onChangeEnd: (v) => ref
+                  .read(settingsProvider.notifier)
+                  .setSurfaceOpacity(v),
             ),
           ),
         ),
@@ -315,8 +565,12 @@ class ThemeSettingsSection extends ConsumerWidget {
               max: 1.0,
               divisions: 9,
               label: '${(settings.backgroundOpacity * 100).round()}%',
-              onChanged: (v) =>
-                  ref.read(settingsProvider.notifier).setBackgroundOpacity(v),
+              onChanged: (v) => ref
+                  .read(settingsProvider.notifier)
+                  .setBackgroundOpacityLive(v),
+              onChangeEnd: (v) => ref
+                  .read(settingsProvider.notifier)
+                  .setBackgroundOpacity(v),
             ),
           ),
         ),

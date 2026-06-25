@@ -3,25 +3,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/knowledge_service.dart';
 import '../../data/models/link_type.dart';
+import '../../data/models/note.dart';
 import '../../data/models/unlinked_mention.dart';
 
-class BacklinksPanel extends ConsumerWidget {
+/// Right-hand panel showing backlinks and unlinked mentions for the
+/// active note. Backlinks are cheap (a cached list lookup) and render
+/// immediately. Unlinked mentions require an O(n_titles × content)
+/// regex scan, so on first open (cache miss) the scan is deferred to a
+/// microtask so the note can paint first instead of freezing the UI.
+class BacklinksPanel extends ConsumerStatefulWidget {
   final VoidCallback? onClose;
   const BacklinksPanel({super.key, this.onClose});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BacklinksPanel> createState() => _BacklinksPanelState();
+}
+
+class _BacklinksPanelState extends ConsumerState<BacklinksPanel> {
+  List<UnlinkedMentionResult> _unlinkedMentions = const [];
+  // Tracks the (noteId, content) the current [_unlinkedMentions] was
+  // computed for, so we only re-scan when the active note actually
+  // changes — not on every keystroke that bubbles through the provider.
+  String? _computedNoteId;
+  String? _computedContent;
+
+  @override
+  Widget build(BuildContext context) {
     final knowledgeState = ref.watch(knowledgeProvider);
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
     final activeNote = knowledgeState.activeNote;
     final backlinks = knowledgeState.backlinks;
 
-    final unlinkedMentions = activeNote != null
-        ? ref
-              .read(knowledgeProvider.notifier)
-              .getUnlinkedMentions(activeNote.id)
-        : <UnlinkedMentionResult>[];
+    _maybeScheduleUnlinkedScan(activeNote);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,14 +67,14 @@ class BacklinksPanel extends ConsumerWidget {
                 ),
               ),
               const Spacer(),
-              if (onClose != null)
+              if (widget.onClose != null)
                 IconButton(
                   icon: Icon(
                     Icons.chevron_right,
                     size: 16,
                     color: theme.hintColor,
                   ),
-                  onPressed: onClose,
+                  onPressed: widget.onClose,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
                     minWidth: 28,
@@ -80,7 +94,7 @@ class BacklinksPanel extends ConsumerWidget {
                     style: theme.textTheme.bodySmall,
                   ),
                 )
-              : backlinks.isEmpty && unlinkedMentions.isEmpty
+              : backlinks.isEmpty && _unlinkedMentions.isEmpty
               ? Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(l.noBacklinks, style: theme.textTheme.bodySmall),
@@ -95,7 +109,7 @@ class BacklinksPanel extends ConsumerWidget {
                         type: link.type,
                       ),
                     ),
-                    if (unlinkedMentions.isNotEmpty) ...[
+                    if (_unlinkedMentions.isNotEmpty) ...[
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -109,11 +123,14 @@ class BacklinksPanel extends ConsumerWidget {
                               color: theme.colorScheme.tertiary,
                             ),
                             const SizedBox(width: 6),
-                            Text(
-                              l.unlinkedMentions,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.tertiary,
+                            Flexible(
+                              child: Text(
+                                l.unlinkedMentions,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.tertiary,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -129,7 +146,7 @@ class BacklinksPanel extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
-                                '${unlinkedMentions.length}',
+                                '${_unlinkedMentions.length}',
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.tertiary,
                                 ),
@@ -138,7 +155,7 @@ class BacklinksPanel extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      ...unlinkedMentions.map(
+                      ..._unlinkedMentions.map(
                         (m) => _UnlinkedMentionItem(
                           mention: m,
                           onLink: () => ref
@@ -156,6 +173,42 @@ class BacklinksPanel extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  /// Schedules an unlinked-mention scan only when the active note or its
+  /// content has changed since the last computation. The scan runs in a
+  /// microtask so this build returns immediately and the note can paint
+  /// first; the panel then populates once the (cached or fresh) result
+  /// is ready.
+  void _maybeScheduleUnlinkedScan(Note? activeNote) {
+    if (activeNote == null) {
+      if (_computedNoteId != null) {
+        _computedNoteId = null;
+        _computedContent = null;
+        _unlinkedMentions = const [];
+      }
+      return;
+    }
+    if (activeNote.id == _computedNoteId &&
+        activeNote.content == _computedContent) {
+      return;
+    }
+    _computedNoteId = activeNote.id;
+    _computedContent = activeNote.content;
+    final noteId = activeNote.id;
+    Future.microtask(() {
+      if (!mounted) return;
+      final result =
+          ref.read(knowledgeProvider.notifier).getUnlinkedMentions(noteId);
+      if (!mounted) return;
+      // Guard against the active note having changed again while the
+      // microtask was pending.
+      final current = ref.read(knowledgeProvider).activeNote;
+      if (current?.id != noteId) return;
+      setState(() {
+        _unlinkedMentions = result;
+      });
+    });
   }
 }
 
