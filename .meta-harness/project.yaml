@@ -18,7 +18,7 @@ repos:
     lint_command: "flutter analyze"
     test_command: "flutter test"
 
-meta_harness_version: "2.0.0"
+meta_harness_version: "2.5.0"
 
 # === 运行模式 ===
 # fast: 跳过 brainstorm + code-review，适合小改动和 bugfix

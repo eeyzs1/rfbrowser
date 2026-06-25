@@ -1,20 +1,43 @@
 # RFBrowser — AI Operating Instructions
 
-This project uses **Meta-Harness** framework as a git submodule at `meta-harness/`.
+This project uses **Meta-Harness v2.5** framework as a git submodule at `meta-harness/`.
 
-## Bootstrap (ALWAYS — 4 steps)
+## PRE-FLIGHT (RUN FIRST — before ANY other work, every turn)
 
-1. **Self-update check** — run the platform-appropriate version check script. If an update is available, run the update script immediately, then restart the pipeline.
-   - Linux/Mac: `bash meta-harness/scripts/check-version.sh` → if `UPDATE_AVAILABLE=true`, run `bash meta-harness/scripts/update-harness.sh`
-   - Windows: `powershell meta-harness/scripts/check-version.ps1` → if `UPDATE_AVAILABLE=true`, run `powershell meta-harness/scripts/update-harness.ps1`
-2. **Read `meta-harness/meta/interpreter.md`** — extract measurable acceptance criteria
-3. **Read `meta-harness/meta/phase-loader.md`** — load ONLY the files needed for the current phase
-4. **Follow the pipeline:** INTERPRET → GENERATE → FACTORY → PROVE → JUDGE → EVOLVE
+**This is the SINGLE entry point. There is no other bootstrap path.**
+
+1. **Read `meta-harness/.meta-harness/PHASE_BRIEF.md`** — this file tells you exactly:
+   - Which phase you're in and whether it's "in_progress", "blocked", or "complete"
+   - What the original acceptance criteria are (locked during INTERPRET)
+   - What to do next
+2. **If PHASE_BRIEF.md does not exist** (fresh start):
+   - Run self-update: `powershell meta-harness/scripts/check-version.ps1` (Windows) or `bash meta-harness/scripts/check-version.sh` (Linux/Mac)
+   - If `UPDATE_AVAILABLE=true`, run the update script, then restart
+   - Run `python meta-harness/meta/meta-orchestrator.py --status` to initialize
+3. **If PHASE_BRIEF.md says "status: complete"** → stop. Pipeline is done.
+4. **If PHASE_BRIEF.md says "status: blocked"** → diagnose and fix errors, then run `python meta-harness/meta/meta-orchestrator.py --unblock`
+5. **Resume from the phase indicated.** Do NOT re-execute completed phases.
+6. **Before ANY major action**, check the acceptance criteria. If your action does NOT trace to a criterion, STOP — you are experiencing task drift.
+
+## Pipeline: INTERPRET → GENERATE → FACTORY → PROVE → JUDGE → EVOLVE
+
+The pipeline is driven by `meta-harness/meta/meta-orchestrator.py`. Key commands:
+
+| Command | Purpose |
+|---------|---------|
+| `--status` | Check current pipeline state |
+| `--interpret-intent "<intent>"` | Scripted INTERPRET entry — runs interpret.py, writes task.yaml, locks criteria |
+| `--advance` | Mark current phase complete, auto-advance to next (auto-runs next phase script) |
+| `--advance --no-auto-run` | Advance without auto-running next phase script |
+| `--save-acceptance-criteria "<criteria>"` | Lock acceptance criteria (prevents task drift) |
+| `--verify-criterion N` | Mark criterion N as verified with evidence |
+| `--reset` | Reset pipeline to fresh state |
+| `--force-phase <PHASE>` | Force jump to a specific phase |
 
 ## About This Project
 
 RFBrowser is a **Flutter desktop application** — an AI-powered knowledge browser.
-It is NOT a meta-harness generation pipeline. It IS the actual application.
+The harness pipeline governs all development work on this project.
 
 Key technical facts:
 - Flutter 3.27+ with Dart 3.11+
@@ -37,10 +60,10 @@ Key technical facts:
 | Phase | Load |
 |-------|------|
 | INTERPRET | `meta-harness/meta/interpreter.md` + `meta-harness/meta/phase-loader.md` + `meta-harness/seeds/planning/planner-engine.md` |
-| GENERATE | `meta-harness/meta/harness-generator.md` + `meta-harness/seeds/planning/project-yaml-template.yaml` + `meta-harness/seeds/planning/planner-engine.md` |
-| FACTORY | `meta-harness/meta/agent-factory.md` + `meta-harness/seeds/planning/leaf-protocol.md` |
-| PROVE | `meta-harness/seeds/verification/auditor-engine.md` + `meta-harness/seeds/verification/recovery-and-audit.md` + `meta-harness/seeds/verification/quality-gate.py` |
-| JUDGE | `meta-harness/seeds/guard.py` + `meta-harness/seeds/planning/orchestrator.py` |
+| GENERATE | `meta-harness/meta/harness-generator.md` + `meta-harness/seeds/planning/project-yaml-template.yaml` |
+| FACTORY | `meta-harness/meta/agent-factory.md` |
+| PROVE | `meta-harness/scripts/verify-generation.py` + `meta-harness/seeds/verification/auditor-engine.md` |
+| JUDGE | `meta-harness/seeds/guard.py` + `meta-harness/seeds/orchestrator.py` |
 | EVOLVE | `meta-harness/evolution/framework.md` + `meta-harness/scripts/evolve.py` |
 
 ## Rule Files (LOAD ON DEMAND)
