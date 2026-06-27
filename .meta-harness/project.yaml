@@ -1,10 +1,10 @@
 # RFBrowser — Meta-Harness Project Configuration
-# Schema version: 2.0.0
+# Schema version: 2.0 (与框架版本独立，仅在 breaking change 时递增)
 
 project:
   name: "RFBrowser"
   description: "AI-Powered Knowledge Browser — Flutter desktop app"
-  schema_version: "2.0.0"
+  schema_version: "2.0"  # 框架版本真相源为 git tag，不再在此追踪
 
 # === 仓库 ===
 repos:
@@ -17,8 +17,6 @@ repos:
     typecheck_command: "flutter analyze"
     lint_command: "flutter analyze"
     test_command: "flutter test"
-
-meta_harness_version: "2.5.0"
 
 # === 运行模式 ===
 # fast: 跳过 brainstorm + code-review，适合小改动和 bugfix

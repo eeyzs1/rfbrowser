@@ -1,6 +1,6 @@
 # RFBrowser — AI Operating Instructions
 
-This project uses **Meta-Harness v2.5** framework as a git submodule at `meta-harness/`.
+This project uses **Meta-Harness v2.7** framework as a git submodule at `meta-harness/`.
 
 ## PRE-FLIGHT (RUN FIRST — before ANY other work, every turn)
 
@@ -34,6 +34,17 @@ The pipeline is driven by `meta-harness/meta/meta-orchestrator.py`. Key commands
 | `--reset` | Reset pipeline to fresh state |
 | `--force-phase <PHASE>` | Force jump to a specific phase |
 
+## GENERATE Pre-Advance Gate (v2.6 blocking gate)
+
+The GENERATE → FACTORY boundary is a **BLOCKING gate**. `--advance` from GENERATE runs `meta-harness/scripts/validate-harness.py` first; if it does not PASS, `--advance` is REFUSED and FACTORY does not start. This prevents FACTORY from running on a half-scaffolded harness (mock slots, missing work-units, broken DAG refs).
+
+GENERATE is now a 3-step flow:
+1. **scaffold (auto)** — `scripts/scaffold.py` writes deterministic skeleton + universal primitives + slot baseline (`harness-scaffold.yaml`)
+2. **LLM-authored slots (manual)** — fill the 24 project-specific slots per `meta/harness-author.md`
+3. **validate (the gate)** — `scripts/validate-harness.py` must PASS before `--advance`
+
+Fix the slot fills flagged by the validator, re-run `validate-harness.py` until it PASSes, then re-run `--advance`. Only INTERPRET (needs user-confirmed criteria) and GENERATE (needs validate-harness PASS) are blocking gates; all other phase boundaries remain best-effort.
+
 ## About This Project
 
 RFBrowser is a **Flutter desktop application** — an AI-powered knowledge browser.
@@ -60,7 +71,7 @@ Key technical facts:
 | Phase | Load |
 |-------|------|
 | INTERPRET | `meta-harness/meta/interpreter.md` + `meta-harness/meta/phase-loader.md` + `meta-harness/seeds/planning/planner-engine.md` |
-| GENERATE | `meta-harness/meta/harness-generator.md` + `meta-harness/seeds/planning/project-yaml-template.yaml` |
+| GENERATE | `meta-harness/meta/harness-generator.md` (v2 flow: `scripts/scaffold.py` → `meta/harness-author.md` → `scripts/validate-harness.py`) + `meta-harness/seeds/planning/project-yaml-template.yaml` |
 | FACTORY | `meta-harness/meta/agent-factory.md` |
 | PROVE | `meta-harness/scripts/verify-generation.py` + `meta-harness/seeds/verification/auditor-engine.md` |
 | JUDGE | `meta-harness/seeds/guard.py` + `meta-harness/seeds/orchestrator.py` |
