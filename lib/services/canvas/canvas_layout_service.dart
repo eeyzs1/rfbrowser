@@ -1,6 +1,103 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../data/models/canvas_model.dart';
+
+/// Serializable input for the force-directed layout isolate.
+/// Only primitive/serializable types — safe to pass through SendPort.
+class _ForceDirectedInput {
+  final List<String> cardIds;
+  final List<String> connFromIds;
+  final List<String> connToIds;
+  final bool snapToGrid;
+  const _ForceDirectedInput(
+    this.cardIds,
+    this.connFromIds,
+    this.connToIds,
+    this.snapToGrid,
+  );
+}
+
+/// Top-level function executed in a worker isolate via [compute].
+/// Runs the O(50×n²) force-directed algorithm off the UI thread.
+Map<String, (double, double)> _computeForceDirectedIsolate(
+  _ForceDirectedInput input,
+) {
+  final cardIds = input.cardIds;
+  final n = cardIds.length;
+  if (n == 0) return {};
+  final positions = <String, (double, double)>{};
+  for (int i = 0; i < n; i++) {
+    final angle = 2 * 3.14159265 * i / n;
+    final radius = 200.0 * (n > 1 ? 1 : 0);
+    positions[cardIds[i]] = (
+      radius * (1 + angle / 6.28) * 2 - radius,
+      radius * (1 + (angle * 0.5).abs()),
+    );
+  }
+  for (int iter = 0; iter < 50; iter++) {
+    final forces = <String, (double, double)>{};
+    for (final id in cardIds) {
+      forces[id] = (0.0, 0.0);
+    }
+    for (int i = 0; i < n; i++) {
+      for (int j = i + 1; j < n; j++) {
+        final aId = cardIds[i];
+        final bId = cardIds[j];
+        final posA = positions[aId]!;
+        final posB = positions[bId]!;
+        final dx = posB.$1 - posA.$1;
+        final dy = posB.$2 - posA.$2;
+        final dist = (dx * dx + dy * dy).toDouble().clamp(
+          1.0,
+          double.infinity,
+        );
+        final repulsion = 50000.0 / dist;
+        final fx = dx / math.sqrt(dist) * repulsion;
+        final fy = dy / math.sqrt(dist) * repulsion;
+        forces[aId] = (forces[aId]!.$1 - fx, forces[aId]!.$2 - fy);
+        forces[bId] = (forces[bId]!.$1 + fx, forces[bId]!.$2 + fy);
+      }
+    }
+    for (int c = 0; c < input.connFromIds.length; c++) {
+      final fromId = input.connFromIds[c];
+      final toId = input.connToIds[c];
+      final posA = positions[fromId];
+      final posB = positions[toId];
+      if (posA == null || posB == null) continue;
+      final dx = posB.$1 - posA.$1;
+      final dy = posB.$2 - posA.$2;
+      final dist = (dx * dx + dy * dy).toDouble().clamp(1.0, double.infinity);
+      final attraction = dist * 0.01;
+      final fx = dx / math.sqrt(dist) * attraction;
+      final fy = dy / math.sqrt(dist) * attraction;
+      forces[fromId] = (
+        forces[fromId]!.$1 + fx,
+        forces[fromId]!.$2 + fy,
+      );
+      forces[toId] = (
+        forces[toId]!.$1 - fx,
+        forces[toId]!.$2 - fy,
+      );
+    }
+    for (final id in cardIds) {
+      final f = forces[id]!;
+      final pos = positions[id]!;
+      const maxMove = 20.0;
+      final fx = f.$1.clamp(-maxMove, maxMove);
+      final fy = f.$2.clamp(-maxMove, maxMove);
+      positions[id] = (pos.$1 + fx, pos.$2 + fy);
+    }
+  }
+  final result = <String, (double, double)>{};
+  for (final id in cardIds) {
+    final pos = positions[id]!;
+    final x = input.snapToGrid ? (pos.$1 / 20).roundToDouble() * 20.0 : pos.$1;
+    final y = input.snapToGrid ? (pos.$2 / 20).roundToDouble() * 20.0 : pos.$2;
+    result[id] = (x, y);
+  }
+  return result;
+}
 
 class CanvasLayoutService {
   const CanvasLayoutService();
@@ -23,6 +120,28 @@ class CanvasLayoutService {
       case AutoLayoutType.grid:
         return _computeGrid(cards, snapToGrid: snapToGrid);
     }
+  }
+
+  /// Async variant that runs force-directed layout in a worker isolate
+  /// when there are more than 50 cards (the O(50×n²) path).
+  /// Falls back to synchronous [computeLayout] for lighter algorithms.
+  Future<Map<String, Offset>> computeLayoutAsync(
+    List<CanvasCard> cards,
+    List<CanvasConnection> connections,
+    AutoLayoutType type, {
+    bool snapToGrid = true,
+  }) async {
+    if (type == AutoLayoutType.forceDirected && cards.length > 50) {
+      final input = _ForceDirectedInput(
+        cards.map((c) => c.id).toList(),
+        connections.map((c) => c.fromCardId).toList(),
+        connections.map((c) => c.toCardId).toList(),
+        snapToGrid,
+      );
+      final result = await compute(_computeForceDirectedIsolate, input);
+      return result.map((id, pos) => MapEntry(id, Offset(pos.$1, pos.$2)));
+    }
+    return computeLayout(cards, connections, type, snapToGrid: snapToGrid);
   }
 
   double snapToGrid(double value) {
@@ -126,16 +245,22 @@ class CanvasLayoutService {
         hasIncoming[conn.toCardId] = hasIncoming[conn.toCardId]! + 1;
       }
     }
+    // Issue 14: Pre-build adjacency map so recursive calls don't scan all
+    // connections per node.
+    final adjacency = <String, List<String>>{};
+    for (final conn in connections) {
+      if (cardMap.containsKey(conn.toCardId)) {
+        adjacency.putIfAbsent(conn.fromCardId, () => []).add(conn.toCardId);
+      }
+    }
     final levels = <String, int>{};
     final visited = <String>{};
     void assignLevel(String id, int level) {
       if (visited.contains(id)) return;
       visited.add(id);
       levels[id] = level;
-      for (final conn in connections) {
-        if (conn.fromCardId == id && cardMap.containsKey(conn.toCardId)) {
-          assignLevel(conn.toCardId, level + 1);
-        }
+      for (final toId in adjacency[id] ?? const <String>[]) {
+        assignLevel(toId, level + 1);
       }
     }
 
@@ -200,7 +325,9 @@ class CanvasLayoutService {
     AlignmentType type,
   ) {
     if (cardIds.length < 2) return cards;
-    final selected = cards.where((c) => cardIds.contains(c.id)).toList();
+    // Issue 12: Convert to Set once for O(1) contains in the loops below.
+    final idSet = cardIds.toSet();
+    final selected = cards.where((c) => idSet.contains(c.id)).toList();
     if (selected.isEmpty) return cards;
 
     final result = List<CanvasCard>.from(cards);
@@ -208,7 +335,7 @@ class CanvasLayoutService {
       case AlignmentType.left:
         final minX = selected.map((c) => c.x).reduce((a, b) => a < b ? a : b);
         for (int i = 0; i < result.length; i++) {
-          if (cardIds.contains(result[i].id)) {
+          if (idSet.contains(result[i].id)) {
             result[i] = result[i].copyWith(x: minX);
           }
         }
@@ -217,7 +344,7 @@ class CanvasLayoutService {
             selected.map((c) => c.center.dx).reduce((a, b) => a + b) /
             selected.length;
         for (int i = 0; i < result.length; i++) {
-          if (cardIds.contains(result[i].id)) {
+          if (idSet.contains(result[i].id)) {
             result[i] = result[i].copyWith(
               x: avgCenterX - result[i].width / 2,
             );
@@ -228,14 +355,14 @@ class CanvasLayoutService {
             .map((c) => c.x + c.width)
             .reduce((a, b) => a > b ? a : b);
         for (int i = 0; i < result.length; i++) {
-          if (cardIds.contains(result[i].id)) {
+          if (idSet.contains(result[i].id)) {
             result[i] = result[i].copyWith(x: maxRight - result[i].width);
           }
         }
       case AlignmentType.top:
         final minY = selected.map((c) => c.y).reduce((a, b) => a < b ? a : b);
         for (int i = 0; i < result.length; i++) {
-          if (cardIds.contains(result[i].id)) {
+          if (idSet.contains(result[i].id)) {
             result[i] = result[i].copyWith(y: minY);
           }
         }
@@ -244,7 +371,7 @@ class CanvasLayoutService {
             selected.map((c) => c.center.dy).reduce((a, b) => a + b) /
             selected.length;
         for (int i = 0; i < result.length; i++) {
-          if (cardIds.contains(result[i].id)) {
+          if (idSet.contains(result[i].id)) {
             result[i] = result[i].copyWith(
               y: avgCenterY - result[i].height / 2,
             );
@@ -255,7 +382,7 @@ class CanvasLayoutService {
             .map((c) => c.y + c.height)
             .reduce((a, b) => a > b ? a : b);
         for (int i = 0; i < result.length; i++) {
-          if (cardIds.contains(result[i].id)) {
+          if (idSet.contains(result[i].id)) {
             result[i] = result[i].copyWith(y: maxBottom - result[i].height);
           }
         }
@@ -276,10 +403,15 @@ class CanvasLayoutService {
     DistributeType type,
   ) {
     if (cardIds.length < 3) return cards;
-    final selected = cards.where((c) => cardIds.contains(c.id)).toList();
+    final idSet = cardIds.toSet();
+    final selected = cards.where((c) => idSet.contains(c.id)).toList();
     if (selected.length < 3) return cards;
 
     final result = List<CanvasCard>.from(cards);
+    // Issue 13: Pre-build id→index map to avoid O(n) indexWhere in the loop.
+    final idToIndex = <String, int>{
+      for (int i = 0; i < result.length; i++) result[i].id: i,
+    };
     switch (type) {
       case DistributeType.horizontal:
         final sorted = List<CanvasCard>.from(selected)
@@ -292,8 +424,8 @@ class CanvasLayoutService {
         final gap = gapCount > 0 ? totalGap / gapCount : 0.0;
         double currentX = minX;
         for (final card in sorted) {
-          final idx = result.indexWhere((c) => c.id == card.id);
-          if (idx >= 0) {
+          final idx = idToIndex[card.id];
+          if (idx != null) {
             result[idx] = result[idx].copyWith(x: currentX);
             currentX += result[idx].width + gap;
           }
@@ -309,8 +441,8 @@ class CanvasLayoutService {
         final gap = gapCount > 0 ? totalGap / gapCount : 0.0;
         double currentY = minY;
         for (final card in sorted) {
-          final idx = result.indexWhere((c) => c.id == card.id);
-          if (idx >= 0) {
+          final idx = idToIndex[card.id];
+          if (idx != null) {
             result[idx] = result[idx].copyWith(y: currentY);
             currentY += result[idx].height + gap;
           }

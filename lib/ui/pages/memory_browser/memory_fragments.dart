@@ -43,13 +43,33 @@ class _FragmentsTab extends StatelessWidget {
         for (final wm in items) {
           (byTier[wm.fragment.tier] ??= []).add(wm);
         }
-        return ListView(
+        // Flatten tier sections into a single list of render items so
+        // ListView.builder can lazily build cards (Rule 4.2) instead of
+        // materializing every _FragmentCard eagerly.
+        final renderItems = <_FragRenderItem>[];
+        for (final tier in MemoryTier.values) {
+          final tierItems = byTier[tier];
+          if (tierItems == null || tierItems.isEmpty) continue;
+          renderItems.add(_TierHeaderItem(tier: tier, count: tierItems.length));
+          for (final wm in tierItems) {
+            renderItems.add(_FragCardItem(wm: wm));
+          }
+        }
+        return ListView.builder(
           padding: const EdgeInsets.all(12),
-          children: [
-            for (final tier in MemoryTier.values)
-              if ((byTier[tier] ?? []).isNotEmpty)
-                _TierSection(tier: tier, items: byTier[tier]!, memory: memory),
-          ],
+          itemCount: renderItems.length,
+          itemBuilder: (context, index) {
+            final item = renderItems[index];
+            if (item is _TierHeaderItem) {
+              return _TierHeader(tier: item.tier, count: item.count);
+            }
+            final cardItem = item as _FragCardItem;
+            return _FragmentCard(
+              fragment: cardItem.wm.fragment,
+              memory: memory,
+              match: cardItem.wm.match,
+            );
+          },
         );
       },
     );
@@ -86,15 +106,27 @@ class _FragmentWithMatch {
   const _FragmentWithMatch({required this.fragment, this.match});
 }
 
-class _TierSection extends StatelessWidget {
+/// Discriminated render item for the flattened fragments list — either a
+/// tier header or a fragment card — so [ListView.builder] can build each
+/// lazily instead of materializing every card eagerly.
+sealed class _FragRenderItem {}
+
+class _TierHeaderItem extends _FragRenderItem {
+  _TierHeaderItem({required this.tier, required this.count});
   final MemoryTier tier;
-  final List<_FragmentWithMatch> items;
-  final MemoryService memory;
-  const _TierSection({
-    required this.tier,
-    required this.items,
-    required this.memory,
-  });
+  final int count;
+}
+
+class _FragCardItem extends _FragRenderItem {
+  _FragCardItem({required this.wm});
+  final _FragmentWithMatch wm;
+}
+
+/// Tier section header rendered inline in the flattened list.
+class _TierHeader extends StatelessWidget {
+  final MemoryTier tier;
+  final int count;
+  const _TierHeader({required this.tier, required this.count});
 
   @override
   Widget build(BuildContext context) {
@@ -104,32 +136,20 @@ class _TierSection extends StatelessWidget {
       MemoryTier.mid => Colors.orange,
       MemoryTier.long => Colors.red,
     };
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: [
-              Container(width: 6, height: 16, color: color),
-              const SizedBox(width: 8),
-              Text(
-                '${tier.name.toUpperCase()} (${items.length})',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(width: 6, height: 16, color: color),
+          const SizedBox(width: 8),
+          Text(
+            '${tier.name.toUpperCase()} ($count)',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-        ...items.map(
-          (wm) => _FragmentCard(
-            fragment: wm.fragment,
-            memory: memory,
-            match: wm.match,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

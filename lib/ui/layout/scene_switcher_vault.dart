@@ -19,8 +19,11 @@ class _VaultSwitcherState extends ConsumerState<_VaultSwitcher> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
+    // 不声明 button: true —— InkWell 自身已通过 Material 隐式提供 button
+    // semantics（onTap != null 时）。外层 Semantics 只补充 label，避免
+    // 双重 button 声明导致 Windows accessibility_bridge AXTree diff 失败
+    //（"Failed to update ui::AXTree" 错误的根因之一）。
     return Semantics(
-      button: true,
       label: l != null
           ? '${l.openVault}: ${widget.vaultName}'
           : 'Vault: ${widget.vaultName}',

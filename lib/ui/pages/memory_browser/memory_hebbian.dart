@@ -15,6 +15,9 @@ class _HebbianTabState extends ConsumerState<_HebbianTab> {
   String? _selectedId;
   List<HebbianEdge> _edges = const [];
   List<MemoryFragment> _fragments = const [];
+  // O(1) id→fragment lookup built once per _load() so the edges list
+  // builder doesn't do an O(E×N) firstWhere scan per rebuild.
+  Map<String, MemoryFragment> _fragById = const {};
 
   @override
   void initState() {
@@ -24,7 +27,10 @@ class _HebbianTabState extends ConsumerState<_HebbianTab> {
 
   Future<void> _load() async {
     final all = await widget.memory.getAllActiveFragments();
-    setState(() => _fragments = all);
+    setState(() {
+      _fragments = all;
+      _fragById = {for (final f in all) f.id: f};
+    });
     if (_selectedId != null) {
       _loadEdges();
     }
@@ -90,16 +96,14 @@ class _HebbianTabState extends ConsumerState<_HebbianTab> {
                   itemBuilder: (_, i) {
                     final edge = _edges[i];
                     final otherId = edge.otherEnd(_selectedId!)!;
-                    final other = _fragments.firstWhere(
-                      (f) => f.id == otherId,
-                      orElse: () => MemoryFragment(
-                        id: otherId,
-                        sessionId: '?',
-                        content: '(unknown fragment)',
-                        createdAt: DateTime.now(),
-                        updatedAt: DateTime.now(),
-                      ),
-                    );
+                    final other = _fragById[otherId] ??
+                        MemoryFragment(
+                          id: otherId,
+                          sessionId: '?',
+                          content: '(unknown fragment)',
+                          createdAt: DateTime.now(),
+                          updatedAt: DateTime.now(),
+                        );
                     return ListTile(
                       dense: true,
                       leading: _StrengthBar(strength: edge.strength),

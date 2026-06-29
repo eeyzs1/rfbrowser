@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 
 class VectorRecord {
   final String id;
@@ -86,6 +87,22 @@ class VectorStore {
         .toList();
   }
 
+  /// Async variant of [search] that runs the O(N × D) brute-force scan on a
+  /// worker isolate via [compute], so large stores no longer block the UI
+  /// thread. [VectorStore] only holds sendable data (a `Map<String,
+  /// VectorRecord>` of primitives / lists / maps) so it can be deep-copied
+  /// across the isolate boundary.
+  Future<List<SearchResult>> searchAsync(
+    List<double> query, {
+    int topK = 10,
+  }) async {
+    if (_records.isEmpty) return [];
+    return compute(
+      _runVectorSearchInIsolate,
+      _VectorSearchJob(store: this, query: query, topK: topK),
+    );
+  }
+
   void _heapifyMin(List<_HeapEntry> heap) {
     for (var i = heap.length ~/ 2 - 1; i >= 0; i--) {
       _siftDownMin(heap, i);
@@ -133,4 +150,26 @@ class SearchResult {
     required this.score,
     this.metadata = const {},
   });
+}
+
+/// Sendable payload for the worker-isolate brute-force search in
+/// [VectorStore.searchAsync]. All fields are sendable (the [VectorStore] only
+/// holds a `Map<String, VectorRecord>` of primitives / lists / maps) so the
+/// payload can cross an isolate boundary via [compute].
+class _VectorSearchJob {
+  final VectorStore store;
+  final List<double> query;
+  final int topK;
+  const _VectorSearchJob({
+    required this.store,
+    required this.query,
+    required this.topK,
+  });
+}
+
+/// Top-level entry point run by [compute] in [VectorStore.searchAsync].
+/// Delegates to [VectorStore.search] on the deep-copied store so the
+/// O(N × D) scan + O(N log K) heap maintenance executes off the UI thread.
+List<SearchResult> _runVectorSearchInIsolate(_VectorSearchJob job) {
+  return job.store.search(job.query, topK: job.topK);
 }

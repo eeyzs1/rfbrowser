@@ -35,7 +35,25 @@ class KnowledgeState with ActiveNoteMixin {
   final List<String> selectedTags;
   final NoteFilter noteFilter;
 
-  const KnowledgeState({
+  /// Lazy O(1) lookup indices, computed once per state instance on first
+  /// access. Replaces O(n) `notes.where((n) => n.id == ...).firstOrNull`
+  /// scans in hot paths (backlinks, embed resolution, quick search results,
+  /// note_pane_view select, etc.).
+  late final Map<String, Note> byId = {for (final n in notes) n.id: n};
+  late final Map<String, Note> byTitleLower = _buildByTitleLower();
+
+  Map<String, Note> _buildByTitleLower() {
+    final m = <String, Note>{};
+    for (final n in notes) {
+      m[n.title.toLowerCase()] = n;
+      for (final alias in n.aliases) {
+        m[alias.toLowerCase()] ??= n;
+      }
+    }
+    return m;
+  }
+
+  KnowledgeState({
     this.notes = const [],
     this.activeNoteId,
     this.links = const [],
@@ -271,7 +289,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
 
   List<Link> getBacklinks(String noteId) => _linkSvc.getBacklinks(noteId);
 
-  List<UnlinkedMentionResult> getUnlinkedMentions(String noteId) =>
+  Future<List<UnlinkedMentionResult>> getUnlinkedMentions(String noteId) =>
       _linkSvc.getUnlinkedMentions(noteId, state.notes);
 
   List<Map<String, dynamic>> getGraphData() =>
@@ -335,12 +353,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     state = state.copyWith(activeNoteId: noteId);
   }
 
-  Note? _findNote(String id) {
-    for (final n in state.notes) {
-      if (n.id == id) return n;
-    }
-    return null;
-  }
+  Note? _findNote(String id) => state.byId[id];
 
   void updateActiveNoteContent(String content) {
     final activeId = state.activeNoteId;

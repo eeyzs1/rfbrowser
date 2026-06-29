@@ -1,84 +1,109 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../../data/models/canvas_model.dart';
+
+/// Serializable input for the SVG export isolate.
+class _SvgExportInput {
+  final CanvasData data;
+  final String canvasName;
+  const _SvgExportInput(this.data, this.canvasName);
+}
+
+/// Top-level XML escape helper (used by both instance and isolate code paths).
+String _xmlEscape(String input) => input
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+
+/// Top-level function executed in a worker isolate via [compute].
+/// Generates the SVG string off the UI thread.
+String _exportToSvgIsolate(_SvgExportInput input) {
+  final data = input.data;
+  final buffer = StringBuffer();
+  buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
+  double minX = double.infinity,
+      minY = double.infinity,
+      maxX = double.negativeInfinity,
+      maxY = double.negativeInfinity;
+  for (final card in data.cards) {
+    minX = minX < card.x ? minX : card.x;
+    minY = minY < card.y ? minY : card.y;
+    final rx = card.x + card.width;
+    final ry = card.y + card.height;
+    maxX = maxX > rx ? maxX : rx;
+    maxY = maxY > ry ? maxY : ry;
+  }
+  if (minX == double.infinity) {
+    minX = 0;
+    minY = 0;
+    maxX = 800;
+    maxY = 600;
+  }
+  final pad = 40.0;
+  final w = maxX - minX + pad * 2;
+  final h = maxY - minY + pad * 2;
+  buffer.writeln(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="$w" height="$h" viewBox="${minX - pad} ${minY - pad} $w $h">',
+  );
+  // Issue 15a: Build cardById map once instead of O(n) per connection.
+  final cardById = {for (final c in data.cards) c.id: c};
+  for (final conn in data.connections) {
+    final from = cardById[conn.fromCardId];
+    final to = cardById[conn.toCardId];
+    if (from == null || to == null) continue;
+    final (fs, ts) = CanvasConnection.computeSides(from, to);
+    final fp = fs.point(from.rect, conn.fromSideOffset);
+    final tp = ts.point(to.rect, conn.toSideOffset);
+    buffer.writeln(
+      '<line x1="${fp.dx}" y1="${fp.dy}" x2="${tp.dx}" y2="${tp.dy}" stroke="#666" stroke-width="2"/>',
+    );
+    if (conn.label.isNotEmpty) {
+      final mx = (fp.dx + tp.dx) / 2;
+      final my = (fp.dy + tp.dy) / 2;
+      buffer.writeln(
+        '<text x="$mx" y="$my" text-anchor="middle" font-size="12" fill="#666">${_xmlEscape(conn.label)}</text>',
+      );
+    }
+  }
+  for (final card in data.cards) {
+    final hex =
+        '#${(card.colorValue & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
+    final strokeHex =
+        '#${(card.style?.borderColor ?? 0xFFE0E0E0 & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
+    final r = card.style?.borderRadius ?? 8.0;
+    buffer.writeln(
+      '<rect x="${card.x}" y="${card.y}" width="${card.width}" height="${card.height}" rx="$r" fill="$hex" stroke="$strokeHex" stroke-width="1"/>',
+    );
+    if (card.title.isNotEmpty) {
+      buffer.writeln(
+        '<text x="${card.x + 12}" y="${card.y + 20}" font-size="14" font-weight="bold" fill="#333">${_xmlEscape(card.title)}</text>',
+      );
+    }
+    if (card.content.isNotEmpty) {
+      final lines = card.content.split('\n').take(5);
+      var cy = card.y + 40;
+      for (final line in lines) {
+        buffer.writeln(
+          '<text x="${card.x + 12}" y="$cy" font-size="12" fill="#666">${_xmlEscape(line)}</text>',
+        );
+        cy += 16;
+      }
+    }
+  }
+  buffer.writeln('</svg>');
+  return buffer.toString();
+}
 
 class CanvasExportService {
   const CanvasExportService();
 
-  String exportToSvg(CanvasData data, String canvasName) {
-    final buffer = StringBuffer();
-    buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
-    double minX = double.infinity,
-        minY = double.infinity,
-        maxX = double.negativeInfinity,
-        maxY = double.negativeInfinity;
-    for (final card in data.cards) {
-      minX = minX < card.x ? minX : card.x;
-      minY = minY < card.y ? minY : card.y;
-      final rx = card.x + card.width;
-      final ry = card.y + card.height;
-      maxX = maxX > rx ? maxX : rx;
-      maxY = maxY > ry ? maxY : ry;
-    }
-    if (minX == double.infinity) {
-      minX = 0;
-      minY = 0;
-      maxX = 800;
-      maxY = 600;
-    }
-    final pad = 40.0;
-    final w = maxX - minX + pad * 2;
-    final h = maxY - minY + pad * 2;
-    buffer.writeln(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="$w" height="$h" viewBox="${minX - pad} ${minY - pad} $w $h">',
-    );
-    for (final conn in data.connections) {
-      final from = _cardById(data, conn.fromCardId);
-      final to = _cardById(data, conn.toCardId);
-      if (from == null || to == null) continue;
-      final (fs, ts) = CanvasConnection.computeSides(from, to);
-      final fp = fs.point(from.rect, conn.fromSideOffset);
-      final tp = ts.point(to.rect, conn.toSideOffset);
-      buffer.writeln(
-        '<line x1="${fp.dx}" y1="${fp.dy}" x2="${tp.dx}" y2="${tp.dy}" stroke="#666" stroke-width="2"/>',
-      );
-      if (conn.label.isNotEmpty) {
-        final mx = (fp.dx + tp.dx) / 2;
-        final my = (fp.dy + tp.dy) / 2;
-        buffer.writeln(
-          '<text x="$mx" y="$my" text-anchor="middle" font-size="12" fill="#666">${_xmlEscape(conn.label)}</text>',
-        );
-      }
-    }
-    for (final card in data.cards) {
-      final hex =
-          '#${(card.colorValue & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
-      final strokeHex =
-          '#${(card.style?.borderColor ?? 0xFFE0E0E0 & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
-      final r = card.style?.borderRadius ?? 8.0;
-      buffer.writeln(
-        '<rect x="${card.x}" y="${card.y}" width="${card.width}" height="${card.height}" rx="$r" fill="$hex" stroke="$strokeHex" stroke-width="1"/>',
-      );
-      if (card.title.isNotEmpty) {
-        buffer.writeln(
-          '<text x="${card.x + 12}" y="${card.y + 20}" font-size="14" font-weight="bold" fill="#333">${_xmlEscape(card.title)}</text>',
-        );
-      }
-      if (card.content.isNotEmpty) {
-        final lines = card.content.split('\n').take(5);
-        var cy = card.y + 40;
-        for (final line in lines) {
-          buffer.writeln(
-            '<text x="${card.x + 12}" y="$cy" font-size="12" fill="#666">${_xmlEscape(line)}</text>',
-          );
-          cy += 16;
-        }
-      }
-    }
-    buffer.writeln('</svg>');
-    return buffer.toString();
+  /// Issue 15b: Runs SVG generation in a worker isolate via [compute].
+  Future<String> exportToSvg(CanvasData data, String canvasName) {
+    return compute(_exportToSvgIsolate, _SvgExportInput(data, canvasName));
   }
 
-  String exportToPdf(CanvasData data, String canvasName) {
+  Future<String> exportToPdf(CanvasData data, String canvasName) {
     return exportToSvg(data, canvasName);
   }
 
@@ -90,11 +115,16 @@ class CanvasExportService {
     buffer.writeln();
     buffer.writeln('| # | Type | Title | Position | Layer |');
     buffer.writeln('|---|------|-------|----------|-------|');
+    // Issue 16: Build layer name lookup once instead of O(n) per card.
+    final layerNameById = {
+      for (final l in data.layers) l.id: l.name,
+    };
+    // Issue 15a: Build cardById map once for connection title lookups.
+    final cardById = {for (final c in data.cards) c.id: c};
     for (int i = 0; i < data.cards.length; i++) {
       final c = data.cards[i];
       final layerName = c.layerId != null
-          ? (data.layers.where((l) => l.id == c.layerId).firstOrNull?.name ??
-                '-')
+          ? (layerNameById[c.layerId] ?? '-')
           : '-';
       buffer.writeln(
         '| ${i + 1} | ${c.type.label} | ${c.title} | (${c.x.round()}, ${c.y.round()}) | $layerName |',
@@ -104,8 +134,8 @@ class CanvasExportService {
     buffer.writeln('## Connections');
     buffer.writeln();
     for (final conn in data.connections) {
-      final from = _cardById(data, conn.fromCardId)?.title ?? conn.fromCardId;
-      final to = _cardById(data, conn.toCardId)?.title ?? conn.toCardId;
+      final from = cardById[conn.fromCardId]?.title ?? conn.fromCardId;
+      final to = cardById[conn.toCardId]?.title ?? conn.toCardId;
       final label = conn.label.isNotEmpty ? ' "${conn.label}"' : '';
       buffer.writeln('- $from →$label $to ${conn.isAuto ? "(auto)" : ""}');
     }
@@ -128,9 +158,11 @@ class CanvasExportService {
     sb.writeln(
       '<svg width="1200" height="800" style="position:absolute;top:0;left:0">',
     );
+    // Issue 15a: Build cardById map once instead of O(n) per connection.
+    final cardById = {for (final c in data.cards) c.id: c};
     for (final conn in data.connections) {
-      final from = _cardById(data, conn.fromCardId);
-      final to = _cardById(data, conn.toCardId);
+      final from = cardById[conn.fromCardId];
+      final to = cardById[conn.toCardId];
       if (from == null || to == null) continue;
       final fx = from.x + from.width * from.connectionPointOffsetX;
       final fy = from.y + from.height * from.connectionPointOffsetY;
@@ -153,10 +185,10 @@ class CanvasExportService {
     return sb.toString();
   }
 
-  String exportToJpeg(CanvasData data, String canvasName) =>
+  Future<String> exportToJpeg(CanvasData data, String canvasName) =>
       exportToSvg(data, canvasName);
 
-  String exportToWebp(CanvasData data, String canvasName) =>
+  Future<String> exportToWebp(CanvasData data, String canvasName) =>
       exportToSvg(data, canvasName);
 
   String encodeToUrl(CanvasData data) {
@@ -165,9 +197,12 @@ class CanvasExportService {
     return 'rfbrowser://canvas?data=$encoded';
   }
 
-  (String, String) exportWithEmbeddedData(CanvasData data, String canvasName) {
+  Future<(String, String)> exportWithEmbeddedData(
+    CanvasData data,
+    String canvasName,
+  ) async {
     final json = data.toJsonString();
-    final svg = exportToSvg(data, canvasName);
+    final svg = await exportToSvg(data, canvasName);
     final svgWithMeta = svg.replaceFirst(
       '</svg>',
       '<metadata>rfbrowser:${base64Encode(utf8.encode(json))}</metadata></svg>',
@@ -342,18 +377,4 @@ class CanvasExportService {
   static CanvasData? importFromVsdx(String vsdxPath) {
     return null;
   }
-
-  CanvasCard? _cardById(CanvasData data, String id) {
-    try {
-      return data.cards.firstWhere((c) => c.id == id);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  String _xmlEscape(String input) => input
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;');
 }

@@ -65,7 +65,18 @@ class SearchNotifier extends Notifier<SearchState> {
       final semanticResults = <Map<String, dynamic>>[];
       final embedding = await embeddingService.embed(query);
       if (embedding.isNotEmpty) {
-        final results = embeddingService.store.search(embedding, topK: 20);
+        // Use the HNSW index (O(log N × ef)) instead of the brute-force
+        // VectorStore scan (O(N × D)). HNSW search for ~5000 notes with
+        // ef=100 is fast enough (<16ms) to run on the UI thread per Rule 6.1
+        // — it stays well under the 100ms threshold that would mandate
+        // compute(). HnswIndex carries mutable graph state and cannot be
+        // sent across an isolate boundary, so worker-isolate offload is not
+        // practical here.
+        final results = embeddingService.hnswIndex.search(
+          embedding,
+          k: 20,
+          ef: 100,
+        );
         for (final r in results) {
           semanticResults.add({'id': r.id, 'noteId': r.id, 'score': r.score});
         }

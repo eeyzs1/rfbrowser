@@ -72,7 +72,11 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = ref.watch(settingsProvider);
+    // 用 select watch 整个 memory 子对象（参见 editor_settings_section.dart
+    // 中的详细注释）。AppSettings.copyWith 在未传 memory 参数时复用
+    // this.memory 引用（settings_service.dart:176），所以其他字段变化时
+    // select 看到的 memory 引用相同 → 不会触发本 section 重建。
+    final memory = ref.watch(settingsProvider.select((s) => s.memory));
     final notifier = ref.read(settingsProvider.notifier);
     final l = AppLocalizations.of(context)!;
 
@@ -87,7 +91,7 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
             'Send the current vault, active note, selection, and scene as '
             'part of every AI request. Disable for fully isolated chats.',
           ),
-          value: settings.memory.injectContext,
+          value: memory.injectContext,
           onChanged: notifier.setMemoryInjectContext,
         ),
         const Divider(height: 1),
@@ -100,7 +104,7 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
             'When off, the score uses the createdAt timestamp only '
             '(OpenLoomi original behavior).',
           ),
-          value: settings.memory.useLastAccessForRecency,
+          value: memory.useLastAccessForRecency,
           onChanged: notifier.setMemoryUseLastAccessForRecency,
         ),
         const Divider(height: 1),
@@ -111,7 +115,7 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
             'If disabled, the engine stops scoring and tier-transitioning '
             'fragments until you re-enable it.',
           ),
-          value: settings.memory.dreamingEnabled,
+          value: memory.dreamingEnabled,
           onChanged: notifier.setMemoryDreamingEnabled,
         ),
 
@@ -133,7 +137,7 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
               _IntSlider(
                 label: 'Memory context budget',
                 suffix: 'tokens',
-                value: settings.memory.contextBudget,
+                value: memory.contextBudget,
                 min: 200,
                 max: 4000,
                 divisions: 38,
@@ -145,7 +149,7 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
                   'Ask the configured AI to summarize fragments during dreaming. '
                   'Higher quality but slower; requires an AI provider.',
                 ),
-                value: settings.memory.useLlmSummarizer,
+                value: memory.useLlmSummarizer,
                 onChanged: notifier.setMemoryUseLlmSummarizer,
               ),
               SwitchListTile(
@@ -154,21 +158,21 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
                   'Re-rank recall hits with the LLM after FTS+Hebbian. Slower '
                   'first-token time; off by default.',
                 ),
-                value: settings.memory.useLlmRerank,
+                value: memory.useLlmRerank,
                 onChanged: notifier.setMemoryUseLlmRerank,
               ),
               const Divider(height: 1),
               const _SectionHeader(label: 'Thresholds'),
               _ThresholdSlider(
                 label: 'Short → Mid threshold',
-                value: settings.memory.shortToMidThreshold,
+                value: memory.shortToMidThreshold,
                 min: 0.1,
                 max: 0.95,
                 onChanged: notifier.setMemoryShortToMidThreshold,
               ),
               _ThresholdSlider(
                 label: 'Mid → Long threshold',
-                value: settings.memory.midToLongThreshold,
+                value: memory.midToLongThreshold,
                 min: 0.05,
                 max: 0.9,
                 onChanged: notifier.setMemoryMidToLongThreshold,
@@ -176,7 +180,7 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
               _IntSlider(
                 label: 'Short-tier max age',
                 suffix: 'days',
-                value: settings.memory.shortMaxAgeDays,
+                value: memory.shortMaxAgeDays,
                 min: 1,
                 max: 30,
                 onChanged: notifier.setMemoryShortMaxAgeDays,
@@ -184,7 +188,7 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
               _IntSlider(
                 label: 'Mid-tier max age',
                 suffix: 'days',
-                value: settings.memory.midMaxAgeDays,
+                value: memory.midMaxAgeDays,
                 min: 7,
                 max: 180,
                 onChanged: notifier.setMemoryMidMaxAgeDays,
@@ -192,7 +196,7 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
               _IntSlider(
                 label: 'Created recency half-life',
                 suffix: 'days',
-                value: settings.memory.createdRecencyHalfLifeDays,
+                value: memory.createdRecencyHalfLifeDays,
                 min: 30,
                 max: 730,
                 divisions: 70,
@@ -201,7 +205,7 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
               _IntSlider(
                 label: 'Last-access recency half-life',
                 suffix: 'days',
-                value: settings.memory.accessRecencyHalfLifeDays,
+                value: memory.accessRecencyHalfLifeDays,
                 min: 1,
                 max: 90,
                 divisions: 89,
@@ -212,7 +216,7 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
               _IntSlider(
                 label: 'Co-access window',
                 suffix: 'minutes',
-                value: settings.memory.hebbianCoAccessMinutes,
+                value: memory.hebbianCoAccessMinutes,
                 min: 1,
                 max: 60,
                 onChanged: notifier.setMemoryHebbianCoAccessMinutes,
@@ -220,17 +224,17 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
               _IntSlider(
                 label: 'Edge decay constant',
                 suffix: 'days',
-                value: settings.memory.hebbianDecayDays,
+                value: memory.hebbianDecayDays,
                 min: 1,
                 max: 365,
                 onChanged: notifier.setMemoryHebbianDecayDays,
               ),
               _IntSlider(
                 label: 'Export chat to Markdown every',
-                suffix: settings.memory.autoExportEveryNMessages == 0
+                suffix: memory.autoExportEveryNMessages == 0
                     ? 'disabled'
                     : 'messages',
-                value: settings.memory.autoExportEveryNMessages,
+                value: memory.autoExportEveryNMessages,
                 min: 0,
                 max: 64,
                 divisions: 16,
@@ -334,13 +338,17 @@ class _ThresholdSlider extends StatelessWidget {
       subtitle: Text(value.toStringAsFixed(2)),
       trailing: SizedBox(
         width: 200,
-        child: Slider(
-          value: value,
-          min: min,
-          max: max,
-          divisions: ((max - min) * 20).round(),
-          label: value.toStringAsFixed(2),
-          onChanged: onChanged,
+        // ExcludeSemantics：Slider 拖拽时每帧触发 AXTree 更新，包裹后
+        // 不再贡献语义节点，subtitle Text 仍可朗读当前值。
+        child: ExcludeSemantics(
+          child: Slider(
+            value: value,
+            min: min,
+            max: max,
+            divisions: ((max - min) * 20).round(),
+            label: value.toStringAsFixed(2),
+            onChanged: onChanged,
+          ),
         ),
       ),
     );
@@ -372,13 +380,15 @@ class _IntSlider extends StatelessWidget {
       subtitle: Text('$value $suffix'),
       trailing: SizedBox(
         width: 200,
-        child: Slider(
-          value: value.toDouble().clamp(min.toDouble(), max.toDouble()),
-          min: min.toDouble(),
-          max: max.toDouble(),
-          divisions: divisions ?? (max - min),
-          label: '$value $suffix',
-          onChanged: (v) => onChanged(v.round()),
+        child: ExcludeSemantics(
+          child: Slider(
+            value: value.toDouble().clamp(min.toDouble(), max.toDouble()),
+            min: min.toDouble(),
+            max: max.toDouble(),
+            divisions: divisions ?? (max - min),
+            label: '$value $suffix',
+            onChanged: (v) => onChanged(v.round()),
+          ),
         ),
       ),
     );

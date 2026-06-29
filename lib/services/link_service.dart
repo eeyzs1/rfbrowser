@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/note.dart';
 import '../data/models/link.dart';
@@ -6,6 +7,29 @@ import '../data/models/unlinked_mention.dart';
 import '../core/link/link_extractor.dart';
 import '../core/link/link_resolver.dart';
 import '../core/graph/filter_engine.dart';
+
+/// Serializable argument bundle for [_findUnlinkedMentionsInIsolate].
+/// `compute()` requires a top-level callback with a sendable argument;
+/// this carries the note content and the candidate note titles across
+/// the isolate boundary.
+class _UnlinkedMentionsIsolateArg {
+  final String content;
+  final List<String> titles;
+  const _UnlinkedMentionsIsolateArg(this.content, this.titles);
+}
+
+/// Top-level worker for `compute()`. Runs the O(n_titles × content)
+/// unlinked-mention regex scan in a background isolate so the UI thread
+/// is not blocked. [LinkExtractor] holds only static regexes (no mutable
+/// instance state), so a fresh instance is safe to construct here.
+/// [UnlinkedMention] has only primitive fields (String/int) and is
+/// therefore sendable back across the isolate boundary.
+List<UnlinkedMention> _findUnlinkedMentionsInIsolate(
+  _UnlinkedMentionsIsolateArg arg,
+) {
+  final extractor = LinkExtractor();
+  return extractor.findUnlinkedMentions(arg.content, arg.titles);
+}
 
 class LinkState {
   final List<Link> links;
@@ -122,10 +146,10 @@ class LinkNotifier extends Notifier<LinkState> {
     return state.backlinksCache[noteId] ?? [];
   }
 
-  List<UnlinkedMentionResult> getUnlinkedMentions(
+  Future<List<UnlinkedMentionResult>> getUnlinkedMentions(
     String noteId,
     List<Note> allNotes,
-  ) {
+  ) async {
     final note = allNotes.where((n) => n.id == noteId).firstOrNull;
     if (note == null) return const [];
 
@@ -136,10 +160,20 @@ class LinkNotifier extends Notifier<LinkState> {
       return _unlinkedCacheResult;
     }
 
+    // Offload the O(n_titles × content) regex scan to a background
+    // isolate via compute(). The previous implementation called
+    // findUnlinkedMentions synchronously on the UI thread's microtask
+    // queue (Future.microtask in BacklinksPanel), which froze the editor
+    // for 250ms-1s per note first-open on large vaults. compute() spawns
+    // a real isolate so the UI thread stays free; the result
+    // (List<UnlinkedMention> with only primitive fields) is sendable
+    // back across the isolate boundary.
     final titles = allNotes.map((n) => n.title).toList();
-    final extractor = LinkExtractor();
-    final result = extractor
-        .findUnlinkedMentions(note.content, titles)
+    final mentions = await compute(
+      _findUnlinkedMentionsInIsolate,
+      _UnlinkedMentionsIsolateArg(note.content, titles),
+    );
+    final result = mentions
         .map(
           (m) => UnlinkedMentionResult(
             sourceNoteId: m.noteId,

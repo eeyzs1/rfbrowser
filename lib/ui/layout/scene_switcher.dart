@@ -123,8 +123,10 @@ class _SettingsButtonState extends State<_SettingsButton> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // 不声明 button: true —— InkWell 自身通过 Material 隐式提供 button
+    // semantics（onTap != null 时）。外层 Semantics 只补充 label，与 InkWell
+    // 的 button semantics 合并形成单个语义节点（button=true + label='Settings'）。
     return Semantics(
-      button: true,
       label: 'Settings',
       child: Material(
         color: _isHovered ? DesignColors.primaryHover : Colors.transparent,
@@ -195,8 +197,17 @@ class _SceneButtonState extends State<_SceneButton> {
     final active = widget.isActive;
     final primary = theme.colorScheme.primary;
 
+    // 关键修复：onTap 始终为 widget.onTap（不再用 active ? null : widget.onTap）。
+    // 之前 active 时 InkWell.onTap=null → InkWell 不贡献 button semantics；
+    // 非 active 时 InkWell.onTap=callback → InkWell 贡献 button semantics。
+    // 这导致 3 个兄弟 _SceneButton 的语义节点结构不一致（一个无 button 角色，
+    // 两个有 button 角色），切换场景时结构翻转，触发 Windows accessibility_bridge
+    // AXTree diff 失败（"Failed to update ui::AXTree, error: NNN"）。
+    // 统一为始终提供 onTap（widget.onSceneChanged 对相同 scene 是幂等的），
+    // 让所有 _SceneButton 的 InkWell 都贡献 button semantics，结构一致。
+    // 不声明外层 button: true —— 让 InkWell 通过合并提供 button 角色，
+    // 外层 Semantics 只补充 selected/label。
     return Semantics(
-      button: true,
       selected: active,
       label: widget.label,
       child: Tooltip(
@@ -209,7 +220,7 @@ class _SceneButtonState extends State<_SceneButton> {
           borderRadius: BorderRadius.circular(DesignRadius.sm),
           child: InkWell(
             borderRadius: BorderRadius.circular(DesignRadius.sm),
-            onTap: active ? null : widget.onTap,
+            onTap: widget.onTap,
             onHover: (hovered) => setState(() => _isHovered = hovered),
             onFocusChange: (focused) => setState(() => _isFocused = focused),
             child: Container(

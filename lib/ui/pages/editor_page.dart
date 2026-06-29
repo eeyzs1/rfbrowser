@@ -54,6 +54,12 @@ abstract class _EditorViewStateBase extends ConsumerState<EditorView> {
   // would mark the note dirty and schedule autosaves even though the
   // user never edited anything.
   String? _lastSeenText;
+  // True while we programmatically set _controller.text (e.g. on note
+  // switch). The content-changed listener ignores notifications raised
+  // while this is set so that loading a note's content doesn't mark it
+  // dirty, schedule autosaves, or trigger sidebar/backlinks rebuilds.
+  // Mirrors the pattern in note_pane_view.dart.
+  bool _suppressListener = false;
 
   @override
   void initState() {
@@ -67,6 +73,12 @@ abstract class _EditorViewStateBase extends ConsumerState<EditorView> {
 
   void _onContentChanged() {
     final currentText = _controller.text;
+    if (_suppressListener) {
+      // Still track the text so the subsequent async-highlight
+      // notifyListeners() doesn't mistake the loaded text for an edit.
+      _lastSeenText = currentText;
+      return;
+    }
     if (_lastSeenText == currentText) {
       // Notification not triggered by a text change (e.g. async highlight
       // update or selection-only change). Skip dirty-marking and save
@@ -384,7 +396,14 @@ abstract class _EditorViewStateBase extends ConsumerState<EditorView> {
       _lastLoadedNoteId = note.id;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        // Suppress the content-changed listener while loading the note's
+        // content into the controller. Otherwise the listener fires
+        // spuriously, marking the note dirty, scheduling an autosave, and
+        // triggering sidebar/backlinks full rebuilds on every note switch.
+        _suppressListener = true;
         _controller.text = note.content;
+        _lastSeenText = note.content;
+        _suppressListener = false;
         if (_isDirty) {
           _isDirty = false;
         }

@@ -48,6 +48,16 @@ class CanvasNotifierBase extends Notifier<CanvasData>
   final List<CanvasData> _redoStack = [];
   static const int _maxHistory = 50;
 
+  // Lazy O(1) card-by-id cache. Rebuilt only when the cards list identity
+  // changes (which happens on every state mutation via copyWith).
+  Map<String, CanvasCard>? _cardByIdCache;
+  List<CanvasCard>? _cardByIdCacheKey;
+
+  /// True while a heavy auto-layout (force-directed) is running in an isolate.
+  /// The UI shows a progress overlay when this is true.
+  bool _isAutoLayouting = false;
+  bool get isAutoLayouting => _isAutoLayouting;
+
   CanvasNotifierBase({
     CanvasLayoutService? layoutService,
     CanvasExportService? exportService,
@@ -240,11 +250,12 @@ class CanvasNotifierBase extends Notifier<CanvasData>
   // === Lookup helpers ===
 
   CanvasCard? cardById(String id) {
-    try {
-      return state.cards.firstWhere((c) => c.id == id);
-    } catch (_) {
-      return null;
+    final cards = state.cards;
+    if (!identical(_cardByIdCacheKey, cards)) {
+      _cardByIdCacheKey = cards;
+      _cardByIdCache = {for (final c in cards) c.id: c};
     }
+    return _cardByIdCache![id];
   }
 
   CanvasGroup? groupForCard(String cardId) {

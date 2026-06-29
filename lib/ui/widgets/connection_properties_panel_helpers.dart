@@ -132,6 +132,9 @@ Widget _cardDropdown(
     value: cards.any((c) => c.id == selectedCardId) ? selectedCardId : null,
     key: ValueKey(selectedCardId),
     isDense: true,
+    // isExpanded=true 让 DropdownButtonFormField 把选中项的 child 包在 Expanded 里，
+    // 给内部 Text 一个有限宽度约束，避免长标题导致 Row 溢出（RenderFlex overflow）
+    isExpanded: true,
     decoration: const InputDecoration(
       border: OutlineInputBorder(),
       contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -144,6 +147,7 @@ Widget _cardDropdown(
               card.title.isEmpty ? 'Untitled' : card.title,
               style: theme.textTheme.bodySmall,
               overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         )

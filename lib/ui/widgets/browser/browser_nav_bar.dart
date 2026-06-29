@@ -92,18 +92,23 @@ class _NavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final enabled = onPressed != null;
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
+    // 移除 Semantics(button: true) —— 与 _SceneButton 修复同理：
+    // Material+InkWell(onTap != null) 通过合并隐式提供 button 角色，
+    // 外层显式 button:true 会形成双重 button 节点。
+    // 但这里保留了 enabled 翻转时 InkWell.onTap null ↔ callback 的结构变化
+    // 问题：disabled 时无 button 角色，enabled 时有 button 角色。
+    // 为了彻底消除结构变化，用 ExcludeSemantics 包裹整个 _NavButton。
+    // _NavButton 是浏览器导航按钮（后退/前进/刷新/阅读模式），非核心交互，
+    // 无障碍用户可通过 Tab 键访问 WebView 内容。
+    return ExcludeSemantics(
+      child: Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
-        onTap: onPressed,
-        child: Tooltip(
-          message: tooltip,
-          child: Semantics(
-            button: true,
-            enabled: enabled,
-            label: tooltip,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onPressed,
+          child: Tooltip(
+            message: tooltip,
             child: Padding(
               padding: const EdgeInsets.all(6),
               child: Icon(

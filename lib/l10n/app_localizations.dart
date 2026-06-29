@@ -740,6 +740,12 @@ abstract class AppLocalizations {
   /// **'Edit'**
   String get edit;
 
+  /// No description provided for @render.
+  ///
+  /// In en, this message translates to:
+  /// **'Render'**
+  String get render;
+
   /// No description provided for @startWriting.
   ///
   /// In en, this message translates to:
@@ -859,6 +865,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Large file opened in source view (editing may be slow)'**
   String get largeFileSourceNotice;
+
+  /// No description provided for @largeFileRenderNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Large file opened in source view (rendering may be slow)'**
+  String get largeFileRenderNotice;
 
   /// No description provided for @error.
   ///

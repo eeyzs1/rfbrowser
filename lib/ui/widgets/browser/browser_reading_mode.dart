@@ -70,7 +70,11 @@ class _BrowserReadingModeState extends State<BrowserReadingMode> {
     final l = widget.l;
 
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      // ExcludeSemantics：见 capture_ai_summary_build.dart 同类修复说明。
+      // 阅读模式加载指示器，每帧更新 Semantics(value: '%')，包裹后排除。
+      return const Center(
+        child: ExcludeSemantics(child: CircularProgressIndicator()),
+      );
     }
 
     if (_content.isEmpty) {

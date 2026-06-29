@@ -79,12 +79,31 @@ class _NotePaneViewState extends ConsumerState<NotePaneView> {
   // fallback and builds the real editor (with deferred loading). Reset
   // whenever the displayed note changes.
   bool _forceEditForLargeFile = false;
+  // Set to true when the user explicitly clicks "渲染" on the large-file
+  // notice in rendered view. While true, the rendered branch skips the
+  // source-view fallback and builds NoteMarkdownView with forceRender so
+  // its internal guard is also bypassed. Reset whenever the displayed
+  // note changes.
+  bool _forceRenderForLargeFile = false;
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_onContentChanged);
     _focusNode.addListener(_onFocusChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant NotePaneView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset the rendered-mode force flag when the displayed note changes,
+    // so a new large note doesn't inherit the previous note's forced-render
+    // state. (_forceEditForLargeFile is reset inside the edit-mode block
+    // below via _lastLoadedNoteId; rendered mode has no such tracking, so
+    // we handle it here.)
+    if (oldWidget.noteId != widget.noteId) {
+      _forceRenderForLargeFile = false;
+    }
   }
 
   @override
@@ -156,13 +175,10 @@ class _NotePaneViewState extends ConsumerState<NotePaneView> {
     // only rebuilds when THIS note's content actually changes — not when
     // other notes are edited, created, or deleted. This prevents a cascade
     // of rebuilds across all open tabs when the user types in one tab.
+    // Uses byId for O(1) lookup instead of O(n) linear scan — critical with
+    // multiple split panes where each pane's select runs per keystroke.
     final noteContent = ref.watch(
-      knowledgeProvider.select((s) {
-        for (final n in s.notes) {
-          if (n.id == widget.noteId) return n.content;
-        }
-        return null;
-      }),
+      knowledgeProvider.select((s) => s.byId[widget.noteId]?.content),
     );
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
@@ -261,13 +277,63 @@ class _NotePaneViewState extends ConsumerState<NotePaneView> {
         ],
       );
     }
+    // For large files in rendered mode, fall back to a fast source view
+    // with a notice instead of freezing the UI on flutter_markdown's
+    // whole-document AST parse + layout. The user can click "渲染" to
+    // force rendered mode (which bypasses NoteMarkdownView's internal
+    // guard via the forceRender flag).
+    if (widget.viewMode == NoteViewMode.rendered &&
+        noteContent.length > _largeFileThreshold &&
+        !_forceRenderForLargeFile) {
+      return Column(
+        children: [
+          Material(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DesignSpacing.lg,
+                vertical: DesignSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l.largeFileRenderNotice,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _forceRenderForLargeFile = true);
+                    },
+                    child: Text(l.render),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(child: _buildSource(theme, noteContent)),
+        ],
+      );
+    }
     switch (widget.viewMode) {
       case NoteViewMode.edit:
         return _buildEdit(theme, l);
       case NoteViewMode.source:
         return _buildSource(theme, noteContent);
       case NoteViewMode.rendered:
-        return NoteMarkdownView(content: noteContent);
+        // forceRender bypasses NoteMarkdownView's internal large-file guard
+        // when the user has already opted in via the "渲染" button above.
+        return NoteMarkdownView(
+          content: noteContent,
+          forceRender: _forceRenderForLargeFile,
+        );
     }
   }
 
@@ -277,12 +343,7 @@ class _NotePaneViewState extends ConsumerState<NotePaneView> {
     // but at least the user sees a loading indicator instead of a frozen
     // window, and they explicitly opted in.
     final noteContent = ref.read(
-      knowledgeProvider.select((s) {
-        for (final n in s.notes) {
-          if (n.id == widget.noteId) return n.content;
-        }
-        return null;
-      }),
+      knowledgeProvider.select((s) => s.byId[widget.noteId]?.content),
     );
     if (noteContent == null) return;
     setState(() {
@@ -310,7 +371,9 @@ class _NotePaneViewState extends ConsumerState<NotePaneView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(),
+            // ExcludeSemantics：见 capture_ai_summary_build.dart 同类修复说明。
+            // 大文件加载指示器，每帧更新 Semantics(value: '%')，包裹后排除。
+            const ExcludeSemantics(child: CircularProgressIndicator()),
             const SizedBox(height: 16),
             Text(
               l.loading,

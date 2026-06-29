@@ -127,24 +127,22 @@ class _SpeedDialFABState extends ConsumerState<SpeedDialFAB>
                           Positioned(
                             top: DesignSpacing.xs,
                             right: DesignSpacing.xs,
-                            child: Semantics(
-                              button: true,
-                              label: MaterialLocalizations.of(
+                            // 直接 IconButton（不用 Semantics 包裹）：
+                            // 之前 Semantics(button: true) + IconButton 创造两个 button 节点
+                            // （外层显式 + 内层 InkWell 自动），切换 _activePanel
+                            // 时结构翻转 → AXTree diff 失败。
+                            child: IconButton(
+                              icon: const Icon(Icons.close, size: 16),
+                              onPressed: _closeAll,
+                              tooltip: MaterialLocalizations.of(
                                 context,
                               ).closeButtonLabel,
-                              child: IconButton(
-                                icon: const Icon(Icons.close, size: 16),
-                                onPressed: _closeAll,
-                                tooltip: MaterialLocalizations.of(
-                                  context,
-                                ).closeButtonLabel,
-                                constraints: const BoxConstraints(
-                                  minWidth: DesignTouchTarget.iconButtonSize,
-                                  minHeight: DesignTouchTarget.iconButtonSize,
-                                ),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.black26,
-                                ),
+                              constraints: const BoxConstraints(
+                                minWidth: DesignTouchTarget.iconButtonSize,
+                                minHeight: DesignTouchTarget.iconButtonSize,
+                              ),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.black26,
                               ),
                             ),
                           ),
@@ -185,24 +183,19 @@ class _SpeedDialFABState extends ConsumerState<SpeedDialFAB>
                           Positioned(
                             top: DesignSpacing.xs,
                             right: DesignSpacing.xs,
-                            child: Semantics(
-                              button: true,
-                              label: MaterialLocalizations.of(
+                            // 直接 IconButton（不用 Semantics 包裹）：同上一个 panel。
+                            child: IconButton(
+                              icon: const Icon(Icons.close, size: 16),
+                              onPressed: _closeAll,
+                              tooltip: MaterialLocalizations.of(
                                 context,
                               ).closeButtonLabel,
-                              child: IconButton(
-                                icon: const Icon(Icons.close, size: 16),
-                                onPressed: _closeAll,
-                                tooltip: MaterialLocalizations.of(
-                                  context,
-                                ).closeButtonLabel,
-                                constraints: const BoxConstraints(
-                                  minWidth: DesignTouchTarget.iconButtonSize,
-                                  minHeight: DesignTouchTarget.iconButtonSize,
-                                ),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.black26,
-                                ),
+                              constraints: const BoxConstraints(
+                                minWidth: DesignTouchTarget.iconButtonSize,
+                                minHeight: DesignTouchTarget.iconButtonSize,
+                              ),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.black26,
                               ),
                             ),
                           ),
@@ -242,6 +235,10 @@ class _SpeedDialFABState extends ConsumerState<SpeedDialFAB>
           child: SizedBox(
             width: 60,
             height: 60,
+            // 关键修复：FAB 静态 Icon，无 AnimatedSwitcher。
+            // 之前 AnimatedSwitcher + ValueKey(_isAnythingOpen) 每次切换会 unmount + remount
+            // Icon → SemanticsNode 节点重新创建/销毁 → AXTree diff 失败。
+            // 改用条件渲染 + 简单 Icon，不产生节点替换。
             child: FloatingActionButton(
               heroTag: 'speed_dial_fab',
               onPressed: _toggleSpeedDial,
@@ -250,14 +247,10 @@ class _SpeedDialFABState extends ConsumerState<SpeedDialFAB>
                 borderRadius: BorderRadius.circular(20),
               ),
               backgroundColor: theme.colorScheme.primary,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Icon(
-                  _isAnythingOpen ? Icons.close : Icons.auto_awesome,
-                  key: ValueKey(_isAnythingOpen),
-                  size: 28,
-                  color: theme.colorScheme.onPrimary,
-                ),
+              child: Icon(
+                _isAnythingOpen ? Icons.close : Icons.auto_awesome,
+                size: 28,
+                color: theme.colorScheme.onPrimary,
               ),
             ),
           ),

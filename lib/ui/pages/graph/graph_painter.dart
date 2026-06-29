@@ -31,6 +31,21 @@ class GraphPainter extends CustomPainter {
   final Color errorColor;
   final double baseFontSize;
 
+  // Reusable Paint objects — created once per painter, only `color` is mutated
+  // in the node loop (avoids N allocations per frame).
+  final Paint _nodePaint = Paint()..style = PaintingStyle.fill;
+  final Paint _bridgePaint = Paint()..style = PaintingStyle.fill;
+  final Paint _glowPaint = Paint()..style = PaintingStyle.fill;
+  final Paint _hoverPaint = Paint()..style = PaintingStyle.fill;
+
+  // TextPainter cache keyed by note title — avoids re-laying out the same
+  // title on every paint. Cleared in [shouldRepaint] when notes change.
+  final Map<String, TextPainter> _textPainterCache = {};
+
+  // Cached link counts (only depends on [links]). Lazily computed once per
+  // painter instance instead of rebuilt on every paint() call.
+  Map<String, int>? _linkCountCache;
+
   GraphPainter({
     required this.notes,
     required this.links,
@@ -50,6 +65,18 @@ class GraphPainter extends CustomPainter {
     this.baseFontSize = 10.0,
   });
 
+  Map<String, int> get _linkCount {
+    final cache = _linkCountCache;
+    if (cache != null) return cache;
+    final result = <String, int>{};
+    for (final link in links) {
+      result[link.sourceId] = (result[link.sourceId] ?? 0) + 1;
+      result[link.targetId] = (result[link.targetId] ?? 0) + 1;
+    }
+    _linkCountCache = result;
+    return result;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     if (notes.isEmpty) return;
@@ -59,11 +86,7 @@ class GraphPainter extends CustomPainter {
     final nodePositions = <String, Offset>{};
     final nodeRadius = 6.0 * scale;
 
-    final linkCount = <String, int>{};
-    for (final link in links) {
-      linkCount[link.sourceId] = (linkCount[link.sourceId] ?? 0) + 1;
-      linkCount[link.targetId] = (linkCount[link.targetId] ?? 0) + 1;
-    }
+    final linkCount = _linkCount;
 
     if (layout != null) {
       for (final entry in layout!.entries) {
@@ -98,15 +121,22 @@ class GraphPainter extends CustomPainter {
       final targetPos = nodePositions[link.targetId];
       if (sourcePos == null || targetPos == null) continue;
       if (link.isAuto) {
-        // A-6: auto-discovered wikilinks are rendered as dashed lines
-        _drawDashedLine(
-          canvas,
-          sourcePos,
-          targetPos,
-          autoEdgePaint,
-          dash: 6.0,
-          gap: 4.0,
-        );
+        // A-6: auto-discovered wikilinks are rendered as dashed lines.
+        // When zoomed out (scale < 0.5) the expensive computeMetrics/
+        // extractPath per edge dominates the frame; draw a solid line
+        // instead — visually indistinguishable at low zoom.
+        if (scale < 0.5) {
+          canvas.drawLine(sourcePos, targetPos, autoEdgePaint);
+        } else {
+          _drawDashedLine(
+            canvas,
+            sourcePos,
+            targetPos,
+            autoEdgePaint,
+            dash: 6.0,
+            gap: 4.0,
+          );
+        }
       } else {
         canvas.drawLine(sourcePos, targetPos, edgePaint);
       }
@@ -127,41 +157,32 @@ class GraphPainter extends CustomPainter {
       final isSelected = selectedNode == note.id;
       final isBridge = bridgeIds.contains(note.id);
 
-      final nodePaint = Paint()
-        ..color = isBridge
-            ? redColor
-            : isSelected
-            ? primaryColor
-            : isHovered
-            ? secondaryColor
-            : primaryColor.withValues(alpha: 0.7)
-        ..style = PaintingStyle.fill;
+      _nodePaint.color = isBridge
+          ? redColor
+          : isSelected
+          ? primaryColor
+          : isHovered
+          ? secondaryColor
+          : primaryColor.withValues(alpha: 0.7);
 
-      final bridgePaint = Paint()
-        ..color = redColor.withValues(alpha: 0.3)
-        ..style = PaintingStyle.fill;
-
-      final glowPaint = Paint()
-        ..color = primaryColor.withValues(alpha: 0.15)
-        ..style = PaintingStyle.fill;
+      _bridgePaint.color = redColor.withValues(alpha: 0.3);
+      _glowPaint.color = primaryColor.withValues(alpha: 0.15);
 
       if (isHovered) {
-        final hoverPaint = Paint()
-          ..color = secondaryColor.withValues(alpha: 0.1)
-          ..style = PaintingStyle.fill;
+        _hoverPaint.color = secondaryColor.withValues(alpha: 0.1);
         canvas.drawCircle(
           pos,
           _GraphViewStateBase._nodeHitRadius * scale,
-          hoverPaint,
+          _hoverPaint,
         );
       }
 
       if (isBridge) {
-        canvas.drawCircle(pos, r * 1.8, bridgePaint);
+        canvas.drawCircle(pos, r * 1.8, _bridgePaint);
       } else if (connections > 2) {
-        canvas.drawCircle(pos, r * 2, glowPaint);
+        canvas.drawCircle(pos, r * 2, _glowPaint);
       }
-      canvas.drawCircle(pos, r, nodePaint);
+      canvas.drawCircle(pos, r, _nodePaint);
 
       if (isBridge && scale > 0.4) {
         final starSpan = TextSpan(
@@ -186,23 +207,28 @@ class GraphPainter extends CustomPainter {
       }
 
       if (scale > 0.5) {
-        final textSpan = TextSpan(
-          text: note.title,
-          style: TextStyle(
-            color: isSelected
-                ? primaryColor
-                : isBridge
-                ? redColor
-                : onSurfaceColor.withValues(alpha: 0.8),
-            fontSize: (baseFontSize * scale).clamp(8, 14),
-          ),
+        final textPainter = _textPainterCache.putIfAbsent(
+          note.title,
+          () {
+            final tp = TextPainter(
+              text: TextSpan(
+                text: note.title,
+                style: TextStyle(
+                  color: isSelected
+                      ? primaryColor
+                      : isBridge
+                      ? redColor
+                      : onSurfaceColor.withValues(alpha: 0.8),
+                  fontSize: (baseFontSize * scale).clamp(8, 14),
+                ),
+              ),
+              textDirection: TextDirection.ltr,
+              maxLines: 1,
+            );
+            tp.layout(maxWidth: 100 * scale);
+            return tp;
+          },
         );
-        final textPainter = TextPainter(
-          text: textSpan,
-          textDirection: TextDirection.ltr,
-          maxLines: 1,
-        );
-        textPainter.layout(maxWidth: 100 * scale);
         textPainter.paint(
           canvas,
           Offset(pos.dx - textPainter.width / 2, pos.dy + r + 4),
@@ -212,15 +238,20 @@ class GraphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant GraphPainter oldDelegate) =>
-      oldDelegate.notes != notes ||
-      oldDelegate.links != links ||
-      oldDelegate.scale != scale ||
-      oldDelegate.offset != offset ||
-      oldDelegate.layout != layout ||
-      oldDelegate.hoveredNode != hoveredNode ||
-      oldDelegate.selectedNode != selectedNode ||
-      oldDelegate.bridgeIds != bridgeIds;
+  bool shouldRepaint(covariant GraphPainter oldDelegate) {
+    if (oldDelegate.notes != notes) {
+      // Notes changed: cached TextPainters are stale (titles/styles may differ).
+      _textPainterCache.clear();
+      return true;
+    }
+    return oldDelegate.links != links ||
+        oldDelegate.scale != scale ||
+        oldDelegate.offset != offset ||
+        oldDelegate.layout != layout ||
+        oldDelegate.hoveredNode != hoveredNode ||
+        oldDelegate.selectedNode != selectedNode ||
+        oldDelegate.bridgeIds != bridgeIds;
+  }
 
   /// Draws a straight line between [a] and [b] as a dashed pattern.
   /// Used for A-6: auto-discovered [[wikilink]] edges in the graph.

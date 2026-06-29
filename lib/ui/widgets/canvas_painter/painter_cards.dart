@@ -3,19 +3,20 @@ part of '../canvas_painter.dart';
 mixin _CanvasCardPainterMixin on _CanvasPainterBase {
   @override
   void _drawCards(Canvas canvas) {
-    final noteMap = <String, Note>{};
-    for (final n in knowledgeState.notes) {
-      noteMap[n.id] = n;
-    }
+    // Issue 6: Convert Lists to Sets once for O(1) contains.
+    final selectedSet = selectedCardIds.toSet();
+    final searchSet = searchMatchedIds.toSet();
+    // Issue 7: Reusable Path for shadow drawing (avoids 2 allocations per card).
+    final shadowPath = Path();
 
     for (final card in cards) {
       if (!_isCardInSelectedLayer(card)) continue;
       if (card.type == CanvasCardType.container) {
-        _drawContainerCard(canvas, card, noteMap);
+        _drawContainerCard(canvas, card, _noteMap);
         continue;
       }
       if (card.type.isSwimlane) {
-        _drawSwimlaneCard(canvas, card, noteMap);
+        _drawSwimlaneCard(canvas, card, _noteMap);
         continue;
       }
       if (card.type == CanvasCardType.table) {
@@ -35,6 +36,9 @@ mixin _CanvasCardPainterMixin on _CanvasPainterBase {
         continue;
       }
 
+      // Issue 5: Viewport culling — skip off-screen cards.
+      if (!visibleWorldRect.overlaps(card.rect.inflate(50))) continue;
+
       final pos = _w2s(card.x, card.y);
       final cardRect = Rect.fromLTWH(
         pos.dx,
@@ -43,9 +47,9 @@ mixin _CanvasCardPainterMixin on _CanvasPainterBase {
         card.height * scale,
       );
 
-      final isSelected = selectedCardIds.contains(card.id);
+      final isSelected = selectedSet.contains(card.id);
       final isConnecting = card.id == connectingFromCardId;
-      final isSearchMatch = searchMatchedIds.contains(card.id);
+      final isSearchMatch = searchSet.contains(card.id);
       final isSearchActive =
           searchMatchedIds.isNotEmpty &&
           searchActiveIndex < searchMatchedIds.length &&
@@ -81,14 +85,16 @@ mixin _CanvasCardPainterMixin on _CanvasPainterBase {
       );
 
       if (s.shadow) {
+        shadowPath.reset();
+        shadowPath.addRRect(rrect);
         canvas.drawShadow(
-          Path()..addRRect(rrect),
+          shadowPath,
           Colors.black.withValues(alpha: 0.12),
           10,
           false,
         );
         canvas.drawShadow(
-          Path()..addRRect(rrect),
+          shadowPath,
           Colors.black.withValues(alpha: 0.06),
           20,
           false,
@@ -198,7 +204,7 @@ mixin _CanvasCardPainterMixin on _CanvasPainterBase {
       Note? linkedNote;
       bool noteDeleted = false;
       if (card.noteId != null) {
-        linkedNote = noteMap[card.noteId];
+        linkedNote = _noteMap[card.noteId];
         if (linkedNote == null) noteDeleted = true;
       }
       final displayTitle = linkedNote != null

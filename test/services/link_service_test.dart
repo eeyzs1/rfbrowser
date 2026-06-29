@@ -419,7 +419,7 @@ void main() {
     });
 
     group('getUnlinkedMentions', () {
-      test('finds unlinked mentions of other note titles', () {
+      test('finds unlinked mentions of other note titles', () async {
         final container = ProviderContainer();
         addTearDown(container.dispose);
         final notifier = container.read(linkServiceProvider.notifier);
@@ -431,13 +431,14 @@ void main() {
         );
         final noteB = Note(title: 'Note B', filePath: 'notes/note_b.md');
 
-        final mentions = notifier.getUnlinkedMentions(noteA.id, [noteA, noteB]);
+        final mentions =
+            await notifier.getUnlinkedMentions(noteA.id, [noteA, noteB]);
         expect(mentions.length, 1);
         expect(mentions.first.targetTitle, 'Note B');
         expect(mentions.first.context, isNotNull);
       });
 
-      test('does not flag already linked mentions', () {
+      test('does not flag already linked mentions', () async {
         final container = ProviderContainer();
         addTearDown(container.dispose);
         final notifier = container.read(linkServiceProvider.notifier);
@@ -451,20 +452,21 @@ void main() {
 
         notifier.rebuildAllLinks([noteA, noteB]);
 
-        final mentions = notifier.getUnlinkedMentions(noteA.id, [noteA, noteB]);
+        final mentions =
+            await notifier.getUnlinkedMentions(noteA.id, [noteA, noteB]);
         expect(mentions.length, 1);
       });
 
-      test('returns empty for non-existent note id', () {
+      test('returns empty for non-existent note id', () async {
         final container = ProviderContainer();
         addTearDown(container.dispose);
         final notifier = container.read(linkServiceProvider.notifier);
 
-        final mentions = notifier.getUnlinkedMentions('nonexistent', []);
+        final mentions = await notifier.getUnlinkedMentions('nonexistent', []);
         expect(mentions, isEmpty);
       });
 
-      test('skips titles shorter than 3 characters', () {
+      test('skips titles shorter than 3 characters', () async {
         final container = ProviderContainer();
         addTearDown(container.dispose);
         final notifier = container.read(linkServiceProvider.notifier);
@@ -476,14 +478,14 @@ void main() {
         );
         final shortNote = Note(title: 'ab', filePath: 'notes/ab.md');
 
-        final mentions = notifier.getUnlinkedMentions(noteA.id, [
+        final mentions = await notifier.getUnlinkedMentions(noteA.id, [
           noteA,
           shortNote,
         ]);
         expect(mentions, isEmpty);
       });
 
-      test('finds multiple unlinked mentions', () {
+      test('finds multiple unlinked mentions', () async {
         final container = ProviderContainer();
         addTearDown(container.dispose);
         final notifier = container.read(linkServiceProvider.notifier);
@@ -496,7 +498,7 @@ void main() {
         final noteB = Note(title: 'Note B', filePath: 'notes/note_b.md');
         final noteC = Note(title: 'Note C', filePath: 'notes/note_c.md');
 
-        final mentions = notifier.getUnlinkedMentions(noteA.id, [
+        final mentions = await notifier.getUnlinkedMentions(noteA.id, [
           noteA,
           noteB,
           noteC,

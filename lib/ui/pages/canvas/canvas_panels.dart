@@ -1,6 +1,17 @@
 part of '../canvas_page.dart';
 
 mixin _CanvasPanelsMixin on _CanvasViewStateBase {
+  // Issue 17: Cache the minimap bounding box keyed by
+  // (cards list reference, selectedLayerId). Avoids re-scanning every visible
+  // card on every rebuild when only camera/scale changed.
+  List<CanvasCard>? _minimapBboxCardsKey;
+  String? _minimapBboxLayerKey;
+  bool _minimapBboxValid = false;
+  double _minimapBboxMinX = 0;
+  double _minimapBboxMinY = 0;
+  double _minimapBboxMaxX = 0;
+  double _minimapBboxMaxY = 0;
+
   @override
   Widget _buildActiveFilterBanner(ThemeData theme, CanvasData canvasData) {
     final l = AppLocalizations.of(context)!;
@@ -153,14 +164,33 @@ mixin _CanvasPanelsMixin on _CanvasViewStateBase {
 
     if (visibleCards.isEmpty) return const SizedBox.shrink();
 
-    double minX = double.infinity, minY = double.infinity;
-    double maxX = double.negativeInfinity, maxY = double.negativeInfinity;
-    for (final card in visibleCards) {
-      minX = math.min(minX, card.x);
-      minY = math.min(minY, card.y);
-      maxX = math.max(maxX, card.x + card.width);
-      maxY = math.max(maxY, card.y + card.height);
+    // Issue 17: Reuse cached bbox when (cards, selectedLayerId) are unchanged.
+    // The bbox only depends on card positions/dimensions and the layer filter;
+    // camera/scale changes (which trigger most rebuilds) don't affect it.
+    if (!_minimapBboxValid ||
+        !identical(_minimapBboxCardsKey, canvasData.cards) ||
+        _minimapBboxLayerKey != canvasData.selectedLayerId) {
+      _minimapBboxCardsKey = canvasData.cards;
+      _minimapBboxLayerKey = canvasData.selectedLayerId;
+      double minX = double.infinity, minY = double.infinity;
+      double maxX = double.negativeInfinity, maxY = double.negativeInfinity;
+      for (final card in visibleCards) {
+        minX = math.min(minX, card.x);
+        minY = math.min(minY, card.y);
+        maxX = math.max(maxX, card.x + card.width);
+        maxY = math.max(maxY, card.y + card.height);
+      }
+      _minimapBboxMinX = minX;
+      _minimapBboxMinY = minY;
+      _minimapBboxMaxX = maxX;
+      _minimapBboxMaxY = maxY;
+      _minimapBboxValid = true;
     }
+
+    final minX = _minimapBboxMinX;
+    final minY = _minimapBboxMinY;
+    final maxX = _minimapBboxMaxX;
+    final maxY = _minimapBboxMaxY;
 
     const minimapW = 160.0;
     const minimapH = 100.0;

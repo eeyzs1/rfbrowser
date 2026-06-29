@@ -338,6 +338,14 @@ class EmbeddingService {
         embeddingModelId: embeddingModelId,
       );
       count++;
+      // onNoteSaved awaits embedding (network/IO) so the loop already yields
+      // between notes, but each note's hnswIndex.insert is a synchronous
+      // O(log N × efConstruction) call. When using the deterministic local
+      // fallback (synchronous embedding) a tight batch can still jank the UI,
+      // so yield to the event loop every 100 notes.
+      if (count % 100 == 0) {
+        await Future<void>.delayed(Duration.zero);
+      }
     }
     return count;
   }
@@ -382,9 +390,24 @@ class EmbeddingService {
       return {};
     }
 
-    for (final r in records) {
-      hnswIndex.insert(r.noteId, r.embedding, metadata: r.metadata);
-      store.insert(r.noteId, r.embedding, metadata: r.metadata);
+    // HnswIndex carries a `Random` and mutable graph state, so it cannot be
+    // sent across an isolate boundary (compute() would throw). Instead we
+    // batch the inserts in chunks of 100 and yield to the event loop with
+    // `Future.delayed(Duration.zero)` between chunks. Each insert is
+    // O(log N × efConstruction); for 5000 records this keeps the UI thread
+    // responsive instead of freezing for seconds at startup.
+    const chunkSize = 100;
+    for (var i = 0; i < records.length; i += chunkSize) {
+      final end =
+          (i + chunkSize < records.length) ? i + chunkSize : records.length;
+      for (var j = i; j < end; j++) {
+        final r = records[j];
+        hnswIndex.insert(r.noteId, r.embedding, metadata: r.metadata);
+        store.insert(r.noteId, r.embedding, metadata: r.metadata);
+      }
+      if (end < records.length) {
+        await Future<void>.delayed(Duration.zero);
+      }
     }
     return records.map((r) => r.noteId).toSet();
   }

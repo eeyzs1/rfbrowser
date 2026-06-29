@@ -115,7 +115,7 @@ void main() {
 
 class _TestKnowledgeNotifier extends KnowledgeNotifier {
   @override
-  KnowledgeState build() => const KnowledgeState();
+  KnowledgeState build() => KnowledgeState();
 }
 
 class _TestQuickMoveNotifier extends QuickMoveNotifier {

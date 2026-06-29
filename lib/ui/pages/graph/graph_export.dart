@@ -2,6 +2,14 @@
 
 part of '../graph_page.dart';
 
+/// Top-level isolate entry point for JSON serialization of the graph.
+///
+/// Runs `JsonEncoder.withIndent` off the UI thread so that large graphs
+/// (hundreds of nodes/edges) do not block the frame loop (Rule 6.1).
+String _encodeGraphJson(Map<String, dynamic> data) {
+  return JsonEncoder.withIndent('  ').convert(data);
+}
+
 /// Mixin providing graph export functionality (PNG / SVG / JSON).
 mixin _GraphExportMixin on _GraphViewStateBase {
   @override
@@ -144,10 +152,10 @@ mixin _GraphExportMixin on _GraphViewStateBase {
     );
   }
 
-  void _exportGraphToJson(
+  Future<void> _exportGraphToJson(
     List<Note> displayNotes,
     List<GraphLink> displayLinks,
-  ) {
+  ) async {
     final l = AppLocalizations.of(context)!;
     final layout = _cachedLayout;
 
@@ -167,15 +175,19 @@ mixin _GraphExportMixin on _GraphViewStateBase {
         .map((e) => {'source': e.sourceId, 'target': e.targetId})
         .toList();
 
-    final data = JsonEncoder.withIndent('  ').convert({
+    final data = <String, dynamic>{
       'nodes': nodes,
       'edges': edges,
       'exportedAt': DateTime.now().toIso8601String(),
-    });
+    };
+
+    // JSON encoding (with indentation) of large graphs can take >100ms;
+    // run it in a worker isolate to keep the UI thread free (Rule 6.1).
+    final json = await compute(_encodeGraphJson, data);
 
     _saveGraphExportFile(
       'graph_${DateTime.now().millisecondsSinceEpoch}.json',
-      data,
+      json,
       l,
     );
   }

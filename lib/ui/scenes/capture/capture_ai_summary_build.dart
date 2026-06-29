@@ -318,7 +318,14 @@ mixin _AiSummaryPanelBuildMixin on _AiSummaryPanelBase {
 
     if (summaryMode == _SummaryMode.loading &&
         (summaryText == null || summaryText!.isEmpty)) {
-      return const Center(child: CircularProgressIndicator());
+      // ExcludeSemantics：CircularProgressIndicator 内部用
+      // AnimationController.repeat() 每帧更新语义 value 属性（在
+      // Semantics(value: '%') 中）。这是启动时右侧 AI 摘要面板正在
+      // 加载的指示器，每秒 60 帧更新向 AXTree 提交。
+      // 包裹后该指示器不再向语义树贡献节点。
+      return const Center(
+        child: ExcludeSemantics(child: CircularProgressIndicator()),
+      );
     }
 
     return SingleChildScrollView(

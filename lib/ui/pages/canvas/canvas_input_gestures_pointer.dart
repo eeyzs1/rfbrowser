@@ -29,7 +29,17 @@ mixin _CanvasPointerGesturesMixin on _CanvasViewStateBase {
 
   @override
   void _onHover(PointerHoverEvent event) {
-    final worldPos = _screenToWorld(event.localPosition);
+    _pendingHoverPos = _screenToWorld(event.localPosition);
+    if (_hoverThrottle?.isActive ?? false) return;
+    _hoverThrottle = Timer(
+      const Duration(milliseconds: 33),
+      _runHoverHitTest,
+    );
+  }
+
+  void _runHoverHitTest() {
+    final worldPos = _pendingHoverPos;
+    if (worldPos == null) return;
     final hitCard = _hitTestCardWithResize(worldPos);
     _ResizeEdge edge = _ResizeEdge.none;
     String? hoverId;

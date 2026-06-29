@@ -23,51 +23,96 @@ class SettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
 
+    // 关键修复：用 ListView.builder 替代 ListView(children: [...])。
+    //
+    // 之前 ListView(children: [...]) 一次性挂载所有 12 个 section ×
+    // 5-10 个 widget = ~700-1000 个 SemanticsNode。滚动时视口移动，
+    // SemanticsNode 的"父节点"在 viewport SemanticsNode 的 children
+    // 中反复切换（in-viewport ↔ out-of-viewport）。Flutter 的
+    // accessibility_bridge.cc:51-56 注释明确指出：
+    //
+    //   "AXTree cannot move a node in a single update.
+    //    This must be split across two updates:
+    //    * Update 1: remove nodes from their old parents.
+    //    * Update 2: re-add nodes (including their children) to their new parents."
+    //
+    // 滚动每帧产生大量 move 请求 → Chromium ui::AXTree diff 算法
+    // 拒绝 → 输出 "Failed to update ui::AXTree, error: 54 will not be
+    // in the tree and is not the new root"。67 次连续 = 67 帧滚动。
+    //
+    // ListView.builder 只挂载当前可见 + 缓冲区的 sections，~200 节点
+    // 而非 ~1000，滚动时移动的节点数大幅减少，AXTree diff 可处理。
+    //
+    // 注：每项是一个 Widget（不是 Widget[]），所以 SizedBox(height: 16)
+    // 等间距元素也是独立 item，确保滚动时挂载/卸载的是单项。
+    final items = <Widget>[
+      _CategoryHeader(title: l.settingsCategoryGeneral),
+      const SizedBox(height: 8),
+      const ThemeSettingsSection(),
+      const SizedBox(height: 16),
+      const ComponentSettingsSection(),
+      const SizedBox(height: 16),
+      const LanguageSettingsSection(),
+      const SizedBox(height: 16),
+      const EditorSettingsSection(),
+      const SizedBox(height: 16),
+      const QuickMovesSettingsSection(),
+      const SizedBox(height: 24),
+      _CategoryHeader(title: l.settingsCategoryAI),
+      const SizedBox(height: 8),
+      const AISettingsSection(),
+      const SizedBox(height: 16),
+      const AgentSettingsSection(),
+      const SizedBox(height: 16),
+      const MemorySettingsSection(),
+      const SizedBox(height: 16),
+      const _MemoryBrowserTile(),
+      const SizedBox(height: 16),
+      const _SkillsSettingsTile(),
+      const SizedBox(height: 16),
+      const ShortcutSettingsSection(),
+      const SizedBox(height: 24),
+      _CategoryHeader(title: l.settingsCategoryAdvanced),
+      const SizedBox(height: 8),
+      const SyncSettingsSection(),
+      const SizedBox(height: 16),
+      const PluginSettingsSection(),
+      const SizedBox(height: 16),
+      const AboutSection(),
+    ];
+
     return Scaffold(
       appBar: AppBar(title: Text(l.settings)),
-      body: ListView(
+      body: ListView.builder(
         padding: const EdgeInsets.all(20),
-        children: [
-          _CategoryHeader(title: l.settingsCategoryGeneral),
-          const SizedBox(height: 8),
-          const ThemeSettingsSection(),
-          const SizedBox(height: 16),
-          const ComponentSettingsSection(),
-          const SizedBox(height: 16),
-          const LanguageSettingsSection(),
-          const SizedBox(height: 16),
-          const EditorSettingsSection(),
-          const SizedBox(height: 16),
-          const QuickMovesSettingsSection(),
-          const SizedBox(height: 24),
-          _CategoryHeader(title: l.settingsCategoryAI),
-          const SizedBox(height: 8),
-          const AISettingsSection(),
-          const SizedBox(height: 16),
-          const AgentSettingsSection(),
-          const SizedBox(height: 16),
-          const MemorySettingsSection(),
-          const SizedBox(height: 16),
-          _MemoryBrowserTile(),
-          const SizedBox(height: 16),
-          _SkillsSettingsTile(),
-          const SizedBox(height: 16),
-          const ShortcutSettingsSection(),
-          const SizedBox(height: 24),
-          _CategoryHeader(title: l.settingsCategoryAdvanced),
-          const SizedBox(height: 8),
-          const SyncSettingsSection(),
-          const SizedBox(height: 16),
-          const PluginSettingsSection(),
-          const SizedBox(height: 16),
-          const AboutSection(),
-        ],
+        itemCount: items.length,
+        // 关键修复 1：cacheExtent: 0 — 真正卸载视口外 items
+        // ListView.builder 默认 cacheExtent=250，会把视口外 ±250px 的 items 保留
+        // 在 SemanticsNode 树中（标记为 isHidden）。每个 section ~250px 高，所以
+        // 视口外有 2-3 个 sections 在缓存里。滚动时这些 hidden 节点的位置变化
+        // 导致 Chromium ui::AXTree diff 失败（"error 54"）。
+        // 复现测试显示：滚动前 111 lines，滚动后 124 lines（Δ=+13，全部是
+        // 进入 cacheExtent 的新 hidden 节点）。cacheExtent: 0 后视口外立即卸载。
+        //
+        // 关键修复 2：KeyedSubtree + ValueKey(index)
+        // const 列表中同一 widget instance 在 ListView 跨位置时会被 Flutter
+        // 视为"同一个 element 移动位置"，导致 isHidden 标记而不是卸载。
+        // 加 Key 后 Flutter 知道是不同 item，强制挂载/卸载。
+        cacheExtent: 0, // ignore: deprecated_member_use
+        addAutomaticKeepAlives: false,
+        addRepaintBoundaries: false,
+        itemBuilder: (context, index) => KeyedSubtree(
+          key: ValueKey<int>(index),
+          child: items[index],
+        ),
       ),
     );
   }
 }
 
 class _MemoryBrowserTile extends StatelessWidget {
+  const _MemoryBrowserTile();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

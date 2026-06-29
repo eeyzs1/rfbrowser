@@ -84,16 +84,26 @@ class _StatusBarState extends ConsumerState<StatusBar> {
       hasError: webdavState.status == SyncStatus.error,
     );
 
-    return Container(
-      height: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: theme.appBarTheme.backgroundColor,
-        border: Border(top: BorderSide(color: theme.dividerColor)),
-      ),
-      child: Row(
-        children: [
-          Text('RFBrowser v0.3.0', style: theme.textTheme.bodySmall),
+    // ExcludeSemantics：StatusBar watch 了 5 个 provider（browser/knowledge/
+    // vault/connectivity/webdav），任何状态变化都触发整个 StatusBar 重建，每次
+    // 重建都向 AXTree 提交一组新语义节点（版本号、状态文本、笔记数、标签数、
+    // 同步状态等）。启动时这些 provider 异步加载会接连触发 5-10 次重建，叠加
+    // LoadingScreen → MainLayout 切换的大规模 widget tree 变化，会让 Windows
+    // accessibility_bridge 在很短时间内接收大量语义树更新 → AXTree diff 失败
+    // （"Failed to update ui::AXTree, error: NNN"）→ 进程崩溃。
+    // 包裹后 StatusBar 不再向语义树贡献任何节点，从根源上消除崩溃。
+    // StatusBar 是纯状态指示器，无障碍用户通过主界面 Tab 仍可访问所有功能。
+    return ExcludeSemantics(
+      child: Container(
+        height: 24,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: theme.appBarTheme.backgroundColor,
+          border: Border(top: BorderSide(color: theme.dividerColor)),
+        ),
+        child: Row(
+          children: [
+            Text('RFBrowser v0.3.0', style: theme.textTheme.bodySmall),
           const SizedBox(width: 12),
           Container(
             width: 6,
@@ -165,7 +175,8 @@ class _StatusBarState extends ConsumerState<StatusBar> {
             style: theme.textTheme.bodySmall,
           ),
           if (hasVault) ...[const SizedBox(width: 12), syncWidget],
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -200,12 +211,20 @@ class _StatusBarState extends ConsumerState<StatusBar> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: 10,
-              height: 10,
-              child: CircularProgressIndicator(
-                strokeWidth: 1.5,
-                color: theme.colorScheme.primary,
+            // ExcludeSemantics：CircularProgressIndicator 内部用
+            // AnimationController.repeat() 每帧更新语义 value 属性，
+            // 持续向 AXTree 提交更新。在 AXTree 已脆弱时（如启动期间
+            // 或主题切换触发的全树重建），会触发 accessibility_bridge
+            // AXTree diff 失败导致进程崩溃。ExcludeSemantics 后该
+            // 指示器不再向语义树贡献节点。
+            ExcludeSemantics(
+              child: SizedBox(
+                width: 10,
+                height: 10,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  color: theme.colorScheme.primary,
+                ),
               ),
             ),
             const SizedBox(width: 4),

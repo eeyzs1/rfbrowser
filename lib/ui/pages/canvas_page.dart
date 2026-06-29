@@ -162,6 +162,7 @@ class _CanvasViewState extends _CanvasViewStateBase
     _inlineContentFocus?.dispose();
     _searchController.dispose();
     _searchDebounceTimer?.cancel();
+    _hoverThrottle?.cancel();
     for (final image in _imageCache.values) {
       image.dispose();
     }
@@ -423,6 +424,10 @@ class _CanvasViewState extends _CanvasViewStateBase
                                                     canvasData.selectedCardIds,
                                                 connectingFromCardId:
                                                     _connectingFromCardId,
+                                                connectingFromSide:
+                                                    _connectingFromSide,
+                                                connectingFromSideOffset:
+                                                    _connectingFromSideOffset,
                                                 searchMatchedIds:
                                                     _searchMatchedIds,
                                                 searchActiveIndex:
@@ -500,6 +505,19 @@ class _CanvasViewState extends _CanvasViewStateBase
                                 _buildInlineEditor(theme, canvasData, settings),
                               if (_showCanvasGuide)
                                 _buildCanvasGuideOverlay(theme, l),
+                              if (notifier.isAutoLayouting)
+                                Positioned.fill(
+                                  child: Container(
+                                    color: Colors.black26,
+                                    alignment: Alignment.center,
+                                    child: const Card(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(24),
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           );
                         },

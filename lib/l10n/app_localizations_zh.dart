@@ -330,6 +330,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get edit => '编辑';
 
   @override
+  String get render => '渲染';
+
+  @override
   String get startWriting => '开始写作...';
 
   @override
@@ -392,6 +395,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get largeFileSourceNotice => '大文件以源码视图打开（编辑可能较慢）';
+
+  @override
+  String get largeFileRenderNotice => '大文件以源码视图打开（渲染可能较慢）';
 
   @override
   String get error => '错误';

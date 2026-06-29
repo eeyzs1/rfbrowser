@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
@@ -35,6 +37,7 @@ class _MemoryBrowserPageState extends ConsumerState<MemoryBrowserPage>
   bool _onlyActive = true;
   bool _onlyPinned = false;
   final _searchController = TextEditingController();
+  Timer? _searchDebounce;
 
   /// 是否已看过引导卡片（null = 加载中，false = 首次进入需展示，true = 已关闭）
   bool? _hasSeenGuide;
@@ -62,6 +65,7 @@ class _MemoryBrowserPageState extends ConsumerState<MemoryBrowserPage>
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -130,7 +134,19 @@ class _MemoryBrowserPageState extends ConsumerState<MemoryBrowserPage>
                             ),
                             isDense: true,
                           ),
-                          onChanged: (v) => setState(() => _query = v.trim()),
+                          onChanged: (v) {
+                            _searchDebounce?.cancel();
+                            _searchDebounce = Timer(
+                              const Duration(milliseconds: 200),
+                              () {
+                                if (mounted) {
+                                  setState(
+                                    () => _query = _searchController.text.trim(),
+                                  );
+                                }
+                              },
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(width: 8),

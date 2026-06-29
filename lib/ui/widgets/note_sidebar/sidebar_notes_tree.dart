@@ -1,7 +1,6 @@
 part of '../note_sidebar.dart';
 
-mixin _SidebarNotesTreeMixin on _NoteSidebarStateBase,
-    _SidebarNotesTreeWidgetsMixin {
+mixin _SidebarNotesTreeMixin on _NoteSidebarStateBase {
   _TrieNode _buildNoteTrie(List<Note> notes) {
     final root = _TrieNode('', 0);
     for (final note in notes) {
@@ -15,12 +14,10 @@ mixin _SidebarNotesTreeMixin on _NoteSidebarStateBase,
           current.notes.add(note);
         } else {
           final pathSoFar = parts.sublist(0, i + 1).join('/');
-          var child = current.children
-              .where((c) => c.path == pathSoFar)
-              .firstOrNull;
+          var child = current.children[pathSoFar];
           if (child == null) {
             child = _TrieNode(pathSoFar, current.depth + 1);
-            current.children.add(child);
+            current.children[pathSoFar] = child;
           }
           current = child;
         }
@@ -31,25 +28,40 @@ mixin _SidebarNotesTreeMixin on _NoteSidebarStateBase,
       _TrieNode current = root;
       for (var i = 0; i < parts.length; i++) {
         final pathSoFar = parts.sublist(0, i + 1).join('/');
-        var child = current.children
-            .where((c) => c.path == pathSoFar)
-            .firstOrNull;
+        var child = current.children[pathSoFar];
         if (child == null) {
           child = _TrieNode(pathSoFar, current.depth + 1);
-          current.children.add(child);
+          current.children[pathSoFar] = child;
         }
         current = child;
       }
     }
     _sortTrie(root);
+    _computeNoteCounts(root);
     return root;
   }
 
   void _sortTrie(_TrieNode node) {
-    node.children.sort((a, b) => a.name.compareTo(b.name));
-    for (final child in node.children) {
+    final sortedEntries = node.children.entries.toList()
+      ..sort((a, b) => a.value.name.compareTo(b.value.name));
+    final sorted = <String, _TrieNode>{
+      for (final e in sortedEntries) e.key: e.value,
+    };
+    node.children
+      ..clear()
+      ..addAll(sorted);
+    for (final child in node.children.values) {
       _sortTrie(child);
     }
+  }
+
+  int _computeNoteCounts(_TrieNode node) {
+    var count = node.notes.length;
+    for (final child in node.children.values) {
+      count += _computeNoteCounts(child);
+    }
+    node.totalNoteCount = count;
+    return count;
   }
 
   Widget _buildNotesTree(
@@ -86,9 +98,69 @@ mixin _SidebarNotesTreeMixin on _NoteSidebarStateBase,
     }
 
     final trie = _resolvedTrie(notes, knowledgeState);
-    return ListView(
+    final flatList = _buildFlatList(trie);
+    return ListView.builder(
       padding: EdgeInsets.zero,
-      children: _buildTrieWidgets(trie, knowledgeState, l),
+      itemCount: flatList.length,
+      itemBuilder: (context, index) {
+        final node = flatList[index];
+        if (node.isFolder) {
+          return _NoteFolderRow(
+            name: node.name,
+            depth: node.depth,
+            isExpanded: node.isExpanded,
+            isRoot: node.isRoot,
+            noteCount: node.noteCount,
+            folderPath: node.folderPath,
+            hasChildren: node.hasChildren,
+            l: l,
+            baseFontSize: _baseFontSize,
+            isDraggingNote: _draggingNoteId != null,
+            onToggle: () => setState(() {
+              if (node.isExpanded) {
+                _expandedNoteFolders.remove(node.folderPath);
+              } else {
+                _expandedNoteFolders.add(node.folderPath);
+              }
+            }),
+            onNewNote: () => _createNewNote(node.folderPath),
+            onNewFolder: () => _createNoteFolder(node.folderPath),
+            onRename: node.depth > 0
+                ? () => _renameNoteFolder(node.folderPath)
+                : null,
+            onDelete: node.depth > 0
+                ? () => _confirmDeleteNoteFolder(node.folderPath)
+                : null,
+            onAcceptNote: (noteId) {
+              ref
+                  .read(knowledgeProvider.notifier)
+                  .moveNote(noteId, node.folderPath)
+                  .then((_) => _scanDiskFolders());
+            },
+          );
+        } else {
+          final note = node.note!;
+          return _NoteRow(
+            note: note,
+            depth: node.depth,
+            isActive: knowledgeState.activeNote?.id == note.id,
+            l: l,
+            baseFontSize: _baseFontSize,
+            onTap: () {
+              ref.read(knowledgeProvider.notifier).openNote(note.id);
+              if (widget.onNotePreview != null) {
+                widget.onNotePreview!(note.id);
+              } else {
+                widget.onNoteOpened?.call();
+              }
+            },
+            onMove: () => _showMoveNoteDialog(note),
+            onDelete: () => _confirmDeleteNote(note.title, note.id),
+            onDragStarted: () => setState(() => _draggingNoteId = note.id),
+            onDragEnd: () => setState(() => _draggingNoteId = null),
+          );
+        }
+      },
     );
   }
 
@@ -105,77 +177,92 @@ mixin _SidebarNotesTreeMixin on _NoteSidebarStateBase,
     return trie;
   }
 
-  List<Widget> _buildTrieWidgets(
-    _TrieNode node,
-    KnowledgeState knowledgeState,
-    AppLocalizations l,
-  ) {
-    final items = <Widget>[];
-    for (final child in node.children) {
+  /// Flattens the trie into a visible-only list of [_FlatNode]s for
+  /// [ListView.builder]. Only expanded folders' children are included,
+  /// so collapsed subtrees contribute zero rows — keeping the item count
+  /// proportional to what the user actually sees.
+  List<_FlatNode> _buildFlatList(_TrieNode root) {
+    final result = <_FlatNode>[];
+    _flattenTrie(root, result);
+    return result;
+  }
+
+  void _flattenTrie(_TrieNode node, List<_FlatNode> result) {
+    for (final child in node.children.values) {
       final isExpanded = _expandedNoteFolders.contains(child.path);
-      final noteCount = child.totalNoteCount;
-      items.add(
-        _noteFolderRow(
-          name: child.name,
+      result.add(
+        _FlatNode(
+          key: 'folder:${child.path}',
           depth: child.depth,
+          isFolder: true,
+          name: child.name,
           isExpanded: isExpanded,
           isRoot: child.depth == 0 && child.path.isEmpty,
-          noteCount: noteCount,
+          noteCount: child.totalNoteCount,
           folderPath: child.path,
-          l: l,
-          onToggle: () => setState(() {
-            if (isExpanded) {
-              _expandedNoteFolders.remove(child.path);
-            } else {
-              _expandedNoteFolders.add(child.path);
-            }
-          }),
-          onNewNote: () => _createNewNote(child.path),
-          onNewFolder: () => _createNoteFolder(child.path),
-          onRename: child.depth > 0
-              ? () => _renameNoteFolder(child.path)
-              : null,
-          onDelete: child.depth > 0
-              ? () => _confirmDeleteNoteFolder(child.path)
-              : null,
+          hasChildren:
+              child.children.isNotEmpty || child.notes.isNotEmpty,
         ),
       );
       if (isExpanded) {
-        items.addAll(_buildTrieWidgets(child, knowledgeState, l));
+        _flattenTrie(child, result);
       }
     }
     for (final note in node.notes) {
-      final isActive = knowledgeState.activeNote?.id == note.id;
-      final isHovered = _hoveredNoteId == note.id;
-      items.add(
-        _noteRow(
-          note,
-          node.depth + (node.path.isEmpty ? 0 : 1),
-          isActive,
-          isHovered,
-          l,
+      result.add(
+        _FlatNode(
+          key: 'note:${note.id}',
+          depth: node.depth + (node.path.isEmpty ? 0 : 1),
+          isFolder: false,
+          name: note.title,
+          note: note,
         ),
       );
     }
-    return items;
   }
 }
 
 class _TrieNode {
   final String path;
   final int depth;
-  final List<_TrieNode> children = [];
+  /// Keyed by full child path for O(1) lookup (replaces the previous
+  /// `List<_TrieNode>` + linear `.where().firstOrNull` scan that was
+  /// O(n) per path segment — O(n²) for flat vaults).
+  final Map<String, _TrieNode> children = {};
   final List<Note> notes = [];
+  /// Precomputed during trie construction by [_SidebarNotesTreeMixin._computeNoteCounts]
+  /// to avoid recursing the whole subtree on every folder-row build.
+  int totalNoteCount = 0;
 
   _TrieNode(this.path, this.depth);
 
   String get name => path.isEmpty ? '' : path.split('/').last;
+}
 
-  int get totalNoteCount {
-    var count = notes.length;
-    for (final child in children) {
-      count += child.totalNoteCount;
-    }
-    return count;
-  }
+/// Flattened representation of a single visible tree row, used as the
+/// item type for the [ListView.builder] in [_buildNotesTree].
+class _FlatNode {
+  final String key;
+  final int depth;
+  final bool isFolder;
+  final String name;
+  final bool isExpanded;
+  final bool isRoot;
+  final int noteCount;
+  final String folderPath;
+  final bool hasChildren;
+  final Note? note;
+
+  const _FlatNode({
+    required this.key,
+    required this.depth,
+    required this.isFolder,
+    required this.name,
+    this.isExpanded = false,
+    this.isRoot = false,
+    this.noteCount = 0,
+    this.folderPath = '',
+    this.hasChildren = false,
+    this.note,
+  });
 }

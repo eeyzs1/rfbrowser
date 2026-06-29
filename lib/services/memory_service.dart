@@ -256,8 +256,10 @@ class MemoryService {
     int limit = 5,
   }) => _fragments.searchFragmentsWithScores(query, limit: limit);
 
-  Future<List<MemoryFragment>> getAllActiveFragments() =>
-      _fragments.getAllActiveFragments();
+  Future<List<MemoryFragment>> getAllActiveFragments({
+    int limit = 500,
+    int offset = 0,
+  }) => _fragments.getAllActiveFragments(limit: limit, offset: offset);
 
   Future<List<MemoryFragment>> getFragmentsInTier(
     MemoryTier tier, {

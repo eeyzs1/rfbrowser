@@ -10,7 +10,18 @@ class ComponentSettingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider);
+    // 用 select 只 watch 本 section 关心的 4 个字段（borderRadius、iconSize、
+    // buttonStyle、density）。参见 editor_settings_section.dart 中的详细注释。
+    // effectiveBorderRadius 是 derived value（borderRadius 或 buttonStyle
+    // 决定），所以只需要 watch 这 4 个字段。
+    final borderRadius = ref.watch(
+      settingsProvider.select((s) => s.borderRadius),
+    );
+    final iconSize = ref.watch(settingsProvider.select((s) => s.iconSize));
+    final buttonStyle = ref.watch(
+      settingsProvider.select((s) => s.buttonStyle),
+    );
+    final density = ref.watch(settingsProvider.select((s) => s.density));
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
 
@@ -28,9 +39,15 @@ class ComponentSettingsSection extends ConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: _buildButtonStyleSelector(context, ref, settings, l),
+          child: _buildButtonStyleSelector(
+            context,
+            ref,
+            buttonStyle: buttonStyle,
+            borderRadius: borderRadius,
+            l: l,
+          ),
         ),
-        if (settings.buttonStyle == AppButtonStyle.rounded) ...[
+        if (buttonStyle == AppButtonStyle.rounded) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
@@ -43,7 +60,7 @@ class ComponentSettingsSection extends ConsumerWidget {
                 ),
                 const Spacer(),
                 Text(
-                  '${settings.borderRadius.toInt()}px',
+                  '${borderRadius.toInt()}px',
                   style: theme.textTheme.bodySmall,
                 ),
               ],
@@ -51,49 +68,63 @@ class ComponentSettingsSection extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Slider(
-              value: settings.borderRadius,
-              min: 0,
-              max: 50,
-              divisions: 50,
-              label: '${settings.borderRadius.toInt()}px',
-              onChanged: (v) => ref
-                  .read(settingsProvider.notifier)
-                  .setBorderRadiusLive(v),
-              onChangeEnd: (v) =>
-                  ref.read(settingsProvider.notifier).setBorderRadius(v),
+            // ExcludeSemantics：Slider 的 onChanged 每帧触发，每次都更新
+            // settingsProvider → 重建整个设置页 → 向 AXTree 提交新语义树。
+            // Slider 自身的语义节点会在每帧 announcing value，叠加全树重建，
+            // 导致 Windows accessibility_bridge AXTree diff 失败。包裹后
+            // Slider 不再贡献语义节点，旁边的 Text 仍可朗读当前值。
+            child: ExcludeSemantics(
+              child: Slider(
+                value: borderRadius,
+                min: 0,
+                max: 50,
+                divisions: 50,
+                label: '${borderRadius.toInt()}px',
+                onChanged: (v) => ref
+                    .read(settingsProvider.notifier)
+                    .setBorderRadiusLive(v),
+                onChangeEnd: (v) =>
+                    ref.read(settingsProvider.notifier).setBorderRadius(v),
+              ),
             ),
           ),
         ],
         ListTile(
           title: Text(l.density),
-          subtitle: Text(_densityLabel(settings.density, l)),
+          subtitle: Text(_densityLabel(density, l)),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => _showDensityDialog(context, ref, settings.density, l),
+          onTap: () => _showDensityDialog(context, ref, density, l),
         ),
         ListTile(
           title: Text(l.iconSize),
-          subtitle: Text('${settings.iconSize}px'),
+          subtitle: Text('$iconSize px'),
           trailing: SizedBox(
             width: 200,
-            child: Slider(
-              value: settings.iconSize.toDouble(),
-              min: 12,
-              max: 36,
-              divisions: 24,
-              label: '${settings.iconSize}px',
-              onChanged: (v) => ref
-                  .read(settingsProvider.notifier)
-                  .setIconSizeLive(v.round()),
-              onChangeEnd: (v) => ref
-                  .read(settingsProvider.notifier)
-                  .setIconSize(v.round()),
+            child: ExcludeSemantics(
+              child: Slider(
+                value: iconSize.toDouble(),
+                min: 12,
+                max: 36,
+                divisions: 24,
+                label: '$iconSize px',
+                onChanged: (v) => ref
+                    .read(settingsProvider.notifier)
+                    .setIconSizeLive(v.round()),
+                onChangeEnd: (v) => ref
+                    .read(settingsProvider.notifier)
+                    .setIconSize(v.round()),
+              ),
             ),
           ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: _buildPreviewButton(theme, settings, l),
+          child: _buildPreviewButton(
+            theme,
+            buttonStyle: buttonStyle,
+            borderRadius: borderRadius,
+            l: l,
+          ),
         ),
       ],
     );
@@ -101,14 +132,15 @@ class ComponentSettingsSection extends ConsumerWidget {
 
   Widget _buildButtonStyleSelector(
     BuildContext context,
-    WidgetRef ref,
-    AppSettings settings,
-    AppLocalizations l,
-  ) {
+    WidgetRef ref, {
+    required AppButtonStyle buttonStyle,
+    required double borderRadius,
+    required AppLocalizations l,
+  }) {
     final theme = Theme.of(context);
     return Row(
       children: AppButtonStyle.values.map((style) {
-        final isSelected = settings.buttonStyle == style;
+        final isSelected = buttonStyle == style;
         final label = switch (style) {
           AppButtonStyle.rounded => l.rounded,
           AppButtonStyle.sharp => l.sharp,
@@ -120,8 +152,11 @@ class ComponentSettingsSection extends ConsumerWidget {
             child: GestureDetector(
               onTap: () =>
                   ref.read(settingsProvider.notifier).setButtonStyle(style),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+              // Container 替代 AnimatedContainer：
+              // 200ms 动画在选中状态切换时会产生 12 帧动画序列，每帧都向
+              // AXTree 提交语义节点更新。叠加 Slider 的 onChanged 和全树重建，
+              // 会触发 Windows accessibility_bridge AXTree diff 失败。
+              child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected
@@ -154,11 +189,15 @@ class ComponentSettingsSection extends ConsumerWidget {
   }
 
   Widget _buildPreviewButton(
-    ThemeData theme,
-    AppSettings settings,
-    AppLocalizations l,
-  ) {
-    final br = settings.effectiveBorderRadius;
+    ThemeData theme, {
+    required AppButtonStyle buttonStyle,
+    required double borderRadius,
+    required AppLocalizations l,
+  }) {
+    // effectiveBorderRadius 是 derived：根据 buttonStyle 计算。
+    final br = buttonStyle == AppButtonStyle.rounded
+        ? borderRadius
+        : 0.0;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(8),

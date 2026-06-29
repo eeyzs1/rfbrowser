@@ -24,6 +24,8 @@ abstract class _CanvasPainterBase extends CustomPainter {
   late final Rect visibleWorldRect;
   late final List<String> selectedCardIds;
   late final String? connectingFromCardId;
+  late final ConnectionSide? connectingFromSide;
+  late final double connectingFromSideOffset;
   late final List<String> searchMatchedIds;
   late final int searchActiveIndex;
   late final Offset? connectingPreviewEnd;
@@ -47,6 +49,16 @@ abstract class _CanvasPainterBase extends CustomPainter {
   late final double animationValue;
   late final Map<String, ui.Image> cardImageCache;
 
+  // Lazily-computed lookup maps. Built once per painter instance (the painter
+  // is recreated when shouldRepaint detects a change). Avoids rebuilding these
+  // maps on every paint() call within the same instance.
+  late final Map<String, CanvasCard> _cardByIdMap = {
+    for (final c in cards) c.id: c,
+  };
+  late final Map<String, Note> _noteMap = {
+    for (final n in knowledgeState.notes) n.id: n,
+  };
+
   _CanvasPainterBase({
     required this.cards,
     required this.connections,
@@ -60,6 +72,8 @@ abstract class _CanvasPainterBase extends CustomPainter {
     required this.visibleWorldRect,
     required this.selectedCardIds,
     this.connectingFromCardId,
+    this.connectingFromSide,
+    this.connectingFromSideOffset = 0.5,
     required this.searchMatchedIds,
     required this.searchActiveIndex,
     this.connectingPreviewEnd,
@@ -220,6 +234,8 @@ class CanvasPainter extends _CanvasPainterBase
     required super.visibleWorldRect,
     required super.selectedCardIds,
     super.connectingFromCardId,
+    super.connectingFromSide,
+    super.connectingFromSideOffset,
     required super.searchMatchedIds,
     required super.searchActiveIndex,
     super.connectingPreviewEnd,
@@ -282,6 +298,8 @@ class CanvasPainter extends _CanvasPainterBase
         visibleWorldRect != old.visibleWorldRect ||
         !identical(selectedCardIds, old.selectedCardIds) ||
         connectingFromCardId != old.connectingFromCardId ||
+        connectingFromSide != old.connectingFromSide ||
+        connectingFromSideOffset != old.connectingFromSideOffset ||
         !identical(searchMatchedIds, old.searchMatchedIds) ||
         searchActiveIndex != old.searchActiveIndex ||
         connectingPreviewEnd != old.connectingPreviewEnd ||

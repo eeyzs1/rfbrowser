@@ -11,6 +11,24 @@ mixin _CanvasScaleGesturesMixin on _CanvasViewStateBase {
     _lastScale = _scale;
     final worldPos = _screenToWorld(details.localFocalPoint);
 
+    // 连接点命中测试必须在 resize handle 和卡片体之前，否则连接点的命中区域
+    // 会被 resize handle（card.x+width ± 14px）或卡片体覆盖，导致无法拉出连线。
+    // 连接点位于卡片边缘外 8px，命中半径 10px，因此其命中区域有部分在卡片内部
+    // （card_edge - 2px 到 card_edge + 18px），必须先于此处的其他测试处理。
+    final portHit = _hitTestConnectionPoint(worldPos);
+    if (portHit != null) {
+      if (ref.read(canvasProvider.notifier).isLayerLocked(portHit.$1)) return;
+      setState(() {
+        _connectingFromCardId = portHit.$1;
+        _connectingFromSide = portHit.$2;
+        _connectingFromSideOffset = portHit.$3;
+        _isDraggingFromPort = true;
+        _connectingPreviewEnd = _w2s(worldPos.dx, worldPos.dy);
+        ref.read(canvasProvider.notifier).selectConnection(null);
+      });
+      return;
+    }
+
     final selectedIds = _selectedCardIds;
     if (selectedIds.length == 1) {
       final selectedCard = ref
@@ -88,19 +106,7 @@ mixin _CanvasScaleGesturesMixin on _CanvasViewStateBase {
       return;
     }
 
-    final portHit = _hitTestConnectionPoint(worldPos);
-    if (portHit != null) {
-      if (ref.read(canvasProvider.notifier).isLayerLocked(portHit.$1)) return;
-      setState(() {
-        _connectingFromCardId = portHit.$1;
-        _connectingFromSide = portHit.$2;
-        _connectingFromSideOffset = portHit.$3;
-        _isDraggingFromPort = true;
-        _connectingPreviewEnd = _w2s(worldPos.dx, worldPos.dy);
-        ref.read(canvasProvider.notifier).selectConnection(null);
-      });
-      return;
-    }
+    // 连接点已在函数开头处理（先于 resize handle 和卡片体）
     final wpHit = _hitTestWaypoint(worldPos);
     if (wpHit != null) {
       _draggingWaypointConnId = wpHit.$1;

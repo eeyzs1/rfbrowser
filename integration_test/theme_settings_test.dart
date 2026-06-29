@@ -41,57 +41,69 @@ void main() {
       await prefs.remove('backgroundOpacity');
     });
 
-    testWidgets('renders all three color sections', (tester) async {
+    testWidgets('renders all four color sections', (tester) async {
       await pumpThemeSettings(tester);
 
       expect(find.text('Theme Color'), findsOneWidget);
       expect(find.text('Background Color'), findsOneWidget);
-      expect(find.text('Surface'), findsAtLeast(1));
+      // l10n 的 surfaceColor 在 en 中是 'Surface'，不是 'Surface Color'。
+      expect(find.text('Surface'), findsOneWidget);
+      expect(find.text('Font Color'), findsOneWidget);
     });
 
-    testWidgets('renders 10 theme color presets', (tester) async {
+    // 4 个色板的 label 全局唯一（参见 theme_settings_section.dart 中
+    // _themePresets/_bgPresets/_surfacePresets/_fontPresets 的注释），
+    // 所以 findsOneWidget 即可精确定位每个预设。
+    testWidgets('renders 16 theme color presets', (tester) async {
       await pumpThemeSettings(tester);
 
-      expect(find.text('Ocean'), findsOneWidget);
-      expect(find.text('Violet'), findsOneWidget);
-      expect(find.text('Rose'), findsOneWidget);
-      expect(find.text('Emerald'), findsOneWidget);
-      expect(find.text('Amber'), findsOneWidget);
-      expect(find.text('Indigo'), findsOneWidget);
-      expect(find.text('Teal'), findsOneWidget);
-      expect(find.text('Coral'), findsOneWidget);
-      expect(find.text('Mint'), findsOneWidget);
-      expect(find.text('Slate'), findsAtLeast(1));
+      const labels = [
+        'Scarlet', 'Red', 'Sunset', 'Marigold', 'Yellow', 'Lime',
+        'Emerald', 'Teal', 'Cyan', 'Ocean', 'Indigo', 'Violet',
+        'Purple', 'Magenta', 'Pink', 'Strawberry',
+      ];
+      for (final label in labels) {
+        expect(find.text(label), findsOneWidget, reason: 'theme preset: $label');
+      }
     });
 
-    testWidgets('renders 10 background color presets', (tester) async {
+    testWidgets('renders 16 background color presets', (tester) async {
       await pumpThemeSettings(tester);
 
-      expect(find.text('Midnight'), findsOneWidget);
-      expect(find.text('Obsidian'), findsOneWidget);
-      expect(find.text('Espresso'), findsOneWidget);
-      expect(find.text('Deep Sea'), findsOneWidget);
-      expect(find.text('Plum'), findsOneWidget);
-      expect(find.text('Charcoal'), findsOneWidget);
-      expect(find.text('Forest'), findsOneWidget);
-      expect(find.text('Linen'), findsOneWidget);
-      expect(find.text('Fog'), findsOneWidget);
-      expect(find.text('Dune'), findsOneWidget);
+      const labels = [
+        'Midnight', 'Obsidian', 'Mocha', 'Deep Sea', 'Onyx', 'Forest',
+        'Wine', 'Slate Dark', 'Cream', 'Mist', 'Parchment', 'Sagebrush',
+        'Dune', 'Pearl', 'Blush', 'Linen',
+      ];
+      for (final label in labels) {
+        expect(find.text(label), findsOneWidget, reason: 'bg preset: $label');
+      }
     });
 
-    testWidgets('renders 10 surface color presets', (tester) async {
+    testWidgets('renders 16 surface color presets', (tester) async {
       await pumpThemeSettings(tester);
 
-      expect(find.text('Slate'), findsWidgets);
-      expect(find.text('Graphite'), findsOneWidget);
-      expect(find.text('Bronze'), findsOneWidget);
-      expect(find.text('Steel'), findsOneWidget);
-      expect(find.text('Ivory'), findsOneWidget);
-      expect(find.text('Mist'), findsOneWidget);
-      expect(find.text('Sandstone'), findsOneWidget);
-      expect(find.text('Sage'), findsOneWidget);
-      expect(find.text('Lavender'), findsOneWidget);
-      expect(find.text('Pearl'), findsOneWidget);
+      const labels = [
+        'Slate Blue', 'Graphite', 'Bronze', 'Cinnamon', 'Ivory', 'Sky',
+        'Sandstone', 'Sage', 'Peach', 'Lavender', 'Pearl Surface', 'Mint',
+        'Rose', 'Amber', 'Clay', 'Steel',
+      ];
+      for (final label in labels) {
+        expect(find.text(label), findsOneWidget, reason: 'surface preset: $label');
+      }
+    });
+
+    testWidgets('renders 16 font color presets', (tester) async {
+      await pumpThemeSettings(tester);
+
+      const labels = [
+        'White', 'Ivory White', 'Butter', 'Pearl White', 'Warm Gray', 'Gray',
+        'Slate', 'Charcoal', 'Black', 'Sepia', 'Coffee', 'Caramel',
+        'Sand', 'Honey', 'Crimson', 'Navy',
+      ];
+      for (final label in labels) {
+        expect(find.text(label), findsOneWidget, reason: 'font preset: $label');
+      }
     });
 
     testWidgets('renders custom color button for each section', (tester) async {
@@ -166,11 +178,13 @@ void main() {
 
       final oceanGesture = find.ancestor(
         of: find.text('Ocean'),
-        matching: find.byType(AnimatedContainer),
+        // 修复 AXTree 时将 AnimatedContainer 改为 Container（避免 200ms 动画
+        // 在主题色变化时产生帧序列触发 Windows accessibility_bridge 更新失败）。
+        matching: find.byType(Container),
       );
       expect(oceanGesture, findsOneWidget);
 
-      final container = tester.widget<AnimatedContainer>(oceanGesture.first);
+      final container = tester.widget<Container>(oceanGesture.first);
       final decoration = container.decoration as BoxDecoration;
       expect(decoration.border, isNotNull);
     });

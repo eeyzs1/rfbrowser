@@ -10,7 +10,9 @@ class LanguageSettingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider);
+    // 用 select 只 watch locale 字段（参见 editor_settings_section.dart 中的
+    // 详细注释）。本 section 只在 locale 真正变化时重建。
+    final locale = ref.watch(settingsProvider.select((s) => s.locale));
     final l = AppLocalizations.of(context)!;
 
     return SettingsSection(
@@ -18,9 +20,9 @@ class LanguageSettingsSection extends ConsumerWidget {
       children: [
         ListTile(
           title: Text(l.language),
-          subtitle: Text(_localeLabel(settings.locale, l)),
+          subtitle: Text(_localeLabel(locale, l)),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => _showLanguageDialog(context, ref, settings.locale, l),
+          onTap: () => _showLanguageDialog(context, ref, locale, l),
         ),
       ],
     );

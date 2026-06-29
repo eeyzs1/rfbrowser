@@ -40,23 +40,23 @@ mixin _CanvasExportPanelsMixin on _CanvasViewStateBase {
   }
 
   @override
-  void _handleExport(String format) {
+  Future<void> _handleExport(String format) async {
     final notifier = ref.read(canvasProvider.notifier);
     switch (format) {
       case 'svg':
-        final svg = notifier.exportToSvg();
-        _saveExportFile('canvas_${notifier.activeCanvasName}.svg', svg);
+        final svg = await notifier.exportToSvg();
+        await _saveExportFile('canvas_${notifier.activeCanvasName}.svg', svg);
       case 'markdown':
         final md = notifier.exportToMarkdown();
-        _saveExportFile('canvas_${notifier.activeCanvasName}.md', md);
+        await _saveExportFile('canvas_${notifier.activeCanvasName}.md', md);
       case 'png':
-        _exportToPng();
+        await _exportToPng();
       case 'html':
         final html = notifier.exportToHtml();
-        _saveExportFile('canvas_${notifier.activeCanvasName}.html', html);
+        await _saveExportFile('canvas_${notifier.activeCanvasName}.html', html);
       case 'svgWithMeta':
-        final (svg, _) = notifier.exportWithEmbeddedData();
-        _saveExportFile('canvas_${notifier.activeCanvasName}.svg', svg);
+        final (svg, _) = await notifier.exportWithEmbeddedData();
+        await _saveExportFile('canvas_${notifier.activeCanvasName}.svg', svg);
     }
   }
 
@@ -111,7 +111,7 @@ mixin _CanvasExportPanelsMixin on _CanvasViewStateBase {
   }
 
   @override
-  void _saveExportFile(String filename, String content) async {
+  Future<void> _saveExportFile(String filename, String content) async {
     final l = AppLocalizations.of(context)!;
     try {
       final vaultPath = ref.read(vaultProvider).currentVault?.path;

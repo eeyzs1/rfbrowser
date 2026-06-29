@@ -14,7 +14,6 @@ class AIFloat extends StatefulWidget {
 
 class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
-  bool _isPressed = false;
   late final AnimationController _animationController;
   late final Animation<double> _scaleAnimation;
   late final Animation<double> _fadeAnimation;
@@ -36,11 +35,6 @@ class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
       curve: Curves.easeOut,
       reverseCurve: Curves.easeIn,
     );
-  }
-
-  @override
-  void didUpdateWidget(covariant AIFloat oldWidget) {
-    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -110,24 +104,23 @@ class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
                           Positioned(
                             top: DesignSpacing.xs,
                             right: DesignSpacing.xs,
-                            child: Semantics(
-                              button: true,
-                              label: MaterialLocalizations.of(
+                            // 直接 IconButton（不用 Semantics 包裹）：
+                            // 之前 Semantics(button: true) + IconButton 创造两个 button
+                            // 节点（外层显式 + 内层 InkWell 自动），且动态 label
+                            // ('Open AI Chat'/'Close AI Chat') 翻转时结构不一致
+                            // → AXTree diff 失败。直接 IconButton 自带 button 语义且稳定。
+                            child: IconButton(
+                              icon: const Icon(Icons.close, size: 16),
+                              onPressed: _collapse,
+                              tooltip: MaterialLocalizations.of(
                                 context,
                               ).closeButtonLabel,
-                              child: IconButton(
-                                icon: const Icon(Icons.close, size: 16),
-                                onPressed: _collapse,
-                                tooltip: MaterialLocalizations.of(
-                                  context,
-                                ).closeButtonLabel,
-                                constraints: const BoxConstraints(
-                                  minWidth: DesignTouchTarget.iconButtonSize,
-                                  minHeight: DesignTouchTarget.iconButtonSize,
-                                ),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.black26,
-                                ),
+                              constraints: const BoxConstraints(
+                                minWidth: DesignTouchTarget.iconButtonSize,
+                                minHeight: DesignTouchTarget.iconButtonSize,
+                              ),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.black26,
                               ),
                             ),
                           ),
@@ -142,32 +135,24 @@ class _AIFloatState extends State<AIFloat> with SingleTickerProviderStateMixin {
         Positioned(
           right: DesignSpacing.lg,
           bottom: DesignSpacing.lg,
-          child: Semantics(
-            button: true,
-            label: _isExpanded ? 'Close AI Chat' : 'Open AI Chat',
-            child: GestureDetector(
-              onTapDown: (_) => setState(() => _isPressed = true),
-              onTapUp: (_) {
-                setState(() => _isPressed = false);
-                _toggle();
-              },
-              onTapCancel: () => setState(() => _isPressed = false),
-              child: AnimatedScale(
-                scale: _isPressed ? 0.95 : 1.0,
-                duration: const Duration(milliseconds: 100),
-                curve: Curves.easeInOut,
-                child: FloatingActionButton(
-                  heroTag: 'ai_float',
-                  onPressed: null,
-                  mini: true,
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: Icon(
-                    _isExpanded ? Icons.close : Icons.psychology,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                ),
-              ),
+          // 关键修复：FAB 直接用 onPressed 回调，去掉 GestureDetector/AnimatedScale/Semantics 三层包裹。
+          // 之前 FloatingActionButton(onPressed: null) + GestureDetector + AnimatedScale + 动态 label
+          // → 每按一次 6 帧 AnimatedScale + 切换 _isExpanded 时 label 从 'Open' 变 'Close'
+          //   → SemanticsNode 结构翻转 → AXTree diff 失败。
+          // 改用 onPressed: _toggle 让 FAB 自己处理 tap，去掉所有包裹层。
+          child: FloatingActionButton(
+            heroTag: 'ai_float',
+            onPressed: _toggle,
+            mini: true,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            // 静态 Icon，无 AnimatedSwitcher。
+            // 之前 AnimatedSwitcher + ValueKey(_isExpanded) 每次切换会 unmount + remount Icon
+            // → SemanticsNode 节点重新创建/销毁 → AXTree diff 失败。
+            // 改用条件渲染 + 简单 Icon，不产生节点替换。
+            child: Icon(
+              _isExpanded ? Icons.close : Icons.psychology,
+              size: 20,
+              color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),
         ),

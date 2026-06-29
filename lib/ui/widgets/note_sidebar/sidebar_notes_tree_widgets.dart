@@ -1,63 +1,112 @@
 part of '../note_sidebar.dart';
 
-/// Widget builders for the notes tree: folder rows, note rows, and the
-/// folder context menu. Extracted into its own part file because the
-/// drag-and-drop + hover-state UI makes them the largest chunk of the
-/// tree renderer.
-mixin _SidebarNotesTreeWidgetsMixin on _NoteSidebarStateBase {
-  Widget _noteFolderRow({
-    required String name,
-    required int depth,
-    required bool isExpanded,
-    required bool isRoot,
-    required int noteCount,
-    required String folderPath,
-    required AppLocalizations l,
-    required VoidCallback onToggle,
-    required VoidCallback onNewNote,
-    required VoidCallback onNewFolder,
-    VoidCallback? onRename,
-    VoidCallback? onDelete,
-  }) {
+/// Widget builders for the notes tree: folder rows and note rows.
+///
+/// [_noteFolderRow] and [_noteRow] used to be inline functions on the
+/// sidebar state that called the PARENT `setState` on every hover
+/// enter/exit, rebuilding all ~5000 row widgets. They are now small
+/// [StatefulWidget]s that manage their own hover state locally, so a
+/// hover change only rebuilds the single affected row.
+
+/// Small icon button used inside folder/note rows. Mirrors the `_ib`
+/// helper on `_NoteSidebarStateBase` but as a top-level function so the
+/// row [StatefulWidget]s (which are not mixins) can use it.
+Widget _rowIconButton(
+  BuildContext context,
+  IconData icon,
+  VoidCallback? onPressed,
+  String tooltip,
+) {
+  return IconButton(
+    icon: Icon(
+      icon,
+      size: 12,
+      color: Theme.of(context).hintColor.withValues(alpha: 0.7),
+    ),
+    onPressed: onPressed,
+    padding: EdgeInsets.zero,
+    constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+    tooltip: tooltip,
+  );
+}
+
+/// A single folder row in the notes tree. Hover state is local so it
+/// never triggers a full sidebar rebuild.
+class _NoteFolderRow extends StatefulWidget {
+  final String name;
+  final int depth;
+  final bool isExpanded;
+  final bool isRoot;
+  final int noteCount;
+  final String folderPath;
+  final bool hasChildren;
+  final AppLocalizations l;
+  final double baseFontSize;
+  final bool isDraggingNote;
+  final VoidCallback onToggle;
+  final VoidCallback onNewNote;
+  final VoidCallback onNewFolder;
+  final VoidCallback? onRename;
+  final VoidCallback? onDelete;
+  final ValueChanged<String> onAcceptNote;
+
+  const _NoteFolderRow({
+    required this.name,
+    required this.depth,
+    required this.isExpanded,
+    required this.isRoot,
+    required this.noteCount,
+    required this.folderPath,
+    required this.hasChildren,
+    required this.l,
+    required this.baseFontSize,
+    required this.isDraggingNote,
+    required this.onToggle,
+    required this.onNewNote,
+    required this.onNewFolder,
+    this.onRename,
+    this.onDelete,
+    required this.onAcceptNote,
+  });
+
+  @override
+  State<_NoteFolderRow> createState() => _NoteFolderRowState();
+}
+
+class _NoteFolderRowState extends State<_NoteFolderRow> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return DragTarget<String>(
-      onWillAcceptWithDetails: (details) => _draggingNoteId != null,
-      onAcceptWithDetails: (details) {
-        if (_draggingNoteId != null) {
-          ref
-              .read(knowledgeProvider.notifier)
-              .moveNote(_draggingNoteId!, folderPath)
-              .then((_) {
-                _scanDiskFolders();
-              });
-        }
-      },
+      onWillAcceptWithDetails: (_) => widget.isDraggingNote,
+      onAcceptWithDetails: (details) => widget.onAcceptNote(details.data),
       builder: (context, candidateData, rejectedData) {
         final isDragOver = candidateData.isNotEmpty;
-        final theme = Theme.of(context);
-        final isHovered = _hoveredNoteFolder == folderPath;
         return MouseRegion(
-          onEnter: (_) => setState(() => _hoveredNoteFolder = folderPath),
-          onExit: (_) => setState(() => _hoveredNoteFolder = null),
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
           child: GestureDetector(
             onSecondaryTapUp: (d) => _showFolderContextMenu(
+              context,
               d.globalPosition,
-              onNewNote,
-              onNewFolder,
-              onRename,
-              onDelete,
-              l,
+              widget.onNewNote,
+              widget.onNewFolder,
+              widget.onRename,
+              widget.onDelete,
+              widget.l,
             ),
             child: Container(
-              padding: EdgeInsets.only(left: depth * 14.0 + 4.0),
+              padding: EdgeInsets.only(left: widget.depth * 14.0 + 4.0),
               color: isDragOver
                   ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                  : isHovered
-                  ? theme.colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.3,
-                    )
-                  : null,
+                  : _isHovered
+                      ? theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.3)
+                      : null,
               child: InkWell(
-                onTap: onToggle,
+                onTap: widget.onToggle,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     vertical: 5,
@@ -66,51 +115,77 @@ mixin _SidebarNotesTreeWidgetsMixin on _NoteSidebarStateBase {
                   child: Row(
                     children: [
                       Icon(
-                        isExpanded ? Icons.expand_more : Icons.chevron_right,
+                        widget.isExpanded
+                            ? Icons.expand_more
+                            : Icons.chevron_right,
                         size: 14,
                         color: theme.hintColor,
                       ),
                       const SizedBox(width: 2),
                       Icon(
-                        isExpanded ? Icons.folder_open : Icons.folder,
+                        widget.isExpanded
+                            ? Icons.folder_open
+                            : Icons.folder,
                         size: 15,
-                        color: isRoot
+                        color: widget.isRoot
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.primary.withValues(alpha: 0.7),
+                            : theme.colorScheme.primary
+                                .withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 5),
                       Expanded(
                         child: Text(
-                          isRoot && name.isEmpty ? 'Vault' : name,
+                          widget.isRoot && widget.name.isEmpty
+                              ? 'Vault'
+                              : widget.name,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: _baseFontSize,
+                            fontSize: widget.baseFontSize,
                             fontWeight: FontWeight.w600,
-                            color: isRoot ? theme.colorScheme.primary : null,
+                            color: widget.isRoot
+                                ? theme.colorScheme.primary
+                                : null,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (isHovered && !isRoot) ...[
-                        _ib(Icons.edit_outlined, onRename, l.rename),
-                        _ib(Icons.delete_outline, onDelete, l.delete),
-                      ],
-                      if (isHovered) ...[
-                        _ib(Icons.add, onNewNote, l.newNote),
-                        _ib(
-                          Icons.create_new_folder,
-                          onNewFolder,
-                          l.newSubfolder,
+                      if (_isHovered && !widget.isRoot) ...[
+                        _rowIconButton(
+                          context,
+                          Icons.edit_outlined,
+                          widget.onRename,
+                          widget.l.rename,
+                        ),
+                        _rowIconButton(
+                          context,
+                          Icons.delete_outline,
+                          widget.onDelete,
+                          widget.l.delete,
                         ),
                       ],
-                      if (!isHovered && noteCount > 0)
+                      if (_isHovered) ...[
+                        _rowIconButton(
+                          context,
+                          Icons.add,
+                          widget.onNewNote,
+                          widget.l.newNote,
+                        ),
+                        _rowIconButton(
+                          context,
+                          Icons.create_new_folder,
+                          widget.onNewFolder,
+                          widget.l.newSubfolder,
+                        ),
+                      ],
+                      if (!_isHovered && widget.noteCount > 0)
                         Padding(
                           padding: const EdgeInsets.only(left: 4),
                           child: Text(
-                            '$noteCount',
+                            '${widget.noteCount}',
                             style: TextStyle(
-                              fontSize: _baseFontSize - 2,
-                              color: theme.hintColor.withValues(alpha: 0.6),
+                              fontSize: widget.baseFontSize - 2,
+                              color:
+                                  theme.hintColor.withValues(alpha: 0.6),
                             ),
                           ),
                         ),
@@ -124,18 +199,49 @@ mixin _SidebarNotesTreeWidgetsMixin on _NoteSidebarStateBase {
       },
     );
   }
+}
 
-  Widget _noteRow(
-    Note note,
-    int depth,
-    bool isActive,
-    bool isHovered,
-    AppLocalizations l,
-  ) {
+/// A single note row in the notes tree. Hover state is local so it
+/// never triggers a full sidebar rebuild.
+class _NoteRow extends StatefulWidget {
+  final Note note;
+  final int depth;
+  final bool isActive;
+  final AppLocalizations l;
+  final double baseFontSize;
+  final VoidCallback onTap;
+  final VoidCallback onMove;
+  final VoidCallback onDelete;
+  final VoidCallback onDragStarted;
+  final VoidCallback onDragEnd;
+
+  const _NoteRow({
+    required this.note,
+    required this.depth,
+    required this.isActive,
+    required this.l,
+    required this.baseFontSize,
+    required this.onTap,
+    required this.onMove,
+    required this.onDelete,
+    required this.onDragStarted,
+    required this.onDragEnd,
+  });
+
+  @override
+  State<_NoteRow> createState() => _NoteRowState();
+}
+
+class _NoteRowState extends State<_NoteRow> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Draggable<String>(
-      data: note.id,
-      onDragStarted: () => setState(() => _draggingNoteId = note.id),
-      onDragEnd: (_) => setState(() => _draggingNoteId = null),
+      data: widget.note.id,
+      onDragStarted: widget.onDragStarted,
+      onDragEnd: (_) => widget.onDragEnd(),
       feedback: Material(
         elevation: 4,
         borderRadius: BorderRadius.circular(4),
@@ -145,12 +251,10 @@ mixin _SidebarNotesTreeWidgetsMixin on _NoteSidebarStateBase {
             vertical: DesignSpacing.xs,
           ),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.3),
+              color: theme.colorScheme.primary.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -159,36 +263,28 @@ mixin _SidebarNotesTreeWidgetsMixin on _NoteSidebarStateBase {
               Icon(
                 Icons.description,
                 size: 14,
-                color: Theme.of(context).colorScheme.primary,
+                color: theme.colorScheme.primary,
               ),
               const SizedBox(width: 6),
               Text(
-                note.title,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontSize: _baseFontSize),
+                widget.note.title,
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(fontSize: widget.baseFontSize),
               ),
             ],
           ),
         ),
       ),
       child: MouseRegion(
-        onEnter: (_) => setState(() => _hoveredNoteId = note.id),
-        onExit: (_) => setState(() => _hoveredNoteId = null),
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
         child: Container(
-          padding: EdgeInsets.only(left: depth * 14.0 + 4.0),
-          color: isActive
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+          padding: EdgeInsets.only(left: widget.depth * 14.0 + 4.0),
+          color: widget.isActive
+              ? theme.colorScheme.primary.withValues(alpha: 0.08)
               : null,
           child: InkWell(
-            onTap: () {
-              ref.read(knowledgeProvider.notifier).openNote(note.id);
-              if (widget.onNotePreview != null) {
-                widget.onNotePreview!(note.id);
-              } else {
-                widget.onNoteOpened?.call();
-              }
-            },
+            onTap: widget.onTap,
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 vertical: DesignSpacing.xs,
@@ -199,35 +295,38 @@ mixin _SidebarNotesTreeWidgetsMixin on _NoteSidebarStateBase {
                   Icon(
                     Icons.description_outlined,
                     size: 14,
-                    color: isActive
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).hintColor,
+                    color: widget.isActive
+                        ? theme.colorScheme.primary
+                        : theme.hintColor,
                   ),
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
-                      note.title,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontSize: _baseFontSize,
-                        color: isActive
-                            ? Theme.of(context).colorScheme.primary
+                      widget.note.title,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: widget.baseFontSize,
+                        color: widget.isActive
+                            ? theme.colorScheme.primary
                             : null,
-                        fontWeight: isActive ? FontWeight.w600 : null,
+                        fontWeight:
+                            widget.isActive ? FontWeight.w600 : null,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (isHovered) ...[
-                    _ib(
+                  if (_isHovered) ...[
+                    _rowIconButton(
+                      context,
                       Icons.drive_file_move_outline,
-                      () => _showMoveNoteDialog(note),
-                      l.move,
+                      widget.onMove,
+                      widget.l.move,
                     ),
-                    _ib(
+                    _rowIconButton(
+                      context,
                       Icons.close,
-                      () => _confirmDeleteNote(note.title, note.id),
-                      l.delete,
+                      widget.onDelete,
+                      widget.l.delete,
                     ),
                   ],
                 ],
@@ -238,92 +337,92 @@ mixin _SidebarNotesTreeWidgetsMixin on _NoteSidebarStateBase {
       ),
     );
   }
+}
 
-  void _showFolderContextMenu(
-    Offset pos,
-    VoidCallback onNewNote,
-    VoidCallback onNewFolder,
-    VoidCallback? onRename,
-    VoidCallback? onDelete,
-    AppLocalizations l,
-  ) {
-    final items = <PopupMenuEntry<String>>[
+/// Shows the folder right-click context menu. Top-level so the
+/// [_NoteFolderRow] widget (which is not a mixin) can call it.
+void _showFolderContextMenu(
+  BuildContext context,
+  Offset pos,
+  VoidCallback onNewNote,
+  VoidCallback onNewFolder,
+  VoidCallback? onRename,
+  VoidCallback? onDelete,
+  AppLocalizations l,
+) {
+  final theme = Theme.of(context);
+  final items = <PopupMenuEntry<String>>[
+    PopupMenuItem(
+      value: 'new_note',
+      child: Row(
+        children: [
+          Icon(Icons.add, size: 14, color: theme.hintColor),
+          const SizedBox(width: 8),
+          Text(l.newNote),
+        ],
+      ),
+    ),
+    PopupMenuItem(
+      value: 'new_folder',
+      child: Row(
+        children: [
+          Icon(Icons.create_new_folder, size: 14, color: theme.hintColor),
+          const SizedBox(width: 8),
+          Text(l.newSubfolder),
+        ],
+      ),
+    ),
+  ];
+  if (onRename != null) {
+    items.add(
       PopupMenuItem(
-        value: 'new_note',
+        value: 'rename',
         child: Row(
           children: [
-            Icon(Icons.add, size: 14, color: Theme.of(context).hintColor),
+            Icon(Icons.edit, size: 14, color: theme.hintColor),
             const SizedBox(width: 8),
-            Text(l.newNote),
+            Text(l.rename),
           ],
         ),
       ),
+    );
+  }
+  if (onDelete != null) {
+    items.add(const PopupMenuDivider());
+    items.add(
       PopupMenuItem(
-        value: 'new_folder',
+        value: 'delete',
         child: Row(
           children: [
             Icon(
-              Icons.create_new_folder,
+              Icons.delete_outline,
               size: 14,
-              color: Theme.of(context).hintColor,
+              color: theme.colorScheme.error,
             ),
             const SizedBox(width: 8),
-            Text(l.newSubfolder),
+            Text(
+              l.delete,
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
           ],
         ),
       ),
-    ];
-    if (onRename != null) {
-      items.add(
-        PopupMenuItem(
-          value: 'rename',
-          child: Row(
-            children: [
-              Icon(Icons.edit, size: 14, color: Theme.of(context).hintColor),
-              const SizedBox(width: 8),
-              Text(l.rename),
-            ],
-          ),
-        ),
-      );
-    }
-    if (onDelete != null) {
-      items.add(const PopupMenuDivider());
-      items.add(
-        PopupMenuItem(
-          value: 'delete',
-          child: Row(
-            children: [
-              Icon(
-                Icons.delete_outline,
-                size: 14,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                l.delete,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(pos.dx, pos.dy, pos.dx + 1, pos.dy + 1),
-      items: items,
-    ).then((v) {
-      switch (v) {
-        case 'new_note':
-          onNewNote();
-        case 'new_folder':
-          onNewFolder();
-        case 'rename':
-          onRename?.call();
-        case 'delete':
-          onDelete?.call();
-      }
-    });
+    );
   }
+  showMenu(
+    context: context,
+    position: RelativeRect.fromLTRB(pos.dx, pos.dy, pos.dx + 1, pos.dy + 1),
+    items: items,
+  ).then((v) {
+    switch (v) {
+      case 'new_note':
+        onNewNote();
+      case 'new_folder':
+        onNewFolder();
+      case 'rename':
+        onRename?.call();
+      case 'delete':
+        onDelete?.call();
+    }
+  });
 }

@@ -178,7 +178,11 @@ class HebbianService {
       limit: recentLimit,
     );
     final now = DateTime.now();
-    var created = 0;
+    // Collect all (fragId, associateId) pairs across the outer+inner
+    // loops, then upsert them in a single batch — previously the double
+    // loop issued one upsertHebbianEdge txn per pair (up to 50 × 2 = 100
+    // separate transactions).
+    final pairs = <(String, String)>[];
     for (final row in rows) {
       final fragId = row['id'] as String;
       final assocs = await _memory.findCrossSessionAssociates(
@@ -187,17 +191,18 @@ class HebbianService {
         limit: 2,
       );
       for (final a in assocs) {
-        await _memory.upsertHebbianEdge(
-          fragId,
-          a.fragment.id,
-          strengthDelta: _reinforcementDelta() * 0.25,
-          stability: _stabilityFromAge(now),
-          now: now,
-        );
-        created++;
+        pairs.add((fragId, a.fragment.id));
       }
     }
-    return created;
+    if (pairs.isNotEmpty) {
+      await _memory.upsertHebbianEdgesBatch(
+        pairs,
+        strengthDelta: _reinforcementDelta() * 0.25,
+        stability: _stabilityFromAge(now),
+        now: now,
+      );
+    }
+    return pairs.length;
   }
 
   void _trimPending(DateTime now) {

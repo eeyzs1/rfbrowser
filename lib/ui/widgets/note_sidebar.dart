@@ -1,5 +1,7 @@
 // ignore_for_file: unused_element, unused_element_parameter
+import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -48,12 +50,18 @@ class NoteSidebar extends ConsumerStatefulWidget {
 abstract class _NoteSidebarStateBase extends ConsumerState<NoteSidebar> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  // Debounce timer for sidebar search input (120ms). Cancels the previous
+  // pending search on each keystroke so we don't scan note content per key.
+  Timer? _searchDebounce;
+  // True while a [compute] isolate is scanning note content for a large vault.
+  bool _isSearching = false;
+  // Monotonic generation guard so stale isolate results (from a superseded
+  // query) are discarded.
+  int _searchGeneration = 0;
   _SidebarTab _activeTab = _SidebarTab.notes;
   final _expandedNoteFolders = <String>{};
   final _expandedBookmarkFolders = <String>{};
-  String? _hoveredNoteId;
   String? _hoveredBookmarkId;
-  String? _hoveredNoteFolder;
   String? _hoveredBookmarkFolder;
   String? _draggingNoteId;
   String? _draggingBookmarkId;
@@ -85,6 +93,7 @@ abstract class _NoteSidebarStateBase extends ConsumerState<NoteSidebar> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -125,32 +134,12 @@ abstract class _NoteSidebarStateBase extends ConsumerState<NoteSidebar> {
   }
 
   List<Note> _filterNotes(List<Note> notes, KnowledgeState knowledgeState) {
-    var filtered = notes;
-    final filter = knowledgeState.noteFilter;
-    if (filter == NoteFilter.hasLinks) {
-      final links = knowledgeState.links;
-      filtered = notes
-          .where(
-            (n) => links.any((l) => l.sourceId == n.id || l.targetId == n.id),
-          )
-          .toList();
-    } else if (filter == NoteFilter.hasTags) {
-      filtered = notes.where((n) => n.tags.isNotEmpty).toList();
-    } else if (filter == NoteFilter.hasAttachments) {
-      filtered = notes
-          .where((n) => n.frontMatter.containsKey('attachments'))
-          .toList();
-    }
-    if (_searchQuery.isEmpty) return filtered;
-    final q = _searchQuery.toLowerCase();
-    return filtered
-        .where(
-          (n) =>
-              n.title.toLowerCase().contains(q) ||
-              n.tags.any((t) => t.toLowerCase().contains(q)) ||
-              n.content.toLowerCase().contains(q),
-        )
-        .toList();
+    return _applyNoteFilter(
+      notes,
+      _searchQuery,
+      knowledgeState.noteFilter,
+      knowledgeState.links,
+    );
   }
 
   /// Returns true when the filtered-notes / trie cache is still valid for
@@ -167,8 +156,15 @@ abstract class _NoteSidebarStateBase extends ConsumerState<NoteSidebar> {
 
   /// Returns the filtered notes list, reusing the cached result when the
   /// inputs are unchanged (the common case during note opening / typing).
+  ///
+  /// While an async (isolate) search is running this returns the stale
+  /// cached list so [build] never blocks; the isolate completion callback
+  /// updates the cache and calls [setState].
   List<Note> _resolvedNotes(KnowledgeState ks) {
     if (_cacheValid(ks)) return _cacheFiltered;
+    // Async search in progress — return stale cache until the isolate lands.
+    if (_isSearching) return _cacheFiltered;
+    // Synchronous path (small vault ≤500 notes, or no content search).
     final filtered = _filterNotes(ks.notes, ks);
     _cacheSrcNotes = ks.notes;
     _cacheFilter = ks.noteFilter;
@@ -178,6 +174,48 @@ abstract class _NoteSidebarStateBase extends ConsumerState<NoteSidebar> {
     _cacheFiltered = filtered;
     _cacheTrie = null;
     return filtered;
+  }
+
+  /// Called by the debounced search handler (see
+  /// [_SidebarNotesToolbarMixin]). Sets the query and, for large vaults
+  /// (>500 notes) with a non-empty query, runs the content scan in a
+  /// worker isolate via [compute] so the UI thread never blocks
+  /// (Rule 6.1). For small vaults the synchronous path in
+  /// [_resolvedNotes] is fast enough.
+  void _applySearchQuery(String q) {
+    final ks = ref.read(knowledgeProvider);
+    final useIsolate = q.isNotEmpty && ks.notes.length > 500;
+    if (!useIsolate) {
+      setState(() => _searchQuery = q);
+      return;
+    }
+    // Large vault + content search — offload to isolate.
+    _searchGeneration++;
+    final gen = _searchGeneration;
+    setState(() {
+      _searchQuery = q;
+      _isSearching = true;
+    });
+    final input = _FilterIsolateInput(
+      notes: ks.notes,
+      query: q,
+      filter: ks.noteFilter,
+      links: ks.links,
+    );
+    compute(_filterNotesInIsolate, input).then((result) {
+      // Stale check: a newer search may have started, or the widget disposed.
+      if (gen != _searchGeneration || !mounted) return;
+      setState(() {
+        _cacheFiltered = result;
+        _cacheSrcNotes = ks.notes;
+        _cacheFilter = ks.noteFilter;
+        _cacheSearch = q;
+        _cacheLinks = ks.links;
+        _cacheDiskFolders = _diskFolders;
+        _cacheTrie = null;
+        _isSearching = false;
+      });
+    });
   }
 
   // --- Shared UI helper (used by multiple mixins) ---
@@ -218,7 +256,6 @@ class _NoteSidebarState extends _NoteSidebarStateBase
     with
         _SidebarTabBarMixin,
         _SidebarNotesToolbarMixin,
-        _SidebarNotesTreeWidgetsMixin,
         _SidebarNotesTreeMixin,
         _SidebarBookmarksMixin,
         _SidebarBookmarkRowMixin,
@@ -258,4 +295,61 @@ class _NoteSidebarState extends _NoteSidebarStateBase
       ],
     );
   }
+}
+
+/// Input bundle for [_filterNotesInIsolate]. Must be isolate-Sendable;
+/// [Note], [Link], [NoteFilter] are plain data types with no native handles.
+class _FilterIsolateInput {
+  final List<Note> notes;
+  final String query;
+  final NoteFilter filter;
+  final List<Link> links;
+
+  const _FilterIsolateInput({
+    required this.notes,
+    required this.query,
+    required this.filter,
+    required this.links,
+  });
+}
+
+/// Pure (isolate-safe) note filtering logic shared by the synchronous
+/// [_NoteSidebarStateBase._filterNotes] path and the async
+/// [_filterNotesInIsolate] worker. Extracted top-level so both can call it
+/// without duplicating the filter/search conditions.
+List<Note> _applyNoteFilter(
+  List<Note> notes,
+  String query,
+  NoteFilter filter,
+  List<Link> links,
+) {
+  var filtered = notes;
+  if (filter == NoteFilter.hasLinks) {
+    filtered = notes
+        .where(
+          (n) => links.any((l) => l.sourceId == n.id || l.targetId == n.id),
+        )
+        .toList();
+  } else if (filter == NoteFilter.hasTags) {
+    filtered = notes.where((n) => n.tags.isNotEmpty).toList();
+  } else if (filter == NoteFilter.hasAttachments) {
+    filtered = notes.where((n) => n.frontMatter.containsKey('attachments')).toList();
+  }
+  if (query.isEmpty) return filtered;
+  final q = query.toLowerCase();
+  return filtered
+      .where(
+        (n) =>
+            n.title.toLowerCase().contains(q) ||
+            n.tags.any((t) => t.toLowerCase().contains(q)) ||
+            n.content.toLowerCase().contains(q),
+      )
+      .toList();
+}
+
+/// Worker entry for [compute] (Rule 6.1: >100ms / >2000-char content
+/// scans must run in a worker isolate). Runs the same filter logic as
+/// the synchronous path but off the UI thread for large vaults.
+List<Note> _filterNotesInIsolate(_FilterIsolateInput input) {
+  return _applyNoteFilter(input.notes, input.query, input.filter, input.links);
 }

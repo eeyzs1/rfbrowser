@@ -18,21 +18,56 @@ mixin _SidebarNotesToolbarMixin on _NoteSidebarStateBase {
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: DesignSpacing.xs + 2,
                 ),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.close, size: 12),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                        constraints: const BoxConstraints(
-                          minWidth: DesignTouchTarget.minSize * 0.5,
-                          minHeight: DesignTouchTarget.minSize * 0.5,
+                suffixIcon: _isSearching
+                    ? const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          width: 12,
+                          height: 12,
+                          // ExcludeSemantics：见 capture_ai_summary_build.dart
+                          // 同类修复说明。搜索指示器，每帧更新
+                          // Semantics(value: '%')，包裹后排除。
+                          child: ExcludeSemantics(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         ),
                       )
-                    : null,
+                    : _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.close, size: 12),
+                            onPressed: () {
+                              _searchDebounce?.cancel();
+                              _searchGeneration++;
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                                _isSearching = false;
+                              });
+                            },
+                            constraints: const BoxConstraints(
+                              minWidth: DesignTouchTarget.minSize * 0.5,
+                              minHeight: DesignTouchTarget.minSize * 0.5,
+                            ),
+                          )
+                        : null,
               ),
-              onChanged: (q) => setState(() => _searchQuery = q),
+              onChanged: (q) {
+                _searchDebounce?.cancel();
+                if (q.trim().isEmpty) {
+                  _searchGeneration++;
+                  setState(() {
+                    _searchQuery = '';
+                    _isSearching = false;
+                  });
+                  return;
+                }
+                _searchDebounce = Timer(
+                  const Duration(milliseconds: 120),
+                  () {
+                    if (mounted) _applySearchQuery(q);
+                  },
+                );
+              },
             ),
           ),
           const SizedBox(width: DesignSpacing.xs),

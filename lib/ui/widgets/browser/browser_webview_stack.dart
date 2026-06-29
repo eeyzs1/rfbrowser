@@ -49,15 +49,21 @@ class _BrowserWebViewStackState extends ConsumerState<BrowserWebViewStack> {
       }
 
       webViews.add(
-        AnimatedOpacity(
-          opacity: isActive ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 150),
-          child: Visibility(
-            visible: isActive,
-            maintainState: isActive,
-            maintainSize: false,
-            maintainAnimation: false,
-            child: ExcludeSemantics(
+        // ExcludeSemantics 必须包含 AnimatedOpacity 和 Visibility：
+        // 它们各自会创建 SemanticsNode（表示 visible/hidden + opacity 状态），
+        // 切换 tab 时这些节点状态翻转，触发 Chromium ui::AXTree diff 失败
+        // （"Failed to update ui::AXTree, error: N will not be in the tree"）。
+        // 这是 root cause：之前的修复只包裹了 InAppWebView 自身，没包裹
+        // 动画和可见性 widget，所以每帧/每次切换都向 AXTree 推送更新。
+        ExcludeSemantics(
+          child: AnimatedOpacity(
+            opacity: isActive ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 150),
+            child: Visibility(
+              visible: isActive,
+              maintainState: isActive,
+              maintainSize: false,
+              maintainAnimation: false,
               child: InAppWebView(
                 key: ValueKey(tab.id),
                 initialUrlRequest: URLRequest(url: WebUri(tab.url)),

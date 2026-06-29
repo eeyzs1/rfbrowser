@@ -4,6 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
 import '../../l10n/app_localizations.dart';
 import '../../services/knowledge_service.dart';
+import '../../services/settings_service.dart';
 import '../theme/design_tokens.dart';
 
 /// Cache the extension set — it's immutable and never changes, so creating
@@ -28,12 +29,18 @@ class NoteMarkdownView extends ConsumerStatefulWidget {
   final String content;
   final EdgeInsets padding;
   final bool selectable;
+  /// When true, skips the internal large-file guard (the caller has already
+  /// handled the fallback). Used by note_pane_view's rendered branch, which
+  /// has its own notice bar + "渲染" button — without this, NoteMarkdownView
+  /// would show a second notice on top of the caller's.
+  final bool forceRender;
 
   const NoteMarkdownView({
     super.key,
     required this.content,
     this.padding = const EdgeInsets.all(DesignSpacing.xl),
     this.selectable = true,
+    this.forceRender = false,
   });
 
   @override
@@ -41,11 +48,32 @@ class NoteMarkdownView extends ConsumerStatefulWidget {
 }
 
 class _NoteMarkdownViewState extends ConsumerState<NoteMarkdownView> {
+  // Above this size, rendering via flutter_markdown is skipped because it
+  // parses the entire document into an AST and lays out all nodes at once,
+  // freezing the UI thread for seconds. Instead, a fast Source view
+  // (SelectionArea + ListView.builder) is shown with a notice bar offering
+  // a "渲染" button to manually enter rendered mode. Mirrors the same
+  // threshold/pattern used by note_pane_view.dart for Edit mode.
+  static const _largeFileThreshold = 20000; // ~20KB
+
   MarkdownStyleSheet? _cachedStyleSheet;
   ThemeData? _cachedThemeForStyleSheet;
   Map<String, MarkdownElementBuilder>? _cachedBuilders;
   ThemeData? _cachedThemeForBuilders;
   AppLocalizations? _cachedL10nForBuilders;
+  // Set to true when the user explicitly clicks "渲染" on the large-file
+  // notice. While true, the build skips the source-view fallback and
+  // renders via flutter_markdown (which may be slow, but the user opted in).
+  // Reset whenever the displayed content changes.
+  bool _forceRenderForLargeFile = false;
+
+  @override
+  void didUpdateWidget(covariant NoteMarkdownView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.content != widget.content) {
+      _forceRenderForLargeFile = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +98,21 @@ class _NoteMarkdownViewState extends ConsumerState<NoteMarkdownView> {
       _cachedL10nForBuilders = l;
     }
 
+    // Large file guard: flutter_markdown parses the whole doc into an AST
+    // and lays out all nodes at once, freezing the UI for >20KB notes.
+    // Fall back to a fast Source view (viewport-based lazy rendering) with
+    // a notice bar; the user can click "渲染" to force rendered mode.
+    if (widget.content.length > _largeFileThreshold &&
+        !_forceRenderForLargeFile &&
+        !widget.forceRender) {
+      return Column(
+        children: [
+          _buildLargeFileNotice(theme, l),
+          Expanded(child: _buildSource(theme)),
+        ],
+      );
+    }
+
     return RepaintBoundary(
       // ExcludeSemantics: The Markdown widget generates a large number of
       // semantic nodes (one per text element). When note content changes,
@@ -86,6 +129,65 @@ class _NoteMarkdownViewState extends ConsumerState<NoteMarkdownView> {
           extensionSet: _cachedExtensionSet,
           styleSheet: _cachedStyleSheet!,
         ),
+      ),
+    );
+  }
+
+  Widget _buildLargeFileNotice(ThemeData theme, AppLocalizations l) {
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DesignSpacing.lg,
+          vertical: DesignSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              size: 16,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                l.largeFileRenderNotice,
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() => _forceRenderForLargeFile = true);
+              },
+              child: Text(l.render),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSource(ThemeData theme) {
+    final settings = ref.watch(settingsProvider);
+    final textStyle = theme.textTheme.bodyLarge?.copyWith(
+      fontFamily: 'monospace',
+      fontSize: settings.editorFontSize,
+      height: 1.6,
+    );
+    // Lazy line-by-line rendering: only visible lines are built and laid
+    // out. This is the same pattern used by note_pane_view's Source view,
+    // so a 100,000-line file opens as fast as a 100-line file.
+    final lines = widget.content.split('\n');
+    return SelectionArea(
+      child: ListView.builder(
+        padding: const EdgeInsets.all(DesignSpacing.lg),
+        itemCount: lines.length,
+        itemBuilder: (context, index) {
+          return Text(
+            lines[index],
+            style: textStyle,
+          );
+        },
       ),
     );
   }
@@ -186,10 +288,8 @@ class WikiLinkBuilder extends MarkdownElementBuilder {
       child: GestureDetector(
         onTap: () {
           final knowledge = ref.read(knowledgeProvider);
-          final note = knowledge.notes.where((n) {
-            return n.title.toLowerCase() == target.toLowerCase() ||
-                n.aliases.any((a) => a.toLowerCase() == target.toLowerCase());
-          }).firstOrNull;
+          // O(1) lookup via byTitleLower (covers both title and aliases).
+          final note = knowledge.byTitleLower[target.toLowerCase()];
           if (note != null) {
             ref.read(knowledgeProvider.notifier).openNote(note.id);
           }
@@ -311,10 +411,8 @@ class EmbedBuilder extends MarkdownElementBuilder {
 
   Future<String?> _getEmbedContent(String target) async {
     final knowledge = ref.read(knowledgeProvider);
-    final note = knowledge.notes.where((n) {
-      return n.title.toLowerCase() == target.toLowerCase() ||
-          n.aliases.any((a) => a.toLowerCase() == target.toLowerCase());
-    }).firstOrNull;
+    // O(1) lookup via byTitleLower (covers both title and aliases).
+    final note = knowledge.byTitleLower[target.toLowerCase()];
     return note?.content;
   }
 }

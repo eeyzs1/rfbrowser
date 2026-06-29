@@ -40,16 +40,16 @@ class _SummariesTab extends StatelessWidget {
   Future<List<MemorySummary>> _load() async {
     if (query.isEmpty) {
       // searchSummaries falls back to LIKE matches. We pull across all
-      // tiers to keep the UI simple.
-      final result = <MemorySummary>[];
-      for (final tier in MemorySummaryTier.values) {
-        result.addAll(
-          await memory
-              .searchSummaries('', limit: 100, tiers: [tier])
+      // tiers in parallel via Future.wait so the N DB round-trips run
+      // concurrently instead of serially.
+      final tierResults = await Future.wait(
+        MemorySummaryTier.values.map(
+          (t) => memory
+              .searchSummaries('', limit: 100, tiers: [t])
               .catchError((Object _) => <MemorySummary>[]),
-        );
-      }
-      return result;
+        ),
+      );
+      return [for (final r in tierResults) ...r];
     }
     return memory.searchSummaries(query, limit: 100);
   }

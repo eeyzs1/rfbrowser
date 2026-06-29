@@ -53,7 +53,10 @@ class _QuickSearchBarState extends ConsumerState<QuickSearchBar> {
     if (!mounted) return;
 
     final knowledgeState = ref.read(knowledgeProvider);
-    final notes = knowledgeState.notes;
+    // O(1) note lookup via the shared byId index instead of a linear
+    // scan (notes.where((n) => n.id == noteId).firstOrNull) per result —
+    // with 5000 notes and up to 8 results that was 40000 comparisons.
+    final byId = knowledgeState.byId;
     final items = <_QuickSearchItem>[];
 
     for (final r in results.take(8)) {
@@ -74,7 +77,7 @@ class _QuickSearchBarState extends ConsumerState<QuickSearchBar> {
       } else {
         // 笔记结果：通过 noteId 查找对应的 Note 对象
         final noteId = (r['noteId'] as String?) ?? '';
-        final note = notes.where((n) => n.id == noteId).firstOrNull;
+        final note = byId[noteId];
         if (note == null) continue;
         items.add(
           _QuickSearchItem(

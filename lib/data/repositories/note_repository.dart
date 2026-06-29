@@ -16,27 +16,16 @@ class NoteRepository extends RepositoryBase {
   NoteRepository(super.vaultPath);
 
   Future<List<Note>> getAllNotes() async {
-    final notes = <Note>[];
     final dir = Directory(vaultPath);
-    if (!await dir.exists()) return notes;
+    if (!await dir.exists()) return [];
 
-    await for (final entity in dir.list(recursive: true)) {
-      if (entity is File && entity.path.endsWith('.md')) {
-        try {
-          final canonical = entity.absolute.path;
-          final vaultCanonical = Directory(vaultPath).absolute.path;
-          if (!canonical.startsWith(vaultCanonical)) continue;
-
-          final content = await entity.readAsString();
-          final relativePath = p.relative(entity.path, from: vaultPath);
-          final note = Note.fromMarkdown(relativePath, content);
-          notes.add(note);
-        } catch (_) {
-          appLog.warning('NoteRepo: failed to parse note file: ${entity.path}');
-        }
-      }
-    }
-    return notes;
+    // Move all file I/O + YAML parsing off the UI thread via a worker
+    // isolate. Previously this method awaited each file read serially
+    // on the UI thread (await for + await readAsString), which could
+    // block for seconds on vaults with thousands of notes. The isolate
+    // uses synchronous I/O (listSync / readAsStringSync) since there is
+    // no event-loop benefit to async I/O in a worker isolate.
+    return compute(_loadAllNotesInIsolate, vaultPath);
   }
 
   Future<Note?> getNoteByPath(String relativePath) async {
@@ -351,6 +340,47 @@ class NoteRepository extends RepositoryBase {
   @visibleForTesting
   String normalizeRelativePath(String relativePath) =>
       safeRelativePath(relativePath);
+}
+
+/// Top-level isolate entry point for [NoteRepository.getAllNotes].
+///
+/// Lists all `.md` files under [vaultPath], reads each synchronously, and
+/// parses it into a [Note] via [Note.fromMarkdown] — replicating the original
+/// serial async logic exactly (frontmatter, tags, aliases, etc.) but on a
+/// worker isolate so the UI thread is never blocked by file I/O or YAML
+/// parsing. Uses synchronous I/O ([Directory.listSync] / [File.readAsStringSync])
+/// because there is no event-loop benefit to async I/O in a worker isolate.
+///
+/// Must be a top-level function (not a closure) so it can be passed to
+/// [compute]. The [vaultPath] argument is a [String] (sendable across
+/// isolates), and the returned [List<Note>] contains only primitive fields
+/// + Lists/Maps/DateTimes (sendable under isolate groups in Flutter 3.27+).
+@pragma('vm:entry-point')
+List<Note> _loadAllNotesInIsolate(String vaultPath) {
+  final notes = <Note>[];
+  final dir = Directory(vaultPath);
+  // Double-check existence inside the isolate — the directory may have
+  // been deleted between the exists() check in getAllNotes and the spawn.
+  if (!dir.existsSync()) return notes;
+
+  final vaultCanonical = dir.absolute.path;
+
+  for (final entity in dir.listSync(recursive: true)) {
+    if (entity is File && entity.path.endsWith('.md')) {
+      try {
+        final canonical = entity.absolute.path;
+        if (!canonical.startsWith(vaultCanonical)) continue;
+
+        final content = entity.readAsStringSync();
+        final relativePath = p.relative(entity.path, from: vaultPath);
+        final note = Note.fromMarkdown(relativePath, content);
+        notes.add(note);
+      } catch (_) {
+        appLog.warning('NoteRepo: failed to parse note file: ${entity.path}');
+      }
+    }
+  }
+  return notes;
 }
 
 final noteRepositoryProvider = Provider<NoteRepository?>((ref) {

@@ -114,30 +114,11 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
       _platformBrightness; // 引用以建立依赖
     }
 
-    if (!_initialized) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.explore, size: 64, color: Colors.blue.shade400),
-                const SizedBox(height: 16),
-                const CircularProgressIndicator(),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     final noVault = ref.watch(vaultProvider).currentVault == null;
     final showWelcome =
         noVault || (settings.alwaysShowWelcomePage && !_enteredMainLayout);
 
+    // 统一使用同一个 MaterialApp 骨架，仅切换 home 内容。
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'RFBrowser',
@@ -149,14 +130,40 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
           ? AppTheme.darkTheme(settings)
           : AppTheme.lightTheme(settings),
       locale: RFBrowserApp._resolveLocale(settings.locale),
-      home: showWelcome
-          ? WelcomePage(
-              onVaultOpened: () {
-                setState(() => _enteredMainLayout = true);
-                ref.read(knowledgeProvider.notifier).loadAllNotes();
-              },
-            )
-          : const MainLayout(),
+      home: !_initialized
+          ? _buildLoadingScreen()
+          : showWelcome
+              ? WelcomePage(
+                  onVaultOpened: () {
+                    setState(() => _enteredMainLayout = true);
+                    ref.read(knowledgeProvider.notifier).loadAllNotes();
+                  },
+                )
+              : const MainLayout(),
+    );
+  }
+
+  /// 启动加载屏。
+  /// CircularProgressIndicator 必须用 ExcludeSemantics 包裹：它内部使用
+  /// AnimationController.repeat() 每帧更新语义节点的 value 属性，在 _initApp
+  /// 期间（ONNX 模型下载 ~23MB + 多次磁盘 I/O，可能持续数秒）会持续向 AXTree
+  /// 提交更新。叠加 windowManager 并发的 native 窗口操作，会触发 Windows
+  /// accessibility_bridge AXTree diff 失败导致进程崩溃。
+  /// ExcludeSemantics 后该指示器不再向语义树贡献节点，从根源消除崩溃。
+  Widget _buildLoadingScreen() {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.explore, size: 64, color: Colors.blue.shade400),
+            const SizedBox(height: 16),
+            const ExcludeSemantics(
+              child: CircularProgressIndicator(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -116,6 +116,17 @@ class RequestContextNotifier extends Notifier<RequestContext> {
   RequestContext build() => RequestContext.empty;
 
   void updateVault(VaultSnapshot? vault) {
+    // 相等性检查：避免 vault 内容未变时仍触发 state 赋值。
+    // 之前的实现总是调用 copyWith(capturedAt: DateTime.now())，
+    // 即使 vault 没变也会产生新实例并触发 Riverpod 通知，
+    // 在 AXTree 已脆弱时加剧 widget tree churn。
+    final oldVault = state.vault;
+    final unchanged = (oldVault == null && vault == null) ||
+        (oldVault != null &&
+            vault != null &&
+            oldVault.name == vault.name &&
+            oldVault.path == vault.path);
+    if (unchanged) return;
     state = state.copyWith(vault: vault, clearVault: vault == null);
   }
 
@@ -131,6 +142,10 @@ class RequestContextNotifier extends Notifier<RequestContext> {
   }
 
   void updateScene(AppScene scene) {
+    // 相等性检查：避免 scene 未变时仍触发 state 赋值。
+    // copyWith 总是设置 capturedAt: DateTime.now()，即使 scene 没变
+    // 也会产生新实例并触发 Riverpod 通知，在 AXTree 已脆弱时加剧 churn。
+    if (state.scene == scene) return;
     state = state.copyWith(scene: scene);
   }
 

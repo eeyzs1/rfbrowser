@@ -93,7 +93,11 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
         // Ignore load errors for invalid/missing images
       }
     }
-    if (mounted) setState(() {});
+    // Issue 20: Notify only the canvas painter's ListenableBuilder subtree
+    // instead of triggering a full widget rebuild via setState. The painter
+    // picks up the mutated _imageCache on its next repaint (driven by the
+    // animation controller or camera changes).
+    if (mounted) _cameraNotifier.notify();
   }
 
   final GlobalKey _canvasPaintKey = GlobalKey();
@@ -110,6 +114,19 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
   double _canvasH = 600;
   double get _viewW => _canvasW;
   double get _viewH => _canvasH;
+
+  /// Visible region of the canvas in world coordinates (no padding).
+  /// Used by hit-tests and snap logic for viewport culling.
+  Rect get _visibleWorldRect => Rect.fromLTWH(
+    _cameraX - _viewW / 2 / _scale,
+    _cameraY - _viewH / 2 / _scale,
+    _viewW / _scale,
+    _viewH / _scale,
+  );
+
+  /// Throttle timer for hover hit-testing (~30fps).
+  Timer? _hoverThrottle;
+  Offset? _pendingHoverPos;
 
   static const List<Color> _cardColorPresets = [
     Color(0xFFFFFFFF),
@@ -281,9 +298,9 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
     double toSideOffset,
   ]);
   void _fitToContent();
-  void _handleExport(String format);
+  Future<void> _handleExport(String format);
   Future<void> _exportToPng();
-  void _saveExportFile(String filename, String content);
+  Future<void> _saveExportFile(String filename, String content);
   void _showLayerPanel();
   void _showScratchpad();
   Widget _buildActiveFilterBanner(ThemeData theme, CanvasData canvasData);

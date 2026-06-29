@@ -332,6 +332,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edit => 'Edit';
 
   @override
+  String get render => 'Render';
+
+  @override
   String get startWriting => 'Start writing...';
 
   @override
@@ -395,6 +398,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get largeFileSourceNotice =>
       'Large file opened in source view (editing may be slow)';
+
+  @override
+  String get largeFileRenderNotice =>
+      'Large file opened in source view (rendering may be slow)';
 
   @override
   String get error => 'Error';

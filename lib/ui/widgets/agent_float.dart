@@ -20,7 +20,6 @@ class AgentFloat extends ConsumerStatefulWidget {
 class _AgentFloatState extends ConsumerState<AgentFloat>
     with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
-  bool _isPressed = false;
   late final AnimationController _animationController;
   late final Animation<double> _scaleAnimation;
   late final Animation<double> _fadeAnimation;
@@ -111,24 +110,22 @@ class _AgentFloatState extends ConsumerState<AgentFloat>
                           Positioned(
                             top: DesignSpacing.xs,
                             right: DesignSpacing.xs,
-                            child: Semantics(
-                              button: true,
-                              label: MaterialLocalizations.of(
+                            // 直接 IconButton（不用 Semantics 包裹）：
+                            // 之前 Semantics(button: true) + IconButton 创造两个 button
+                            // 节点（外层显式 + 内层 InkWell 自动），切换 _isExpanded
+                            // 时结构翻转 → AXTree diff 失败。
+                            child: IconButton(
+                              icon: const Icon(Icons.close, size: 16),
+                              onPressed: _collapse,
+                              tooltip: MaterialLocalizations.of(
                                 context,
                               ).closeButtonLabel,
-                              child: IconButton(
-                                icon: const Icon(Icons.close, size: 16),
-                                onPressed: _collapse,
-                                tooltip: MaterialLocalizations.of(
-                                  context,
-                                ).closeButtonLabel,
-                                constraints: const BoxConstraints(
-                                  minWidth: DesignTouchTarget.iconButtonSize,
-                                  minHeight: DesignTouchTarget.iconButtonSize,
-                                ),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.black26,
-                                ),
+                              constraints: const BoxConstraints(
+                                minWidth: DesignTouchTarget.iconButtonSize,
+                                minHeight: DesignTouchTarget.iconButtonSize,
+                              ),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.black26,
                               ),
                             ),
                           ),
@@ -143,32 +140,21 @@ class _AgentFloatState extends ConsumerState<AgentFloat>
         Positioned(
           right: DesignSpacing.lg,
           bottom: DesignSpacing.lg,
-          child: Semantics(
-            button: true,
-            label: _isExpanded ? 'Close Agent' : 'Open Agent',
-            child: GestureDetector(
-              onTapDown: (_) => setState(() => _isPressed = true),
-              onTapUp: (_) {
-                setState(() => _isPressed = false);
-                _toggle();
-              },
-              onTapCancel: () => setState(() => _isPressed = false),
-              child: AnimatedScale(
-                scale: _isPressed ? 0.95 : 1.0,
-                duration: const Duration(milliseconds: 100),
-                curve: Curves.easeInOut,
-                child: FloatingActionButton(
-                  heroTag: 'agent_float',
-                  onPressed: null,
-                  mini: true,
-                  backgroundColor: Theme.of(context).colorScheme.tertiary,
-                  child: Icon(
-                    _isExpanded ? Icons.close : Icons.smart_toy,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.onTertiary,
-                  ),
-                ),
-              ),
+          // 关键修复：FAB 直接用 onPressed: _toggle，去掉 Semantics/GestureDetector/AnimatedScale。
+          // 之前 FloatingActionButton(onPressed: null) + GestureDetector + AnimatedScale + 动态 label
+          // → 每按一次 6 帧 AnimatedScale + 切换 _isExpanded 时 label 从 'Open' 变 'Close'
+          //   → SemanticsNode 结构翻转 → AXTree diff 失败。
+          // 改用 onPressed: _toggle 让 FAB 自己处理 tap，去掉所有包裹层。
+          child: FloatingActionButton(
+            heroTag: 'agent_float',
+            onPressed: _toggle,
+            mini: true,
+            backgroundColor: Theme.of(context).colorScheme.tertiary,
+            // 静态 Icon，无 AnimatedSwitcher。
+            child: Icon(
+              _isExpanded ? Icons.close : Icons.smart_toy,
+              size: 20,
+              color: Theme.of(context).colorScheme.onTertiary,
             ),
           ),
         ),

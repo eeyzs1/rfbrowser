@@ -219,7 +219,7 @@ void main() {
       expect(find.text('/翻译'), findsOneWidget);
     });
 
-    testWidgets('AC-3-2: all moves show type badge and drag handle', (
+    testWidgets('AC-3-2: all moves show type badge and reorder controls', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -228,8 +228,13 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      // Type badge on every row.
       expect(find.text('Preset'), findsWidgets);
-      expect(find.byIcon(Icons.drag_handle), findsWidgets);
+      // Reorder controls: up/down IconButtons (ReorderableListView drag handle
+      // was replaced with explicit buttons to avoid Windows AXTree corruption
+      // — see .trae/rules/project_rules.md Rule 4).
+      expect(find.byIcon(Icons.arrow_upward), findsWidgets);
+      expect(find.byIcon(Icons.arrow_downward), findsWidgets);
     });
   });
 

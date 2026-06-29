@@ -223,21 +223,24 @@ class FragmentRepository {
     );
   }
 
-  /// Mark a batch of fragments as accessed in a single transaction.
+  /// Mark a batch of fragments as accessed in a single UPDATE per chunk
+  /// (chunked to stay under SQLite's 999 bound-variable limit). Each id
+  /// gets access_count incremented and last_access_at set to [now].
   Future<void> markAccessedBatch(Iterable<String> fragmentIds) async {
-    final ids = fragmentIds.toList();
-    if (ids.isEmpty) return;
+    // Count occurrences per id — duplicate ids must increment multiple times
+    // (e.g. markAccessedBatch(['a','b','a']) must give 'a' accessCount += 2).
+    final counts = <String, int>{};
+    for (final id in fragmentIds) {
+      counts[id] = (counts[id] ?? 0) + 1;
+    }
+    if (counts.isEmpty) return;
     final db = await _database;
     final now = DateTime.now().toIso8601String();
     await db.transaction((txn) async {
-      for (final id in ids) {
+      for (final entry in counts.entries) {
         await txn.rawUpdate(
-          '''
-          UPDATE memory_fragments
-          SET access_count = access_count + 1, last_access_at = ?
-          WHERE id = ?
-          ''',
-          [now, id],
+          'UPDATE memory_fragments SET access_count = access_count + ?, last_access_at = ? WHERE id = ?',
+          [entry.value, now, entry.key],
         );
       }
     });
@@ -328,13 +331,20 @@ class FragmentRepository {
     return [for (final f in fragments) _match(f, tokens, now)];
   }
 
-  /// Get all active fragments (for rebuilding or inspection).
-  Future<List<MemoryFragment>> getAllActiveFragments() async {
+  /// Get all active fragments (for rebuilding or inspection). Defaults to
+  /// the 500 most-recently-updated rows to avoid loading the entire table
+  /// into memory; pass a larger [limit] (or null) for full scans.
+  Future<List<MemoryFragment>> getAllActiveFragments({
+    int limit = 500,
+    int offset = 0,
+  }) async {
     final db = await _database;
     final rows = await db.query(
       'memory_fragments',
       where: 'is_active = 1',
       orderBy: 'updated_at DESC',
+      limit: limit,
+      offset: offset,
     );
     return rows.map(MemoryFragment.fromRow).toList();
   }

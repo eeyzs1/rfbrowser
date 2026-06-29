@@ -96,12 +96,16 @@ mixin _CanvasInputHitTestMixin on _CanvasViewStateBase {
   @override
   (String, double)? _hitTestConnectionLine(Offset worldPos) {
     final canvasData = ref.read(canvasProvider);
+    final notifier = ref.read(canvasProvider.notifier);
     final hitRadius = 12.0 / _scale;
     final hits = <(String, double)>[];
+    final vr = _visibleWorldRect.inflate(50);
     for (final conn in canvasData.connections) {
-      final from = ref.read(canvasProvider.notifier).cardById(conn.fromCardId);
-      final to = ref.read(canvasProvider.notifier).cardById(conn.toCardId);
+      final from = notifier.cardById(conn.fromCardId);
+      final to = notifier.cardById(conn.toCardId);
       if (from == null || to == null) continue;
+      // Viewport culling: skip if both endpoints are far off-screen.
+      if (!vr.overlaps(from.rect) && !vr.overlaps(to.rect)) continue;
       final fromPoint = conn.fromSide.point(from.rect, conn.fromSideOffset);
       final toPoint = conn.toSide.point(to.rect, conn.toSideOffset);
       final style = conn.style ?? CanvasConnectionStyle.defaults;
@@ -190,8 +194,15 @@ mixin _CanvasInputHitTestMixin on _CanvasViewStateBase {
     final gap = 8.0 / _scale;
     final spacing = 16.0 / _scale;
     final cards = ref.read(canvasProvider).cards;
+    final vr = _visibleWorldRect.inflate(16);
+    final boundsPad = gap + hitRadius;
+    final hitRadiusSq = hitRadius * hitRadius;
     for (final card in cards.reversed) {
       if (card.type == CanvasCardType.freehand) continue;
+      // (a) Viewport cull — skip cards entirely off-screen.
+      if (!vr.overlaps(card.rect)) continue;
+      // (c) Cheap pre-filter before perimeter scan.
+      if (!card.rect.inflate(boundsPad).contains(worldPos)) continue;
       final w = card.width;
       final h = card.height;
       final topY = card.y - gap;
@@ -202,10 +213,9 @@ mixin _CanvasInputHitTestMixin on _CanvasViewStateBase {
       final topCount = (w / spacing).floor().clamp(2, 20);
       for (int i = 0; i <= topCount; i++) {
         final x = card.x + w * i / topCount;
-        final dist = math.sqrt(
-          math.pow(worldPos.dx - x, 2) + math.pow(worldPos.dy - topY, 2),
-        );
-        if (dist <= hitRadius) {
+        final ddx = worldPos.dx - x;
+        final ddy = worldPos.dy - topY;
+        if (ddx * ddx + ddy * ddy <= hitRadiusSq) {
           return (card.id, ConnectionSide.top, i / topCount);
         }
       }
@@ -213,10 +223,9 @@ mixin _CanvasInputHitTestMixin on _CanvasViewStateBase {
       final bottomCount = (w / spacing).floor().clamp(2, 20);
       for (int i = 0; i <= bottomCount; i++) {
         final x = card.x + w * i / bottomCount;
-        final dist = math.sqrt(
-          math.pow(worldPos.dx - x, 2) + math.pow(worldPos.dy - bottomY, 2),
-        );
-        if (dist <= hitRadius) {
+        final ddx = worldPos.dx - x;
+        final ddy = worldPos.dy - bottomY;
+        if (ddx * ddx + ddy * ddy <= hitRadiusSq) {
           return (card.id, ConnectionSide.bottom, i / bottomCount);
         }
       }
@@ -224,10 +233,9 @@ mixin _CanvasInputHitTestMixin on _CanvasViewStateBase {
       final leftCount = (h / spacing).floor().clamp(2, 20);
       for (int i = 1; i < leftCount; i++) {
         final y = card.y + h * i / leftCount;
-        final dist = math.sqrt(
-          math.pow(worldPos.dx - leftX, 2) + math.pow(worldPos.dy - y, 2),
-        );
-        if (dist <= hitRadius) {
+        final ddx = worldPos.dx - leftX;
+        final ddy = worldPos.dy - y;
+        if (ddx * ddx + ddy * ddy <= hitRadiusSq) {
           return (card.id, ConnectionSide.left, i / leftCount);
         }
       }
@@ -235,10 +243,9 @@ mixin _CanvasInputHitTestMixin on _CanvasViewStateBase {
       final rightCount = (h / spacing).floor().clamp(2, 20);
       for (int i = 1; i < rightCount; i++) {
         final y = card.y + h * i / rightCount;
-        final dist = math.sqrt(
-          math.pow(worldPos.dx - rightX, 2) + math.pow(worldPos.dy - y, 2),
-        );
-        if (dist <= hitRadius) {
+        final ddx = worldPos.dx - rightX;
+        final ddy = worldPos.dy - y;
+        if (ddx * ddx + ddy * ddy <= hitRadiusSq) {
           return (card.id, ConnectionSide.right, i / rightCount);
         }
       }

@@ -27,8 +27,10 @@ mixin _CanvasConnectionPainterMixin on _CanvasPainterBase {
   void _drawGroups(Canvas canvas) {
     for (final group in groups) {
       if (group.cardIds.isEmpty) continue;
-      final groupCards = cards
-          .where((c) => group.cardIds.contains(c.id))
+      // Issue 9: Use the cached cardById map instead of O(n) where().contains().
+      final groupCards = group.cardIds
+          .map((id) => _cardByIdMap[id])
+          .whereType<CanvasCard>()
           .toList();
       if (groupCards.isEmpty) continue;
 
@@ -103,10 +105,9 @@ mixin _CanvasConnectionPainterMixin on _CanvasPainterBase {
 
   @override
   void _drawConnections(Canvas canvas) {
-    final cardById = <String, CanvasCard>{};
-    for (final c in cards) {
-      cardById[c.id] = c;
-    }
+    // Issue 8: Use the cached cardById map (built once per painter instance)
+    // instead of rebuilding it on every paint() call.
+    final cardById = _cardByIdMap;
 
     void drawLine(CanvasConnection conn, bool forceDashed) {
       final from = cardById[conn.fromCardId];
@@ -359,7 +360,11 @@ mixin _CanvasConnectionPainterMixin on _CanvasPainterBase {
     if (connectingFromCardId != null && connectingPreviewEnd != null) {
       final fromCard = cardById[connectingFromCardId];
       if (fromCard != null) {
-        final fp = _w2s(fromCard.center.dx, fromCard.center.dy);
+        // 起点使用实际的连接点（卡片边缘上的点），而不是卡片中心
+        // 这样预览线从用户拖拽的 connection point 出发，与最终落点连线视觉一致
+        final side = connectingFromSide ?? ConnectionSide.top;
+        final startWorld = side.point(fromCard.rect, connectingFromSideOffset);
+        final fp = _w2s(startWorld.dx, startWorld.dy);
         final tp = connectingPreviewEnd!;
         final path = Path()
           ..moveTo(fp.dx, fp.dy)

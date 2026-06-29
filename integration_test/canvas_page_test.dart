@@ -210,7 +210,7 @@ class _TestCanvasNotifier extends CanvasNotifier {
 
 class _TestKnowledgeNotifier extends KnowledgeNotifier {
   @override
-  KnowledgeState build() => const KnowledgeState();
+  KnowledgeState build() => KnowledgeState();
 }
 
 class _TestSettingsNotifier extends SettingsNotifier {

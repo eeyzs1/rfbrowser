@@ -48,8 +48,8 @@ void main() {
 
   group('CanvasExportService', () {
     group('exportToSvg', () {
-      test('generates valid SVG with cards and connections', () {
-        final svg = service.exportToSvg(makeSampleData(), 'TestCanvas');
+      test('generates valid SVG with cards and connections', () async {
+        final svg = await service.exportToSvg(makeSampleData(), 'TestCanvas');
         expect(svg, startsWith('<?xml'));
         expect(svg, contains('<svg xmlns="http://www.w3.org/2000/svg"'));
         expect(svg, contains('<rect'));
@@ -59,20 +59,20 @@ void main() {
         expect(svg, endsWith('</svg>\n'));
       });
 
-      test('handles empty canvas gracefully', () {
-        final svg = service.exportToSvg(CanvasData(), 'Empty');
+      test('handles empty canvas gracefully', () async {
+        final svg = await service.exportToSvg(CanvasData(), 'Empty');
         expect(svg, contains('<svg'));
         expect(svg, contains('width'));
         expect(svg, contains('height'));
       });
 
-      test('includes connection label as text', () {
-        final svg = service.exportToSvg(makeSampleData(), 'T');
+      test('includes connection label as text', () async {
+        final svg = await service.exportToSvg(makeSampleData(), 'T');
         expect(svg, contains('<text'));
         expect(svg, contains('links to'));
       });
 
-      test('skips connections with missing cards', () {
+      test('skips connections with missing cards', () async {
         final data = CanvasData(
           cards: [
             CanvasCard(
@@ -88,16 +88,16 @@ void main() {
             CanvasConnection(id: 'conn', fromCardId: 'c1', toCardId: 'missing'),
           ],
         );
-        final svg = service.exportToSvg(data, 'T');
+        final svg = await service.exportToSvg(data, 'T');
         expect(svg, isNot(contains('<line')));
       });
 
-      test('computes bounding box from card positions', () {
-        final svg = service.exportToSvg(makeSampleData(), 'T');
+      test('computes bounding box from card positions', () async {
+        final svg = await service.exportToSvg(makeSampleData(), 'T');
         expect(svg, contains('viewBox'));
       });
 
-      test('escapes XML special characters in content', () {
+      test('escapes XML special characters in content', () async {
         final data = CanvasData(
           cards: [
             CanvasCard(
@@ -112,28 +112,28 @@ void main() {
             ),
           ],
         );
-        final svg = service.exportToSvg(data, 'T');
+        final svg = await service.exportToSvg(data, 'T');
         expect(svg, contains('A &lt; B &amp; C &gt; &quot;D&quot;'));
       });
     });
 
     group('exportToPdf', () {
-      test('returns SVG content as PDF placeholder', () {
-        final pdf = service.exportToPdf(makeSampleData(), 'T');
+      test('returns SVG content as PDF placeholder', () async {
+        final pdf = await service.exportToPdf(makeSampleData(), 'T');
         expect(pdf, isNotEmpty);
       });
     });
 
     group('exportToJpeg', () {
-      test('returns SVG content as JPEG placeholder', () {
-        final jpeg = service.exportToJpeg(makeSampleData(), 'T');
+      test('returns SVG content as JPEG placeholder', () async {
+        final jpeg = await service.exportToJpeg(makeSampleData(), 'T');
         expect(jpeg, isNotEmpty);
       });
     });
 
     group('exportToWebp', () {
-      test('returns SVG content as WebP placeholder', () {
-        final webp = service.exportToWebp(makeSampleData(), 'T');
+      test('returns SVG content as WebP placeholder', () async {
+        final webp = await service.exportToWebp(makeSampleData(), 'T');
         expect(webp, isNotEmpty);
       });
     });
@@ -230,8 +230,8 @@ void main() {
     });
 
     group('exportWithEmbeddedData', () {
-      test('embeds metadata in SVG', () {
-        final (svg, json) = service.exportWithEmbeddedData(
+      test('embeds metadata in SVG', () async {
+        final (svg, json) = await service.exportWithEmbeddedData(
           makeSampleData(),
           'T',
         );
@@ -239,8 +239,8 @@ void main() {
         expect(json, isNotEmpty);
       });
 
-      test('importFromEmbeddedSvg recovers data', () {
-        final (svg, _) = service.exportWithEmbeddedData(makeSampleData(), 'T');
+      test('importFromEmbeddedSvg recovers data', () async {
+        final (svg, _) = await service.exportWithEmbeddedData(makeSampleData(), 'T');
         final recovered = CanvasExportService.importFromEmbeddedSvg(svg);
         expect(recovered, isNotNull);
         expect(recovered!.cards.length, 2);
@@ -253,8 +253,8 @@ void main() {
     });
 
     group('importFromSvg', () {
-      test('prefers embedded data over rect parsing', () {
-        final (svg, _) = service.exportWithEmbeddedData(makeSampleData(), 'T');
+      test('prefers embedded data over rect parsing', () async {
+        final (svg, _) = await service.exportWithEmbeddedData(makeSampleData(), 'T');
         final result = CanvasExportService.importFromSvg(svg);
         expect(result!.cards.length, 2);
         expect(result.connections.length, 1);

@@ -123,9 +123,12 @@ class _BrowserUrlBarState extends ConsumerState<BrowserUrlBar> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // 移除 Semantics(textField: true) —— TextField 自身通过合并隐式提供
+        // textField 角色，外层显式 textField:true 会形成双重 textField 节点。
+        // 保留 label 为辅助属性。TextField 的 enabled/focused 状态由其自身
+        // semantics 反映，无需外层声明。
         Semantics(
           label: l.urlFieldLabel,
-          textField: true,
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(DesignRadius.md),

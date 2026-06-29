@@ -130,13 +130,18 @@ class _BrowserTabBarState extends ConsumerState<BrowserTabBar> {
 
   Widget _buildTabItem(ThemeData theme, BrowserTab tab, int index) {
     final isActive = tab.id == widget.browserState.activeTabId;
+    // 移除 Semantics(button: true, selected: isActive) —— 与 _SceneButton /
+    // _NavButton 修复同理：InkWell(onTap != null) 通过合并隐式提供 button
+    // 角色，外层显式 button:true 会形成双重 button 节点。且 selected:isActive
+    // 在 activeTabId 变化时翻转，导致结构变化。
+    // ReorderableListView.builder 本身在 Windows 上对 AXTree 敏感，叠加
+    // 双重 button + 动态 selected + AnimatedSwitcher 中的
+    // CircularProgressIndicator（每帧更新语义 value），是启动崩溃的主要根因。
+    // 用 ExcludeSemantics 包裹整个 tab item，彻底消除结构变化和动画帧更新。
     return ReorderableDragStartListener(
       key: ValueKey(tab.id),
       index: index,
-      child: Semantics(
-        label: widget.l.tabLabel(tab.title.isNotEmpty ? tab.title : tab.url),
-        button: true,
-        selected: isActive,
+      child: ExcludeSemantics(
         child: InkWell(
           onTap: () => ref.read(browserProvider.notifier).setActiveTab(tab.id),
           onSecondaryTapDown: (_) => widget.onShowContextMenu(tab),
@@ -168,9 +173,14 @@ class _BrowserTabBarState extends ConsumerState<BrowserTabBar> {
                           key: const ValueKey('loading'),
                           width: 12,
                           height: 12,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 1.5,
-                            color: theme.colorScheme.primary,
+                          // ExcludeSemantics：CircularProgressIndicator 每帧
+                          // 更新语义 value 属性，在 ReorderableListView 内
+                          // 叠加 tab 切换时结构变化，触发 AXTree diff 失败。
+                          child: ExcludeSemantics(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              color: theme.colorScheme.primary,
+                            ),
                           ),
                         )
                       : Icon(

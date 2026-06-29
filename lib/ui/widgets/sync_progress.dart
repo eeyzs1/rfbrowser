@@ -27,9 +27,14 @@ class SyncProgressWidget extends StatelessWidget {
               SizedBox(
                 width: 14,
                 height: 14,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: theme.colorScheme.primary,
+                // ExcludeSemantics：见 capture_ai_summary_build.dart 同类
+                // 修复说明。同步进度指示器，每帧更新 Semantics(value: '%')，
+                // 包裹后排除。
+                child: ExcludeSemantics(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),

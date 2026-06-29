@@ -39,6 +39,11 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   ConnectViewMode _connectViewMode = ConnectViewMode.canvas;
 
   void _switchScene(SceneType scene) {
+    // 守卫：避免 scene 未变时触发 setState + updateScene。
+    // 之前 _SceneButton.onTap = active ? null : widget.onTap 阻止了
+    // 点击已激活按钮，但修复 AXTree 不一致后 onTap 始终有效，需要此守卫
+    // 避免相同 scene 的重复 setState 和 Riverpod 通知。
+    if (_currentScene == scene) return;
     setState(() => _currentScene = scene);
     // Push the new scene into the ambient AI context so subsequent
     // AI requests know what the user is currently doing.
@@ -71,14 +76,20 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   @override
   Widget build(BuildContext context) {
     final vaultState = ref.watch(vaultProvider);
-    // Mirror vault changes into the ambient AI context so prompts
-    // include the workspace name / path.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // 用 ref.listen 监听 vault 变化，只在 vault 真正变化时才更新 requestContext。
+    // 之前的实现是在 build 中注册 addPostFrameCallback —— 这是反模式：
+    // 1) 每次 MainLayout rebuild 都注册一个新 callback（每帧都注册）
+    // 2) callback 调用 updateVault，而 copyWith(capturedAt: DateTime.now())
+    //    总是产生新实例，总是触发 Riverpod 通知
+    // 3) 即使无 widget watch requestContextProvider，notifier 的 state 赋值
+    //    仍会触发内部处理，在 AXTree 已脆弱时加剧 churn
+    // ref.listen 是 Riverpod 推荐方式：只在依赖变化时触发，不在每帧调用。
+    ref.listen<VaultState>(vaultProvider, (prev, next) {
       final notifier = ref.read(requestContextProvider.notifier);
-      if (vaultState.currentVault == null) {
+      if (next.currentVault == null) {
         notifier.updateVault(null);
       } else {
-        final v = vaultState.currentVault!;
+        final v = next.currentVault!;
         notifier.updateVault(VaultSnapshot(name: v.name, path: v.path));
       }
     });

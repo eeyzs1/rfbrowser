@@ -1,6 +1,22 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import '../../core/editor/markdown_highlighter.dart';
+
+/// Runs [MarkdownHighlighter.highlight] in a worker isolate so the UI thread
+/// never blocks on long notes (project_rules.md Rule 6.1: >2000 chars must
+/// use `compute()`).
+///
+/// Returns a primitive, isolate-safe representation: each element is
+/// `[start, end, typeIndex, language?]`. The main isolate reconstructs
+/// [HighlightRange]s from this list (custom classes are not guaranteed to
+/// transfer cleanly across isolates on all Flutter versions).
+List<List<dynamic>> _highlightInIsolate(String text) {
+  final ranges = MarkdownHighlighter().highlight(text);
+  return ranges
+      .map((r) => <dynamic>[r.start, r.end, r.type.index, r.language])
+      .toList();
+}
 
 /// A [TextEditingController] that applies markdown syntax highlighting.
 ///
@@ -10,9 +26,9 @@ import '../../core/editor/markdown_highlighter.dart';
 ///   so this is imperceptible and avoids a second layout pass.
 /// - Long notes (> [_syncThreshold] chars): [buildTextSpan] returns plain
 ///   text instantly so the note paints immediately, then a debounced
-///   background scan produces the [HighlightRange]s and triggers a re-render.
-///   The scan runs in a [Timer] callback — the frame has already painted by
-///   then, so the user never sees a frozen UI.
+///   (120ms) background scan produces the [HighlightRange]s and triggers a
+///   re-render. The scan runs in a worker isolate via [compute] so the UI
+///   thread never blocks on the regex pass (Rule 6.1).
 class HighlightedTextEditingController extends TextEditingController {
   final MarkdownHighlighter _highlighter = MarkdownHighlighter();
   ThemeData? _theme;
@@ -79,15 +95,28 @@ class HighlightedTextEditingController extends TextEditingController {
     _highlightTimer?.cancel();
     _highlightTimer = Timer(const Duration(milliseconds: 120), () {
       if (_disposed) return;
-      _computeHighlight(text);
+      _computeHighlightAsync(text);
     });
   }
 
-  void _computeHighlight(String text) {
+  Future<void> _computeHighlightAsync(String text) async {
+    // Stale check before starting the isolate: text may have changed during
+    // the 120ms debounce window.
     if (_pendingText != text) return;
-    final ranges = _highlighter.highlight(text);
+    final serialized = await compute(_highlightInIsolate, text);
+    // Stale check after the isolate: text may have changed while the worker
+    // was running, or the controller may have been disposed. Either way,
+    // discard the result — a newer compute is already in flight.
+    if (_disposed || _pendingText != text) return;
+    _ranges = serialized
+        .map((r) => HighlightRange(
+              start: r[0] as int,
+              end: r[1] as int,
+              type: HighlightType.values[r[2] as int],
+              language: r[3] as String?,
+            ))
+        .toList();
     _rangesForText = text;
-    _ranges = ranges;
     _pendingText = null;
     notifyListeners();
   }

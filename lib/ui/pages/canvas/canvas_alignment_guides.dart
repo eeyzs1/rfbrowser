@@ -107,8 +107,12 @@ mixin _CanvasAlignmentGuidesMixin on _CanvasViewStateBase {
   double? _getSnapOffset(CanvasCard draggedCard, List<CanvasCard> allCards) {
     if (_altKeyPressed) return null;
     final threshold = _CanvasViewStateBase._alignmentThreshold;
+    // Issue 19: Skip cards outside the viewport (with a buffer for the
+    // threshold) to avoid O(n) full-scan on every drag move frame.
+    final vr = _visibleWorldRect.inflate(threshold);
     for (final other in allCards) {
       if (other.id == draggedCard.id) continue;
+      if (!vr.overlaps(other.rect)) continue;
       final dCenterX = (draggedCard.center.dx - other.center.dx).abs();
       if (dCenterX < threshold) {
         return other.center.dx - draggedCard.width / 2 - draggedCard.x;
@@ -128,8 +132,12 @@ mixin _CanvasAlignmentGuidesMixin on _CanvasViewStateBase {
   double? _getSnapOffsetY(CanvasCard draggedCard, List<CanvasCard> allCards) {
     if (_altKeyPressed) return null;
     final threshold = _CanvasViewStateBase._alignmentThreshold;
+    // Issue 19: Skip cards outside the viewport (with a buffer for the
+    // threshold) to avoid O(n) full-scan on every drag move frame.
+    final vr = _visibleWorldRect.inflate(threshold);
     for (final other in allCards) {
       if (other.id == draggedCard.id) continue;
+      if (!vr.overlaps(other.rect)) continue;
       final dCenterY = (draggedCard.center.dy - other.center.dy).abs();
       if (dCenterY < threshold) {
         return other.center.dy - draggedCard.height / 2 - draggedCard.y;

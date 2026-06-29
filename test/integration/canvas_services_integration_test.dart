@@ -8,7 +8,7 @@ import 'package:rfbrowser/services/canvas/canvas_templates_service.dart';
 
 void main() {
   group('Canvas Export Service Integration', () {
-    test('exportToSvg generates valid SVG with cards', () {
+    test('exportToSvg generates valid SVG with cards', () async {
       final data = CanvasData(
         cards: [
           CanvasCard(
@@ -26,7 +26,7 @@ void main() {
       );
 
       const exporter = CanvasExportService();
-      final svg = exporter.exportToSvg(data, 'Test Canvas');
+      final svg = await exporter.exportToSvg(data, 'Test Canvas');
 
       expect(svg, contains('<?xml version="1.0"'));
       expect(svg, contains('<svg'));
@@ -34,7 +34,7 @@ void main() {
       expect(svg, contains('Hello'));
     });
 
-    test('exportToSvg generates SVG with connections', () {
+    test('exportToSvg generates SVG with connections', () async {
       final data = CanvasData(
         cards: [
           CanvasCard(
@@ -69,17 +69,17 @@ void main() {
       );
 
       const exporter = CanvasExportService();
-      final svg = exporter.exportToSvg(data, 'Connected');
+      final svg = await exporter.exportToSvg(data, 'Connected');
 
       expect(svg, contains('<line'));
       expect(svg, contains('relates to'));
     });
 
-    test('exportToSvg handles empty canvas', () {
+    test('exportToSvg handles empty canvas', () async {
       final data = CanvasData(cards: [], connections: []);
 
       const exporter = CanvasExportService();
-      final svg = exporter.exportToSvg(data, 'Empty');
+      final svg = await exporter.exportToSvg(data, 'Empty');
 
       expect(svg, contains('<?xml'));
       expect(svg, contains('<svg'));

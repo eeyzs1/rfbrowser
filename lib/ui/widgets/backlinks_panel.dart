@@ -177,9 +177,11 @@ class _BacklinksPanelState extends ConsumerState<BacklinksPanel> {
 
   /// Schedules an unlinked-mention scan only when the active note or its
   /// content has changed since the last computation. The scan runs in a
-  /// microtask so this build returns immediately and the note can paint
-  /// first; the panel then populates once the (cached or fresh) result
-  /// is ready.
+  /// background isolate via compute() (not Future.microtask, which runs
+  /// synchronously on the UI thread's microtask queue and would freeze
+  /// the editor on large vaults). This build returns immediately so the
+  /// note can paint first; the panel then populates once the (cached or
+  /// fresh) result is ready.
   void _maybeScheduleUnlinkedScan(Note? activeNote) {
     if (activeNote == null) {
       if (_computedNoteId != null) {
@@ -196,19 +198,25 @@ class _BacklinksPanelState extends ConsumerState<BacklinksPanel> {
     _computedNoteId = activeNote.id;
     _computedContent = activeNote.content;
     final noteId = activeNote.id;
-    Future.microtask(() {
+    // Fire-and-forget the async scan. getUnlinkedMentions offloads the
+    // O(n_titles × content) regex scan to a background isolate via
+    // compute(), so the UI thread is not blocked. (Previously this used
+    // Future.microtask, which is NOT an isolate — it runs on the UI
+    // thread's microtask queue and froze the UI 250ms-1s per first-open.)
+    () async {
       if (!mounted) return;
-      final result =
-          ref.read(knowledgeProvider.notifier).getUnlinkedMentions(noteId);
+      final result = await ref
+          .read(knowledgeProvider.notifier)
+          .getUnlinkedMentions(noteId);
       if (!mounted) return;
       // Guard against the active note having changed again while the
-      // microtask was pending.
+      // isolate was running.
       final current = ref.read(knowledgeProvider).activeNote;
       if (current?.id != noteId) return;
       setState(() {
         _unlinkedMentions = result;
       });
-    });
+    }();
   }
 }
 
@@ -227,9 +235,7 @@ class _BacklinkItem extends ConsumerWidget {
   Widget build(BuildContext ctx, WidgetRef ref) {
     final theme = Theme.of(ctx);
     final knowledgeState = ref.watch(knowledgeProvider);
-    final sourceNote = knowledgeState.notes
-        .where((n) => n.id == sourceId)
-        .firstOrNull;
+    final sourceNote = knowledgeState.byId[sourceId];
     final title = sourceNote?.title ?? sourceId;
 
     return InkWell(
@@ -304,11 +310,8 @@ class _UnlinkedMentionItem extends ConsumerWidget {
     return InkWell(
       onTap: () {
         final knowledgeState = ref.read(knowledgeProvider);
-        final note = knowledgeState.notes
-            .where(
-              (n) => n.title.toLowerCase() == mention.targetTitle.toLowerCase(),
-            )
-            .firstOrNull;
+        final note =
+            knowledgeState.byTitleLower[mention.targetTitle.toLowerCase()];
         if (note != null) {
           ref.read(knowledgeProvider.notifier).openNote(note.id);
         }
