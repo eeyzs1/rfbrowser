@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import 'settings/theme_settings_section.dart';
@@ -98,9 +99,15 @@ class SettingsPage extends ConsumerWidget {
         // const 列表中同一 widget instance 在 ListView 跨位置时会被 Flutter
         // 视为"同一个 element 移动位置"，导致 isHidden 标记而不是卸载。
         // 加 Key 后 Flutter 知道是不同 item，强制挂载/卸载。
-        cacheExtent: 0, // ignore: deprecated_member_use
+        //
+        // scrollCacheExtent: ScrollCacheExtent.pixels(0) 替代已废弃的
+        // cacheExtent: 0（Flutter 3.41+ 后 cacheExtent 被废弃）。
+        // 保留 addAutomaticKeepAlives: false 配合强制卸载。
+        // 移除 addRepaintBoundaries: false —— 该标志与 AXTree 无关，纯粹
+        // 禁用每项 RepaintBoundary 隔离，导致滚动时整个 ListView 重绘，
+        // 是不必要的性能损耗。保留默认 true 恢复每项重绘隔离。
+        scrollCacheExtent: ScrollCacheExtent.pixels(0),
         addAutomaticKeepAlives: false,
-        addRepaintBoundaries: false,
         itemBuilder: (context, index) => KeyedSubtree(
           key: ValueKey<int>(index),
           child: items[index],

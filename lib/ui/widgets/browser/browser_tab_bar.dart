@@ -130,94 +130,100 @@ class _BrowserTabBarState extends ConsumerState<BrowserTabBar> {
 
   Widget _buildTabItem(ThemeData theme, BrowserTab tab, int index) {
     final isActive = tab.id == widget.browserState.activeTabId;
-    // 移除 Semantics(button: true, selected: isActive) —— 与 _SceneButton /
-    // _NavButton 修复同理：InkWell(onTap != null) 通过合并隐式提供 button
-    // 角色，外层显式 button:true 会形成双重 button 节点。且 selected:isActive
-    // 在 activeTabId 变化时翻转，导致结构变化。
-    // ReorderableListView.builder 本身在 Windows 上对 AXTree 敏感，叠加
-    // 双重 button + 动态 selected + AnimatedSwitcher 中的
-    // CircularProgressIndicator（每帧更新语义 value），是启动崩溃的主要根因。
-    // 用 ExcludeSemantics 包裹整个 tab item，彻底消除结构变化和动画帧更新。
+    // 稳定语义策略（与 _NavButton / _SceneButton 一致）：
+    // 外层 Semantics(button, selected, label) 提供稳定的 button 角色 +
+    // tab 标题 + active 状态。内层 ExcludeSemantics 屏蔽 InkWell 及其所有
+    // 子节点的动态 semantics（InkWell button 角色、CircularProgressIndicator
+    // 每帧 value 更新、IconButton 关闭按钮等）。
+    //
+    // 之前的 ExcludeSemantics(整个 tab item) 把 tab 从语义树完全移除，
+    // 屏幕阅读器用户无法切换/关闭标签 —— a11y 倒退。
+    //
+    // selected: isActive 在 activeTabId 变化时翻转，但这是 SemanticsNode 的
+    // 属性值更新（AXTree 可处理），非结构翻转。button: true 始终存在，结构稳定。
     return ReorderableDragStartListener(
       key: ValueKey(tab.id),
       index: index,
-      child: ExcludeSemantics(
-        child: InkWell(
-          onTap: () => ref.read(browserProvider.notifier).setActiveTab(tab.id),
-          onSecondaryTapDown: (_) => widget.onShowContextMenu(tab),
-          onLongPress: () => widget.onShowContextMenu(tab),
-          hoverColor: theme.colorScheme.primary.withValues(alpha: 0.04),
-          splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-          highlightColor: theme.colorScheme.primary.withValues(alpha: 0.06),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 180),
-            padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                  : Colors.transparent,
-              border: Border(
-                right: BorderSide(color: theme.dividerColor, width: 0.5),
-                bottom: isActive
-                    ? BorderSide(color: theme.colorScheme.primary, width: 2)
-                    : BorderSide.none,
+      child: Semantics(
+        button: true,
+        selected: isActive,
+        label: widget.l.tabLabel(tab.title.isNotEmpty ? tab.title : tab.url),
+        child: ExcludeSemantics(
+          child: InkWell(
+            onTap: () => ref.read(browserProvider.notifier).setActiveTab(tab.id),
+            onSecondaryTapDown: (_) => widget.onShowContextMenu(tab),
+            onLongPress: () => widget.onShowContextMenu(tab),
+            hoverColor: theme.colorScheme.primary.withValues(alpha: 0.04),
+            splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+            highlightColor: theme.colorScheme.primary.withValues(alpha: 0.06),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 180),
+              padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                    : Colors.transparent,
+                border: Border(
+                  right: BorderSide(color: theme.dividerColor, width: 0.5),
+                  bottom: isActive
+                      ? BorderSide(color: theme.colorScheme.primary, width: 2)
+                      : BorderSide.none,
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: tab.isLoading
-                      ? SizedBox(
-                          key: const ValueKey('loading'),
-                          width: 12,
-                          height: 12,
-                          // ExcludeSemantics：CircularProgressIndicator 每帧
-                          // 更新语义 value 属性，在 ReorderableListView 内
-                          // 叠加 tab 切换时结构变化，触发 AXTree diff 失败。
-                          child: ExcludeSemantics(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 1.5,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        )
-                      : Icon(
-                          tab.isPinned
-                              ? Icons.push_pin_outlined
-                              : Icons.language_outlined,
-                          key: ValueKey(tab.isPinned ? 'pinned' : 'idle'),
-                          size: 12,
-                          color: isActive
-                              ? theme.colorScheme.primary
-                              : theme.hintColor,
-                        ),
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    tab.title.isNotEmpty ? tab.title : tab.url,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: isActive ? theme.colorScheme.primary : null,
-                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 条件 Icon 替代 AnimatedSwitcher（与 ai_float / agent_float /
+                  // speed_dial_fab 一致）：AnimatedSwitcher + ValueKey 在
+                  // loading↔idle 切换时会 unmount + remount 子节点，导致
+                  // SemanticsNode 重新创建/销毁 → AXTree diff 失败。
+                  // 改用条件渲染，不产生节点替换。CircularProgressIndicator
+                  // 的每帧 value 更新已由上层 ExcludeSemantics 屏蔽，无需
+                  // 单独包裹。
+                  if (tab.isLoading)
+                    SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        color: theme.colorScheme.primary,
+                      ),
+                    )
+                  else
+                    Icon(
+                      tab.isPinned
+                          ? Icons.push_pin_outlined
+                          : Icons.language_outlined,
+                      size: 12,
+                      color: isActive
+                          ? theme.colorScheme.primary
+                          : theme.hintColor,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      tab.title.isNotEmpty ? tab.title : tab.url,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: isActive ? theme.colorScheme.primary : null,
+                        fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                SizedBox(
-                  width: DesignTouchTarget.minSize,
-                  height: DesignTouchTarget.minSize,
-                  child: IconButton(
-                    onPressed: () => widget.onCloseTab(tab),
-                    icon: Icon(Icons.close, size: 12, color: theme.hintColor),
-                    padding: EdgeInsets.zero,
-                    tooltip: widget.l.closeTabLabel(tab.title),
+                  const SizedBox(width: 4),
+                  SizedBox(
+                    width: DesignTouchTarget.minSize,
+                    height: DesignTouchTarget.minSize,
+                    child: IconButton(
+                      onPressed: () => widget.onCloseTab(tab),
+                      icon: Icon(Icons.close, size: 12, color: theme.hintColor),
+                      padding: EdgeInsets.zero,
+                      tooltip: widget.l.closeTabLabel(tab.title),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

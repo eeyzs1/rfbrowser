@@ -45,51 +45,64 @@ class BrowserClipButtons extends ConsumerWidget {
       );
     }
 
-    // 移除两个 Semantics(button: true, enabled: hasPage) —— 与 _NavButton
-    // 修复同理：IconButton(onPressed != null) 通过合并隐式提供 button 角色，
-    // 外层显式 button:true 会形成双重 button 节点。且 hasPage 在 URL 从
-    // about:blank → 实际 URL 加载时翻转 false→true，IconButton.onPressed
-    // 也从 null → callback，导致 IconButton 的 button semantics 出现/消失，
-    // 叠加外层 button:true 的结构不一致，触发 AXTree diff 失败。
-    // 用 ExcludeSemantics 包裹整个 Row，彻底消除结构变化。
-    return ExcludeSemantics(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Tooltip(
-            message: l.clipFullPage,
-            child: IconButton(
-              icon: Icon(
-                Icons.content_copy_outlined,
-                size: iconSize,
-                color: hasPage ? theme.hintColor : theme.disabledColor,
-              ),
-              onPressed: hasPage ? onClipPage : null,
-              padding: const EdgeInsets.all(4),
-              constraints: BoxConstraints(
-                minWidth: iconSize + 16,
-                minHeight: iconSize + 16,
-              ),
-            ),
-          ),
-          Tooltip(
-            message: l.clipSelection,
-            child: IconButton(
-              icon: Icon(
-                Icons.text_fields_outlined,
-                size: iconSize,
-                color: hasPage ? theme.hintColor : theme.disabledColor,
-              ),
-              onPressed: hasPage ? onClipSelection : null,
-              padding: const EdgeInsets.all(4),
-              constraints: BoxConstraints(
-                minWidth: iconSize + 16,
-                minHeight: iconSize + 16,
+    // 稳定语义策略（与 _NavButton 一致）：每个剪取按钮用
+    // Semantics(button, enabled, label) + ExcludeSemantics(IconButton) 提供
+    // 稳定的 button 节点。之前的 ExcludeSemantics(整个 Row) 把两个剪取按钮
+    // 完全从语义树移除，屏幕阅读器用户无法访问 —— a11y 倒退。
+    //
+    // hasPage 在 URL 加载时翻转 false→true，IconButton.onPressed 也从
+    // null → callback，但被 ExcludeSemantics 屏蔽。外层 Semantics 的
+    // enabled 从 false→true 是属性值更新（AXTree 可处理），非结构翻转。
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Semantics(
+          button: true,
+          enabled: hasPage,
+          label: l.clipFullPage,
+          child: ExcludeSemantics(
+            child: Tooltip(
+              message: l.clipFullPage,
+              child: IconButton(
+                icon: Icon(
+                  Icons.content_copy_outlined,
+                  size: iconSize,
+                  color: hasPage ? theme.hintColor : theme.disabledColor,
+                ),
+                onPressed: hasPage ? onClipPage : null,
+                padding: const EdgeInsets.all(4),
+                constraints: BoxConstraints(
+                  minWidth: iconSize + 16,
+                  minHeight: iconSize + 16,
+                ),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+        Semantics(
+          button: true,
+          enabled: hasPage,
+          label: l.clipSelection,
+          child: ExcludeSemantics(
+            child: Tooltip(
+              message: l.clipSelection,
+              child: IconButton(
+                icon: Icon(
+                  Icons.text_fields_outlined,
+                  size: iconSize,
+                  color: hasPage ? theme.hintColor : theme.disabledColor,
+                ),
+                onPressed: hasPage ? onClipSelection : null,
+                padding: const EdgeInsets.all(4),
+                constraints: BoxConstraints(
+                  minWidth: iconSize + 16,
+                  minHeight: iconSize + 16,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

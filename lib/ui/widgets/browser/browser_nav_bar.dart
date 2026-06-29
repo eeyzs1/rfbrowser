@@ -92,29 +92,36 @@ class _NavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final enabled = onPressed != null;
-    // 移除 Semantics(button: true) —— 与 _SceneButton 修复同理：
-    // Material+InkWell(onTap != null) 通过合并隐式提供 button 角色，
-    // 外层显式 button:true 会形成双重 button 节点。
-    // 但这里保留了 enabled 翻转时 InkWell.onTap null ↔ callback 的结构变化
-    // 问题：disabled 时无 button 角色，enabled 时有 button 角色。
-    // 为了彻底消除结构变化，用 ExcludeSemantics 包裹整个 _NavButton。
-    // _NavButton 是浏览器导航按钮（后退/前进/刷新/阅读模式），非核心交互，
-    // 无障碍用户可通过 Tab 键访问 WebView 内容。
-    return ExcludeSemantics(
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
+    // 稳定语义策略：外层 Semantics 提供稳定的 button 角色 + label + enabled
+    // 状态，内层 ExcludeSemantics 屏蔽 InkWell 的动态 semantics。
+    //
+    // 之前的 ExcludeSemantics(整个 _NavButton) 把按钮从语义树完全移除，
+    // 屏幕阅读器用户无法访问后退/前进/刷新/阅读模式按钮 —— 这是 a11y 倒退。
+    //
+    // 新策略：InkWell.onTap 仍可为 null（disabled），但被 ExcludeSemantics
+    // 屏蔽，其 button 角色出现/消失的结构变化不会到达 AXTree。外层
+    // Semantics(button: true, enabled:, label:) 始终贡献稳定的 button 节点，
+    // enabled 从 true→false 是属性值更新（AXTree 可处理），非结构翻转。
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: tooltip,
+      child: ExcludeSemantics(
+        child: Material(
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(8),
-          onTap: onPressed,
-          child: Tooltip(
-            message: tooltip,
-            child: Padding(
-              padding: const EdgeInsets.all(6),
-              child: Icon(
-                icon,
-                size: iconSize,
-                color: enabled ? theme.iconTheme.color : theme.disabledColor,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: onPressed,
+            child: Tooltip(
+              message: tooltip,
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Icon(
+                  icon,
+                  size: iconSize,
+                  color: enabled ? theme.iconTheme.color : theme.disabledColor,
+                ),
               ),
             ),
           ),

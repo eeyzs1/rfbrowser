@@ -84,99 +84,128 @@ class _StatusBarState extends ConsumerState<StatusBar> {
       hasError: webdavState.status == SyncStatus.error,
     );
 
-    // ExcludeSemantics：StatusBar watch 了 5 个 provider（browser/knowledge/
-    // vault/connectivity/webdav），任何状态变化都触发整个 StatusBar 重建，每次
-    // 重建都向 AXTree 提交一组新语义节点（版本号、状态文本、笔记数、标签数、
-    // 同步状态等）。启动时这些 provider 异步加载会接连触发 5-10 次重建，叠加
-    // LoadingScreen → MainLayout 切换的大规模 widget tree 变化，会让 Windows
-    // accessibility_bridge 在很短时间内接收大量语义树更新 → AXTree diff 失败
-    // （"Failed to update ui::AXTree, error: NNN"）→ 进程崩溃。
-    // 包裹后 StatusBar 不再向语义树贡献任何节点，从根源上消除崩溃。
-    // StatusBar 是纯状态指示器，无障碍用户通过主界面 Tab 仍可访问所有功能。
-    return ExcludeSemantics(
-      child: Container(
-        height: 24,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: theme.appBarTheme.backgroundColor,
-          border: Border(top: BorderSide(color: theme.dividerColor)),
-        ),
-        child: Row(
-          children: [
-            Text('RFBrowser v0.3.0', style: theme.textTheme.bodySmall),
-          const SizedBox(width: 12),
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isOffline
-                  ? const Color(0xFFEF4444)
-                  : hasVault
-                  ? const Color(0xFF2DD4BF)
-                  : const Color(0xFFFBBF24),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            isOffline ? l.offline : (hasVault ? l.ready : l.noVault),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: isOffline ? const Color(0xFFEF4444) : null,
-            ),
-          ),
-          if (isOffline && connectivityState.syncQueue.isNotEmpty) ...[
-            const SizedBox(width: 12),
-            Icon(Icons.cloud_upload, size: 10, color: theme.hintColor),
-            const SizedBox(width: 4),
-            Text(
-              l.pendingCount(connectivityState.syncQueue.length),
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
-          if (hasVault && !isOffline) ...[
-            const SizedBox(width: 12),
-            Icon(Icons.description, size: 10, color: theme.hintColor),
-            const SizedBox(width: 4),
-            Text(
-              l.notesCount(knowledgeState.notes.length),
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
-          const Spacer(),
-          // 命令栏可见按钮入口（与 Ctrl+K 快捷键效果相同）
-          if (widget.onCommandBar != null) ...[
-            InkWell(
-              onTap: widget.onCommandBar,
-              borderRadius: BorderRadius.circular(4),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.search, size: 12, color: theme.hintColor),
+    // 稳定语义策略：StatusBar 有两类内容 ——
+    // (1) 纯状态文本（版本号、在线/离线、笔记数、标签数、同步状态文本）：
+    //     受 5 个 provider 驱动频繁 churn，用 ExcludeSemantics 屏蔽，避免
+    //     启动时 AXTree diff 失败。
+    // (2) 交互入口（命令栏按钮 + 同步设置跳转）：之前的 outer ExcludeSemantics
+    //     把这两个交互元素也一并移除，屏幕阅读器用户无法触发命令栏或跳转
+    //     同步设置 —— a11y 倒退。注释"纯状态指示器"也是错误的。
+    //     现拆分：左侧状态文本用 Expanded+ExcludeSemantics+Spacer 占满左侧；
+    //     命令栏和同步入口用 Semantics(button, label)+ExcludeSemantics(InkWell)
+    //     提供稳定 button 节点，InkWell 的动态 semantics 被屏蔽。
+    return Container(
+      height: 24,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: theme.appBarTheme.backgroundColor,
+        border: Border(top: BorderSide(color: theme.dividerColor)),
+      ),
+      child: Row(
+        children: [
+          // 左侧状态文本：Expanded 让 Spacer 把右侧内容推到右边。
+          Expanded(
+            child: ExcludeSemantics(
+              child: Row(
+                children: [
+                  Text('RFBrowser v0.3.0', style: theme.textTheme.bodySmall),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isOffline
+                          ? const Color(0xFFEF4444)
+                          : hasVault
+                          ? const Color(0xFF2DD4BF)
+                          : const Color(0xFFFBBF24),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    isOffline ? l.offline : (hasVault ? l.ready : l.noVault),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isOffline ? const Color(0xFFEF4444) : null,
+                    ),
+                  ),
+                  if (isOffline &&
+                      connectivityState.syncQueue.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    Icon(Icons.cloud_upload, size: 10, color: theme.hintColor),
                     const SizedBox(width: 4),
                     Text(
-                      l.commandBar,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.hintColor,
-                      ),
+                      l.pendingCount(connectivityState.syncQueue.length),
+                      style: theme.textTheme.bodySmall,
                     ),
                   ],
+                  if (hasVault && !isOffline) ...[
+                    const SizedBox(width: 12),
+                    Icon(Icons.description, size: 10, color: theme.hintColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      l.notesCount(knowledgeState.notes.length),
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                  const Spacer(),
+                ],
+              ),
+            ),
+          ),
+          // 命令栏入口（交互元素，与 Ctrl+K 快捷键效果相同）：
+          // Semantics 提供稳定 button 角色 + label，ExcludeSemantics 屏蔽
+          // InkWell 动态 semantics。
+          if (widget.onCommandBar != null) ...[
+            Semantics(
+              button: true,
+              label: l.commandBar,
+              child: ExcludeSemantics(
+                child: InkWell(
+                  onTap: widget.onCommandBar,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.search, size: 12, color: theme.hintColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          l.commandBar,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 12),
           ],
-          Text(
-            l.tabsCount(browserState.tabs.length),
-            style: theme.textTheme.bodySmall,
+          // 标签数（纯文本状态）：ExcludeSemantics
+          ExcludeSemantics(
+            child: Text(
+              l.tabsCount(browserState.tabs.length),
+              style: theme.textTheme.bodySmall,
+            ),
           ),
-          if (hasVault) ...[const SizedBox(width: 12), syncWidget],
+          // 同步状态入口（可点击跳转同步设置）：Semantics 提供稳定 button 角色，
+          // 屏蔽内部 churning 状态文本 + CircularProgressIndicator。
+          if (hasVault) ...[
+            const SizedBox(width: 12),
+            Semantics(
+              button: true,
+              label: 'Sync settings',
+              child: ExcludeSemantics(child: syncWidget),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
