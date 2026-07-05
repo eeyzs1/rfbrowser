@@ -238,28 +238,25 @@ class _ShortcutSettingsSectionState
                     ),
                   ),
                 ),
-                AnimatedRotation(
-                  turns: isExpanded ? 0.25 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    Icons.chevron_right,
-                    size: 18,
-                    color: theme.hintColor,
-                  ),
+                // 条件 Icon（无动画）：AnimatedRotation 在 200ms 动画期间
+                // 每帧向 AXTree 提交 transform 更新，与同 section 的
+                // AnimatedCrossFade 叠加。改用条件 Icon（expand_more/chevron_right）
+                // 与 _AdvancedSettingsToggle 统一模式。
+                Icon(
+                  isExpanded ? Icons.expand_more : Icons.chevron_right,
+                  size: 18,
+                  color: theme.hintColor,
                 ),
               ],
             ),
           ),
         ),
-        AnimatedCrossFade(
-          firstChild: const SizedBox(width: double.infinity),
-          secondChild: Column(children: _buildActionList(actions, l, theme)),
-          crossFadeState: isExpanded
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          duration: const Duration(milliseconds: 200),
-          sizeCurve: Curves.easeInOut,
-        ),
+        // 条件渲染（无动画）：AnimatedCrossFade 展开时一次涌入 16（global）
+        // 或 6（canvas）个 ListTile button 语义节点，且每个 ListTile 还带
+        // 条件 onTap（见 _buildActionList）。改用 if/else 条件渲染，
+        // 折叠时完全不挂载子树。
+        if (isExpanded)
+          Column(children: _buildActionList(actions, l, theme)),
       ],
     );
   }
@@ -320,12 +317,16 @@ class _ShortcutSettingsSectionState
                   ),
                 ],
               ),
-        onTap: isEditing
-            ? null
-            : () {
-                setState(() => _editingAction = action);
-                Future.microtask(() => _editFocusNode.requestFocus());
-              },
+        // 始终非空 callback：之前 onTap: isEditing ? null : cb 会在 editing
+        // 态时让 ListTile 丢失 button 角色，非 editing 时恢复 button 角色，
+        // 22 个 tile 中任一进入/退出编辑都会触发 button 角色翻转 → AXTree
+        // diff 失败。改为始终提供 onTap（内部 early-return），与
+        // scene_switcher.dart _SceneButton.onTap: widget.onTap 统一模式。
+        onTap: () {
+          if (isEditing) return;
+          setState(() => _editingAction = action);
+          Future.microtask(() => _editFocusNode.requestFocus());
+        },
       );
     }).toList();
   }

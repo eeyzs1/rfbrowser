@@ -102,9 +102,12 @@ mixin _ProviderListMixin on _AISettingsSectionStateBase {
         ],
       ),
       children: [
-        AnimatedOpacity(
+        // Opacity（无动画）：AnimatedOpacity 在 enable/disable 时 200ms
+        // 透明度动画，每帧向 AXTree 提交 opacity 更新；多个 provider 同时
+        // 切换时会多个 AnimatedOpacity 并发。改用 Opacity 即时切换，
+        // 只提交一次属性更新（AXTree 可处理属性级变化，不可处理高频帧更新）。
+        Opacity(
           opacity: enabled ? 1.0 : 0.45,
-          duration: const Duration(milliseconds: 200),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

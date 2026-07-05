@@ -39,6 +39,10 @@ void main() {
           ),
         ),
       );
+      // SceneScaffold 采用分阶段渲染：首帧只渲染 shell（SceneSwitcher +
+      // ExcludeSemantics 占位符），第二帧通过 addPostFrameCallback 触发
+      // _contentReady=true 后才渲染场景内容。pump() 推进一帧以触发回调。
+      await tester.pump();
 
       expect(find.text('Capture View'), findsOneWidget);
       expect(find.text('Think View'), findsNothing);

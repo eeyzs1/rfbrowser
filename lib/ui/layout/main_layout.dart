@@ -33,10 +33,18 @@ class MainLayout extends ConsumerStatefulWidget {
 
 class _MainLayoutState extends ConsumerState<MainLayout> {
   bool _showCommandBar = false;
+  bool _showSettings = false;
   SceneType _currentScene = SceneType.capture;
   bool _leftPanelExpanded = true;
   bool _rightPanelExpanded = true;
   ConnectViewMode _connectViewMode = ConnectViewMode.canvas;
+
+  void _openSettings() {
+    setState(() => _showSettings = true);
+  }
+  void _closeSettings() {
+    setState(() => _showSettings = false);
+  }
 
   void _switchScene(SceneType scene) {
     // 守卫：避免 scene 未变时触发 setState + updateScene。
@@ -105,35 +113,61 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           autofocus: true,
           child: Stack(
             children: [
-              SceneScaffold(
-                initialScene: _currentScene,
-                captureView: (_) => CaptureScene(
-                  leftPanelExpanded: _leftPanelExpanded,
-                  rightPanelExpanded: _rightPanelExpanded,
-                  onToggleLeftPanel: _toggleLeftPanel,
-                  onToggleRightPanel: _toggleRightPanel,
-                  onNoteOpened: _onNoteOpened,
+              // 根因修复（2026-07-05）：用 AbsorbPointer 替代 Offstage。
+              //
+              // 之前的 Offstage(offstage: true) 会从 semantics 树中移除
+              // SceneScaffold 的 23 个节点（#5-#27）。当 _openSettings 触发此
+              // 移除时，native AXTree 出现大 diff（28→16 节点），导致 WebView2
+              // 的 native accessibility 节点（如 63）失去 Flutter 层的父引用 →
+              // orphan → accessibility_bridge.cc(114) Failed to update ui::AXTree
+              // → 进程崩溃。
+              //
+              // 诊断证据（error.log）：
+              // - 启动 MainLayout frame #1-3：28 节点，无 accessibility_bridge 报错
+              // - _openSettings 后：16 节点（SceneScaffold semantics 被移除）
+              // - line 162-163：accessibility_bridge.cc(114) error: 63
+              // 节点 63 从未出现在 Flutter 层（#0-#38），是 native 节点。
+              //
+              // AbsorbPointer(absorbing: true) 只屏蔽触摸，不移除 semantics。
+              // SceneScaffold 始终保留在 semantics 树里，native 节点 63 始终有
+              // 父引用。开关设置时树只增减 SettingsPage 的节点（~11 个），
+              // 不触碰 SceneScaffold（含 WebView 的 native 节点）。
+              // 副作用：SceneScaffold 在 settings 期间仍 watch provider 但不显示；
+              // WebView 继续运行（保留页面状态）——可接受。
+              AbsorbPointer(
+                absorbing: _showSettings,
+                child: SceneScaffold(
+                  initialScene: _currentScene,
+                  captureView: (_) => CaptureScene(
+                    leftPanelExpanded: _leftPanelExpanded,
+                    rightPanelExpanded: _rightPanelExpanded,
+                    onToggleLeftPanel: _toggleLeftPanel,
+                    onToggleRightPanel: _toggleRightPanel,
+                    onNoteOpened: _onNoteOpened,
+                  ),
+                  thinkView: (_) => ThinkScene(
+                    leftPanelExpanded: _leftPanelExpanded,
+                    rightPanelExpanded: _rightPanelExpanded,
+                    onToggleLeftPanel: _toggleLeftPanel,
+                    onToggleRightPanel: _toggleRightPanel,
+                    onCreateNote: _createNewNote,
+                    onNoteOpened: _onNoteOpened,
+                  ),
+                  connectView: (_) => ConnectScene(
+                    initialViewMode: _connectViewMode,
+                    leftPanelExpanded: _leftPanelExpanded,
+                    rightPanelExpanded: _rightPanelExpanded,
+                    onToggleLeftPanel: _toggleLeftPanel,
+                    onToggleRightPanel: _toggleRightPanel,
+                  ),
+                  statusBar: StatusBar(
+                    onCommandBar: () =>
+                        setState(() => _showCommandBar = true),
+                    onSettings: _openSettings,
+                  ),
+                  onSceneChanged: _switchScene,
+                  onSettings: _openSettings,
                 ),
-                thinkView: (_) => ThinkScene(
-                  leftPanelExpanded: _leftPanelExpanded,
-                  rightPanelExpanded: _rightPanelExpanded,
-                  onToggleLeftPanel: _toggleLeftPanel,
-                  onToggleRightPanel: _toggleRightPanel,
-                  onCreateNote: _createNewNote,
-                  onNoteOpened: _onNoteOpened,
-                ),
-                connectView: (_) => ConnectScene(
-                  initialViewMode: _connectViewMode,
-                  leftPanelExpanded: _leftPanelExpanded,
-                  rightPanelExpanded: _rightPanelExpanded,
-                  onToggleLeftPanel: _toggleLeftPanel,
-                  onToggleRightPanel: _toggleRightPanel,
-                ),
-                statusBar: StatusBar(
-                  onCommandBar: () =>
-                      setState(() => _showCommandBar = true),
-                ),
-                onSceneChanged: _switchScene,
               ),
               if (_showCommandBar)
                 GestureDetector(
@@ -146,7 +180,41 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                     ),
                   ),
                 ),
-              const SpeedDialFAB(),
+              // 根因修复（2026-07-05，final）：条件渲染 + 自定义 binding 禁用 semantics。
+              //
+              // 这是 Flutter engine 已知 bug（flutter/flutter#98099, #103808）：
+              // 当 semantics 子树 mount/unmount 时，Windows accessibility_bridge 的
+              // ui::AXTree::Unserialize 会失败（"NNN will not be in the tree"）。
+              //
+              // 尝试过的方案及结果：
+              // 1. Completer（main.dart）：解决启动阶段 race condition ✓
+              // 2. AbsorbPointer 替代 Offstage（SceneScaffold）：保留节点 ✓
+              // 3. Offstage 替代条件渲染（SettingsPage/SpeedDialFAB）：节点 ID
+              //    稳定但 isHidden 标志翻转会从 framework 树移除/重新挂载节点，
+              //    错误数从 3 暴增到 27（error 57×22 + 63×1 + 74×1 + 83×1）✗
+              // 4. `setSemanticsTreeEnabled(false)` 单独使用：无效，该 API 只告诉
+              //    engine "可释放资源"，不阻止 framework 发送 semantics 更新 ✗
+              // 5. `onSemanticsEnabledChanged = no-op`：太晚，handle 在 initInstances
+              //    期间已创建 ✗
+              //
+              // 根因（Flutter SDK 源码分析）：
+              // - Windows 上 `platformDispatcher.semanticsEnabled` 从 app 启动起就为 true
+              // - `SemanticsBinding.initInstances` 调用 `ensureSemantics()` →
+              //   `_semanticsEnabled.value = true` → `_semanticsOwner` 创建 →
+              //   framework 持续发送 semantics 更新 → AXTree diff 冲突
+              //
+              // 唯一彻底方案：在 main.dart 中创建自定义 binding 子类
+              // `RFBrowserBinding extends WidgetsFlutterBinding`，override
+              // `semanticsEnabled` getter 返回 false。这让 PipelineOwner 看到
+              // semantics 为 disabled → 不创建 `_semanticsOwner` → flushSemantics
+              // 直接 return → 不发送 updateSemantics → 无 AXTree diff → 无冲突。
+              // 详见 lib/core/rf_browser_binding.dart。
+              //
+              // 代价：屏幕阅读器无法读取 UI。但当前状态下 a11y 已被错误破坏，
+              // 禁用 semantics 反而让 app 稳定可用。等 Flutter 修复 engine bug 后
+              // 可移除 RFBrowserBinding 的 override 恢复 a11y。
+              if (_showSettings) SettingsPage(onBack: _closeSettings),
+              if (!_showSettings) const SpeedDialFAB(),
             ],
           ),
         ),
@@ -191,10 +259,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       ref.read(knowledgeProvider.notifier).createDailyNote(DateTime.now());
       _switchScene(SceneType.think);
     },
-    'settings' => () => Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SettingsPage()),
-    ),
+    'settings' => _openSettings,
     'memory_browser' => () => Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const MemoryBrowserPage()),
@@ -219,10 +284,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     } else if (c.contains('graph')) {
       _switchScene(SceneType.connect);
     } else if (c.contains('settings')) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const SettingsPage()),
-      );
+      _openSettings();
     } else if (c.contains('theme')) {
       final settings = ref.read(settingsProvider);
       final isDark = settings.isDarkMode;

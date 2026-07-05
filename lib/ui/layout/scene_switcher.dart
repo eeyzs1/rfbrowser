@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../theme/design_tokens.dart';
-import '../pages/settings_page.dart';
 import '../../data/stores/vault_store.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/browser_service.dart';
@@ -15,11 +14,13 @@ part 'scene_switcher_vault.dart';
 class SceneSwitcher extends ConsumerStatefulWidget {
   final SceneType currentScene;
   final ValueChanged<SceneType> onSceneChanged;
+  final VoidCallback? onSettings;
 
   const SceneSwitcher({
     super.key,
     required this.currentScene,
     required this.onSceneChanged,
+    this.onSettings,
   });
 
   @override
@@ -101,7 +102,7 @@ class _SceneSwitcherState extends ConsumerState<SceneSwitcher> {
             ),
           ),
           const SizedBox(width: DesignSpacing.xs),
-          const _SettingsButton(),
+          _SettingsButton(onSettings: widget.onSettings),
         ],
       ),
     );
@@ -109,7 +110,8 @@ class _SceneSwitcherState extends ConsumerState<SceneSwitcher> {
 }
 
 class _SettingsButton extends StatefulWidget {
-  const _SettingsButton();
+  final VoidCallback? onSettings;
+  const _SettingsButton({this.onSettings});
 
   @override
   State<_SettingsButton> createState() => _SettingsButtonState();
@@ -133,12 +135,7 @@ class _SettingsButtonState extends State<_SettingsButton> {
         borderRadius: BorderRadius.circular(DesignRadius.sm),
         child: InkWell(
           borderRadius: BorderRadius.circular(DesignRadius.sm),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsPage()),
-            );
-          },
+          onTap: widget.onSettings,
           onHover: (hovered) => setState(() => _isHovered = hovered),
           onFocusChange: (focused) => setState(() => _isFocused = focused),
           child: Container(

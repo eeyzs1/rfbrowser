@@ -6,12 +6,12 @@ import '../../services/connectivity_service.dart';
 import '../../services/knowledge_service.dart';
 import '../../services/webdav_sync_service.dart';
 import '../../data/stores/vault_store.dart';
-import '../pages/settings_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StatusBar extends ConsumerStatefulWidget {
   final VoidCallback? onCommandBar;
-  const StatusBar({super.key, this.onCommandBar});
+  final VoidCallback? onSettings;
+  const StatusBar({super.key, this.onCommandBar, this.onSettings});
 
   @override
   ConsumerState<StatusBar> createState() => _StatusBarState();
@@ -317,9 +317,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
     return Tooltip(
       message: 'Sync settings',
       child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const SettingsPage()),
-        ),
+        onTap: widget.onSettings,
         borderRadius: BorderRadius.circular(4),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),

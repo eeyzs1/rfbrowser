@@ -18,60 +18,25 @@ part 'memory_settings_widgets.dart';
 /// SharedPreferences key 用于持久化高级参数区域的展开状态。
 const _kAdvancedExpandedKey = 'memory_settings_advanced_expanded';
 
-/// Settings panel for the memory subsystem (progressive forgetting,
-/// Hebbian connections, and auto-export).
+/// Settings panel for the memory subsystem — basic settings + operations.
+///
+/// 基础设置（始终显示）：环境上下文注入、Progressive forgetting 开关、
+/// Dreaming 开关。操作状态：手动导出、备份恢复、Dreaming 状态卡片。
+///
+/// 高级参数（阈值、半衰期、衰减常数、Hebbian 连接等 10 个 Slider + 2 个
+/// SwitchListTile）已拆出至 [MemoryAdvancedSettingsSection]，独立成 section。
+/// 拆分目的：避免单 section 同时挂载大量 Slider，拖拽某个 Slider 时
+/// onChanged 每帧写 provider 触发整个 section rebuild，放大 semantics
+/// 节点时序竞争。拆分后基础设置与高级参数各自独立 rebuild。
 ///
 /// Values are written through to [settingsProvider], which the dreaming
 /// service and Hebbian service read on every rebuild — so changes take
 /// effect immediately.
-///
-/// 设置项分为两类：
-///   - 基础设置（始终显示）：环境上下文注入、自动记忆、Dreaming 开关
-///   - 高级参数（默认折叠）：阈值、半衰期、衰减常数等专业参数
-class MemorySettingsSection extends ConsumerStatefulWidget {
+class MemorySettingsSection extends ConsumerWidget {
   const MemorySettingsSection({super.key});
 
   @override
-  ConsumerState<MemorySettingsSection> createState() =>
-      _MemorySettingsSectionState();
-}
-
-class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
-  /// 高级参数区域是否展开。从 SharedPreferences 读取初始值。
-  bool _advancedExpanded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadExpansionState();
-  }
-
-  Future<void> _loadExpansionState() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (mounted) {
-        setState(() {
-          _advancedExpanded = prefs.getBool(_kAdvancedExpandedKey) ?? false;
-        });
-      }
-    } catch (e) {
-      appLog.debug('MemorySettings: failed to load expansion state: $e');
-    }
-  }
-
-  Future<void> _toggleAdvanced() async {
-    final next = !_advancedExpanded;
-    setState(() => _advancedExpanded = next);
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_kAdvancedExpandedKey, next);
-    } catch (e) {
-      appLog.debug('MemorySettings: failed to persist expansion state: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // 用 select watch 整个 memory 子对象（参见 editor_settings_section.dart
     // 中的详细注释）。AppSettings.copyWith 在未传 memory 参数时复用
     // this.memory 引用（settings_service.dart:176），所以其他字段变化时
@@ -119,19 +84,89 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
           onChanged: notifier.setMemoryDreamingEnabled,
         ),
 
-        // ── 高级参数（默认折叠）──────────────────────────────────────
+        // ── 操作与状态（始终显示）────────────────────────────────────
+        const Divider(height: 1),
+        const _ManualExportTile(),
+        const Divider(height: 1),
+        _SectionHeader(label: l.backupAndRestore),
+        const _BackupRestoreRow(),
+        const Divider(height: 1),
+        _SectionHeader(label: l.dreamingActivity),
+        const _DreamingStatusCard(),
+      ],
+    );
+  }
+}
+
+/// 高级参数 section（阈值、半衰期、衰减常数、Hebbian 连接等）。
+///
+/// 从原 [MemorySettingsSection] 拆出，独立成 section。默认折叠，展开时挂载
+/// 10 个 Slider + 2 个 SwitchListTile。折叠时只渲染 toggle，子树完全不挂载，
+/// 避免与基础设置 section 的 rebuild 牵连。
+///
+/// 展开状态持久化到 SharedPreferences（key: [_kAdvancedExpandedKey]）。
+///
+/// 条件渲染（无动画）：AnimatedCrossFade 在 200ms 动画期间会同时挂载
+/// firstChild + secondChild 两套语义子树，批量涌入触发 AXTree diff 失败。
+/// 改用 if/else 条件渲染，折叠时完全不挂载子树。
+class MemoryAdvancedSettingsSection extends ConsumerStatefulWidget {
+  const MemoryAdvancedSettingsSection({super.key});
+
+  @override
+  ConsumerState<MemoryAdvancedSettingsSection> createState() =>
+      _MemoryAdvancedSettingsSectionState();
+}
+
+class _MemoryAdvancedSettingsSectionState
+    extends ConsumerState<MemoryAdvancedSettingsSection> {
+  /// 高级参数区域是否展开。从 SharedPreferences 读取初始值。
+  bool _advancedExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExpansionState();
+  }
+
+  Future<void> _loadExpansionState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) {
+        setState(() {
+          _advancedExpanded = prefs.getBool(_kAdvancedExpandedKey) ?? false;
+        });
+      }
+    } catch (e) {
+      appLog.debug('MemoryAdvancedSettings: failed to load expansion state: $e');
+    }
+  }
+
+  Future<void> _toggleAdvanced() async {
+    final next = !_advancedExpanded;
+    setState(() => _advancedExpanded = next);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_kAdvancedExpandedKey, next);
+    } catch (e) {
+      appLog.debug('MemoryAdvancedSettings: failed to persist expansion state: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final memory = ref.watch(settingsProvider.select((s) => s.memory));
+    final notifier = ref.read(settingsProvider.notifier);
+    final l = AppLocalizations.of(context)!;
+
+    return SettingsSection(
+      title: l.memoryAdvancedSettings,
+      children: [
         _AdvancedSettingsToggle(
           expanded: _advancedExpanded,
           onTap: _toggleAdvanced,
         ),
-        // AnimatedCrossFade 控制高级参数的显示/隐藏
-        AnimatedCrossFade(
-          duration: const Duration(milliseconds: 200),
-          crossFadeState: _advancedExpanded
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          firstChild: const SizedBox(width: double.infinity, height: 0),
-          secondChild: Column(
+        if (_advancedExpanded)
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _IntSlider(
@@ -242,17 +277,6 @@ class _MemorySettingsSectionState extends ConsumerState<MemorySettingsSection> {
               ),
             ],
           ),
-        ),
-
-        // ── 操作与状态（始终显示）────────────────────────────────────
-        const Divider(height: 1),
-        const _ManualExportTile(),
-        const Divider(height: 1),
-        _SectionHeader(label: l.backupAndRestore),
-        const _BackupRestoreRow(),
-        const Divider(height: 1),
-        _SectionHeader(label: l.dreamingActivity),
-        const _DreamingStatusCard(),
       ],
     );
   }

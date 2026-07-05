@@ -81,15 +81,20 @@ class _TestMainLayout extends StatefulWidget {
 
 class _TestMainLayoutState extends State<_TestMainLayout> {
   SceneType _currentScene = SceneType.capture;
+  bool _showSettings = false;
 
   @override
   Widget build(BuildContext context) {
+    if (_showSettings) {
+      return SettingsPage(onBack: () => setState(() => _showSettings = false));
+    }
     return Scaffold(
       body: Column(
         children: [
           SceneSwitcher(
             currentScene: _currentScene,
             onSceneChanged: (scene) => setState(() => _currentScene = scene),
+            onSettings: () => setState(() => _showSettings = true),
           ),
           Expanded(
             child: AnimatedSwitcher(

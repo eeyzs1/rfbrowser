@@ -50,11 +50,14 @@ mixin _PresetTileBuilderMixin on _AISettingsSectionStateBase {
     return Padding(
       padding: EdgeInsets.only(bottom: bottomPadding),
       child: InkWell(
-        onTap: isAddingThis
-            ? null
-            : () async {
-                await _onPresetTap(preset, isOnline, sheetCtx: sheetCtx);
-              },
+        // 始终非空 callback：消除 onTap null↔callback 的 button 角色翻转。
+        // 之前 isAddingThis 期间 onTap=null（InkWell 丢失 button 角色），
+        // 完成后恢复 callback（button 角色重现）→ AXTree diff 失败。
+        // 与 scene_switcher.dart _SceneButton.onTap 统一模式。
+        onTap: () async {
+          if (isAddingThis) return;
+          await _onPresetTap(preset, isOnline, sheetCtx: sheetCtx);
+        },
         borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: EdgeInsets.symmetric(

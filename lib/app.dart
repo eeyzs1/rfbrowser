@@ -16,7 +16,14 @@ import 'plugins/plugin_registry.dart';
 import 'plugins/host/plugin_host.dart';
 
 class RFBrowserApp extends ConsumerStatefulWidget {
-  const RFBrowserApp({super.key});
+  const RFBrowserApp({super.key, this.windowReady});
+
+  /// Future that completes when windowManager.waitUntilReadyToShow finishes
+  /// all its method channel round-trips. _initApp awaits this (with a 5s
+  /// timeout) before setting _initialized = true, so MainLayout doesn't
+  /// render until the native accessibility tree is stable. See main.dart for
+  /// the full rationale (orphan node race condition).
+  final Future<void>? windowReady;
 
   static Locale? _resolveLocale(String localeSetting) {
     if (localeSetting == 'system') return null;
@@ -59,6 +66,35 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
     // exception in any awaited call below would leave _initialized = false
     // forever, stranding the user on a blank loading screen.
     try {
+      // ─── Await windowManager completion FIRST ──────────────────────────
+      // waitUntilReadyToShow (in main.dart) is NOT awaited before runApp() —
+      // the native window would never show if we did. Instead it completes a
+      // `Completer<void>` (windowReady) when its 10+ method channel round-trips
+      // finish. Awaiting that Completer here keeps the LoadingScreen (minimal
+      // semantics — Scaffold + Icon + ExcludeSemantics(CircularProgressIndicator))
+      // visible until windowManager is done.
+      //
+      // Why this matters: windowManager.show()/setSize()/setAlignment() trigger
+      // Windows accessibility queries that assign native node IDs (e.g., 63, 57)
+      // BEFORE Flutter's AccessibilityBridge commits its first semantics tree.
+      // If MainLayout renders while these calls are in flight, the native
+      // AXTree is in a partial state → orphaned native nodes →
+      // `accessibility_bridge.cc(114) Failed to update ui::AXTree, error: 63`
+      // → cascade of error 57 × 40+ → process crash.
+      //
+      // The 5-second timeout is a safety net: if windowManager hangs (rare),
+      // we proceed anyway rather than stranding the user on LoadingScreen.
+      if (widget.windowReady != null) {
+        try {
+          await widget.windowReady!.timeout(const Duration(seconds: 5));
+        } catch (e) {
+          appLog.error(
+            'windowReady await failed or timed out (proceeding anyway)',
+            error: e,
+          );
+        }
+      }
+
       // Kick off ONNX embedding backend initialization in the background.
       // This downloads the MiniLM model (~23MB) on first run and loads it into
       // memory. Until it is ready, the EmbeddingService falls back to
@@ -90,8 +126,16 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
         if (!settings.alwaysShowWelcomePage) {
           _enteredMainLayout = true;
         }
-        ref.read(knowledgeProvider.notifier).loadAllNotes();
-        ref.read(browserProvider.notifier).loadBookmarks();
+        // 必须在 _initialized = true 之前 await 完成：loadAllNotes() 和
+        // loadBookmarks() 会触发 knowledgeProvider / browserProvider 通知，
+        // 进而触发 MainLayout（含 SceneScaffold + CaptureScene + NoteSidebar
+        // + BrowserView 的大语义树）rebuild。若这些通知在 MainLayout 渲染
+        // 后才完成，会叠加在已经脆弱的启动 AXTree 上，触发
+        // "Failed to update ui::AXTree, error: N" → 进程崩溃。
+        // await 确保所有 provider 通知在 LoadingScreen（最小 AXTree）期间
+        // 完成，MainLayout 渲染时数据已就绪，无 post-init 重建。
+        await ref.read(knowledgeProvider.notifier).loadAllNotes();
+        await ref.read(browserProvider.notifier).loadBookmarks();
       }
     } catch (e, st) {
       appLog.error('App initialization failed', error: e, stackTrace: st);
