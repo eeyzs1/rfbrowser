@@ -15,11 +15,8 @@ import 'package:rfbrowser/services/browser_service.dart';
 /// [PluginApiImpl] without a full widget tree.
 final _testRefProvider = Provider<Ref>((ref) => ref);
 
-PluginManifest _manifest(List<Permission> perms) => PluginManifest(
-      id: 'test-plugin',
-      name: 'Test Plugin',
-      permissions: perms,
-    );
+PluginManifest _manifest(List<Permission> perms) =>
+    PluginManifest(id: 'test-plugin', name: 'Test Plugin', permissions: perms);
 
 PluginApiImpl _createApi(ProviderContainer container, List<Permission> perms) {
   final ref = container.read(_testRefProvider);
@@ -87,43 +84,52 @@ void main() {
       expect(result['text'], '');
     });
 
-    test('browser.navigateTo creates a tab and returns navigated true', () async {
-      final api = _createApi(container, [Permission.browserWrite]);
-      final result = await api.dispatch('browser.navigateTo', {
-        'url': 'https://example.com',
-      });
-      expect(result['navigated'], true);
+    test(
+      'browser.navigateTo creates a tab and returns navigated true',
+      () async {
+        final api = _createApi(container, [Permission.browserWrite]);
+        final result = await api.dispatch('browser.navigateTo', {
+          'url': 'https://example.com',
+        });
+        expect(result['navigated'], true);
 
-      final browserState = container.read(browserProvider);
-      expect(browserState.tabs, isNotEmpty);
-      expect(browserState.activeTab?.url, 'https://example.com');
-    });
+        final browserState = container.read(browserProvider);
+        expect(browserState.tabs, isNotEmpty);
+        expect(browserState.activeTab?.url, 'https://example.com');
+      },
+    );
 
-    test('ui.showNotification adds a notification and returns shown true', () async {
-      final api = _createApi(container, [Permission.uiCommand]);
-      final result = await api.dispatch('ui.showNotification', {
-        'message': 'Hello from plugin',
-      });
-      expect(result['shown'], true);
+    test(
+      'ui.showNotification adds a notification and returns shown true',
+      () async {
+        final api = _createApi(container, [Permission.uiCommand]);
+        final result = await api.dispatch('ui.showNotification', {
+          'message': 'Hello from plugin',
+        });
+        expect(result['shown'], true);
 
-      final uiState = container.read(pluginUiProvider);
-      expect(uiState.notifications, isNotEmpty);
-      expect(uiState.notifications.last.message, 'Hello from plugin');
-      expect(uiState.notifications.last.pluginId, 'test-plugin');
-    });
+        final uiState = container.read(pluginUiProvider);
+        expect(uiState.notifications, isNotEmpty);
+        expect(uiState.notifications.last.message, 'Hello from plugin');
+        expect(uiState.notifications.last.pluginId, 'test-plugin');
+      },
+    );
 
-    test('ui.registerCommand registers a command and returns registered true', () async {
-      final api = _createApi(container, [Permission.uiCommand]);
-      final result = await api.dispatch('ui.registerCommand', {
-        'id': 'cmd1',
-        'name': 'Run Test',
-      });
-      expect(result['registered'], true);
+    test(
+      'ui.registerCommand registers a command and returns registered true',
+      () async {
+        final api = _createApi(container, [Permission.uiCommand]);
+        final result = await api.dispatch('ui.registerCommand', {
+          'id': 'cmd1',
+          'name': 'Run Test',
+        });
+        expect(result['registered'], true);
 
-      final hostState = container.read(pluginHostProvider);
-      expect(hostState.commands['test-plugin'], isNotEmpty);
-      expect(hostState.commands['test-plugin']!.first.label, 'Run Test');
-    });
+        final hostState = container.read(pluginHostProvider);
+        expect(hostState.commands['test-plugin'], isNotEmpty);
+        expect(hostState.commands['test-plugin']!.first.label, 'Run Test');
+      },
+    );
 
     test('ui.showPanel adds a panel and returns shown true', () async {
       final api = _createApi(container, [Permission.uiPanel]);
@@ -163,13 +169,16 @@ void main() {
       );
     });
 
-    test('agent.executeTask route enforces aiChat permission (G14-A)', () async {
-      final api = _createApi(container, []);
-      expect(
-        () => api.dispatch('agent.executeTask', {'name': 'task'}),
-        throwsA(isA<PluginCapabilityDeniedError>()),
-      );
-    });
+    test(
+      'agent.executeTask route enforces aiChat permission (G14-A)',
+      () async {
+        final api = _createApi(container, []);
+        expect(
+          () => api.dispatch('agent.executeTask', {'name': 'task'}),
+          throwsA(isA<PluginCapabilityDeniedError>()),
+        );
+      },
+    );
 
     test('agent.listTasks route enforces aiChat permission (G14-A)', () async {
       final api = _createApi(container, []);
@@ -187,16 +196,19 @@ void main() {
       );
     });
 
-    test('agent.toolExecute is not a known dispatch route (throws UnimplementedError)', () async {
-      final api = _createApi(container, [Permission.aiChat]);
-      expect(
-        () => api.dispatch('agent.toolExecute', {
-          'toolName': 'test',
-          'args': {},
-        }),
-        throwsA(isA<UnimplementedError>()),
-      );
-    });
+    test(
+      'agent.toolExecute is not a known dispatch route (throws UnimplementedError)',
+      () async {
+        final api = _createApi(container, [Permission.aiChat]);
+        expect(
+          () => api.dispatch('agent.toolExecute', {
+            'toolName': 'test',
+            'args': {},
+          }),
+          throwsA(isA<UnimplementedError>()),
+        );
+      },
+    );
   });
 
   group('PluginApiImpl sub-APIs', () {
@@ -294,63 +306,84 @@ void main() {
         );
       });
 
-      test('complete throws PluginCapabilityDeniedError without aiChat', () async {
-        final api = _createApi(container, []);
-        expect(
-          () => api.ai.complete('prompt'),
-          throwsA(isA<PluginCapabilityDeniedError>()),
-        );
-      });
+      test(
+        'complete throws PluginCapabilityDeniedError without aiChat',
+        () async {
+          final api = _createApi(container, []);
+          expect(
+            () => api.ai.complete('prompt'),
+            throwsA(isA<PluginCapabilityDeniedError>()),
+          );
+        },
+      );
     });
 
     group('AgentAPI', () {
-      test('listTools throws PluginCapabilityDeniedError without aiChat', () async {
-        final api = _createApi(container, []);
-        expect(
-          () => api.agent.listTools(),
-          throwsA(isA<PluginCapabilityDeniedError>()),
-        );
-      });
+      test(
+        'listTools throws PluginCapabilityDeniedError without aiChat',
+        () async {
+          final api = _createApi(container, []);
+          expect(
+            () => api.agent.listTools(),
+            throwsA(isA<PluginCapabilityDeniedError>()),
+          );
+        },
+      );
 
-      test('registerTool throws PluginCapabilityDeniedError without aiChat', () async {
-        final api = _createApi(container, []);
-        expect(
-          () => api.agent.registerTool({}),
-          throwsA(isA<PluginCapabilityDeniedError>()),
-        );
-      });
+      test(
+        'registerTool throws PluginCapabilityDeniedError without aiChat',
+        () async {
+          final api = _createApi(container, []);
+          expect(
+            () => api.agent.registerTool({}),
+            throwsA(isA<PluginCapabilityDeniedError>()),
+          );
+        },
+      );
 
-      test('unregisterTool throws PluginCapabilityDeniedError without aiChat', () async {
-        final api = _createApi(container, []);
-        expect(
-          () => api.agent.unregisterTool('test'),
-          throwsA(isA<PluginCapabilityDeniedError>()),
-        );
-      });
+      test(
+        'unregisterTool throws PluginCapabilityDeniedError without aiChat',
+        () async {
+          final api = _createApi(container, []);
+          expect(
+            () => api.agent.unregisterTool('test'),
+            throwsA(isA<PluginCapabilityDeniedError>()),
+          );
+        },
+      );
 
-      test('executeTask throws PluginCapabilityDeniedError without aiChat', () async {
-        final api = _createApi(container, []);
-        expect(
-          () => api.agent.executeTask({}),
-          throwsA(isA<PluginCapabilityDeniedError>()),
-        );
-      });
+      test(
+        'executeTask throws PluginCapabilityDeniedError without aiChat',
+        () async {
+          final api = _createApi(container, []);
+          expect(
+            () => api.agent.executeTask({}),
+            throwsA(isA<PluginCapabilityDeniedError>()),
+          );
+        },
+      );
 
-      test('getTaskStatus throws PluginCapabilityDeniedError without aiChat', () async {
-        final api = _createApi(container, []);
-        expect(
-          () => api.agent.getTaskStatus('x'),
-          throwsA(isA<PluginCapabilityDeniedError>()),
-        );
-      });
+      test(
+        'getTaskStatus throws PluginCapabilityDeniedError without aiChat',
+        () async {
+          final api = _createApi(container, []);
+          expect(
+            () => api.agent.getTaskStatus('x'),
+            throwsA(isA<PluginCapabilityDeniedError>()),
+          );
+        },
+      );
 
-      test('listTasks throws PluginCapabilityDeniedError without aiChat', () async {
-        final api = _createApi(container, []);
-        expect(
-          () => api.agent.listTasks(),
-          throwsA(isA<PluginCapabilityDeniedError>()),
-        );
-      });
+      test(
+        'listTasks throws PluginCapabilityDeniedError without aiChat',
+        () async {
+          final api = _createApi(container, []);
+          expect(
+            () => api.agent.listTasks(),
+            throwsA(isA<PluginCapabilityDeniedError>()),
+          );
+        },
+      );
     });
   });
 

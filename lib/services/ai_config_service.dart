@@ -146,8 +146,11 @@ class AIConfigNotifier extends Notifier<AIConfigState> with SharedPrefsAware {
       // flutter_secure_storage can throw on Windows (DPAPI / Credential Vault
       // unavailable, locked session, corporate policy). Don't let it abort
       // app startup — API keys will simply be unavailable until re-entered.
-      appLog.error('AI config: failed to load API keys from secure storage',
-          error: e, stackTrace: st);
+      appLog.error(
+        'AI config: failed to load API keys from secure storage',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 

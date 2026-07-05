@@ -426,8 +426,9 @@ class _TestKnowledgeNotifier extends KnowledgeNotifier {
       KnowledgeState(notes: _notes, activeNoteId: _activeNoteId, links: _links);
 
   @override
-  Future<List<UnlinkedMentionResult>> getUnlinkedMentions(String noteId) async =>
-      _unlinkedMentions ?? [];
+  Future<List<UnlinkedMentionResult>> getUnlinkedMentions(
+    String noteId,
+  ) async => _unlinkedMentions ?? [];
 }
 
 class _TestLinkNotifier extends LinkNotifier {

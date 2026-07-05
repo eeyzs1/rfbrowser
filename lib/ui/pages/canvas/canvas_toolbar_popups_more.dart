@@ -13,11 +13,19 @@ mixin _CanvasToolbarPopupsMoreMixin on _CanvasViewStateBase {
       itemBuilder: (ctx) => [
         PopupMenuItem(
           value: AutoLayoutType.forceDirected,
-          child: _popupRow(Icons.bubble_chart, l.forceDirected, tooltip: l.ttForceDirected),
+          child: _popupRow(
+            Icons.bubble_chart,
+            l.forceDirected,
+            tooltip: l.ttForceDirected,
+          ),
         ),
         PopupMenuItem(
           value: AutoLayoutType.hierarchical,
-          child: _popupRow(Icons.account_tree, l.hierarchical, tooltip: l.ttHierarchical),
+          child: _popupRow(
+            Icons.account_tree,
+            l.hierarchical,
+            tooltip: l.ttHierarchical,
+          ),
         ),
         PopupMenuItem(
           value: AutoLayoutType.grid,
@@ -46,7 +54,11 @@ mixin _CanvasToolbarPopupsMoreMixin on _CanvasViewStateBase {
         ),
         PopupMenuItem(
           value: 'markdown',
-          child: _popupRow(Icons.description, l.exportMarkdown, tooltip: l.ttExportMarkdown),
+          child: _popupRow(
+            Icons.description,
+            l.exportMarkdown,
+            tooltip: l.ttExportMarkdown,
+          ),
         ),
         PopupMenuItem(
           value: 'html',
@@ -54,7 +66,11 @@ mixin _CanvasToolbarPopupsMoreMixin on _CanvasViewStateBase {
         ),
         PopupMenuItem(
           value: 'svgWithMeta',
-          child: _popupRow(Icons.data_object, l.exportSvgWithData, tooltip: l.ttExportSvgMeta),
+          child: _popupRow(
+            Icons.data_object,
+            l.exportSvgWithData,
+            tooltip: l.ttExportSvgMeta,
+          ),
         ),
       ],
     );
@@ -82,14 +98,22 @@ mixin _CanvasToolbarPopupsMoreMixin on _CanvasViewStateBase {
         ),
         PopupMenuItem(
           value: 'scratchpad',
-          child: _popupRow(Icons.bookmark_border, l.tooltipScratchpad, tooltip: l.ttScratchpad),
+          child: _popupRow(
+            Icons.bookmark_border,
+            l.tooltipScratchpad,
+            tooltip: l.ttScratchpad,
+          ),
         ),
       ],
     );
   }
 
   @override
-  Widget _buildSettingsPopup(ThemeData theme, CanvasData canvasData, AppLocalizations l) {
+  Widget _buildSettingsPopup(
+    ThemeData theme,
+    CanvasData canvasData,
+    AppLocalizations l,
+  ) {
     return HoverPopupMenuButton<String>(
       tooltip: l.tooltipCanvasSettings,
       icon: Icon(Icons.settings, size: 14, color: theme.hintColor),
@@ -143,27 +167,51 @@ mixin _CanvasToolbarPopupsMoreMixin on _CanvasViewStateBase {
       itemBuilder: (ctx) => [
         PopupMenuItem(
           value: 'background',
-          child: _popupRow(Icons.palette, l.backgroundColor, tooltip: l.ttBackground),
+          child: _popupRow(
+            Icons.palette,
+            l.backgroundColor,
+            tooltip: l.ttBackground,
+          ),
         ),
         PopupMenuItem(
           value: 'clearBackground',
-          child: _popupRow(Icons.clear, l.clearBackground, tooltip: l.ttClearBackground),
+          child: _popupRow(
+            Icons.clear,
+            l.clearBackground,
+            tooltip: l.ttClearBackground,
+          ),
         ),
         PopupMenuItem(
           value: 'defaultCardStyle',
-          child: _popupRow(Icons.style, l.defaultCardStyle, tooltip: l.ttDefaultCardStyle),
+          child: _popupRow(
+            Icons.style,
+            l.defaultCardStyle,
+            tooltip: l.ttDefaultCardStyle,
+          ),
         ),
         PopupMenuItem(
           value: 'enumerate',
-          child: _popupRow(Icons.format_list_numbered, l.enumerateShapes, tooltip: l.ttEnumerate),
+          child: _popupRow(
+            Icons.format_list_numbered,
+            l.enumerateShapes,
+            tooltip: l.ttEnumerate,
+          ),
         ),
         PopupMenuItem(
           value: 'importCsv',
-          child: _popupRow(Icons.table_chart, l.importCsv, tooltip: l.ttImportCsv),
+          child: _popupRow(
+            Icons.table_chart,
+            l.importCsv,
+            tooltip: l.ttImportCsv,
+          ),
         ),
         PopupMenuItem(
           value: 'importMermaid',
-          child: _popupRow(Icons.code, l.importMermaid, tooltip: l.ttImportMermaid),
+          child: _popupRow(
+            Icons.code,
+            l.importMermaid,
+            tooltip: l.ttImportMermaid,
+          ),
         ),
         PopupMenuItem(
           value: 'importSvg',
@@ -180,7 +228,11 @@ mixin _CanvasToolbarPopupsMoreMixin on _CanvasViewStateBase {
             message: l.ttClearCanvas,
             child: Row(
               children: [
-                Icon(Icons.delete_outline, size: 14, color: theme.colorScheme.error),
+                Icon(
+                  Icons.delete_outline,
+                  size: 14,
+                  color: theme.colorScheme.error,
+                ),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(

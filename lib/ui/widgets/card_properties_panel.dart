@@ -30,10 +30,7 @@ abstract class _CardPropertiesPanelBase extends ConsumerWidget {
   }
 
   Widget sectionDivider(ThemeData theme) {
-    return Divider(
-      color: theme.dividerColor.withValues(alpha: 0.3),
-      height: 1,
-    );
+    return Divider(color: theme.dividerColor.withValues(alpha: 0.3), height: 1);
   }
 
   IconData gradientDirectionIcon(GradientDirection gd) => switch (gd) {

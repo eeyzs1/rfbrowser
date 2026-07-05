@@ -48,10 +48,7 @@ Map<String, (double, double)> _computeForceDirectedIsolate(
         final posB = positions[bId]!;
         final dx = posB.$1 - posA.$1;
         final dy = posB.$2 - posA.$2;
-        final dist = (dx * dx + dy * dy).toDouble().clamp(
-          1.0,
-          double.infinity,
-        );
+        final dist = (dx * dx + dy * dy).toDouble().clamp(1.0, double.infinity);
         final repulsion = 50000.0 / dist;
         final fx = dx / math.sqrt(dist) * repulsion;
         final fy = dy / math.sqrt(dist) * repulsion;
@@ -71,14 +68,8 @@ Map<String, (double, double)> _computeForceDirectedIsolate(
       final attraction = dist * 0.01;
       final fx = dx / math.sqrt(dist) * attraction;
       final fy = dy / math.sqrt(dist) * attraction;
-      forces[fromId] = (
-        forces[fromId]!.$1 + fx,
-        forces[fromId]!.$2 + fy,
-      );
-      forces[toId] = (
-        forces[toId]!.$1 - fx,
-        forces[toId]!.$2 - fy,
-      );
+      forces[fromId] = (forces[fromId]!.$1 + fx, forces[fromId]!.$2 + fy);
+      forces[toId] = (forces[toId]!.$1 - fx, forces[toId]!.$2 - fy);
     }
     for (final id in cardIds) {
       final f = forces[id]!;
@@ -345,9 +336,7 @@ class CanvasLayoutService {
             selected.length;
         for (int i = 0; i < result.length; i++) {
           if (idSet.contains(result[i].id)) {
-            result[i] = result[i].copyWith(
-              x: avgCenterX - result[i].width / 2,
-            );
+            result[i] = result[i].copyWith(x: avgCenterX - result[i].width / 2);
           }
         }
       case AlignmentType.right:

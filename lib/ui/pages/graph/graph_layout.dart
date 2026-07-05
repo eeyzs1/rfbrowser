@@ -91,16 +91,14 @@ mixin _GraphLayoutMixin on _GraphViewStateBase {
     if (notes.length > 50) {
       final input = <String, dynamic>{
         'nodeIds': notes.map((n) => n.id).toList(),
-        'edges': links
-            .map((l) {
-              final key = '${l.sourceId}->${l.targetId}';
-              return <dynamic>[
-                l.sourceId,
-                l.targetId,
-                linkCounts[key]?.toDouble() ?? 1.0,
-              ];
-            })
-            .toList(),
+        'edges': links.map((l) {
+          final key = '${l.sourceId}->${l.targetId}';
+          return <dynamic>[
+            l.sourceId,
+            l.targetId,
+            linkCounts[key]?.toDouble() ?? 1.0,
+          ];
+        }).toList(),
         'areaWidth': layoutEngine.areaWidth,
         'areaHeight': layoutEngine.areaHeight,
         'idealEdgeLength': layoutEngine.idealEdgeLength,

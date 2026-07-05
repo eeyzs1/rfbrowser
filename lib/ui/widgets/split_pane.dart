@@ -9,12 +9,13 @@ part 'split_pane_tab.dart';
 /// Builds a widget for a leaf pane showing [noteId] in [viewMode].
 /// [leafId] identifies the pane within the split tree, so the built
 /// widget can report focus back to the split-pane store.
-typedef NotePaneViewBuilder = Widget Function(
-  BuildContext context,
-  String leafId,
-  String noteId,
-  NoteViewMode viewMode,
-);
+typedef NotePaneViewBuilder =
+    Widget Function(
+      BuildContext context,
+      String leafId,
+      String noteId,
+      NoteViewMode viewMode,
+    );
 
 class SplitPane extends StatefulWidget {
   final SplitNode node;

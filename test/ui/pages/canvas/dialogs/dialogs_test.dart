@@ -46,28 +46,30 @@ class _DialogHostState<T> extends State<_DialogHost<T>> {
 }
 
 Widget _materialApp(Widget child) => MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: child,
-    );
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: child,
+);
 
 /// Finds GestureDetector widgets that are descendants of a Wrap widget.
 /// Used to locate color-swatch tappable areas.
 Finder _colorSwatches() => find.descendant(
-      of: find.byType(Wrap),
-      matching: find.byType(GestureDetector),
-    );
+  of: find.byType(Wrap),
+  matching: find.byType(GestureDetector),
+);
 
 void main() {
   group('AddTagDialog', () {
     testWidgets('returns trimmed tag when Add is tapped', (tester) async {
       final completer = Completer<String?>();
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<String>(
-          resultCompleter: completer,
-          dialogBuilder: (_) => const AddTagDialog(),
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<String>(
+            resultCompleter: completer,
+            dialogBuilder: (_) => const AddTagDialog(),
+          ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -81,12 +83,14 @@ void main() {
 
     testWidgets('returns tag when Enter is pressed', (tester) async {
       final completer = Completer<String?>();
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<String>(
-          resultCompleter: completer,
-          dialogBuilder: (_) => const AddTagDialog(),
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<String>(
+            resultCompleter: completer,
+            dialogBuilder: (_) => const AddTagDialog(),
+          ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -100,12 +104,14 @@ void main() {
 
     testWidgets('returns null when Cancel is tapped', (tester) async {
       final completer = Completer<String?>();
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<String>(
-          resultCompleter: completer,
-          dialogBuilder: (_) => const AddTagDialog(),
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<String>(
+            resultCompleter: completer,
+            dialogBuilder: (_) => const AddTagDialog(),
+          ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -120,13 +126,15 @@ void main() {
   group('RemoveTagDialog', () {
     testWidgets('returns the selected tag', (tester) async {
       final completer = Completer<String?>();
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<String>(
-          resultCompleter: completer,
-          dialogBuilder: (_) =>
-              const RemoveTagDialog(tags: ['work', 'important', 'idea']),
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<String>(
+            resultCompleter: completer,
+            dialogBuilder: (_) =>
+                const RemoveTagDialog(tags: ['work', 'important', 'idea']),
+          ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -138,13 +146,14 @@ void main() {
     });
 
     testWidgets('renders all provided tags', (tester) async {
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<String>(
-          resultCompleter: Completer<String?>(),
-          dialogBuilder: (_) =>
-              const RemoveTagDialog(tags: ['a', 'b', 'c']),
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<String>(
+            resultCompleter: Completer<String?>(),
+            dialogBuilder: (_) => const RemoveTagDialog(tags: ['a', 'b', 'c']),
+          ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -158,14 +167,15 @@ void main() {
   group('ColorPickerDialog', () {
     testWidgets('returns the tapped color', (tester) async {
       final completer = Completer<Color?>();
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<Color>(
-          resultCompleter: completer,
-          dialogBuilder: (_) => const ColorPickerDialog(
-            currentColorValue: 0xFFFFFFFF,
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<Color>(
+            resultCompleter: completer,
+            dialogBuilder: (_) =>
+                const ColorPickerDialog(currentColorValue: 0xFFFFFFFF),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -182,14 +192,15 @@ void main() {
     });
 
     testWidgets('shows check mark on current color', (tester) async {
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<Color>(
-          resultCompleter: Completer<Color?>(),
-          dialogBuilder: (_) => const ColorPickerDialog(
-            currentColorValue: 0xFFFFFFFF,
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<Color>(
+            resultCompleter: Completer<Color?>(),
+            dialogBuilder: (_) =>
+                const ColorPickerDialog(currentColorValue: 0xFFFFFFFF),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -201,14 +212,15 @@ void main() {
 
     testWidgets('returns null when Cancel is tapped', (tester) async {
       final completer = Completer<Color?>();
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<Color>(
-          resultCompleter: completer,
-          dialogBuilder: (_) => const ColorPickerDialog(
-            currentColorValue: 0xFFFFFFFF,
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<Color>(
+            resultCompleter: completer,
+            dialogBuilder: (_) =>
+                const ColorPickerDialog(currentColorValue: 0xFFFFFFFF),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -227,15 +239,15 @@ void main() {
         const CanvasLayer(id: 'layer2', name: 'Layer 2', order: 1),
       ];
 
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<({String? layerId})>(
-          resultCompleter: Completer<({String? layerId})?>(),
-          dialogBuilder: (_) => MoveToLayerDialog(
-            currentLayerId: 'layer1',
-            layers: layers,
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<({String? layerId})>(
+            resultCompleter: Completer<({String? layerId})?>(),
+            dialogBuilder: (_) =>
+                MoveToLayerDialog(currentLayerId: 'layer1', layers: layers),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -248,15 +260,15 @@ void main() {
 
     testWidgets('returns null when Cancel is tapped', (tester) async {
       final completer = Completer<({String? layerId})?>();
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<({String? layerId})>(
-          resultCompleter: completer,
-          dialogBuilder: (_) => MoveToLayerDialog(
-            currentLayerId: null,
-            layers: const [],
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<({String? layerId})>(
+            resultCompleter: completer,
+            dialogBuilder: (_) =>
+                MoveToLayerDialog(currentLayerId: null, layers: const []),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -274,15 +286,15 @@ void main() {
         const CanvasLayer(id: 'layer2', name: 'Layer 2', order: 1),
       ];
 
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<({String? layerId})>(
-          resultCompleter: completer,
-          dialogBuilder: (_) => MoveToLayerDialog(
-            currentLayerId: 'layer1',
-            layers: layers,
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<({String? layerId})>(
+            resultCompleter: completer,
+            dialogBuilder: (_) =>
+                MoveToLayerDialog(currentLayerId: 'layer1', layers: layers),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -304,14 +316,15 @@ void main() {
   group('BackgroundColorPickerDialog', () {
     testWidgets('returns selected colorValue', (tester) async {
       final completer = Completer<({int? colorValue})?>();
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<({int? colorValue})>(
-          resultCompleter: completer,
-          dialogBuilder: (_) => const BackgroundColorPickerDialog(
-            currentColorValue: null,
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<({int? colorValue})>(
+            resultCompleter: completer,
+            dialogBuilder: (_) =>
+                const BackgroundColorPickerDialog(currentColorValue: null),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -329,14 +342,15 @@ void main() {
 
     testWidgets('returns null colorValue when Clear is tapped', (tester) async {
       final completer = Completer<({int? colorValue})?>();
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<({int? colorValue})>(
-          resultCompleter: completer,
-          dialogBuilder: (_) => const BackgroundColorPickerDialog(
-            currentColorValue: null,
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<({int? colorValue})>(
+            resultCompleter: completer,
+            dialogBuilder: (_) =>
+                const BackgroundColorPickerDialog(currentColorValue: null),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
@@ -349,17 +363,19 @@ void main() {
       expect(result!.colorValue, isNull);
     });
 
-    testWidgets('returns null (cancelled) when Cancel is tapped',
-        (tester) async {
+    testWidgets('returns null (cancelled) when Cancel is tapped', (
+      tester,
+    ) async {
       final completer = Completer<({int? colorValue})?>();
-      await tester.pumpWidget(_materialApp(
-        _DialogHost<({int? colorValue})>(
-          resultCompleter: completer,
-          dialogBuilder: (_) => const BackgroundColorPickerDialog(
-            currentColorValue: null,
+      await tester.pumpWidget(
+        _materialApp(
+          _DialogHost<({int? colorValue})>(
+            resultCompleter: completer,
+            dialogBuilder: (_) =>
+                const BackgroundColorPickerDialog(currentColorValue: null),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();

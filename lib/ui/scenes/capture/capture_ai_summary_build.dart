@@ -25,10 +25,7 @@ mixin _AiSummaryPanelBuildMixin on _AiSummaryPanelBase {
           lastMsg != null &&
           lastMsg.role == 'assistant' &&
           lastMsg.isStreaming) {
-        setSummaryState(
-          mode: _SummaryMode.loading,
-          text: lastMsg.content,
-        );
+        setSummaryState(mode: _SummaryMode.loading, text: lastMsg.content);
       } else if (!next.isLoading &&
           next.error != null &&
           summaryMode == _SummaryMode.loading) {

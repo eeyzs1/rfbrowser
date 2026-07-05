@@ -51,9 +51,7 @@ class _ScratchpadDialogState extends ConsumerState<ScratchpadDialog> {
           const Spacer(),
           Text(
             '${_items.length}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.hintColor,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
           ),
         ],
       ),
@@ -102,11 +100,7 @@ class _ScratchpadDialogState extends ConsumerState<ScratchpadDialog> {
                     ),
                   ),
                   child: Center(
-                    child: Icon(
-                      item.type.icon,
-                      size: 12,
-                      color: previewColor,
-                    ),
+                    child: Icon(item.type.icon, size: 12, color: previewColor),
                   ),
                 ),
                 title: Text(

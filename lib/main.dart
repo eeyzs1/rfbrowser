@@ -22,8 +22,11 @@ void main() async {
 
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    appLog.error('FlutterError: ${details.exceptionAsString()}',
-        error: details.exception, stackTrace: details.stack);
+    appLog.error(
+      'FlutterError: ${details.exceptionAsString()}',
+      error: details.exception,
+      stackTrace: details.stack,
+    );
     debugPrint('=== FlutterError ===');
     debugPrint(details.exceptionAsString());
     debugPrint(details.stack?.toString() ?? '(no stack)');
@@ -97,22 +100,25 @@ void main() async {
 
   final windowReady = Completer<void>();
 
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-    if (!windowReady.isCompleted) {
-      windowReady.complete();
-    }
-  }).then((_) {
-    if (!windowReady.isCompleted) {
-      windowReady.complete();
-    }
-  }).catchError((Object e, StackTrace st) {
-    appLog.error('Window show/focus failed', error: e, stackTrace: st);
-    if (!windowReady.isCompleted) {
-      windowReady.complete(); // complete anyway so _initApp doesn't hang
-    }
-  });
+  windowManager
+      .waitUntilReadyToShow(windowOptions, () async {
+        await windowManager.show();
+        await windowManager.focus();
+        if (!windowReady.isCompleted) {
+          windowReady.complete();
+        }
+      })
+      .then((_) {
+        if (!windowReady.isCompleted) {
+          windowReady.complete();
+        }
+      })
+      .catchError((Object e, StackTrace st) {
+        appLog.error('Window show/focus failed', error: e, stackTrace: st);
+        if (!windowReady.isCompleted) {
+          windowReady.complete(); // complete anyway so _initApp doesn't hang
+        }
+      });
 
   // runApp() must be called unconditionally so the first frame renders and
   // the native window becomes visible. RFBrowserApp receives `windowReady`

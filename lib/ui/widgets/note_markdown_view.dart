@@ -29,6 +29,7 @@ class NoteMarkdownView extends ConsumerStatefulWidget {
   final String content;
   final EdgeInsets padding;
   final bool selectable;
+
   /// When true, skips the internal large-file guard (the caller has already
   /// handled the fallback). Used by note_pane_view's rendered branch, which
   /// has its own notice bar + "渲染" button — without this, NoteMarkdownView
@@ -81,7 +82,8 @@ class _NoteMarkdownViewState extends ConsumerState<NoteMarkdownView> {
     final l = AppLocalizations.of(context)!;
 
     // Cache style sheet — only rebuild when theme identity changes.
-    if (_cachedStyleSheet == null || !identical(_cachedThemeForStyleSheet, theme)) {
+    if (_cachedStyleSheet == null ||
+        !identical(_cachedThemeForStyleSheet, theme)) {
       _cachedStyleSheet = noteMarkdownStyleSheet(theme);
       _cachedThemeForStyleSheet = theme;
     }
@@ -183,10 +185,7 @@ class _NoteMarkdownViewState extends ConsumerState<NoteMarkdownView> {
         padding: const EdgeInsets.all(DesignSpacing.lg),
         itemCount: lines.length,
         itemBuilder: (context, index) {
-          return Text(
-            lines[index],
-            style: textStyle,
-          );
+          return Text(lines[index], style: textStyle);
         },
       ),
     );

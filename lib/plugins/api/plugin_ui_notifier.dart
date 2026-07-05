@@ -36,10 +36,7 @@ class PluginUiState {
   final List<PluginNotification> notifications;
   final Map<String, PluginPanel> panels;
 
-  const PluginUiState({
-    this.notifications = const [],
-    this.panels = const {},
-  });
+  const PluginUiState({this.notifications = const [], this.panels = const {}});
 
   PluginUiState copyWith({
     List<PluginNotification>? notifications,
@@ -104,8 +101,9 @@ class PluginUiNotifier extends Notifier<PluginUiState> {
 
   void clearForPlugin(String pluginId) {
     state = state.copyWith(
-      notifications:
-          state.notifications.where((n) => n.pluginId != pluginId).toList(),
+      notifications: state.notifications
+          .where((n) => n.pluginId != pluginId)
+          .toList(),
       panels: Map.fromEntries(
         state.panels.entries.where((e) => e.value.pluginId != pluginId),
       ),

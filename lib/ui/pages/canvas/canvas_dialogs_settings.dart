@@ -26,9 +26,7 @@ mixin _CanvasDialogsSettingsMixin on _CanvasViewStateBase {
     final current = canvasData.settings.backgroundColorValue;
     showDialog<({int? colorValue})>(
       context: context,
-      builder: (ctx) => BackgroundColorPickerDialog(
-        currentColorValue: current,
-      ),
+      builder: (ctx) => BackgroundColorPickerDialog(currentColorValue: current),
     ).then((result) {
       if (result == null) return;
       ref.read(canvasProvider.notifier).setBackgroundColor(result.colorValue);

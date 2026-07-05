@@ -31,10 +31,7 @@ mixin _CanvasPointerGesturesMixin on _CanvasViewStateBase {
   void _onHover(PointerHoverEvent event) {
     _pendingHoverPos = _screenToWorld(event.localPosition);
     if (_hoverThrottle?.isActive ?? false) return;
-    _hoverThrottle = Timer(
-      const Duration(milliseconds: 33),
-      _runHoverHitTest,
-    );
+    _hoverThrottle = Timer(const Duration(milliseconds: 33), _runHoverHitTest);
   }
 
   void _runHoverHitTest() {

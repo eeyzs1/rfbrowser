@@ -35,10 +35,7 @@ class WelcomePage extends ConsumerWidget {
               children: [
                 Icon(Icons.explore, size: 64, color: theme.colorScheme.primary),
                 const SizedBox(height: 20),
-                Text(
-                  l.appName,
-                  style: theme.textTheme.headlineLarge,
-                ),
+                Text(l.appName, style: theme.textTheme.headlineLarge),
                 const SizedBox(height: 6),
                 Text(
                   l.appSubtitle,

@@ -141,7 +141,8 @@ class _MemoryBrowserPageState extends ConsumerState<MemoryBrowserPage>
                               () {
                                 if (mounted) {
                                   setState(
-                                    () => _query = _searchController.text.trim(),
+                                    () =>
+                                        _query = _searchController.text.trim(),
                                   );
                                 }
                               },
@@ -222,10 +223,7 @@ class _MemoryBrowserPageState extends ConsumerState<MemoryBrowserPage>
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  l.memoryGuideDesc,
-                  style: theme.textTheme.bodySmall,
-                ),
+                Text(l.memoryGuideDesc, style: theme.textTheme.bodySmall),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 12,
@@ -267,10 +265,7 @@ class _GuideChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant,
-          width: 0.5,
-        ),
+        border: Border.all(color: theme.colorScheme.outlineVariant, width: 0.5),
       ),
       child: Text(
         text,

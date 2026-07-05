@@ -73,8 +73,7 @@ class _AiSummaryPanelState extends _AiSummaryPanelBase
       : (widget.url != null && widget.url!.isNotEmpty);
 
   @override
-  String sourceLabel(AppLocalizations l) =>
-      _summarizeNote ? l.note : l.webPage;
+  String sourceLabel(AppLocalizations l) => _summarizeNote ? l.note : l.webPage;
 
   @override
   _ErrorType classifyError(String? error) {

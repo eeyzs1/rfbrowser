@@ -83,9 +83,7 @@ mixin _StylePropertiesMixin on _CardPropertiesPanelBase {
               label: s.borderWidth.toStringAsFixed(1),
               onChanged: (v) => ref
                   .read(canvasProvider.notifier)
-                  .updateCard(
-                    card.copyWith(style: s.copyWith(borderWidth: v)),
-                  ),
+                  .updateCard(card.copyWith(style: s.copyWith(borderWidth: v))),
             ),
           ),
           SizedBox(
@@ -280,9 +278,7 @@ mixin _StylePropertiesMixin on _CardPropertiesPanelBase {
                         .read(canvasProvider.notifier)
                         .updateCard(
                           card.copyWith(
-                            style: s.copyWith(
-                              gradientColor: color.toARGB32(),
-                            ),
+                            style: s.copyWith(gradientColor: color.toARGB32()),
                           ),
                         ),
                     child: Container(
@@ -338,9 +334,7 @@ mixin _StylePropertiesMixin on _CardPropertiesPanelBase {
                         ),
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    labelPadding: const EdgeInsets.symmetric(
-                      horizontal: 2,
-                    ),
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 2),
                   ),
                 ),
               )

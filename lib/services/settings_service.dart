@@ -37,6 +37,7 @@ class AppSettings {
   final int accentColorValue;
   final int scaffoldBgColorValue;
   final int surfaceColorValue;
+
   /// Custom font/text color. When null, text color is auto-derived from the
   /// surface color (light text on dark surfaces, dark text on light surfaces).
   final int? fontColorValue;
@@ -88,7 +89,8 @@ class AppSettings {
   Color get surfaceColor => Color(surfaceColorValue);
 
   /// Returns the custom font color if set, otherwise null (auto-derive).
-  Color? get fontColor => fontColorValue != null ? Color(fontColorValue!) : null;
+  Color? get fontColor =>
+      fontColorValue != null ? Color(fontColorValue!) : null;
 
   /// 根据 [themeMode] 判断是否为暗色模式：
   /// - [ThemeMode.system]：跟随系统亮度
@@ -101,8 +103,7 @@ class AppSettings {
       case ThemeMode.dark:
         return true;
       case ThemeMode.system:
-        return WidgetsBinding
-                .instance.platformDispatcher.platformBrightness ==
+        return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
             Brightness.dark;
     }
   }
@@ -160,7 +161,9 @@ class AppSettings {
       accentColorValue: accentColorValue ?? this.accentColorValue,
       scaffoldBgColorValue: scaffoldBgColorValue ?? this.scaffoldBgColorValue,
       surfaceColorValue: surfaceColorValue ?? this.surfaceColorValue,
-      fontColorValue: clearFontColor ? null : (fontColorValue ?? this.fontColorValue),
+      fontColorValue: clearFontColor
+          ? null
+          : (fontColorValue ?? this.fontColorValue),
       buttonStyle: buttonStyle ?? this.buttonStyle,
       density: density ?? this.density,
       iconSize: iconSize ?? this.iconSize,
@@ -452,4 +455,3 @@ class SettingsNotifier extends Notifier<AppSettings>
 final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
   SettingsNotifier.new,
 );
-

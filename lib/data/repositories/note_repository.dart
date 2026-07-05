@@ -195,7 +195,9 @@ class NoteRepository extends RepositoryBase {
     validatePath(safeOld);
     final fileName = p.basename(safeOld);
     final safeFolder = safeRelativePath(folder);
-    final newPath = safeFolder.isEmpty ? fileName : p.join(safeFolder, fileName);
+    final newPath = safeFolder.isEmpty
+        ? fileName
+        : p.join(safeFolder, fileName);
     if (newPath == safeOld) return safeOld;
     validatePath(newPath);
 
@@ -290,7 +292,10 @@ class NoteRepository extends RepositoryBase {
             ),
           );
         } catch (e) {
-          appLog.warning('NoteRepo: failed to load skill ${entity.path}', error: e);
+          appLog.warning(
+            'NoteRepo: failed to load skill ${entity.path}',
+            error: e,
+          );
         }
       }
     }

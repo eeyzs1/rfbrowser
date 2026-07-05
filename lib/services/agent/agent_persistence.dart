@@ -35,7 +35,10 @@ class AgentPersistence {
           try {
             tasks.add(AgentTask.fromJson(e));
           } catch (ex) {
-            appLog.error('AgentPersistence: failed to deserialize task', error: ex);
+            appLog.error(
+              'AgentPersistence: failed to deserialize task',
+              error: ex,
+            );
           }
         }
       }

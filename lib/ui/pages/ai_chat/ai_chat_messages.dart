@@ -136,8 +136,8 @@ mixin _AIChatMessagesMixin on _AIChatPanelStateBase {
                               onPressed: ref.read(aiProvider).isLoading
                                   ? null
                                   : () => ref
-                                      .read(aiProvider.notifier)
-                                      .regenerateLastResponse(),
+                                        .read(aiProvider.notifier)
+                                        .regenerateLastResponse(),
                               icon: const Icon(Icons.refresh, size: 12),
                               label: Text(
                                 l.regenerate,

@@ -144,10 +144,7 @@ mixin _CanvasDialogsEditRichMixin on _CanvasViewStateBase {
                     context: ctx,
                     builder: (dctx) => AlertDialog(
                       title: Text(l.editSegment(seg.type.name)),
-                      content: TextField(
-                        controller: ctrl,
-                        autofocus: true,
-                      ),
+                      content: TextField(controller: ctrl, autofocus: true),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(dctx),
@@ -171,9 +168,7 @@ mixin _CanvasDialogsEditRichMixin on _CanvasViewStateBase {
                 child: Chip(
                   label: Text(
                     seg.text,
-                    style: style.copyWith(
-                      fontSize: cardFontSize * 0.8,
-                    ),
+                    style: style.copyWith(fontSize: cardFontSize * 0.8),
                   ),
                   deleteIcon: const Icon(Icons.close, size: 12),
                   onDeleted: () {

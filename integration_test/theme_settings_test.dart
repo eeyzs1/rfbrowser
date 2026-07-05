@@ -58,12 +58,29 @@ void main() {
       await pumpThemeSettings(tester);
 
       const labels = [
-        'Scarlet', 'Red', 'Sunset', 'Marigold', 'Yellow', 'Lime',
-        'Emerald', 'Teal', 'Cyan', 'Ocean', 'Indigo', 'Violet',
-        'Purple', 'Magenta', 'Pink', 'Strawberry',
+        'Scarlet',
+        'Red',
+        'Sunset',
+        'Marigold',
+        'Yellow',
+        'Lime',
+        'Emerald',
+        'Teal',
+        'Cyan',
+        'Ocean',
+        'Indigo',
+        'Violet',
+        'Purple',
+        'Magenta',
+        'Pink',
+        'Strawberry',
       ];
       for (final label in labels) {
-        expect(find.text(label), findsOneWidget, reason: 'theme preset: $label');
+        expect(
+          find.text(label),
+          findsOneWidget,
+          reason: 'theme preset: $label',
+        );
       }
     });
 
@@ -71,9 +88,22 @@ void main() {
       await pumpThemeSettings(tester);
 
       const labels = [
-        'Midnight', 'Obsidian', 'Mocha', 'Deep Sea', 'Onyx', 'Forest',
-        'Wine', 'Slate Dark', 'Cream', 'Mist', 'Parchment', 'Sagebrush',
-        'Dune', 'Pearl', 'Blush', 'Linen',
+        'Midnight',
+        'Obsidian',
+        'Mocha',
+        'Deep Sea',
+        'Onyx',
+        'Forest',
+        'Wine',
+        'Slate Dark',
+        'Cream',
+        'Mist',
+        'Parchment',
+        'Sagebrush',
+        'Dune',
+        'Pearl',
+        'Blush',
+        'Linen',
       ];
       for (final label in labels) {
         expect(find.text(label), findsOneWidget, reason: 'bg preset: $label');
@@ -84,12 +114,29 @@ void main() {
       await pumpThemeSettings(tester);
 
       const labels = [
-        'Slate Blue', 'Graphite', 'Bronze', 'Cinnamon', 'Ivory', 'Sky',
-        'Sandstone', 'Sage', 'Peach', 'Lavender', 'Pearl Surface', 'Mint',
-        'Rose', 'Amber', 'Clay', 'Steel',
+        'Slate Blue',
+        'Graphite',
+        'Bronze',
+        'Cinnamon',
+        'Ivory',
+        'Sky',
+        'Sandstone',
+        'Sage',
+        'Peach',
+        'Lavender',
+        'Pearl Surface',
+        'Mint',
+        'Rose',
+        'Amber',
+        'Clay',
+        'Steel',
       ];
       for (final label in labels) {
-        expect(find.text(label), findsOneWidget, reason: 'surface preset: $label');
+        expect(
+          find.text(label),
+          findsOneWidget,
+          reason: 'surface preset: $label',
+        );
       }
     });
 
@@ -97,9 +144,22 @@ void main() {
       await pumpThemeSettings(tester);
 
       const labels = [
-        'White', 'Ivory White', 'Butter', 'Pearl White', 'Warm Gray', 'Gray',
-        'Slate', 'Charcoal', 'Black', 'Sepia', 'Coffee', 'Caramel',
-        'Sand', 'Honey', 'Crimson', 'Navy',
+        'White',
+        'Ivory White',
+        'Butter',
+        'Pearl White',
+        'Warm Gray',
+        'Gray',
+        'Slate',
+        'Charcoal',
+        'Black',
+        'Sepia',
+        'Coffee',
+        'Caramel',
+        'Sand',
+        'Honey',
+        'Crimson',
+        'Navy',
       ];
       for (final label in labels) {
         expect(find.text(label), findsOneWidget, reason: 'font preset: $label');

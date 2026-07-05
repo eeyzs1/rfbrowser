@@ -64,8 +64,14 @@ void main() {
 
       final state = container.read(pluginUiProvider);
       final createdAt = state.notifications.first.createdAt;
-      expect(createdAt.isAfter(before.subtract(const Duration(milliseconds: 1))), isTrue);
-      expect(createdAt.isBefore(after.add(const Duration(milliseconds: 1))), isTrue);
+      expect(
+        createdAt.isAfter(before.subtract(const Duration(milliseconds: 1))),
+        isTrue,
+      );
+      expect(
+        createdAt.isBefore(after.add(const Duration(milliseconds: 1))),
+        isTrue,
+      );
     });
   });
 
@@ -108,8 +114,14 @@ void main() {
 
       final state = container.read(pluginUiProvider);
       final createdAt = state.panels['panel-1']!.createdAt;
-      expect(createdAt.isAfter(before.subtract(const Duration(milliseconds: 1))), isTrue);
-      expect(createdAt.isBefore(after.add(const Duration(milliseconds: 1))), isTrue);
+      expect(
+        createdAt.isAfter(before.subtract(const Duration(milliseconds: 1))),
+        isTrue,
+      );
+      expect(
+        createdAt.isBefore(after.add(const Duration(milliseconds: 1))),
+        isTrue,
+      );
     });
   });
 

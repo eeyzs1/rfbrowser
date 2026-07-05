@@ -6,7 +6,8 @@ mixin CanvasLayoutSettingsOperations on CanvasNotifierBase {
     if (state.cards.isEmpty) return;
     // Issue 11: Run force-directed layout (O(50×n²)) in a worker isolate
     // when there are more than 50 cards. Lighter algorithms stay sync.
-    final heavy = type == AutoLayoutType.forceDirected && state.cards.length > 50;
+    final heavy =
+        type == AutoLayoutType.forceDirected && state.cards.length > 50;
     Map<String, Offset> positions;
     if (heavy) {
       _isAutoLayouting = true;

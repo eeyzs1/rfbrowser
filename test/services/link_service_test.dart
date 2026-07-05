@@ -431,8 +431,10 @@ void main() {
         );
         final noteB = Note(title: 'Note B', filePath: 'notes/note_b.md');
 
-        final mentions =
-            await notifier.getUnlinkedMentions(noteA.id, [noteA, noteB]);
+        final mentions = await notifier.getUnlinkedMentions(noteA.id, [
+          noteA,
+          noteB,
+        ]);
         expect(mentions.length, 1);
         expect(mentions.first.targetTitle, 'Note B');
         expect(mentions.first.context, isNotNull);
@@ -452,8 +454,10 @@ void main() {
 
         notifier.rebuildAllLinks([noteA, noteB]);
 
-        final mentions =
-            await notifier.getUnlinkedMentions(noteA.id, [noteA, noteB]);
+        final mentions = await notifier.getUnlinkedMentions(noteA.id, [
+          noteA,
+          noteB,
+        ]);
         expect(mentions.length, 1);
       });
 

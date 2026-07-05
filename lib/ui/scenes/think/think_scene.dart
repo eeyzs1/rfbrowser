@@ -123,11 +123,8 @@ class ThinkScene extends ConsumerWidget {
     return InlineAIEditor(
       child: SplitPane(
         node: root,
-        viewBuilder: (context, leafId, noteId, viewMode) => NotePaneView(
-          leafId: leafId,
-          noteId: noteId,
-          viewMode: viewMode,
-        ),
+        viewBuilder: (context, leafId, noteId, viewMode) =>
+            NotePaneView(leafId: leafId, noteId: noteId, viewMode: viewMode),
         noteTitleOf: (noteId) => _noteTitle(ref, noteId),
         onChanged: (newRoot) =>
             ref.read(splitPaneProvider.notifier).replaceRoot(newRoot),

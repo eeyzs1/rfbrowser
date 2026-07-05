@@ -121,7 +121,8 @@ class RequestContextNotifier extends Notifier<RequestContext> {
     // 即使 vault 没变也会产生新实例并触发 Riverpod 通知，
     // 在 AXTree 已脆弱时加剧 widget tree churn。
     final oldVault = state.vault;
-    final unchanged = (oldVault == null && vault == null) ||
+    final unchanged =
+        (oldVault == null && vault == null) ||
         (oldVault != null &&
             vault != null &&
             oldVault.name == vault.name &&

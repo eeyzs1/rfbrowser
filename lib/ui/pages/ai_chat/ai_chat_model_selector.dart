@@ -249,9 +249,10 @@ mixin _AIChatModelSelectorMixin on _AIChatPanelStateBase {
               testError = '';
             });
             try {
-              final baseUrl = baseUrlController.text
-                  .trim()
-                  .replaceAll(RegExp(r'/$'), '');
+              final baseUrl = baseUrlController.text.trim().replaceAll(
+                RegExp(r'/$'),
+                '',
+              );
               if (baseUrl.isEmpty) {
                 throw Exception('Base URL is empty');
               }
@@ -288,7 +289,9 @@ mixin _AIChatModelSelectorMixin on _AIChatPanelStateBase {
               if (data is Map && data['error'] != null) {
                 final err = data['error'];
                 msg = err is Map
-                    ? (err['message'] as String? ?? e.message ?? 'Unknown error')
+                    ? (err['message'] as String? ??
+                          e.message ??
+                          'Unknown error')
                     : err.toString();
               } else {
                 msg = e.message ?? 'Connection failed';

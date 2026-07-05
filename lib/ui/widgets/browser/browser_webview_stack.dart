@@ -30,7 +30,6 @@ class BrowserWebViewStack extends ConsumerStatefulWidget {
 }
 
 class _BrowserWebViewStackState extends ConsumerState<BrowserWebViewStack> {
-
   @override
   Widget build(BuildContext context) {
     final closedTabIds = widget.initializedTabs.difference(

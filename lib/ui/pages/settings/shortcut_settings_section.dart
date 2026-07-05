@@ -255,8 +255,7 @@ class _ShortcutSettingsSectionState
         // 或 6（canvas）个 ListTile button 语义节点，且每个 ListTile 还带
         // 条件 onTap（见 _buildActionList）。改用 if/else 条件渲染，
         // 折叠时完全不挂载子树。
-        if (isExpanded)
-          Column(children: _buildActionList(actions, l, theme)),
+        if (isExpanded) Column(children: _buildActionList(actions, l, theme)),
       ],
     );
   }

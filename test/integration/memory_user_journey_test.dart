@@ -321,15 +321,9 @@ void main() {
     });
     test('LLM toggle defaults to off and can be flipped', () async {
       final notifier = container.read(settingsProvider.notifier);
-      expect(
-        container.read(settingsProvider).memory.useLlmSummarizer,
-        isFalse,
-      );
+      expect(container.read(settingsProvider).memory.useLlmSummarizer, isFalse);
       await notifier.setMemoryUseLlmSummarizer(true);
-      expect(
-        container.read(settingsProvider).memory.useLlmSummarizer,
-        isTrue,
-      );
+      expect(container.read(settingsProvider).memory.useLlmSummarizer, isTrue);
     });
   });
 

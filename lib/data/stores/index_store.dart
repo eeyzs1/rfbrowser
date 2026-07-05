@@ -184,7 +184,11 @@ class IndexStore {
       where: 'source_id = ? OR target_id = ?',
       whereArgs: [noteId, noteId],
     );
-    await db.delete('note_embeddings', where: 'note_id = ?', whereArgs: [noteId]);
+    await db.delete(
+      'note_embeddings',
+      where: 'note_id = ?',
+      whereArgs: [noteId],
+    );
   }
 
   Future<void> updateNote(Note note) async {
@@ -316,17 +320,13 @@ class IndexStore {
     Map<String, dynamic>? metadata,
   }) async {
     final db = await database;
-    await db.insert(
-      'note_embeddings',
-      {
-        'note_id': noteId,
-        'embedding': jsonEncode(embedding),
-        'dim': embedding.length,
-        'metadata': metadata != null ? jsonEncode(metadata) : null,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('note_embeddings', {
+      'note_id': noteId,
+      'embedding': jsonEncode(embedding),
+      'dim': embedding.length,
+      'metadata': metadata != null ? jsonEncode(metadata) : null,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<NoteEmbeddingRecord>> getAllEmbeddings() async {
@@ -342,13 +342,18 @@ class IndexStore {
         final metadata = (metaRaw != null && metaRaw.isNotEmpty)
             ? Map<String, dynamic>.from(jsonDecode(metaRaw) as Map)
             : <String, dynamic>{};
-        result.add(NoteEmbeddingRecord(
-          noteId: row['note_id'] as String,
-          embedding: embedding,
-          metadata: metadata,
-        ));
+        result.add(
+          NoteEmbeddingRecord(
+            noteId: row['note_id'] as String,
+            embedding: embedding,
+            metadata: metadata,
+          ),
+        );
       } catch (e) {
-        appLog.warning('Failed to decode embedding for ${row['note_id']}', error: e);
+        appLog.warning(
+          'Failed to decode embedding for ${row['note_id']}',
+          error: e,
+        );
       }
     }
     return result;
@@ -362,7 +367,11 @@ class IndexStore {
 
   Future<void> deleteEmbedding(String noteId) async {
     final db = await database;
-    await db.delete('note_embeddings', where: 'note_id = ?', whereArgs: [noteId]);
+    await db.delete(
+      'note_embeddings',
+      where: 'note_id = ?',
+      whereArgs: [noteId],
+    );
   }
 
   Future<void> clearEmbeddings() async {

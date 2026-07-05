@@ -38,10 +38,7 @@ void main() {
     });
 
     test('accepts nested subdirectories', () {
-      expect(
-        () => repo.validatePath('a/b/c/deep.md'),
-        returnsNormally,
-      );
+      expect(() => repo.validatePath('a/b/c/deep.md'), returnsNormally);
     });
 
     test('rejects parent traversal (../outside)', () {
@@ -80,13 +77,17 @@ void main() {
   group('safeRelativePath', () {
     test('returns a clean relative path as-is', () {
       // p.normalize may convert / to \ on Windows.
-      expect(repo.safeRelativePath('notes/hello.md'),
-          p.join('notes', 'hello.md'));
+      expect(
+        repo.safeRelativePath('notes/hello.md'),
+        p.join('notes', 'hello.md'),
+      );
     });
 
     test('normalizes ./ prefix', () {
-      expect(repo.safeRelativePath('./notes/hello.md'),
-          p.join('notes', 'hello.md'));
+      expect(
+        repo.safeRelativePath('./notes/hello.md'),
+        p.join('notes', 'hello.md'),
+      );
     });
 
     test('normalizes single dot to empty string', () {
@@ -156,8 +157,9 @@ void main() {
     });
 
     test('throws for absolute path', () {
-      final absolutePath =
-          Platform.isWindows ? r'D:\stolen' : '/root/.ssh/id_rsa';
+      final absolutePath = Platform.isWindows
+          ? r'D:\stolen'
+          : '/root/.ssh/id_rsa';
       expect(
         () => repo.safeJoin(absolutePath),
         throwsA(isA<PathTraversalException>()),

@@ -38,8 +38,10 @@ mixin _SplitPaneTabMixin on State<SplitPane> {
   void _onTabDragUpdate(DragUpdateDetails details) {
     if (!_tabScrollController.hasClients) return;
     final maxExtent = _tabScrollController.position.maxScrollExtent;
-    final newOffset = (_tabScrollController.offset - details.delta.dx)
-        .clamp(0.0, maxExtent);
+    final newOffset = (_tabScrollController.offset - details.delta.dx).clamp(
+      0.0,
+      maxExtent,
+    );
     _tabScrollController.jumpTo(newOffset);
   }
 
@@ -121,8 +123,7 @@ mixin _SplitPaneTabMixin on State<SplitPane> {
   ) {
     return GestureDetector(
       onTap: () => activateTab(index),
-      onSecondaryTapUp: (details) =>
-          showTabContextMenu(details.globalPosition),
+      onSecondaryTapUp: (details) => showTabContextMenu(details.globalPosition),
       onTertiaryTapDown: (_) => closeTab(index),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
@@ -136,8 +137,7 @@ mixin _SplitPaneTabMixin on State<SplitPane> {
             borderRadius: BorderRadius.circular(4),
             border: isActive
                 ? Border.all(
-                    color:
-                        theme.colorScheme.primary.withValues(alpha: 0.35),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.35),
                   )
                 : Border.all(color: Colors.transparent),
           ),
@@ -147,9 +147,7 @@ mixin _SplitPaneTabMixin on State<SplitPane> {
               Icon(
                 viewModeIcon(tab.viewMode),
                 size: 12,
-                color: isActive
-                    ? theme.colorScheme.primary
-                    : theme.hintColor,
+                color: isActive ? theme.colorScheme.primary : theme.hintColor,
               ),
               const SizedBox(width: 4),
               ConstrainedBox(
@@ -157,8 +155,7 @@ mixin _SplitPaneTabMixin on State<SplitPane> {
                 child: Text(
                   title,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight:
-                        isActive ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
                     color: isActive
                         ? theme.colorScheme.primary
                         : theme.hintColor,
@@ -203,10 +200,7 @@ mixin _SplitPaneTabMixin on State<SplitPane> {
               onTap: () => setViewMode(vm),
               borderRadius: BorderRadius.circular(3),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(
                   color: isActive
                       ? theme.colorScheme.primary.withValues(alpha: 0.18)
@@ -216,9 +210,7 @@ mixin _SplitPaneTabMixin on State<SplitPane> {
                 child: Icon(
                   viewModeIcon(vm),
                   size: 13,
-                  color: isActive
-                      ? theme.colorScheme.primary
-                      : theme.hintColor,
+                  color: isActive ? theme.colorScheme.primary : theme.hintColor,
                 ),
               ),
             ),
@@ -358,16 +350,16 @@ mixin _SplitPaneTabMixin on State<SplitPane> {
   }
 
   String viewModeLabel(NoteViewMode vm) => switch (vm) {
-        NoteViewMode.edit => 'Edit',
-        NoteViewMode.source => 'Source',
-        NoteViewMode.rendered => 'Rendered',
-      };
+    NoteViewMode.edit => 'Edit',
+    NoteViewMode.source => 'Source',
+    NoteViewMode.rendered => 'Rendered',
+  };
 
   IconData viewModeIcon(NoteViewMode vm) => switch (vm) {
-        NoteViewMode.edit => Icons.edit_note,
-        NoteViewMode.source => Icons.code,
-        NoteViewMode.rendered => Icons.menu_book,
-      };
+    NoteViewMode.edit => Icons.edit_note,
+    NoteViewMode.source => Icons.code,
+    NoteViewMode.rendered => Icons.menu_book,
+  };
 }
 
 /// Tiny reusable icon button used by tab close + pane close actions. Kept

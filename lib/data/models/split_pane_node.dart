@@ -26,24 +26,24 @@ class SplitTab {
   });
 
   SplitTab copyWith({String? noteId, NoteViewMode? viewMode}) => SplitTab(
-        id: id,
-        noteId: noteId ?? this.noteId,
-        viewMode: viewMode ?? this.viewMode,
-      );
+    id: id,
+    noteId: noteId ?? this.noteId,
+    viewMode: viewMode ?? this.viewMode,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'noteId': noteId,
-        'viewMode': viewMode.index,
-      };
+    'id': id,
+    'noteId': noteId,
+    'viewMode': viewMode.index,
+  };
 
   factory SplitTab.fromJson(Map<String, dynamic> json) => SplitTab(
-        id: json['id'] as String,
-        noteId: json['noteId'] as String,
-        viewMode: json['viewMode'] != null
-            ? NoteViewMode.values[json['viewMode'] as int]
-            : NoteViewMode.edit,
-      );
+    id: json['id'] as String,
+    noteId: json['noteId'] as String,
+    viewMode: json['viewMode'] != null
+        ? NoteViewMode.values[json['viewMode'] as int]
+        : NoteViewMode.edit,
+  );
 }
 
 class SplitNode {
@@ -64,8 +64,8 @@ class SplitNode {
     required this.tabs,
     this.activeTabIndex = 0,
     this.flex,
-  })  : direction = null,
-        children = const [];
+  }) : direction = null,
+       children = const [];
 
   /// Leaf constructor. Accepts either [tabs] (preferred) or a legacy
   /// [noteId]/[viewMode] pair. When [noteId] is supplied without [tabs],
@@ -79,7 +79,8 @@ class SplitNode {
     int activeTabIndex = 0,
     double? flex,
   }) {
-    final resolvedTabs = tabs ??
+    final resolvedTabs =
+        tabs ??
         [
           if (noteId != null)
             SplitTab(
@@ -101,8 +102,8 @@ class SplitNode {
     required this.direction,
     required this.children,
     this.flex,
-  })  : tabs = const [],
-        activeTabIndex = 0;
+  }) : tabs = const [],
+       activeTabIndex = 0;
 
   bool get isLeaf => direction == null;
 
@@ -193,10 +194,7 @@ class SplitNode {
     if (noteId != null || viewMode != null) {
       final idx = newActive.clamp(0, newTabs.length - 1);
       newTabs = List<SplitTab>.from(newTabs);
-      newTabs[idx] = newTabs[idx].copyWith(
-        noteId: noteId,
-        viewMode: viewMode,
-      );
+      newTabs[idx] = newTabs[idx].copyWith(noteId: noteId, viewMode: viewMode);
     }
     return SplitNode._leaf(
       id: id,

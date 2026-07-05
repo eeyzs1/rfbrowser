@@ -30,10 +30,7 @@ class AiStreamAccumulator {
 
   /// Process a single decoded JSON chunk. Updates internal text and
   /// tool-call buffers.
-  void accumulateChunk(
-    Map<String, dynamic> json,
-    ApiProtocol protocol,
-  ) {
+  void accumulateChunk(Map<String, dynamic> json, ApiProtocol protocol) {
     final choices = json['choices'] as List<dynamic>?;
     if (choices == null || choices.isEmpty) return;
 

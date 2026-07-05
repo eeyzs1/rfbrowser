@@ -33,23 +33,23 @@ mixin _SidebarNotesToolbarMixin on _NoteSidebarStateBase {
                         ),
                       )
                     : _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.close, size: 12),
-                            onPressed: () {
-                              _searchDebounce?.cancel();
-                              _searchGeneration++;
-                              _searchController.clear();
-                              setState(() {
-                                _searchQuery = '';
-                                _isSearching = false;
-                              });
-                            },
-                            constraints: const BoxConstraints(
-                              minWidth: DesignTouchTarget.minSize * 0.5,
-                              minHeight: DesignTouchTarget.minSize * 0.5,
-                            ),
-                          )
-                        : null,
+                    ? IconButton(
+                        icon: const Icon(Icons.close, size: 12),
+                        onPressed: () {
+                          _searchDebounce?.cancel();
+                          _searchGeneration++;
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                            _isSearching = false;
+                          });
+                        },
+                        constraints: const BoxConstraints(
+                          minWidth: DesignTouchTarget.minSize * 0.5,
+                          minHeight: DesignTouchTarget.minSize * 0.5,
+                        ),
+                      )
+                    : null,
               ),
               onChanged: (q) {
                 _searchDebounce?.cancel();
@@ -61,12 +61,9 @@ mixin _SidebarNotesToolbarMixin on _NoteSidebarStateBase {
                   });
                   return;
                 }
-                _searchDebounce = Timer(
-                  const Duration(milliseconds: 120),
-                  () {
-                    if (mounted) _applySearchQuery(q);
-                  },
-                );
+                _searchDebounce = Timer(const Duration(milliseconds: 120), () {
+                  if (mounted) _applySearchQuery(q);
+                });
               },
             ),
           ),

@@ -24,17 +24,16 @@ class _FragmentsTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text(l.errorWithMessage(snapshot.error.toString())));
+          return Center(
+            child: Text(l.errorWithMessage(snapshot.error.toString())),
+          );
         }
         final items = snapshot.data?.items ?? const <_FragmentWithMatch>[];
         if (items.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: Text(
-                l.noFragmentsMatch,
-                textAlign: TextAlign.center,
-              ),
+              child: Text(l.noFragmentsMatch, textAlign: TextAlign.center),
             ),
           );
         }

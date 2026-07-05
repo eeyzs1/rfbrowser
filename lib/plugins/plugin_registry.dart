@@ -86,7 +86,10 @@ class PluginRegistry {
               manifests.add(manifest);
             }
           } catch (e) {
-            appLog.error('PluginRegistry: failed to load ${yamlFile.path}', error: e);
+            appLog.error(
+              'PluginRegistry: failed to load ${yamlFile.path}',
+              error: e,
+            );
           }
         }
       }

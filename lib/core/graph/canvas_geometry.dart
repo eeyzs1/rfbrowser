@@ -56,9 +56,7 @@ class CanvasGeometry {
   /// [points] (consecutive pairs form segments).
   static double pointToPolylineDist(Offset p, List<Offset> points) {
     if (points.length < 2) {
-      return points.isEmpty
-          ? double.infinity
-          : (p - points.first).distance;
+      return points.isEmpty ? double.infinity : (p - points.first).distance;
     }
     var minDist = double.infinity;
     for (int i = 0; i < points.length - 1; i++) {

@@ -37,9 +37,7 @@ class ColorPickerDialog extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     return AlertDialog(
       title: Text(
-        isMulti
-            ? 'Change Color ($selectedCount cards)'
-            : l.changeColor,
+        isMulti ? 'Change Color ($selectedCount cards)' : l.changeColor,
       ),
       content: SizedBox(
         width: 280,
@@ -60,8 +58,7 @@ class ColorPickerDialog extends StatelessWidget {
                         color: currentColorValue == color.toARGB32()
                             ? theme.colorScheme.primary
                             : theme.dividerColor,
-                        width:
-                            currentColorValue == color.toARGB32() ? 2.5 : 1,
+                        width: currentColorValue == color.toARGB32() ? 2.5 : 1,
                       ),
                       boxShadow: [
                         BoxShadow(

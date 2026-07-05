@@ -2,11 +2,7 @@ part of '../card_properties_panel.dart';
 
 /// Basic properties section: header, title, font size, card color.
 mixin _BasicPropertiesMixin on _CardPropertiesPanelBase {
-  Widget buildHeader(
-    ThemeData theme,
-    WidgetRef ref,
-    CanvasCard card,
-  ) {
+  Widget buildHeader(ThemeData theme, WidgetRef ref, CanvasCard card) {
     return Row(
       children: [
         Icon(
@@ -73,11 +69,13 @@ mixin _BasicPropertiesMixin on _CardPropertiesPanelBase {
               label: cardFontSize.round().toString(),
               onChanged: (v) {
                 final defaultSize = settings.editorFontSize * 0.85;
-                ref.read(canvasProvider.notifier).updateCard(
-                  card.copyWith(
-                    fontSize: (v - defaultSize).abs() < 0.5 ? 0 : v,
-                  ),
-                );
+                ref
+                    .read(canvasProvider.notifier)
+                    .updateCard(
+                      card.copyWith(
+                        fontSize: (v - defaultSize).abs() < 0.5 ? 0 : v,
+                      ),
+                    );
               },
             ),
           ),
@@ -111,9 +109,7 @@ mixin _BasicPropertiesMixin on _CardPropertiesPanelBase {
               (color) => GestureDetector(
                 onTap: () => ref
                     .read(canvasProvider.notifier)
-                    .updateCard(
-                      card.copyWith(colorValue: color.toARGB32()),
-                    ),
+                    .updateCard(card.copyWith(colorValue: color.toARGB32())),
                 child: Container(
                   width: 24,
                   height: 24,

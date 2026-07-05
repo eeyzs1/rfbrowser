@@ -94,9 +94,7 @@ class NoteNotifier extends Notifier<NoteState> {
     final note = await repo.createNote(title: uniqueTitle);
 
     // Overwrite the placeholder body with the requested content.
-    final withContent = note.copyWith(
-      content: '# $uniqueTitle\n\n$content',
-    );
+    final withContent = note.copyWith(content: '# $uniqueTitle\n\n$content');
     await repo.saveNote(withContent);
 
     final idx = ref.read(indexStoreProvider);

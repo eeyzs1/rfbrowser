@@ -89,8 +89,8 @@ mixin _MemorySettersMixin on Notifier<AppSettings> {
       key: 'memoryAutoExportEveryNMessages',
       value: v,
       persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) => s
-          .copyWith(memory: s.memory.copyWith(autoExportEveryNMessages: val)),
+      update: (s, val) =>
+          s.copyWith(memory: s.memory.copyWith(autoExportEveryNMessages: val)),
     );
   }
 
@@ -109,8 +109,9 @@ mixin _MemorySettersMixin on Notifier<AppSettings> {
       key: 'memoryCreatedRecencyHalfLifeDays',
       value: v,
       persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) => s
-          .copyWith(memory: s.memory.copyWith(createdRecencyHalfLifeDays: val)),
+      update: (s, val) => s.copyWith(
+        memory: s.memory.copyWith(createdRecencyHalfLifeDays: val),
+      ),
     );
   }
 
@@ -119,8 +120,8 @@ mixin _MemorySettersMixin on Notifier<AppSettings> {
       key: 'memoryAccessRecencyHalfLifeDays',
       value: v,
       persist: (p, k, val) => p.setInt(k, val),
-      update: (s, val) => s
-          .copyWith(memory: s.memory.copyWith(accessRecencyHalfLifeDays: val)),
+      update: (s, val) =>
+          s.copyWith(memory: s.memory.copyWith(accessRecencyHalfLifeDays: val)),
     );
   }
 

@@ -139,10 +139,7 @@ mixin _CanvasExportPanelsMixin on _CanvasViewStateBase {
 
   @override
   void _showLayerPanel() {
-    showDialog(
-      context: context,
-      builder: (ctx) => const LayerPanelDialog(),
-    );
+    showDialog(context: context, builder: (ctx) => const LayerPanelDialog());
   }
 
   @override

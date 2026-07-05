@@ -96,7 +96,8 @@ class _HebbianTabState extends ConsumerState<_HebbianTab> {
                   itemBuilder: (_, i) {
                     final edge = _edges[i];
                     final otherId = edge.otherEnd(_selectedId!)!;
-                    final other = _fragById[otherId] ??
+                    final other =
+                        _fragById[otherId] ??
                         MemoryFragment(
                           id: otherId,
                           sessionId: '?',

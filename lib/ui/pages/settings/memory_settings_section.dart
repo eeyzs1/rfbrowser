@@ -137,7 +137,9 @@ class _MemoryAdvancedSettingsSectionState
         });
       }
     } catch (e) {
-      appLog.debug('MemoryAdvancedSettings: failed to load expansion state: $e');
+      appLog.debug(
+        'MemoryAdvancedSettings: failed to load expansion state: $e',
+      );
     }
   }
 
@@ -148,7 +150,9 @@ class _MemoryAdvancedSettingsSectionState
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_kAdvancedExpandedKey, next);
     } catch (e) {
-      appLog.debug('MemoryAdvancedSettings: failed to persist expansion state: $e');
+      appLog.debug(
+        'MemoryAdvancedSettings: failed to persist expansion state: $e',
+      );
     }
   }
 
@@ -298,11 +302,7 @@ class _AdvancedSettingsToggle extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(
-              Icons.tune,
-              size: 18,
-              color: theme.colorScheme.primary,
-            ),
+            Icon(Icons.tune, size: 18, color: theme.colorScheme.primary),
             const SizedBox(width: 8),
             Text(
               l.memoryAdvancedSettings,

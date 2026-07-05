@@ -26,21 +26,20 @@ Map<String, Object?> _fragmentRow(
   String id, {
   String content = 'c',
   String tier = 'short',
-}) =>
-    {
-      'id': id,
-      'session_id': 's',
-      'content': content,
-      'tier': tier,
-      'is_active': 1,
-      'importance_score': 0.0,
-      'access_count': 0,
-      'is_pinned': 0,
-      'summary_tier': 'none',
-      'source': 'auto',
-      'created_at': DateTime.now().toIso8601String(),
-      'updated_at': DateTime.now().toIso8601String(),
-    };
+}) => {
+  'id': id,
+  'session_id': 's',
+  'content': content,
+  'tier': tier,
+  'is_active': 1,
+  'importance_score': 0.0,
+  'access_count': 0,
+  'is_pinned': 0,
+  'summary_tier': 'none',
+  'source': 'auto',
+  'created_at': DateTime.now().toIso8601String(),
+  'updated_at': DateTime.now().toIso8601String(),
+};
 
 void main() {
   setUpAll(setupSqfliteForTests);
@@ -67,41 +66,49 @@ void main() {
       expect(identical(first, second), isTrue);
     });
 
-    test('concurrent database getter calls resolve to the same instance',
-        () async {
-      final results = await Future.wait([
-        db.database,
-        db.database,
-        db.database,
-      ]);
-      expect(identical(results[0], results[1]), isTrue);
-      expect(identical(results[1], results[2]), isTrue);
-    });
+    test(
+      'concurrent database getter calls resolve to the same instance',
+      () async {
+        final results = await Future.wait([
+          db.database,
+          db.database,
+          db.database,
+        ]);
+        expect(identical(results[0], results[1]), isTrue);
+        expect(identical(results[1], results[2]), isTrue);
+      },
+    );
 
     test('path accessor returns the constructor-provided path', () {
       expect(db.path, dbPath);
     });
 
-    test('open creates the parent directory tree if it does not exist',
-        () async {
-      final nestedPath =
-          p.join(tempDir.path, 'nested', 'deep', 'memory.db');
-      final nested = MemoryDatabase(nestedPath);
-      await nested.database;
-      expect(File(nestedPath).existsSync(), isTrue);
-      await nested.close();
-    });
+    test(
+      'open creates the parent directory tree if it does not exist',
+      () async {
+        final nestedPath = p.join(tempDir.path, 'nested', 'deep', 'memory.db');
+        final nested = MemoryDatabase(nestedPath);
+        await nested.database;
+        expect(File(nestedPath).existsSync(), isTrue);
+        await nested.close();
+      },
+    );
 
-    test('close resets internal state so the database can be reopened',
-        () async {
-      final first = await db.database;
-      expect(first.isOpen, isTrue);
-      await db.close();
-      final reopened = await db.database;
-      expect(reopened.isOpen, isTrue);
-      expect(identical(reopened, first), isFalse,
-          reason: 'a fresh Database instance should be produced after close');
-    });
+    test(
+      'close resets internal state so the database can be reopened',
+      () async {
+        final first = await db.database;
+        expect(first.isOpen, isTrue);
+        await db.close();
+        final reopened = await db.database;
+        expect(reopened.isOpen, isTrue);
+        expect(
+          identical(reopened, first),
+          isFalse,
+          reason: 'a fresh Database instance should be produced after close',
+        );
+      },
+    );
   });
 
   group('MemoryDatabase — schema (AC-DB-03, AC-DB-04, AC-DB-05)', () {
@@ -152,8 +159,9 @@ void main() {
 
     test('memory_fragments has the v3 source-tracking columns', () async {
       final database = await db.database;
-      final rows =
-          await database.rawQuery('PRAGMA table_info(memory_fragments)');
+      final rows = await database.rawQuery(
+        'PRAGMA table_info(memory_fragments)',
+      );
       final cols = rows.map((r) => r['name'] as String).toSet();
       expect(
         cols,
@@ -163,14 +171,14 @@ void main() {
 
     test('memory_summaries has the v4 parent_summary_id column', () async {
       final database = await db.database;
-      final rows =
-          await database.rawQuery('PRAGMA table_info(memory_summaries)');
+      final rows = await database.rawQuery(
+        'PRAGMA table_info(memory_summaries)',
+      );
       final cols = rows.map((r) => r['name'] as String).toSet();
       expect(cols, contains('parent_summary_id'));
     });
 
-    test('creates the expected indexes (including v3/v4 additions)',
-        () async {
+    test('creates the expected indexes (including v3/v4 additions)', () async {
       await db.database;
       final indexes = await indexNames();
       expect(
@@ -238,10 +246,7 @@ void main() {
       );
       await database.update(
         'memory_fragments',
-        {
-          'content': 'new',
-          'updated_at': DateTime.now().toIso8601String(),
-        },
+        {'content': 'new', 'updated_at': DateTime.now().toIso8601String()},
         where: 'id = ?',
         whereArgs: ['a'],
       );
@@ -272,7 +277,10 @@ void main() {
 
     test('query with WHERE filter returns only matching rows', () async {
       final database = await db.database;
-      await database.insert('memory_fragments', _fragmentRow('a', tier: 'short'));
+      await database.insert(
+        'memory_fragments',
+        _fragmentRow('a', tier: 'short'),
+      );
       await database.insert('memory_fragments', _fragmentRow('b', tier: 'mid'));
       final shorts = await database.query(
         'memory_fragments',

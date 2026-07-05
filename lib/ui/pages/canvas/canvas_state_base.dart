@@ -211,20 +211,33 @@ abstract class _CanvasViewStateBase extends ConsumerState<CanvasView>
     AppLocalizations l,
   );
   Widget _toolbarDivider(ThemeData theme);
-  Widget _popupRow(IconData icon, String text, {Widget? trailing, String? tooltip});
+  Widget _popupRow(
+    IconData icon,
+    String text, {
+    Widget? trailing,
+    String? tooltip,
+  });
   List<Widget> _buildAlignPopupSection(
     ThemeData theme,
     CanvasData canvasData,
     AppLocalizations l,
   );
-  Widget _buildViewPopup(ThemeData theme, CanvasData canvasData, AppLocalizations l);
+  Widget _buildViewPopup(
+    ThemeData theme,
+    CanvasData canvasData,
+    AppLocalizations l,
+  );
   Widget _buildCreatePopup(ThemeData theme, AppLocalizations l);
   Widget _buildShapesPopup(ThemeData theme, AppLocalizations l);
   Widget _buildTemplatesPopup(ThemeData theme, AppLocalizations l);
   Widget _buildAutoLayoutPopup(ThemeData theme, AppLocalizations l);
   Widget _buildExportPopup(ThemeData theme, AppLocalizations l);
   Widget _buildOrganizePopup(ThemeData theme, AppLocalizations l);
-  Widget _buildSettingsPopup(ThemeData theme, CanvasData canvasData, AppLocalizations l);
+  Widget _buildSettingsPopup(
+    ThemeData theme,
+    CanvasData canvasData,
+    AppLocalizations l,
+  );
   Widget _toolbarButton(
     ThemeData theme,
     IconData icon,

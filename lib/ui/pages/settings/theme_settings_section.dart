@@ -18,7 +18,12 @@ class _PresetColor {
 // Label 全局唯一：与 _bgPresets/_surfacePresets/_fontPresets 不重名，便于
 // 集成测试用 find.text 精确定位每个预设。
 const _themePresets = [
-  _PresetColor('scarlet', 'Scarlet', Icons.local_fire_department, Color(0xFFDC2626)),
+  _PresetColor(
+    'scarlet',
+    'Scarlet',
+    Icons.local_fire_department,
+    Color(0xFFDC2626),
+  ),
   _PresetColor('red', 'Red', Icons.fire_extinguisher, Color(0xFFEF4444)),
   _PresetColor('sunset', 'Sunset', Icons.wb_twilight, Color(0xFFF97316)),
   _PresetColor('marigold', 'Marigold', Icons.wb_sunny, Color(0xFFF59E0B)),
@@ -70,7 +75,12 @@ const _surfacePresets = [
   _PresetColor('sage', 'Sage', Icons.eco, Color(0xFFB8C5B4)),
   _PresetColor('peach', 'Peach', Icons.sunny, Color(0xFFE5C4A0)),
   _PresetColor('lavender', 'Lavender', Icons.local_florist, Color(0xFFC8C0D4)),
-  _PresetColor('pearlSurface', 'Pearl Surface', Icons.diamond, Color(0xFFD4CFC9)),
+  _PresetColor(
+    'pearlSurface',
+    'Pearl Surface',
+    Icons.diamond,
+    Color(0xFFD4CFC9),
+  ),
   _PresetColor('mint', 'Mint', Icons.local_florist, Color(0xFFC8E6C9)),
   _PresetColor('rose', 'Rose', Icons.favorite, Color(0xFFEAD5DD)),
   _PresetColor('amber', 'Amber', Icons.wb_sunny, Color(0xFFF5DEB3)),
@@ -82,9 +92,19 @@ const _surfacePresets = [
 // Label 全局唯一（参见 _themePresets 注释）。
 const _fontPresets = [
   _PresetColor('white', 'White', Icons.text_fields, Color(0xFFFFFFFF)),
-  _PresetColor('ivoryWhite', 'Ivory White', Icons.text_fields, Color(0xFFFFF8E7)),
+  _PresetColor(
+    'ivoryWhite',
+    'Ivory White',
+    Icons.text_fields,
+    Color(0xFFFFF8E7),
+  ),
   _PresetColor('butter', 'Butter', Icons.text_fields, Color(0xFFFAF3E0)),
-  _PresetColor('pearlWhite', 'Pearl White', Icons.text_fields, Color(0xFFF0F0F0)),
+  _PresetColor(
+    'pearlWhite',
+    'Pearl White',
+    Icons.text_fields,
+    Color(0xFFF0F0F0),
+  ),
   _PresetColor('warmGray', 'Warm Gray', Icons.text_fields, Color(0xFFB8AFA6)),
   _PresetColor('gray', 'Gray', Icons.text_fields, Color(0xFF94A3B8)),
   _PresetColor('slate', 'Slate', Icons.text_fields, Color(0xFF64748B)),
@@ -107,9 +127,7 @@ class ThemeSettingsSection extends ConsumerWidget {
     // 用 select 只 watch 本 section 关心的 8 个字段（参见
     // editor_settings_section.dart 中的详细注释）。其他 section 字段变化
     // 不会触发本 section 重建。
-    final themeMode = ref.watch(
-      settingsProvider.select((s) => s.themeMode),
-    );
+    final themeMode = ref.watch(settingsProvider.select((s) => s.themeMode));
     final accentColorValue = ref.watch(
       settingsProvider.select((s) => s.accentColorValue),
     );
@@ -245,9 +263,7 @@ class ThemeSettingsSection extends ConsumerWidget {
             ],
             selected: {themeMode},
             onSelectionChanged: (modes) {
-              ref
-                  .read(settingsProvider.notifier)
-                  .setThemeMode(modes.first);
+              ref.read(settingsProvider.notifier).setThemeMode(modes.first);
             },
           ),
         ),
@@ -324,9 +340,8 @@ class ThemeSettingsSection extends ConsumerWidget {
                                 : Border.all(
                                     color: isAccent
                                         ? Colors.transparent
-                                        : theme.colorScheme.onSurface.withValues(
-                                            alpha: 0.08,
-                                          ),
+                                        : theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.08),
                                     width: 1,
                                   ),
                             boxShadow: isSelected
@@ -440,9 +455,8 @@ class ThemeSettingsSection extends ConsumerWidget {
                 onChanged: (v) => ref
                     .read(settingsProvider.notifier)
                     .setThemeTintOpacityLive(v),
-                onChangeEnd: (v) => ref
-                    .read(settingsProvider.notifier)
-                    .setThemeTintOpacity(v),
+                onChangeEnd: (v) =>
+                    ref.read(settingsProvider.notifier).setThemeTintOpacity(v),
               ),
             ),
           ),
@@ -462,9 +476,8 @@ class ThemeSettingsSection extends ConsumerWidget {
                 onChanged: (v) => ref
                     .read(settingsProvider.notifier)
                     .setSurfaceOpacityLive(v),
-                onChangeEnd: (v) => ref
-                    .read(settingsProvider.notifier)
-                    .setSurfaceOpacity(v),
+                onChangeEnd: (v) =>
+                    ref.read(settingsProvider.notifier).setSurfaceOpacity(v),
               ),
             ),
           ),
@@ -484,9 +497,8 @@ class ThemeSettingsSection extends ConsumerWidget {
                 onChanged: (v) => ref
                     .read(settingsProvider.notifier)
                     .setBackgroundOpacityLive(v),
-                onChangeEnd: (v) => ref
-                    .read(settingsProvider.notifier)
-                    .setBackgroundOpacity(v),
+                onChangeEnd: (v) =>
+                    ref.read(settingsProvider.notifier).setBackgroundOpacity(v),
               ),
             ),
           ),

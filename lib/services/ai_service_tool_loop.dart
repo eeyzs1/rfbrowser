@@ -58,10 +58,7 @@ mixin _ToolCallLoopMixin on Notifier<AIState> {
             accumulator.accumulateChunk(json, provider.protocol);
             // Update UI with accumulated text in real time
             if (accumulator.text.isNotEmpty) {
-              updateLastAssistantMessage(
-                accumulator.text,
-                isStreaming: true,
-              );
+              updateLastAssistantMessage(accumulator.text, isStreaming: true);
             }
           } catch (e) {
             appLog.warning('Tool loop chunk parse error', error: e);

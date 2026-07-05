@@ -312,7 +312,11 @@ abstract class _EditorViewStateBase extends ConsumerState<EditorView> {
     Color bgColor,
     AppLocalizations l,
   );
-  Widget _buildMarkdownPreview(ThemeData theme, dynamic note, AppLocalizations l);
+  Widget _buildMarkdownPreview(
+    ThemeData theme,
+    dynamic note,
+    AppLocalizations l,
+  );
   Widget _buildOriginalView(
     ThemeData theme,
     dynamic note,

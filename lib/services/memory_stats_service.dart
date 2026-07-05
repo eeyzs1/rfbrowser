@@ -210,4 +210,3 @@ final memoryStatsProvider = FutureProvider<MemoryStats>((ref) async {
   final memory = ref.watch(memoryServiceProvider);
   return MemoryStatsService(memory).compute();
 });
-

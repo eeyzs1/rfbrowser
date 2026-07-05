@@ -59,10 +59,7 @@ class CanvasStyleService {
   }
 
   CanvasCard withLatexFormula(CanvasCard card, String? formula) {
-    return card.copyWith(
-      latexFormula: formula,
-      clearLatex: formula == null,
-    );
+    return card.copyWith(latexFormula: formula, clearLatex: formula == null);
   }
 
   CanvasCard withHtmlContent(CanvasCard card, String? html) {
@@ -70,10 +67,7 @@ class CanvasStyleService {
   }
 
   CanvasCard withCustomSvg(CanvasCard card, String? svgData) {
-    return card.copyWith(
-      customSvgData: svgData,
-      clearSvg: svgData == null,
-    );
+    return card.copyWith(customSvgData: svgData, clearSvg: svgData == null);
   }
 
   CanvasCard withConnectionPointOffset(
@@ -124,11 +118,7 @@ class CanvasStyleService {
       if (i < card.tableCells.length) return card.tableCells[i];
       return const CanvasTableCell();
     });
-    return card.copyWith(
-      tableRows: rows,
-      tableCols: cols,
-      tableCells: cells,
-    );
+    return card.copyWith(tableRows: rows, tableCols: cols, tableCells: cells);
   }
 
   /// Returns a copy of [card] with the cell at ([row], [col]) set to [text].

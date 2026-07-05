@@ -213,7 +213,10 @@ class _NotePaneViewState extends ConsumerState<NotePaneView> {
           _isDirty = false;
           _suppressListener = false;
         }
-      } else if (_forceEditForLargeFile && !_isDirty && !_isLoadingLargeFile && _controller.text != noteContent) {
+      } else if (_forceEditForLargeFile &&
+          !_isDirty &&
+          !_isLoadingLargeFile &&
+          _controller.text != noteContent) {
         _suppressListener = true;
         _controller.text = noteContent;
         _lastSeenText = noteContent;
@@ -245,7 +248,9 @@ class _NotePaneViewState extends ConsumerState<NotePaneView> {
       return Column(
         children: [
           Material(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: DesignSpacing.lg,
@@ -288,7 +293,9 @@ class _NotePaneViewState extends ConsumerState<NotePaneView> {
       return Column(
         children: [
           Material(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: DesignSpacing.lg,
@@ -377,7 +384,9 @@ class _NotePaneViewState extends ConsumerState<NotePaneView> {
             const SizedBox(height: 16),
             Text(
               l.loading,
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
             ),
           ],
         ),
@@ -443,10 +452,7 @@ class _NotePaneViewState extends ConsumerState<NotePaneView> {
         padding: const EdgeInsets.all(DesignSpacing.lg),
         itemCount: lines.length,
         itemBuilder: (context, index) {
-          return Text(
-            lines[index],
-            style: textStyle,
-          );
+          return Text(lines[index], style: textStyle);
         },
       ),
     );

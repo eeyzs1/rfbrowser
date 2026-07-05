@@ -60,8 +60,8 @@ class ModelDownloader {
     }
 
     final results = await Future.wait(probes);
-    final reachable =
-        results.where((r) => r.ok).toList()..sort((a, b) => a.ms.compareTo(b.ms));
+    final reachable = results.where((r) => r.ok).toList()
+      ..sort((a, b) => a.ms.compareTo(b.ms));
 
     if (reachable.isNotEmpty) {
       _selectedEndpoint = reachable.first.endpoint;
@@ -450,7 +450,8 @@ class OnnxEmbeddingService {
         // internal seq_len differs from our tokenization (e.g. the model
         // truncated or padded to a different length).
         final actualSeqLen = pooled.length ~/ expectedHiddenSize;
-        if (actualSeqLen > 0 && pooled.length == actualSeqLen * expectedHiddenSize) {
+        if (actualSeqLen > 0 &&
+            pooled.length == actualSeqLen * expectedHiddenSize) {
           // Clamp to tokenized length to avoid averaging over padding tokens,
           // but never exceed actualSeqLen to avoid RangeError.
           final effectiveSeqLen = tokenized.length < actualSeqLen

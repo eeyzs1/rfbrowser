@@ -251,8 +251,9 @@ mixin _SidebarNoteActionsMixin on _NoteSidebarStateBase {
     if (confirmed == true) {
       // 删除前保存笔记内容，用于撤销恢复
       final knowledgeState = ref.read(knowledgeProvider);
-      final matchingNotes =
-          knowledgeState.notes.where((n) => n.id == noteId).toList();
+      final matchingNotes = knowledgeState.notes
+          .where((n) => n.id == noteId)
+          .toList();
       String? savedFilePath;
       String? savedMarkdown;
       if (matchingNotes.isNotEmpty) {

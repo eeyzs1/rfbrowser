@@ -261,14 +261,16 @@ void main() {
         expect(
           writtenKeys,
           contains(key),
-          reason: 'Legacy key "$key" was not written by saveToPrefs. '
+          reason:
+              'Legacy key "$key" was not written by saveToPrefs. '
               'Existing installs depend on this key name.',
         );
       }
       expect(
         writtenKeys.length,
         kLegacyKeys.length,
-        reason: 'saveToPrefs wrote ${writtenKeys.length} keys, '
+        reason:
+            'saveToPrefs wrote ${writtenKeys.length} keys, '
             'expected ${kLegacyKeys.length}. '
             'Extra keys: ${writtenKeys.difference(kLegacyKeys.toSet())}',
       );

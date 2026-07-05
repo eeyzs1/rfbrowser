@@ -68,7 +68,10 @@ class _MockAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-ResponseBody _jsonResponseBody(Map<String, dynamic> body, {int statusCode = 200}) {
+ResponseBody _jsonResponseBody(
+  Map<String, dynamic> body, {
+  int statusCode = 200,
+}) {
   final bytes = Uint8List.fromList(utf8.encode(jsonEncode(body)));
   return ResponseBody(
     Stream.value(bytes),
@@ -98,20 +101,20 @@ DioException _makeDioException({
 }
 
 AIProvider _openAiProvider({String? apiKey}) => AIProvider(
-      id: 'openai-1',
-      name: 'OpenAI',
-      protocol: ApiProtocol.openaiCompatible,
-      baseUrl: 'https://api.openai.com',
-      apiKey: apiKey ?? 'sk-test-key',
-    );
+  id: 'openai-1',
+  name: 'OpenAI',
+  protocol: ApiProtocol.openaiCompatible,
+  baseUrl: 'https://api.openai.com',
+  apiKey: apiKey ?? 'sk-test-key',
+);
 
 AIProvider _anthropicProvider({String? apiKey}) => AIProvider(
-      id: 'anthropic-1',
-      name: 'Anthropic',
-      protocol: ApiProtocol.anthropic,
-      baseUrl: 'https://api.anthropic.com',
-      apiKey: apiKey ?? 'sk-ant-test',
-    );
+  id: 'anthropic-1',
+  name: 'Anthropic',
+  protocol: ApiProtocol.anthropic,
+  baseUrl: 'https://api.anthropic.com',
+  apiKey: apiKey ?? 'sk-ant-test',
+);
 
 const _testModel = AIModel(
   id: 'gpt-4',
@@ -139,7 +142,9 @@ void main() {
       await strategy.sendRequest(
         provider: _openAiProvider(),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
       );
 
@@ -164,7 +169,9 @@ void main() {
       await strategy.sendRequest(
         provider: _anthropicProvider(),
         model: _claudeModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
       );
 
@@ -187,13 +194,17 @@ void main() {
       await strategy.sendRequest(
         provider: _openAiProvider(),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'a'}],
+        messages: [
+          {'role': 'user', 'content': 'a'},
+        ],
         stream: false,
       );
       await strategy.sendRequest(
         provider: _anthropicProvider(),
         model: _claudeModel,
-        messages: [{'role': 'user', 'content': 'b'}],
+        messages: [
+          {'role': 'user', 'content': 'b'},
+        ],
         stream: false,
       );
 
@@ -216,7 +227,9 @@ void main() {
       await strategy.sendRequest(
         provider: _openAiProvider(),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
       );
 
@@ -235,7 +248,9 @@ void main() {
       await strategy.sendRequest(
         provider: _anthropicProvider(),
         model: _claudeModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
       );
 
@@ -254,7 +269,9 @@ void main() {
       await strategy.sendRequest(
         provider: _openAiProvider(apiKey: 'sk-secret'),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
       );
 
@@ -274,7 +291,9 @@ void main() {
       await strategy.sendRequest(
         provider: _anthropicProvider(apiKey: 'sk-ant-secret'),
         model: _claudeModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
       );
 
@@ -320,7 +339,9 @@ void main() {
       await strategy.sendRequest(
         provider: _anthropicProvider(),
         model: _claudeModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
       );
 
@@ -366,7 +387,9 @@ void main() {
       await strategy.sendRequest(
         provider: _openAiProvider(),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'hello'}],
+        messages: [
+          {'role': 'user', 'content': 'hello'},
+        ],
         stream: false,
       );
 
@@ -387,7 +410,9 @@ void main() {
       await strategy.sendRequest(
         provider: _openAiProvider(),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: true,
       );
 
@@ -407,7 +432,9 @@ void main() {
       await strategy.sendRequest(
         provider: _openAiProvider(),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
       );
 
@@ -437,7 +464,9 @@ void main() {
       await strategy.sendRequest(
         provider: _openAiProvider(),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
         tools: tools,
       );
@@ -458,7 +487,9 @@ void main() {
       await strategy.sendRequest(
         provider: _openAiProvider(),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
         tools: [],
       );
@@ -478,7 +509,9 @@ void main() {
       await strategy.sendRequest(
         provider: _openAiProvider(),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
         tools: null,
       );
@@ -498,7 +531,9 @@ void main() {
       await strategy.sendRequest(
         provider: _openAiProvider(),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
       );
 
@@ -515,7 +550,9 @@ void main() {
       final response = await strategy.sendRequest(
         provider: _openAiProvider(),
         model: _testModel,
-        messages: [{'role': 'user', 'content': 'hi'}],
+        messages: [
+          {'role': 'user', 'content': 'hi'},
+        ],
         stream: false,
       );
 
@@ -529,11 +566,16 @@ void main() {
       final strategy = AiProtocolStrategy(Dio());
       final json = {
         'choices': [
-          {'delta': {'content': 'Hello'}},
+          {
+            'delta': {'content': 'Hello'},
+          },
         ],
       };
 
-      final delta = strategy.extractStreamDelta(json, ApiProtocol.openaiCompatible);
+      final delta = strategy.extractStreamDelta(
+        json,
+        ApiProtocol.openaiCompatible,
+      );
 
       expect(delta, 'Hello');
     });
@@ -546,17 +588,19 @@ void main() {
         ],
       };
 
-      final delta = strategy.extractStreamDelta(json, ApiProtocol.openaiCompatible);
+      final delta = strategy.extractStreamDelta(
+        json,
+        ApiProtocol.openaiCompatible,
+      );
 
       expect(delta, isNull);
     });
 
     test('OpenAI: choices 为空时返回 null', () {
       final strategy = AiProtocolStrategy(Dio());
-      final delta = strategy.extractStreamDelta(
-        {'choices': <dynamic>[]},
-        ApiProtocol.openaiCompatible,
-      );
+      final delta = strategy.extractStreamDelta({
+        'choices': <dynamic>[],
+      }, ApiProtocol.openaiCompatible);
 
       expect(delta, isNull);
     });
@@ -622,7 +666,9 @@ void main() {
     test('OpenAI: 从 error.message 提取错误信息', () {
       final strategy = AiProtocolStrategy(Dio());
       final e = _makeDioException(
-        responseData: {'error': {'message': 'Invalid API key'}},
+        responseData: {
+          'error': {'message': 'Invalid API key'},
+        },
       );
 
       final msg = strategy.extractErrorMessage(e, ApiProtocol.openaiCompatible);
@@ -633,7 +679,9 @@ void main() {
     test('Anthropic: 从 error.message 提取错误信息', () {
       final strategy = AiProtocolStrategy(Dio());
       final e = _makeDioException(
-        responseData: {'error': {'message': 'Rate limited'}},
+        responseData: {
+          'error': {'message': 'Rate limited'},
+        },
       );
 
       final msg = strategy.extractErrorMessage(e, ApiProtocol.anthropic);
@@ -702,9 +750,7 @@ void main() {
 
     test('e.message 为 null 且 error.message 缺失时返回 Unknown error', () {
       final strategy = AiProtocolStrategy(Dio());
-      final e = _makeDioException(
-        responseData: {'error': <String, dynamic>{}},
-      );
+      final e = _makeDioException(responseData: {'error': <String, dynamic>{}});
 
       final msg = strategy.extractErrorMessage(e, ApiProtocol.openaiCompatible);
 

@@ -67,9 +67,10 @@ void _addSqliteDllDirectory() {
 
 void _setDllDirectory(String path) {
   final kernel32 = DynamicLibrary.open('kernel32.dll');
-  final setDllDirectory = kernel32.lookupFunction<
-      _SetDllDirectoryNative,
-      _SetDllDirectoryDart>('SetDllDirectoryW');
+  final setDllDirectory = kernel32
+      .lookupFunction<_SetDllDirectoryNative, _SetDllDirectoryDart>(
+        'SetDllDirectoryW',
+      );
 
   final pathPtr = path.toNativeUtf16();
   try {

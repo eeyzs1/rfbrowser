@@ -52,10 +52,10 @@ class PluginApiImpl implements PluginAPI {
     required String pluginId,
     required PluginManifest manifest,
     PluginToolExecutor? onToolExecute,
-  })  : _ref = ref,
-        _pluginId = pluginId,
-        _checker = CapabilityChecker(pluginId: pluginId, manifest: manifest),
-        _onToolExecute = onToolExecute {
+  }) : _ref = ref,
+       _pluginId = pluginId,
+       _checker = CapabilityChecker(pluginId: pluginId, manifest: manifest),
+       _onToolExecute = onToolExecute {
     knowledge = _KnowledgeAPIImpl(_checker, _ref);
     browser = _BrowserAPIImpl(_checker, _ref);
     ai = _AIAPIImpl(_checker, _ref);
@@ -134,9 +134,7 @@ class PluginApiImpl implements PluginAPI {
       case 'agent.listTools':
         return {'tools': await agent.listTools()};
       case 'agent.registerTool':
-        await agent.registerTool(
-          (args['tool'] as Map<String, dynamic>?) ?? {},
-        );
+        await agent.registerTool((args['tool'] as Map<String, dynamic>?) ?? {});
         return {'registered': true};
       case 'agent.unregisterTool':
         await agent.unregisterTool(args['toolName'] as String? ?? '');
@@ -165,7 +163,9 @@ class _KnowledgeAPIImpl implements KnowledgeAPI {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> queryNotes(Map<String, dynamic> spec) async {
+  Future<List<Map<String, dynamic>>> queryNotes(
+    Map<String, dynamic> spec,
+  ) async {
     _checker.assertCapability(Permission.knowledgeRead);
     final query = spec['query'] as String?;
     if (query != null && query.isNotEmpty) {
@@ -275,16 +275,14 @@ class _UIAPIImpl implements UIAPI {
   }
 
   @override
-  void registerCommand(
-    String id,
-    String name,
-    void Function() handler,
-  ) {
+  void registerCommand(String id, String name, void Function() handler) {
     _checker.assertCapability(Permission.uiCommand);
     // handler cannot cross the isolate boundary; the host records the
     // command metadata so the UI can surface it. The plugin receives tool
     // invocations via the agent.toolExecute API when the command is run.
-    _ref.read(pluginHostProvider.notifier).registerCommand(
+    _ref
+        .read(pluginHostProvider.notifier)
+        .registerCommand(
           PluginCommand(id: id, label: name, pluginId: _pluginId),
         );
   }
@@ -292,12 +290,9 @@ class _UIAPIImpl implements UIAPI {
   @override
   void showPanel(String id, String title, dynamic content) {
     _checker.assertCapability(Permission.uiPanel);
-    _ref.read(pluginUiProvider.notifier).showPanel(
-          _pluginId,
-          id,
-          title,
-          content,
-        );
+    _ref
+        .read(pluginUiProvider.notifier)
+        .showPanel(_pluginId, id, title, content);
   }
 }
 
@@ -312,10 +307,7 @@ class _AgentAPIImpl implements AgentAPI {
   @override
   Future<List<Map<String, dynamic>>> listTools() async {
     _checker.assertCapability(Permission.aiChat);
-    return _ref
-        .read(agentProvider.notifier)
-        .toolRegistry
-        .allToolDefinitions();
+    return _ref.read(agentProvider.notifier).toolRegistry.allToolDefinitions();
   }
 
   @override
@@ -341,7 +333,9 @@ class _AgentAPIImpl implements AgentAPI {
   }
 
   @override
-  Future<Map<String, dynamic>> executeTask(Map<String, dynamic> taskSpec) async {
+  Future<Map<String, dynamic>> executeTask(
+    Map<String, dynamic> taskSpec,
+  ) async {
     _checker.assertCapability(Permission.aiChat);
     final agent = _ref.read(agentProvider.notifier);
     final modeStr = taskSpec['mode'] as String? ?? 'manual';
@@ -355,19 +349,17 @@ class _AgentAPIImpl implements AgentAPI {
       description: taskSpec['description'] as String? ?? '',
       mode: mode,
       steps:
-          (taskSpec['steps'] as List?)
-              ?.map((s) {
-                if (s is Map<String, dynamic>) {
-                  return AgentStep(
-                    description: s['description'] as String? ?? '',
-                    toolName: s['tool'] as String?,
-                    args: (s['args'] as Map<String, dynamic>?) ?? {},
-                  );
-                }
-                return AgentStep(description: s.toString());
-              })
-              .toList() ??
-              [],
+          (taskSpec['steps'] as List?)?.map((s) {
+            if (s is Map<String, dynamic>) {
+              return AgentStep(
+                description: s['description'] as String? ?? '',
+                toolName: s['tool'] as String?,
+                args: (s['args'] as Map<String, dynamic>?) ?? {},
+              );
+            }
+            return AgentStep(description: s.toString());
+          }).toList() ??
+          [],
     );
     await agent.executeTask(task);
     return {'taskId': task.id, 'status': task.status.name};
@@ -378,11 +370,7 @@ class _AgentAPIImpl implements AgentAPI {
     _checker.assertCapability(Permission.aiChat);
     final task = _ref.read(agentProvider.notifier).getTask(taskId);
     if (task == null) return null;
-    return {
-      'id': task.id,
-      'status': task.status.name,
-      'result': task.result,
-    };
+    return {'id': task.id, 'status': task.status.name, 'result': task.result};
   }
 
   @override
@@ -391,12 +379,14 @@ class _AgentAPIImpl implements AgentAPI {
     return _ref
         .read(agentProvider)
         .tasks
-        .map((t) => {
-              'id': t.id,
-              'name': t.name,
-              'status': t.status.name,
-              'mode': t.mode.name,
-            })
+        .map(
+          (t) => {
+            'id': t.id,
+            'name': t.name,
+            'status': t.status.name,
+            'mode': t.mode.name,
+          },
+        )
         .toList();
   }
 }
@@ -440,10 +430,10 @@ class _PluginAgentTool extends AgentTool {
 /// Serialise a [Note] to the wire format expected by plugin API consumers.
 extension _NoteToMap on Note {
   Map<String, dynamic> _toMap() => {
-        'id': id,
-        'title': title,
-        'content': content,
-        'filePath': filePath,
-        'tags': tags,
-      };
+    'id': id,
+    'title': title,
+    'content': content,
+    'filePath': filePath,
+    'tags': tags,
+  };
 }

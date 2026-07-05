@@ -47,12 +47,11 @@ class AINotifier extends Notifier<AIState> with _ToolCallLoopMixin {
     String content, {
     required bool isStreaming,
     bool attachMemoryFootprint = false,
-  }) =>
-      _updateLastAssistantMessage(
-        content,
-        isStreaming: isStreaming,
-        attachMemoryFootprint: attachMemoryFootprint,
-      );
+  }) => _updateLastAssistantMessage(
+    content,
+    isStreaming: isStreaming,
+    attachMemoryFootprint: attachMemoryFootprint,
+  );
 
   @override
   void removeLastAssistantMessage() => _removeLastAssistantMessage();
@@ -461,9 +460,7 @@ class AINotifier extends Notifier<AIState> with _ToolCallLoopMixin {
       // 先同步当前消息到会话列表
       final sessionsToSave = _syncedSessions(state.messages);
       final prefs = await SharedPreferences.getInstance();
-      final json = jsonEncode(
-        sessionsToSave.map((s) => s.toJson()).toList(),
-      );
+      final json = jsonEncode(sessionsToSave.map((s) => s.toJson()).toList());
       await prefs.setString(_sessionsStorageKey, json);
     } catch (e) {
       appLog.warning('Failed to persist AI sessions', error: e);

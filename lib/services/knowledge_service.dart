@@ -145,8 +145,11 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     }
     // Backfill missing vectors in the background (may hit Ollama/ONNX).
     embeddingService.batchEmbedMissing(notes).catchError((e, st) {
-      appLog.warning('Failed to backfill note embeddings',
-          error: e, stackTrace: st);
+      appLog.warning(
+        'Failed to backfill note embeddings',
+        error: e,
+        stackTrace: st,
+      );
       return 0;
     });
   }
@@ -170,8 +173,11 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
   /// so note saving is never blocked by the embedding backend.
   void _indexNoteEmbedding(Note note) {
     ref.read(embeddingServiceProvider).onNoteSaved(note).catchError((e, st) {
-      appLog.warning('Failed to index embedding for note ${note.id}',
-          error: e, stackTrace: st);
+      appLog.warning(
+        'Failed to index embedding for note ${note.id}',
+        error: e,
+        stackTrace: st,
+      );
     });
   }
 
@@ -192,9 +198,15 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     _linkSvc.rebuildAllLinks(state.notes);
     _syncLinks();
     // Remove the note's vector from the semantic index and persistence.
-    ref.read(embeddingServiceProvider).removeNoteEmbedding(id).catchError((e, st) {
-      appLog.warning('Failed to remove embedding for $id',
-          error: e, stackTrace: st);
+    ref.read(embeddingServiceProvider).removeNoteEmbedding(id).catchError((
+      e,
+      st,
+    ) {
+      appLog.warning(
+        'Failed to remove embedding for $id',
+        error: e,
+        stackTrace: st,
+      );
     });
   }
 

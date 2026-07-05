@@ -25,9 +25,9 @@ class MemoryContextBuilder {
     required MemoryService memory,
     required HebbianService hebbian,
     required ActiveMemoryBuffer activeBuffer,
-  })  : _memory = memory,
-        _hebbian = hebbian,
-        _activeBuffer = activeBuffer;
+  }) : _memory = memory,
+       _hebbian = hebbian,
+       _activeBuffer = activeBuffer;
 
   /// Query relevant memory fragments and format them for the system prompt.
   /// Returns a [MemoryContextBundle] containing the formatted context

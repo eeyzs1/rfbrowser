@@ -151,10 +151,7 @@ class ChatSession {
     required this.createdAt,
   });
 
-  ChatSession copyWith({
-    String? title,
-    List<ChatMessage>? messages,
-  }) {
+  ChatSession copyWith({String? title, List<ChatMessage>? messages}) {
     return ChatSession(
       id: id,
       title: title ?? this.title,
@@ -173,9 +170,10 @@ class ChatSession {
   factory ChatSession.fromJson(Map<String, dynamic> json) => ChatSession(
     id: json['id'] as String,
     title: json['title'] as String,
-    messages: (json['messages'] as List?)
-        ?.map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
-        .toList() ??
+    messages:
+        (json['messages'] as List?)
+            ?.map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
+            .toList() ??
         const [],
     createdAt: DateTime.parse(json['createdAt'] as String),
   );

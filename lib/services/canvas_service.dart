@@ -33,8 +33,7 @@ part 'canvas_style_operations.dart';
 /// Mixins (in part files) use `on CanvasNotifierBase` to access these
 /// private members within the same library. [CanvasNotifier] extends this
 /// base and mixes in all operation mixins.
-class CanvasNotifierBase extends Notifier<CanvasData>
-    with SharedPrefsAware {
+class CanvasNotifierBase extends Notifier<CanvasData> with SharedPrefsAware {
   final CanvasLayoutService _layoutService;
   final CanvasExportService _exportService;
   final CanvasLayersService _layersService;

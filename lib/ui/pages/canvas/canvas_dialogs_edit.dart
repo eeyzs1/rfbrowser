@@ -3,8 +3,8 @@ part of '../canvas_page.dart';
 /// The full-screen card editor dialog. Pulled into its own part file
 /// because the rich-text + style controls make it the single largest
 /// dialog in the canvas.
-mixin _CanvasDialogsEditMixin on _CanvasViewStateBase,
-    _CanvasDialogsEditRichMixin {
+mixin _CanvasDialogsEditMixin
+    on _CanvasViewStateBase, _CanvasDialogsEditRichMixin {
   @override
   void _editCard(String cardId) {
     final card = ref.read(canvasProvider.notifier).cardById(cardId);

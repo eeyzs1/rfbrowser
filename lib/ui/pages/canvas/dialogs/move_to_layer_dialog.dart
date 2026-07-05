@@ -43,8 +43,7 @@ class MoveToLayerDialog extends StatelessWidget {
                 // ignore: deprecated_member_use
                 groupValue: currentLayerId,
                 // ignore: deprecated_member_use
-                onChanged: (_) =>
-                    Navigator.pop(context, (layerId: null)),
+                onChanged: (_) => Navigator.pop(context, (layerId: null)),
               ),
             ),
             ...layers.map(
@@ -57,8 +56,7 @@ class MoveToLayerDialog extends StatelessWidget {
                   // ignore: deprecated_member_use
                   groupValue: currentLayerId,
                   // ignore: deprecated_member_use
-                  onChanged: (_) =>
-                      Navigator.pop(context, (layerId: layer.id)),
+                  onChanged: (_) => Navigator.pop(context, (layerId: layer.id)),
                 ),
               ),
             ),

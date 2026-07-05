@@ -19,9 +19,7 @@ mixin _ActionButtonsMixin on _CardPropertiesPanelBase {
       'Note',
       Text(
         card.noteId!,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.hintColor,
-        ),
+        style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
         overflow: TextOverflow.ellipsis,
       ),
     );
@@ -49,16 +47,12 @@ mixin _ActionButtonsMixin on _CardPropertiesPanelBase {
       children: [
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () => ref
-                .read(canvasProvider.notifier)
-                .startInlineEditing(card.id),
+            onPressed: () =>
+                ref.read(canvasProvider.notifier).startInlineEditing(card.id),
             icon: Icon(Icons.edit, size: 14),
             label: Text(l.editCard),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 4,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               minimumSize: Size.zero,
             ),
           ),
@@ -86,10 +80,7 @@ mixin _ActionButtonsMixin on _CardPropertiesPanelBase {
             icon: Icon(Icons.content_copy, size: 14),
             label: Text(l.duplicateCard),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 4,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               minimumSize: Size.zero,
             ),
           ),

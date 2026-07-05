@@ -105,10 +105,7 @@ Widget _panelDropdown<T>(
             .map(
               (v) => DropdownMenuItem(
                 value: v,
-                child: Text(
-                  (v as Enum).name,
-                  style: theme.textTheme.bodySmall,
-                ),
+                child: Text((v as Enum).name, style: theme.textTheme.bodySmall),
               ),
             )
             .toList(),

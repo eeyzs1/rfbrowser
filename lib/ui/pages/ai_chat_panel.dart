@@ -173,296 +173,307 @@ class _AIChatPanelState extends _AIChatPanelStateBase
                         },
                       ),
               ),
-        if (aiState.error != null)
-          Container(
-            padding: const EdgeInsets.all(8),
-            color: theme.colorScheme.error.withValues(alpha: 0.1),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 16,
-                  color: theme.colorScheme.error,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    aiState.error!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.error,
-                    ),
-                  ),
-                ),
-                // 重试按钮：重新发送上一条用户消息
-                IconButton(
-                  icon: const Icon(Icons.refresh, size: 14),
-                  onPressed: aiState.isLoading
-                      ? null
-                      : () => ref.read(aiProvider.notifier).retryLastMessage(),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 20,
-                    minHeight: 20,
-                  ),
-                  tooltip: l.retry,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 14),
-                  onPressed: () => ref.read(aiProvider.notifier).clearError(),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 20,
-                    minHeight: 20,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: theme.dividerColor)),
-          ),
-          child: Row(
-            children: [
-              // 会话侧栏切换按钮
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: IconButton(
-                  icon: Icon(
-                    _showSessionSidebar
-                        ? Icons.view_quilt
-                        : Icons.view_quilt_outlined,
-                    size: 12,
-                  ),
-                  onPressed: () => setState(
-                    () => _showSessionSidebar = !_showSessionSidebar,
-                  ),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 24,
-                    minHeight: 24,
-                  ),
-                  tooltip: l.sessions,
-                  style: IconButton.styleFrom(
-                    backgroundColor: _showSessionSidebar
-                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                        : theme.colorScheme.surface,
-                    side: BorderSide(color: theme.dividerColor),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              _buildModelSelector(theme, aiState),
-              const SizedBox(width: 4),
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: IconButton(
-                  icon: const Icon(Icons.auto_awesome, size: 12),
-                  onPressed: () => _showSkillPicker(theme),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 24,
-                    minHeight: 24,
-                  ),
-                  tooltip: 'Skills',
-                  style: IconButton.styleFrom(
-                    backgroundColor: theme.colorScheme.surface,
-                    side: BorderSide(color: theme.dividerColor),
-                  ),
-                ),
-              ),
-              const Spacer(),
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: IconButton(
-                  icon: const Icon(Icons.add_comment_outlined, size: 12),
-                  onPressed: () =>
-                      ref.read(aiProvider.notifier).createSession(),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 24,
-                    minHeight: 24,
-                  ),
-                  tooltip: l.newSession,
-                  style: IconButton.styleFrom(
-                    backgroundColor: theme.colorScheme.surface,
-                    side: BorderSide(color: theme.dividerColor),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 12),
-                  onPressed: () =>
-                      ref.read(aiProvider.notifier).clearMessages(),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 24,
-                    minHeight: 24,
-                  ),
-                  tooltip: l.clearChat,
-                  style: IconButton.styleFrom(
-                    backgroundColor: theme.colorScheme.surface,
-                    side: BorderSide(color: theme.dividerColor),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: theme.dividerColor)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_showAutocomplete && _autocompleteItems.isNotEmpty)
+              if (aiState.error != null)
                 Container(
-                  constraints: const BoxConstraints(maxHeight: 200),
-                  decoration: BoxDecoration(
-                    color: theme.cardColor,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: theme.dividerColor),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, -2),
+                  padding: const EdgeInsets.all(8),
+                  color: theme.colorScheme.error.withValues(alpha: 0.1),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 16,
+                        color: theme.colorScheme.error,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          aiState.error!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                          ),
+                        ),
+                      ),
+                      // 重试按钮：重新发送上一条用户消息
+                      IconButton(
+                        icon: const Icon(Icons.refresh, size: 14),
+                        onPressed: aiState.isLoading
+                            ? null
+                            : () => ref
+                                  .read(aiProvider.notifier)
+                                  .retryLastMessage(),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                        tooltip: l.retry,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 14),
+                        onPressed: () =>
+                            ref.read(aiProvider.notifier).clearError(),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
                       ),
                     ],
                   ),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    padding: EdgeInsets.zero,
-                    itemCount: _autocompleteItems.length,
-                    itemBuilder: (context, index) {
-                      final item = _autocompleteItems[index];
-                      return InkWell(
-                        onTap: () => _applyAutocomplete(item),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                _iconForRefType(item.type),
-                                size: 14,
-                                color: theme.colorScheme.primary,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      item.label,
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    if (item.description.isNotEmpty)
-                                      Text(
-                                        item.description,
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: theme.hintColor,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
                 ),
-              if (_showAutocomplete) const SizedBox(height: 4),
-              Row(
-                children: [
-                  Expanded(
-                    child: CallbackShortcuts(
-                      bindings: {
-                        // Enter 发送消息，Shift+Enter 换行（默认行为）
-                        const SingleActivator(LogicalKeyboardKey.enter):
-                            _sendMessage,
-                      },
-                      child: TextField(
-                        controller: _controller,
-                        focusNode: _focusNode,
-                        style: theme.textTheme.bodyMedium,
-                        maxLines: 5,
-                        minLines: 1,
-                        keyboardType: TextInputType.multiline,
-                        textInputAction: TextInputAction.newline,
-                        decoration: InputDecoration(
-                          hintText: l.enterMessage,
-                          hintStyle: theme.textTheme.bodySmall,
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: theme.dividerColor)),
+                ),
+                child: Row(
+                  children: [
+                    // 会话侧栏切换按钮
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: IconButton(
+                        icon: Icon(
+                          _showSessionSidebar
+                              ? Icons.view_quilt
+                              : Icons.view_quilt_outlined,
+                          size: 12,
+                        ),
+                        onPressed: () => setState(
+                          () => _showSessionSidebar = !_showSessionSidebar,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 24,
+                          minHeight: 24,
+                        ),
+                        tooltip: l.sessions,
+                        style: IconButton.styleFrom(
+                          backgroundColor: _showSessionSidebar
+                              ? theme.colorScheme.primary.withValues(
+                                  alpha: 0.15,
+                                )
+                              : theme.colorScheme.surface,
+                          side: BorderSide(color: theme.dividerColor),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: Icon(
-                      _agentMode
-                          ? Icons.auto_awesome
-                          : Icons.auto_awesome_outlined,
-                      size: 18,
-                      color: _agentMode
-                          ? theme.colorScheme.primary
-                          : theme.hintColor,
+                    const SizedBox(width: 4),
+                    _buildModelSelector(theme, aiState),
+                    const SizedBox(width: 4),
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: IconButton(
+                        icon: const Icon(Icons.auto_awesome, size: 12),
+                        onPressed: () => _showSkillPicker(theme),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 24,
+                          minHeight: 24,
+                        ),
+                        tooltip: 'Skills',
+                        style: IconButton.styleFrom(
+                          backgroundColor: theme.colorScheme.surface,
+                          side: BorderSide(color: theme.dividerColor),
+                        ),
+                      ),
                     ),
-                    tooltip: _agentMode ? l.agentModeOn : l.agentModeOff,
-                    onPressed: () => setState(() => _agentMode = !_agentMode),
-                    style: IconButton.styleFrom(
-                      backgroundColor: _agentMode
-                          ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                          : Colors.transparent,
+                    const Spacer(),
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: IconButton(
+                        icon: const Icon(Icons.add_comment_outlined, size: 12),
+                        onPressed: () =>
+                            ref.read(aiProvider.notifier).createSession(),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 24,
+                          minHeight: 24,
+                        ),
+                        tooltip: l.newSession,
+                        style: IconButton.styleFrom(
+                          backgroundColor: theme.colorScheme.surface,
+                          side: BorderSide(color: theme.dividerColor),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    icon: aiState.isLoading
-                        ? SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: theme.colorScheme.onPrimary,
-                            ),
-                          )
-                        : const Icon(Icons.send, size: 18),
-                    onPressed: aiState.isLoading ? null : _sendMessage,
-                    style: IconButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
+                    const SizedBox(width: 4),
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 12),
+                        onPressed: () =>
+                            ref.read(aiProvider.notifier).clearMessages(),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 24,
+                          minHeight: 24,
+                        ),
+                        tooltip: l.clearChat,
+                        style: IconButton.styleFrom(
+                          backgroundColor: theme.colorScheme.surface,
+                          side: BorderSide(color: theme.dividerColor),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: theme.dividerColor)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_showAutocomplete && _autocompleteItems.isNotEmpty)
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 200),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: theme.dividerColor),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, -2),
+                            ),
+                          ],
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          itemCount: _autocompleteItems.length,
+                          itemBuilder: (context, index) {
+                            final item = _autocompleteItems[index];
+                            return InkWell(
+                              onTap: () => _applyAutocomplete(item),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      _iconForRefType(item.type),
+                                      size: 14,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            item.label,
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                          ),
+                                          if (item.description.isNotEmpty)
+                                            Text(
+                                              item.description,
+                                              style: theme.textTheme.labelSmall
+                                                  ?.copyWith(
+                                                    color: theme.hintColor,
+                                                  ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    if (_showAutocomplete) const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CallbackShortcuts(
+                            bindings: {
+                              // Enter 发送消息，Shift+Enter 换行（默认行为）
+                              const SingleActivator(LogicalKeyboardKey.enter):
+                                  _sendMessage,
+                            },
+                            child: TextField(
+                              controller: _controller,
+                              focusNode: _focusNode,
+                              style: theme.textTheme.bodyMedium,
+                              maxLines: 5,
+                              minLines: 1,
+                              keyboardType: TextInputType.multiline,
+                              textInputAction: TextInputAction.newline,
+                              decoration: InputDecoration(
+                                hintText: l.enterMessage,
+                                hintStyle: theme.textTheme.bodySmall,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: Icon(
+                            _agentMode
+                                ? Icons.auto_awesome
+                                : Icons.auto_awesome_outlined,
+                            size: 18,
+                            color: _agentMode
+                                ? theme.colorScheme.primary
+                                : theme.hintColor,
+                          ),
+                          tooltip: _agentMode ? l.agentModeOn : l.agentModeOff,
+                          onPressed: () =>
+                              setState(() => _agentMode = !_agentMode),
+                          style: IconButton.styleFrom(
+                            backgroundColor: _agentMode
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.15,
+                                  )
+                                : Colors.transparent,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          icon: aiState.isLoading
+                              ? SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: theme.colorScheme.onPrimary,
+                                  ),
+                                )
+                              : const Icon(Icons.send, size: 18),
+                          onPressed: aiState.isLoading ? null : _sendMessage,
+                          style: IconButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -480,9 +491,7 @@ class _AIChatPanelState extends _AIChatPanelStateBase
       width: 200,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        border: Border(
-          right: BorderSide(color: theme.dividerColor),
-        ),
+        border: Border(right: BorderSide(color: theme.dividerColor)),
       ),
       child: Column(
         children: [
@@ -490,13 +499,15 @@ class _AIChatPanelState extends _AIChatPanelStateBase
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: theme.dividerColor),
-              ),
+              border: Border(bottom: BorderSide(color: theme.dividerColor)),
             ),
             child: Row(
               children: [
-                Icon(Icons.chat_bubble_outline, size: 14, color: theme.hintColor),
+                Icon(
+                  Icons.chat_bubble_outline,
+                  size: 14,
+                  color: theme.hintColor,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -597,9 +608,7 @@ class _AIChatPanelState extends _AIChatPanelStateBase
             Icon(
               isActive ? Icons.chat_bubble : Icons.chat_bubble_outline,
               size: 12,
-              color: isActive
-                  ? theme.colorScheme.primary
-                  : theme.hintColor,
+              color: isActive ? theme.colorScheme.primary : theme.hintColor,
             ),
             const SizedBox(width: 6),
             Expanded(
@@ -665,7 +674,11 @@ class _AIChatPanelState extends _AIChatPanelStateBase
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete_outline, size: 14, color: theme.colorScheme.error),
+              Icon(
+                Icons.delete_outline,
+                size: 14,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(width: 8),
               Text(l.deleteSession, style: theme.textTheme.bodySmall),
             ],
@@ -693,9 +706,7 @@ class _AIChatPanelState extends _AIChatPanelStateBase
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: InputDecoration(
-            labelText: l.sessionTitle,
-          ),
+          decoration: InputDecoration(labelText: l.sessionTitle),
         ),
         actions: [
           TextButton(
@@ -706,7 +717,9 @@ class _AIChatPanelState extends _AIChatPanelStateBase
             onPressed: () {
               final newTitle = controller.text.trim();
               if (newTitle.isNotEmpty) {
-                ref.read(aiProvider.notifier).renameSession(sessionId, newTitle);
+                ref
+                    .read(aiProvider.notifier)
+                    .renameSession(sessionId, newTitle);
               }
               Navigator.pop(ctx);
             },
@@ -750,22 +763,10 @@ class _AIChatPanelState extends _AIChatPanelStateBase
   /// 构建示例提示词卡片，点击后自动填入输入框。
   Widget _buildExamplePrompts(ThemeData theme) {
     final prompts = <_ExamplePrompt>[
-      _ExamplePrompt(
-        icon: Icons.summarize,
-        text: '总结我的笔记',
-      ),
-      _ExamplePrompt(
-        icon: Icons.lightbulb_outline,
-        text: '解释这个概念',
-      ),
-      _ExamplePrompt(
-        icon: Icons.edit_note,
-        text: '帮我写一篇日记',
-      ),
-      _ExamplePrompt(
-        icon: Icons.analytics_outlined,
-        text: '分析网页内容',
-      ),
+      _ExamplePrompt(icon: Icons.summarize, text: '总结我的笔记'),
+      _ExamplePrompt(icon: Icons.lightbulb_outline, text: '解释这个概念'),
+      _ExamplePrompt(icon: Icons.edit_note, text: '帮我写一篇日记'),
+      _ExamplePrompt(icon: Icons.analytics_outlined, text: '分析网页内容'),
     ];
 
     return Wrap(

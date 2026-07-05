@@ -173,11 +173,7 @@ mixin _GraphToolbarMixin on _GraphViewStateBase {
                   value: 'json',
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.data_object,
-                        size: 14,
-                        color: theme.hintColor,
-                      ),
+                      Icon(Icons.data_object, size: 14, color: theme.hintColor),
                       const SizedBox(width: 8),
                       Text(l.exportGraphJson),
                     ],

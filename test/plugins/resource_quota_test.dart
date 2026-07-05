@@ -92,11 +92,9 @@ void main() {
 
         // Third call should throw ResourceQuotaExceededError
         expect(
-          () => sandbox.callApi(
-            'knowledge.getNote',
-            {'id': '3'},
-            requiredPermission: Permission.knowledgeRead,
-          ),
+          () => sandbox.callApi('knowledge.getNote', {
+            'id': '3',
+          }, requiredPermission: Permission.knowledgeRead),
           throwsA(isA<ResourceQuotaExceededError>()),
         );
       },
@@ -123,19 +121,15 @@ void main() {
       addTearDown(sandbox.stop);
 
       // First call succeeds
-      await sandbox.callApi<Map<String, dynamic>>(
-        'knowledge.getNote',
-        {'id': '1'},
-        requiredPermission: Permission.knowledgeRead,
-      );
+      await sandbox.callApi<Map<String, dynamic>>('knowledge.getNote', {
+        'id': '1',
+      }, requiredPermission: Permission.knowledgeRead);
 
       // Second call throws
       try {
-        await sandbox.callApi(
-          'knowledge.getNote',
-          {'id': '2'},
-          requiredPermission: Permission.knowledgeRead,
-        );
+        await sandbox.callApi('knowledge.getNote', {
+          'id': '2',
+        }, requiredPermission: Permission.knowledgeRead);
         fail('Should have thrown ResourceQuotaExceededError');
       } on ResourceQuotaExceededError catch (e) {
         expect(e.message, contains('rate limit'));
@@ -241,11 +235,9 @@ void main() {
       addTearDown(sandbox.stop);
 
       try {
-        await sandbox.callApi(
-          'knowledge.getNote',
-          {'data': 'x' * 100},
-          requiredPermission: Permission.knowledgeRead,
-        );
+        await sandbox.callApi('knowledge.getNote', {
+          'data': 'x' * 100,
+        }, requiredPermission: Permission.knowledgeRead);
         fail('Should have thrown ResourceQuotaExceededError');
       } on ResourceQuotaExceededError catch (e) {
         expect(e.message, contains('too large'));
@@ -315,11 +307,9 @@ void main() {
         });
 
         try {
-          await sandbox.callApi(
-            'knowledge.getNote',
-            {'id': 'x'},
-            requiredPermission: Permission.knowledgeRead,
-          );
+          await sandbox.callApi('knowledge.getNote', {
+            'id': 'x',
+          }, requiredPermission: Permission.knowledgeRead);
           fail('Expected timeout exception');
         } catch (e) {
           expect(e, isA<Exception>());
@@ -329,44 +319,44 @@ void main() {
       timeout: const Timeout(Duration(seconds: 10)),
     );
 
-    test('timeout does not auto-stop sandbox when maxConsecutiveErrors is 0', () async {
-      final manifest = PluginManifest(
-        id: 'timeout-no-stop',
-        name: 'Timeout No Stop',
-        permissions: [Permission.knowledgeRead],
-      );
-      final sandbox = Sandbox(
-        pluginId: manifest.id,
-        manifest: manifest,
-        apiHandler: (apiName, args) async {
-          await Future.delayed(const Duration(milliseconds: 300));
-          return {'ok': true};
-        },
-        quota: const ResourceQuota(
-          maxMessagesPerSecond: 0,
-          maxMessageSizeBytes: 0,
-          maxExecutionDuration: Duration(milliseconds: 100),
-          maxConsecutiveErrors: 0,
-        ),
-      );
-      await sandbox.start();
-      addTearDown(() async {
-        await sandbox.stop();
-        await Future.delayed(const Duration(milliseconds: 400));
-      });
-
-      try {
-        await sandbox.callApi(
-          'knowledge.getNote',
-          {'id': 'x'},
-          requiredPermission: Permission.knowledgeRead,
+    test(
+      'timeout does not auto-stop sandbox when maxConsecutiveErrors is 0',
+      () async {
+        final manifest = PluginManifest(
+          id: 'timeout-no-stop',
+          name: 'Timeout No Stop',
+          permissions: [Permission.knowledgeRead],
         );
-        fail('Expected timeout exception');
-      } catch (e) {
-        // Sandbox should still be running because maxConsecutiveErrors is 0
-        expect(sandbox.isRunning, isTrue);
-      }
-    },
+        final sandbox = Sandbox(
+          pluginId: manifest.id,
+          manifest: manifest,
+          apiHandler: (apiName, args) async {
+            await Future.delayed(const Duration(milliseconds: 300));
+            return {'ok': true};
+          },
+          quota: const ResourceQuota(
+            maxMessagesPerSecond: 0,
+            maxMessageSizeBytes: 0,
+            maxExecutionDuration: Duration(milliseconds: 100),
+            maxConsecutiveErrors: 0,
+          ),
+        );
+        await sandbox.start();
+        addTearDown(() async {
+          await sandbox.stop();
+          await Future.delayed(const Duration(milliseconds: 400));
+        });
+
+        try {
+          await sandbox.callApi('knowledge.getNote', {
+            'id': 'x',
+          }, requiredPermission: Permission.knowledgeRead);
+          fail('Expected timeout exception');
+        } catch (e) {
+          // Sandbox should still be running because maxConsecutiveErrors is 0
+          expect(sandbox.isRunning, isTrue);
+        }
+      },
       timeout: const Timeout(Duration(seconds: 10)),
     );
   });
@@ -398,11 +388,9 @@ void main() {
         // First 2 calls should throw Exception but sandbox stays running
         for (int i = 0; i < 2; i++) {
           try {
-            await sandbox.callApi(
-              'knowledge.getNote',
-              {'id': '$i'},
-              requiredPermission: Permission.knowledgeRead,
-            );
+            await sandbox.callApi('knowledge.getNote', {
+              'id': '$i',
+            }, requiredPermission: Permission.knowledgeRead);
             fail('Expected exception on call ${i + 1}');
           } catch (e) {
             expect(e, isA<Exception>());
@@ -413,11 +401,9 @@ void main() {
 
         // Third call should throw Exception and trigger auto-stop
         try {
-          await sandbox.callApi(
-            'knowledge.getNote',
-            {'id': '2'},
-            requiredPermission: Permission.knowledgeRead,
-          );
+          await sandbox.callApi('knowledge.getNote', {
+            'id': '2',
+          }, requiredPermission: Permission.knowledgeRead);
           fail('Expected exception on call 3');
         } catch (e) {
           expect(e, isA<Exception>());
@@ -432,113 +418,111 @@ void main() {
       timeout: const Timeout(Duration(seconds: 15)),
     );
 
-    test('consecutive errors reset after a successful call', () async {
-      final manifest = PluginManifest(
-        id: 'reset-errors',
-        name: 'Reset Errors',
-        permissions: [Permission.knowledgeRead],
-      );
-      var shouldFail = true;
-      final sandbox = Sandbox(
-        pluginId: manifest.id,
-        manifest: manifest,
-        apiHandler: (apiName, args) async {
-          if (shouldFail) {
-            throw Exception('API error');
-          }
-          return {'ok': true};
-        },
-        quota: const ResourceQuota(
-          maxMessagesPerSecond: 0,
-          maxMessageSizeBytes: 0,
-          maxExecutionDuration: Duration(seconds: 5),
-          maxConsecutiveErrors: 3,
-        ),
-      );
-      await sandbox.start();
-      addTearDown(() async {
-        await sandbox.stop();
-        await Future.delayed(const Duration(milliseconds: 200));
-      });
+    test(
+      'consecutive errors reset after a successful call',
+      () async {
+        final manifest = PluginManifest(
+          id: 'reset-errors',
+          name: 'Reset Errors',
+          permissions: [Permission.knowledgeRead],
+        );
+        var shouldFail = true;
+        final sandbox = Sandbox(
+          pluginId: manifest.id,
+          manifest: manifest,
+          apiHandler: (apiName, args) async {
+            if (shouldFail) {
+              throw Exception('API error');
+            }
+            return {'ok': true};
+          },
+          quota: const ResourceQuota(
+            maxMessagesPerSecond: 0,
+            maxMessageSizeBytes: 0,
+            maxExecutionDuration: Duration(seconds: 5),
+            maxConsecutiveErrors: 3,
+          ),
+        );
+        await sandbox.start();
+        addTearDown(() async {
+          await sandbox.stop();
+          await Future.delayed(const Duration(milliseconds: 200));
+        });
 
-      // Two errors
-      for (int i = 0; i < 2; i++) {
-        try {
-          await sandbox.callApi(
-            'knowledge.getNote',
-            {'id': '$i'},
-            requiredPermission: Permission.knowledgeRead,
-          );
-          fail('Expected exception');
-        } catch (_) {}
-      }
-      expect(sandbox.isRunning, isTrue);
+        // Two errors
+        for (int i = 0; i < 2; i++) {
+          try {
+            await sandbox.callApi('knowledge.getNote', {
+              'id': '$i',
+            }, requiredPermission: Permission.knowledgeRead);
+            fail('Expected exception');
+          } catch (_) {}
+        }
+        expect(sandbox.isRunning, isTrue);
 
-      // A successful call resets the counter
-      shouldFail = false;
-      final result = await sandbox.callApi<Map<String, dynamic>>(
-        'knowledge.getNote',
-        {'id': 'ok'},
-        requiredPermission: Permission.knowledgeRead,
-      );
-      expect(result, isNotNull);
-      expect(result!['ok'], true);
+        // A successful call resets the counter
+        shouldFail = false;
+        final result = await sandbox.callApi<Map<String, dynamic>>(
+          'knowledge.getNote',
+          {'id': 'ok'},
+          requiredPermission: Permission.knowledgeRead,
+        );
+        expect(result, isNotNull);
+        expect(result!['ok'], true);
 
-      // Two more errors should NOT auto-stop (counter was reset)
-      shouldFail = true;
-      for (int i = 0; i < 2; i++) {
-        try {
-          await sandbox.callApi(
-            'knowledge.getNote',
-            {'id': '$i'},
-            requiredPermission: Permission.knowledgeRead,
-          );
-          fail('Expected exception');
-        } catch (_) {}
-      }
-      expect(sandbox.isRunning, isTrue);
-    },
+        // Two more errors should NOT auto-stop (counter was reset)
+        shouldFail = true;
+        for (int i = 0; i < 2; i++) {
+          try {
+            await sandbox.callApi('knowledge.getNote', {
+              'id': '$i',
+            }, requiredPermission: Permission.knowledgeRead);
+            fail('Expected exception');
+          } catch (_) {}
+        }
+        expect(sandbox.isRunning, isTrue);
+      },
       timeout: const Timeout(Duration(seconds: 15)),
     );
 
-    test('zero maxConsecutiveErrors disables auto-stop', () async {
-      final manifest = PluginManifest(
-        id: 'no-auto-stop',
-        name: 'No Auto Stop',
-        permissions: [Permission.knowledgeRead],
-      );
-      final sandbox = Sandbox(
-        pluginId: manifest.id,
-        manifest: manifest,
-        apiHandler: (apiName, args) async {
-          throw Exception('API error');
-        },
-        quota: const ResourceQuota(
-          maxMessagesPerSecond: 0,
-          maxMessageSizeBytes: 0,
-          maxExecutionDuration: Duration(seconds: 5),
-          maxConsecutiveErrors: 0,
-        ),
-      );
-      await sandbox.start();
-      addTearDown(() async {
-        await sandbox.stop();
-        await Future.delayed(const Duration(milliseconds: 200));
-      });
+    test(
+      'zero maxConsecutiveErrors disables auto-stop',
+      () async {
+        final manifest = PluginManifest(
+          id: 'no-auto-stop',
+          name: 'No Auto Stop',
+          permissions: [Permission.knowledgeRead],
+        );
+        final sandbox = Sandbox(
+          pluginId: manifest.id,
+          manifest: manifest,
+          apiHandler: (apiName, args) async {
+            throw Exception('API error');
+          },
+          quota: const ResourceQuota(
+            maxMessagesPerSecond: 0,
+            maxMessageSizeBytes: 0,
+            maxExecutionDuration: Duration(seconds: 5),
+            maxConsecutiveErrors: 0,
+          ),
+        );
+        await sandbox.start();
+        addTearDown(() async {
+          await sandbox.stop();
+          await Future.delayed(const Duration(milliseconds: 200));
+        });
 
-      // Many errors should not auto-stop
-      for (int i = 0; i < 5; i++) {
-        try {
-          await sandbox.callApi(
-            'knowledge.getNote',
-            {'id': '$i'},
-            requiredPermission: Permission.knowledgeRead,
-          );
-          fail('Expected exception');
-        } catch (_) {}
-      }
-      expect(sandbox.isRunning, isTrue);
-    },
+        // Many errors should not auto-stop
+        for (int i = 0; i < 5; i++) {
+          try {
+            await sandbox.callApi('knowledge.getNote', {
+              'id': '$i',
+            }, requiredPermission: Permission.knowledgeRead);
+            fail('Expected exception');
+          } catch (_) {}
+        }
+        expect(sandbox.isRunning, isTrue);
+      },
       timeout: const Timeout(Duration(seconds: 15)),
     );
   });

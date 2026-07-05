@@ -185,8 +185,7 @@ mixin _CanvasInputHitTestMixin on _CanvasViewStateBase {
     Offset p2,
     Offset p3,
     double t,
-  ) =>
-      CanvasGeometry.cubicBezierPoint(p0, p1, p2, p3, t);
+  ) => CanvasGeometry.cubicBezierPoint(p0, p1, p2, p3, t);
 
   @override
   (String, ConnectionSide, double)? _hitTestConnectionPoint(Offset worldPos) {

@@ -16,7 +16,9 @@ class AgentWebView {
     final uri = Uri.tryParse(url);
     if (uri == null) return true;
     if (!_allowedSchemes.contains(uri.scheme)) {
-      appLog.warning('AgentWebView: blocked non-HTTP URL scheme: ${uri.scheme}');
+      appLog.warning(
+        'AgentWebView: blocked non-HTTP URL scheme: ${uri.scheme}',
+      );
       return true;
     }
     return false;

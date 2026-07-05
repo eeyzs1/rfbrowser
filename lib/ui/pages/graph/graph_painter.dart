@@ -207,28 +207,25 @@ class GraphPainter extends CustomPainter {
       }
 
       if (scale > 0.5) {
-        final textPainter = _textPainterCache.putIfAbsent(
-          note.title,
-          () {
-            final tp = TextPainter(
-              text: TextSpan(
-                text: note.title,
-                style: TextStyle(
-                  color: isSelected
-                      ? primaryColor
-                      : isBridge
-                      ? redColor
-                      : onSurfaceColor.withValues(alpha: 0.8),
-                  fontSize: (baseFontSize * scale).clamp(8, 14),
-                ),
+        final textPainter = _textPainterCache.putIfAbsent(note.title, () {
+          final tp = TextPainter(
+            text: TextSpan(
+              text: note.title,
+              style: TextStyle(
+                color: isSelected
+                    ? primaryColor
+                    : isBridge
+                    ? redColor
+                    : onSurfaceColor.withValues(alpha: 0.8),
+                fontSize: (baseFontSize * scale).clamp(8, 14),
               ),
-              textDirection: TextDirection.ltr,
-              maxLines: 1,
-            );
-            tp.layout(maxWidth: 100 * scale);
-            return tp;
-          },
-        );
+            ),
+            textDirection: TextDirection.ltr,
+            maxLines: 1,
+          );
+          tp.layout(maxWidth: 100 * scale);
+          return tp;
+        });
         textPainter.paint(
           canvas,
           Offset(pos.dx - textPainter.width / 2, pos.dy + r + 4),

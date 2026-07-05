@@ -274,8 +274,8 @@ class QuickMovesSettingsSection extends ConsumerWidget {
               tooltip: 'Move Up',
               onPressed: canMoveUp
                   ? () => ref
-                      .read(quickMoveProvider.notifier)
-                      .reorderMove(move.id, index - 1)
+                        .read(quickMoveProvider.notifier)
+                        .reorderMove(move.id, index - 1)
                   : null,
             ),
             IconButton(
@@ -285,8 +285,8 @@ class QuickMovesSettingsSection extends ConsumerWidget {
               tooltip: 'Move Down',
               onPressed: canMoveDown
                   ? () => ref
-                      .read(quickMoveProvider.notifier)
-                      .reorderMove(move.id, index + 1)
+                        .read(quickMoveProvider.notifier)
+                        .reorderMove(move.id, index + 1)
                   : null,
             ),
           ],

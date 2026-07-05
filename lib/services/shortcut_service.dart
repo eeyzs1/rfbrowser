@@ -163,8 +163,11 @@ class ShortcutService {
       } catch (e, st) {
         // Corrupt JSON in prefs should not abort app startup. Reset to
         // defaults and persist so the next launch is clean.
-        appLog.error('ShortcutService: failed to parse stored shortcuts JSON',
-            error: e, stackTrace: st);
+        appLog.error(
+          'ShortcutService: failed to parse stored shortcuts JSON',
+          error: e,
+          stackTrace: st,
+        );
         _bindings = Map.fromEntries(_defaults.entries);
         await persist();
       }

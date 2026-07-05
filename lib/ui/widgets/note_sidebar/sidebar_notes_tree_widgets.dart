@@ -102,9 +102,10 @@ class _NoteFolderRowState extends State<_NoteFolderRow> {
               color: isDragOver
                   ? theme.colorScheme.primary.withValues(alpha: 0.1)
                   : _isHovered
-                      ? theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.3)
-                      : null,
+                  ? theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
+                    )
+                  : null,
               child: InkWell(
                 onTap: widget.onToggle,
                 child: Padding(
@@ -123,14 +124,11 @@ class _NoteFolderRowState extends State<_NoteFolderRow> {
                       ),
                       const SizedBox(width: 2),
                       Icon(
-                        widget.isExpanded
-                            ? Icons.folder_open
-                            : Icons.folder,
+                        widget.isExpanded ? Icons.folder_open : Icons.folder,
                         size: 15,
                         color: widget.isRoot
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.primary
-                                .withValues(alpha: 0.7),
+                            : theme.colorScheme.primary.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 5),
                       Expanded(
@@ -184,8 +182,7 @@ class _NoteFolderRowState extends State<_NoteFolderRow> {
                             '${widget.noteCount}',
                             style: TextStyle(
                               fontSize: widget.baseFontSize - 2,
-                              color:
-                                  theme.hintColor.withValues(alpha: 0.6),
+                              color: theme.hintColor.withValues(alpha: 0.6),
                             ),
                           ),
                         ),
@@ -268,8 +265,9 @@ class _NoteRowState extends State<_NoteRow> {
               const SizedBox(width: 6),
               Text(
                 widget.note.title,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(fontSize: widget.baseFontSize),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: widget.baseFontSize,
+                ),
               ),
             ],
           ),
@@ -308,8 +306,7 @@ class _NoteRowState extends State<_NoteRow> {
                         color: widget.isActive
                             ? theme.colorScheme.primary
                             : null,
-                        fontWeight:
-                            widget.isActive ? FontWeight.w600 : null,
+                        fontWeight: widget.isActive ? FontWeight.w600 : null,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -400,10 +397,7 @@ void _showFolderContextMenu(
               color: theme.colorScheme.error,
             ),
             const SizedBox(width: 8),
-            Text(
-              l.delete,
-              style: TextStyle(color: theme.colorScheme.error),
-            ),
+            Text(l.delete, style: TextStyle(color: theme.colorScheme.error)),
           ],
         ),
       ),

@@ -109,18 +109,18 @@ void main() {
       });
 
       test('returns distance to single point', () {
-        final dist = CanvasGeometry.pointToPolylineDist(
-          const Offset(3, 4),
-          [const Offset(0, 0)],
-        );
+        final dist = CanvasGeometry.pointToPolylineDist(const Offset(3, 4), [
+          const Offset(0, 0),
+        ]);
         expect(dist, closeTo(5, 1e-9));
       });
 
       test('returns distance to closest segment', () {
-        final dist = CanvasGeometry.pointToPolylineDist(
-          const Offset(5, 2),
-          [const Offset(0, 0), const Offset(10, 0), const Offset(10, 10)],
-        );
+        final dist = CanvasGeometry.pointToPolylineDist(const Offset(5, 2), [
+          const Offset(0, 0),
+          const Offset(10, 0),
+          const Offset(10, 10),
+        ]);
         // Closest segment is (0,0)-(10,0), perpendicular distance = 2
         expect(dist, closeTo(2, 1e-9));
       });

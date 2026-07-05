@@ -155,7 +155,8 @@ class PluginHostNotifier extends Notifier<PluginState> {
     final vaultPath = _vaultPath ?? ref.read(noteRepositoryProvider)?.vaultPath;
     if (vaultPath == null) return null;
 
-    final pluginDir = '$vaultPath${Platform.pathSeparator}.rfbrowser${Platform.pathSeparator}plugins${Platform.pathSeparator}${manifest.id}';
+    final pluginDir =
+        '$vaultPath${Platform.pathSeparator}.rfbrowser${Platform.pathSeparator}plugins${Platform.pathSeparator}${manifest.id}';
     final jsFile = File('$pluginDir${Platform.pathSeparator}$entryPath');
     if (!await jsFile.exists()) {
       appLog.warning('PluginHost: entry point not found: ${jsFile.path}');
@@ -411,7 +412,10 @@ class PluginHostNotifier extends Notifier<PluginState> {
         try {
           handler(event, data);
         } catch (e) {
-          appLog.error('PluginHost: hook $event for $pluginId failed', error: e);
+          appLog.error(
+            'PluginHost: hook $event for $pluginId failed',
+            error: e,
+          );
         }
       }
     }

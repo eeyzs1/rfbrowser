@@ -73,8 +73,7 @@ class MemorySettings {
   factory MemorySettings.fromPrefs(SharedPreferences prefs) {
     return MemorySettings(
       injectContext: prefs.getBool('memoryInjectContext') ?? true,
-      shortToMidThreshold:
-          prefs.getDouble('memoryShortToMidThreshold') ?? 0.65,
+      shortToMidThreshold: prefs.getDouble('memoryShortToMidThreshold') ?? 0.65,
       midToLongThreshold: prefs.getDouble('memoryMidToLongThreshold') ?? 0.45,
       shortMaxAgeDays: prefs.getInt('memoryShortMaxAgeDays') ?? 7,
       midMaxAgeDays: prefs.getInt('memoryMidMaxAgeDays') ?? 30,
@@ -104,11 +103,23 @@ class MemorySettings {
     await prefs.setInt('memoryMidMaxAgeDays', midMaxAgeDays);
     await prefs.setInt('memoryHebbianCoAccessMinutes', hebbianCoAccessMinutes);
     await prefs.setInt('memoryHebbianDecayDays', hebbianDecayDays);
-    await prefs.setInt('memoryAutoExportEveryNMessages', autoExportEveryNMessages);
+    await prefs.setInt(
+      'memoryAutoExportEveryNMessages',
+      autoExportEveryNMessages,
+    );
     await prefs.setBool('memoryDreamingEnabled', dreamingEnabled);
-    await prefs.setInt('memoryCreatedRecencyHalfLifeDays', createdRecencyHalfLifeDays);
-    await prefs.setInt('memoryAccessRecencyHalfLifeDays', accessRecencyHalfLifeDays);
-    await prefs.setBool('memoryUseLastAccessForRecency', useLastAccessForRecency);
+    await prefs.setInt(
+      'memoryCreatedRecencyHalfLifeDays',
+      createdRecencyHalfLifeDays,
+    );
+    await prefs.setInt(
+      'memoryAccessRecencyHalfLifeDays',
+      accessRecencyHalfLifeDays,
+    );
+    await prefs.setBool(
+      'memoryUseLastAccessForRecency',
+      useLastAccessForRecency,
+    );
     await prefs.setInt('memoryContextBudget', contextBudget);
     await prefs.setBool('memoryUseLlmSummarizer', useLlmSummarizer);
     await prefs.setBool('memoryUseLlmRerank', useLlmRerank);
@@ -137,13 +148,18 @@ class MemorySettings {
       midToLongThreshold: midToLongThreshold ?? this.midToLongThreshold,
       shortMaxAgeDays: shortMaxAgeDays ?? this.shortMaxAgeDays,
       midMaxAgeDays: midMaxAgeDays ?? this.midMaxAgeDays,
-      hebbianCoAccessMinutes: hebbianCoAccessMinutes ?? this.hebbianCoAccessMinutes,
+      hebbianCoAccessMinutes:
+          hebbianCoAccessMinutes ?? this.hebbianCoAccessMinutes,
       hebbianDecayDays: hebbianDecayDays ?? this.hebbianDecayDays,
-      autoExportEveryNMessages: autoExportEveryNMessages ?? this.autoExportEveryNMessages,
+      autoExportEveryNMessages:
+          autoExportEveryNMessages ?? this.autoExportEveryNMessages,
       dreamingEnabled: dreamingEnabled ?? this.dreamingEnabled,
-      createdRecencyHalfLifeDays: createdRecencyHalfLifeDays ?? this.createdRecencyHalfLifeDays,
-      accessRecencyHalfLifeDays: accessRecencyHalfLifeDays ?? this.accessRecencyHalfLifeDays,
-      useLastAccessForRecency: useLastAccessForRecency ?? this.useLastAccessForRecency,
+      createdRecencyHalfLifeDays:
+          createdRecencyHalfLifeDays ?? this.createdRecencyHalfLifeDays,
+      accessRecencyHalfLifeDays:
+          accessRecencyHalfLifeDays ?? this.accessRecencyHalfLifeDays,
+      useLastAccessForRecency:
+          useLastAccessForRecency ?? this.useLastAccessForRecency,
       contextBudget: contextBudget ?? this.contextBudget,
       useLlmSummarizer: useLlmSummarizer ?? this.useLlmSummarizer,
       useLlmRerank: useLlmRerank ?? this.useLlmRerank,

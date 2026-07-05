@@ -109,12 +109,14 @@ class HighlightedTextEditingController extends TextEditingController {
     // discard the result — a newer compute is already in flight.
     if (_disposed || _pendingText != text) return;
     _ranges = serialized
-        .map((r) => HighlightRange(
-              start: r[0] as int,
-              end: r[1] as int,
-              type: HighlightType.values[r[2] as int],
-              language: r[3] as String?,
-            ))
+        .map(
+          (r) => HighlightRange(
+            start: r[0] as int,
+            end: r[1] as int,
+            type: HighlightType.values[r[2] as int],
+            language: r[3] as String?,
+          ),
+        )
         .toList();
     _rangesForText = text;
     _pendingText = null;
@@ -149,16 +151,18 @@ class HighlightedTextEditingController extends TextEditingController {
         spans.add(
           TextSpan(
             text: rangeText,
-            style: range.style(theme).merge(
-              style?.copyWith(
-                color: null,
-                fontWeight: null,
-                fontStyle: null,
-                fontSize: null,
-                decoration: null,
-                backgroundColor: null,
-              ),
-            ),
+            style: range
+                .style(theme)
+                .merge(
+                  style?.copyWith(
+                    color: null,
+                    fontWeight: null,
+                    fontStyle: null,
+                    fontSize: null,
+                    decoration: null,
+                    backgroundColor: null,
+                  ),
+                ),
           ),
         );
         currentPos = range.end;

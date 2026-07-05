@@ -244,8 +244,10 @@ abstract class _GraphViewStateBase extends ConsumerState<GraphView> {
         allNotes: displayNotes,
         allLinks: displayDataLinks,
       );
-      _cachedBridgeIds =
-          algorithm.getBridgeNodes().map((b) => b.noteId).toSet();
+      _cachedBridgeIds = algorithm
+          .getBridgeNodes()
+          .map((b) => b.noteId)
+          .toSet();
       // Invalidate stats cache since the underlying graph changed.
       _statsNotesRef = null;
     }
@@ -451,7 +453,10 @@ abstract class _GraphViewStateBase extends ConsumerState<GraphView> {
   void _scheduleHoverCheck(PointerHoverEvent details) {
     _pendingHoverPosition = details.localPosition;
     if (_hoverThrottle?.isActive ?? false) return;
-    _hoverThrottle = Timer(const Duration(milliseconds: 33), _processPendingHover);
+    _hoverThrottle = Timer(
+      const Duration(milliseconds: 33),
+      _processPendingHover,
+    );
   }
 
   void _processPendingHover() {

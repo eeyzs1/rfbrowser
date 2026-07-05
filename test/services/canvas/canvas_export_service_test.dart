@@ -240,7 +240,10 @@ void main() {
       });
 
       test('importFromEmbeddedSvg recovers data', () async {
-        final (svg, _) = await service.exportWithEmbeddedData(makeSampleData(), 'T');
+        final (svg, _) = await service.exportWithEmbeddedData(
+          makeSampleData(),
+          'T',
+        );
         final recovered = CanvasExportService.importFromEmbeddedSvg(svg);
         expect(recovered, isNotNull);
         expect(recovered!.cards.length, 2);
@@ -254,7 +257,10 @@ void main() {
 
     group('importFromSvg', () {
       test('prefers embedded data over rect parsing', () async {
-        final (svg, _) = await service.exportWithEmbeddedData(makeSampleData(), 'T');
+        final (svg, _) = await service.exportWithEmbeddedData(
+          makeSampleData(),
+          'T',
+        );
         final result = CanvasExportService.importFromSvg(svg);
         expect(result!.cards.length, 2);
         expect(result.connections.length, 1);

@@ -79,7 +79,8 @@ class _StatusBarState extends ConsumerState<StatusBar> {
       theme: theme,
       l: l,
       isOffline: isOffline,
-      isSyncing: connectivityState.isSyncing ||
+      isSyncing:
+          connectivityState.isSyncing ||
           webdavState.status == SyncStatus.syncing,
       hasError: webdavState.status == SyncStatus.error,
     );
@@ -129,8 +130,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
                       color: isOffline ? const Color(0xFFEF4444) : null,
                     ),
                   ),
-                  if (isOffline &&
-                      connectivityState.syncQueue.isNotEmpty) ...[
+                  if (isOffline && connectivityState.syncQueue.isNotEmpty) ...[
                     const SizedBox(width: 12),
                     Icon(Icons.cloud_upload, size: 10, color: theme.hintColor),
                     const SizedBox(width: 4),
@@ -226,9 +226,12 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           children: [
             Icon(Icons.cloud_off, size: 10, color: theme.hintColor),
             const SizedBox(width: 4),
-            Text(l.offline, style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.hintColor,
-            )),
+            Text(
+              l.offline,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
           ],
         ),
       );

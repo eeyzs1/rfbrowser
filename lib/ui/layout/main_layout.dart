@@ -42,6 +42,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   void _openSettings() {
     setState(() => _showSettings = true);
   }
+
   void _closeSettings() {
     setState(() => _showSettings = false);
   }
@@ -161,8 +162,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                     onToggleRightPanel: _toggleRightPanel,
                   ),
                   statusBar: StatusBar(
-                    onCommandBar: () =>
-                        setState(() => _showCommandBar = true),
+                    onCommandBar: () => setState(() => _showCommandBar = true),
                     onSettings: _openSettings,
                   ),
                   onSceneChanged: _switchScene,

@@ -76,13 +76,13 @@ class Sandbox {
     required ApiHandler apiHandler,
     String? entryPointCode,
     ResourceQuota? quota,
-  })  : _apiHandler = apiHandler,
-        _entryPointCode = entryPointCode,
-        _quota = quota ?? ResourceQuota.defaultQuota,
-        _capabilityChecker = CapabilityChecker(
-          pluginId: pluginId,
-          manifest: manifest,
-        );
+  }) : _apiHandler = apiHandler,
+       _entryPointCode = entryPointCode,
+       _quota = quota ?? ResourceQuota.defaultQuota,
+       _capabilityChecker = CapabilityChecker(
+         pluginId: pluginId,
+         manifest: manifest,
+       );
 
   bool get isRunning => _isRunning;
 
@@ -268,7 +268,8 @@ class Sandbox {
         return _ApiResponse(
           id: requestId,
           success: false,
-          error: 'API call timeout after ${_quota.maxExecutionDuration.inSeconds}s',
+          error:
+              'API call timeout after ${_quota.maxExecutionDuration.inSeconds}s',
         );
       },
     );
@@ -383,7 +384,10 @@ class Sandbox {
   /// Echo loop — backward-compatible pass-through used when no JS entry point
   /// is declared. The main process handles all API logic; the isolate just
   /// relays messages back so existing tests keep working.
-  static void _runEchoLoop(_PluginStartMessage message, ReceivePort receivePort) {
+  static void _runEchoLoop(
+    _PluginStartMessage message,
+    ReceivePort receivePort,
+  ) {
     receivePort.listen((dynamic msg) {
       if (msg is Map<String, dynamic> && msg['type'] == 'apiRequest') {
         final requestId = msg['id'] as String? ?? '';
@@ -419,7 +423,10 @@ class Sandbox {
   /// `apiResponse`. If no handler is registered for that API name, the request
   /// is echoed back to the main process (hybrid mode: JS handlers take
   /// priority, host APIs serve as fallback).
-  static void _runJsPlugin(_PluginStartMessage message, ReceivePort receivePort) {
+  static void _runJsPlugin(
+    _PluginStartMessage message,
+    ReceivePort receivePort,
+  ) {
     JavascriptRuntime? runtime;
     try {
       runtime = getJavascriptRuntime();
@@ -446,16 +453,22 @@ class Sandbox {
           final args = msg['args'] as Map<String, dynamic>? ?? {};
 
           // Check if a JS handler is registered for this API name.
-          final hasHandler = rt.evaluate(
-            "typeof __pluginHandlers['$apiName'] === 'function'",
-          ).stringResult == 'true';
+          final hasHandler =
+              rt
+                  .evaluate(
+                    "typeof __pluginHandlers['$apiName'] === 'function'",
+                  )
+                  .stringResult ==
+              'true';
 
           if (hasHandler) {
             try {
               final argsJson = jsonEncode(args);
-              final resultStr = rt.evaluate(
-                "JSON.stringify(__pluginHandlers['$apiName']($argsJson))",
-              ).stringResult;
+              final resultStr = rt
+                  .evaluate(
+                    "JSON.stringify(__pluginHandlers['$apiName']($argsJson))",
+                  )
+                  .stringResult;
               dynamic result;
               if (resultStr == 'undefined' || resultStr.isEmpty) {
                 result = null;
@@ -488,7 +501,8 @@ class Sandbox {
               'requiredPermission': msg['requiredPermission'] ?? '',
             });
           }
-        } else if (msg is Map<String, dynamic> && msg['type'] == 'apiResponse') {
+        } else if (msg is Map<String, dynamic> &&
+            msg['type'] == 'apiResponse') {
           // Host API response coming back (from fallback echo path).
           final response = _ApiResponse.fromMap(msg);
           message.sendPort.send({

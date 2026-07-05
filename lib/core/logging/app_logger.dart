@@ -36,42 +36,53 @@ class AppLogger {
 
   /// Debug-level message. Use for high-volume diagnostic output.
   void debug(String message, {Object? error, StackTrace? stackTrace}) {
-    _safeLog(() => _logger.d(message, error: error, stackTrace: stackTrace),
-        message, error);
+    _safeLog(
+      () => _logger.d(message, error: error, stackTrace: stackTrace),
+      message,
+      error,
+    );
   }
 
   /// Informational message. Use for noteworthy but non-error events.
   void info(String message, {Object? error, StackTrace? stackTrace}) {
-    _safeLog(() => _logger.i(message, error: error, stackTrace: stackTrace),
-        message, error);
+    _safeLog(
+      () => _logger.i(message, error: error, stackTrace: stackTrace),
+      message,
+      error,
+    );
   }
 
   /// Warning message. Use for recoverable degradations.
   void warning(String message, {Object? error, StackTrace? stackTrace}) {
-    _safeLog(() => _logger.w(message, error: error, stackTrace: stackTrace),
-        message, error);
+    _safeLog(
+      () => _logger.w(message, error: error, stackTrace: stackTrace),
+      message,
+      error,
+    );
   }
 
   /// Error message. Use for failures that should be visible to developers.
   void error(String message, {Object? error, StackTrace? stackTrace}) {
-    _safeLog(() => _logger.e(message, error: error, stackTrace: stackTrace),
-        message, error);
+    _safeLog(
+      () => _logger.e(message, error: error, stackTrace: stackTrace),
+      message,
+      error,
+    );
   }
 
   /// Fatal message. Use for unrecoverable failures.
   void fatal(String message, {Object? error, StackTrace? stackTrace}) {
-    _safeLog(() => _logger.f(message, error: error, stackTrace: stackTrace),
-        message, error);
+    _safeLog(
+      () => _logger.f(message, error: error, stackTrace: stackTrace),
+      message,
+      error,
+    );
   }
 
   /// Wraps a logger call in try/catch so that a formatting error inside
   /// PrettyPrinter (e.g. when processing an unusual error object or stack
   /// trace) never crashes the app. Falls back to debugPrint.
-  void _safeLog(
-    void Function() logCall,
-    String message,
-    Object? error,
-  ) {
+  void _safeLog(void Function() logCall, String message, Object? error) {
     try {
       logCall();
     } catch (e) {

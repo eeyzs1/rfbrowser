@@ -48,8 +48,9 @@ class EditorSettingsSection extends ConsumerWidget {
                 max: 48,
                 divisions: 40,
                 label: '${editorFontSize.toInt()}px',
-                onChanged: (v) =>
-                    ref.read(settingsProvider.notifier).setEditorFontSizeLive(v),
+                onChanged: (v) => ref
+                    .read(settingsProvider.notifier)
+                    .setEditorFontSizeLive(v),
                 onChangeEnd: (v) =>
                     ref.read(settingsProvider.notifier).setEditorFontSize(v),
               ),

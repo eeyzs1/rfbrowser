@@ -180,50 +180,55 @@ void main() {
     group('loadPersistedEmbeddings dimension mismatch', () {
       setUpAll(setupSqfliteForTests);
 
-      test('clears persisted vectors when dimensions are inconsistent', () async {
-        final tempDir =
-            Directory.systemTemp.createTempSync('rfbrowser_emb_test_');
-        final dbPath = p.join(tempDir.path, 'index.db');
-        final indexStore = IndexStore(dbPath);
-        final service = EmbeddingService(indexStore);
-
-        try {
-          // Insert 128-dim vectors (simulating old local-fallback embeddings).
-          await indexStore.upsertEmbedding(
-            'note-1',
-            List.generate(128, (i) => i * 0.01),
-            metadata: {'title': 'Old Note 1'},
+      test(
+        'clears persisted vectors when dimensions are inconsistent',
+        () async {
+          final tempDir = Directory.systemTemp.createTempSync(
+            'rfbrowser_emb_test_',
           );
-          await indexStore.upsertEmbedding(
-            'note-2',
-            List.generate(128, (i) => i * 0.02),
-            metadata: {'title': 'Old Note 2'},
-          );
-          // Insert a 384-dim vector (simulating ONNX embeddings).
-          await indexStore.upsertEmbedding(
-            'note-3',
-            List.generate(384, (i) => i * 0.001),
-            metadata: {'title': 'ONNX Note'},
-          );
+          final dbPath = p.join(tempDir.path, 'index.db');
+          final indexStore = IndexStore(dbPath);
+          final service = EmbeddingService(indexStore);
 
-          // loadPersistedEmbeddings should detect the mismatch and clear all.
-          final result = await service.loadPersistedEmbeddings();
-          expect(result, isEmpty);
+          try {
+            // Insert 128-dim vectors (simulating old local-fallback embeddings).
+            await indexStore.upsertEmbedding(
+              'note-1',
+              List.generate(128, (i) => i * 0.01),
+              metadata: {'title': 'Old Note 1'},
+            );
+            await indexStore.upsertEmbedding(
+              'note-2',
+              List.generate(128, (i) => i * 0.02),
+              metadata: {'title': 'Old Note 2'},
+            );
+            // Insert a 384-dim vector (simulating ONNX embeddings).
+            await indexStore.upsertEmbedding(
+              'note-3',
+              List.generate(384, (i) => i * 0.001),
+              metadata: {'title': 'ONNX Note'},
+            );
 
-          // All persisted vectors should be deleted.
-          final remaining = await indexStore.getAllEmbeddings();
-          expect(remaining, isEmpty);
-        } finally {
-          await indexStore.close();
-          if (tempDir.existsSync()) {
-            tempDir.deleteSync(recursive: true);
+            // loadPersistedEmbeddings should detect the mismatch and clear all.
+            final result = await service.loadPersistedEmbeddings();
+            expect(result, isEmpty);
+
+            // All persisted vectors should be deleted.
+            final remaining = await indexStore.getAllEmbeddings();
+            expect(remaining, isEmpty);
+          } finally {
+            await indexStore.close();
+            if (tempDir.existsSync()) {
+              tempDir.deleteSync(recursive: true);
+            }
           }
-        }
-      });
+        },
+      );
 
       test('loads consistent-dimension vectors without clearing', () async {
-        final tempDir =
-            Directory.systemTemp.createTempSync('rfbrowser_emb_test_');
+        final tempDir = Directory.systemTemp.createTempSync(
+          'rfbrowser_emb_test_',
+        );
         final dbPath = p.join(tempDir.path, 'index.db');
         final indexStore = IndexStore(dbPath);
         final service = EmbeddingService(indexStore);

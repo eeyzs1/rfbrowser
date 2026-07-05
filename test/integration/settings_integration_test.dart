@@ -143,19 +143,22 @@ void main() {
       },
     );
 
-    test('SettingsNotifier theme opacity setters change theme opacity', () async {
-      final notifier = container.read(settingsProvider.notifier);
-      await notifier.loadSettings();
+    test(
+      'SettingsNotifier theme opacity setters change theme opacity',
+      () async {
+        final notifier = container.read(settingsProvider.notifier);
+        await notifier.loadSettings();
 
-      await notifier.setThemeTintOpacity(0.5);
-      await notifier.setSurfaceOpacity(0.8);
-      await notifier.setBackgroundOpacity(0.9);
+        await notifier.setThemeTintOpacity(0.5);
+        await notifier.setSurfaceOpacity(0.8);
+        await notifier.setBackgroundOpacity(0.9);
 
-      final settings = container.read(settingsProvider);
-      expect(settings.themeTintOpacity, 0.5);
-      expect(settings.surfaceOpacity, 0.8);
-      expect(settings.backgroundOpacity, 0.9);
-    });
+        final settings = container.read(settingsProvider);
+        expect(settings.themeTintOpacity, 0.5);
+        expect(settings.surfaceOpacity, 0.8);
+        expect(settings.backgroundOpacity, 0.9);
+      },
+    );
   });
 
   group('AI Config Integration', () {

@@ -46,8 +46,7 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
     PlatformDispatcher.instance.onPlatformBrightnessChanged = () {
       if (mounted) {
         setState(() {
-          _platformBrightness =
-              PlatformDispatcher.instance.platformBrightness;
+          _platformBrightness = PlatformDispatcher.instance.platformBrightness;
         });
       }
     };
@@ -177,13 +176,13 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
       home: !_initialized
           ? _buildLoadingScreen()
           : showWelcome
-              ? WelcomePage(
-                  onVaultOpened: () {
-                    setState(() => _enteredMainLayout = true);
-                    ref.read(knowledgeProvider.notifier).loadAllNotes();
-                  },
-                )
-              : const MainLayout(),
+          ? WelcomePage(
+              onVaultOpened: () {
+                setState(() => _enteredMainLayout = true);
+                ref.read(knowledgeProvider.notifier).loadAllNotes();
+              },
+            )
+          : const MainLayout(),
     );
   }
 
@@ -202,9 +201,7 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
           children: [
             Icon(Icons.explore, size: 64, color: Colors.blue.shade400),
             const SizedBox(height: 16),
-            const ExcludeSemantics(
-              child: CircularProgressIndicator(),
-            ),
+            const ExcludeSemantics(child: CircularProgressIndicator()),
           ],
         ),
       ),

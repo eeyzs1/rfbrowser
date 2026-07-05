@@ -35,9 +35,7 @@ class _LayerPanelDialogState extends ConsumerState<LayerPanelDialog> {
           const Spacer(),
           Text(
             '${canvasData.layers.length}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.hintColor,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
           ),
         ],
       ),

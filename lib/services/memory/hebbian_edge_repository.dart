@@ -133,7 +133,7 @@ class HebbianEdgeRepository {
   /// The keyword-overlap matching over the candidate set runs in a
   /// worker isolate via [compute] so that tokenizing up to 200
   /// candidates does not block the UI isolate.
-  Future<List<({MemoryFragment fragment, int overlap})> >
+  Future<List<({MemoryFragment fragment, int overlap})>>
   findCrossSessionAssociates(
     String fragmentId, {
     int minKeywordOverlap = 2,
@@ -166,9 +166,7 @@ class HebbianEdgeRepository {
       _matchCrossSessionKeywords,
       _CrossSessionMatchInput(
         sourceKeywords: keywords,
-        candidateContents: [
-          for (final c in candidates) c['content'] as String,
-        ],
+        candidateContents: [for (final c in candidates) c['content'] as String],
         minKeywordOverlap: minKeywordOverlap,
       ),
     );

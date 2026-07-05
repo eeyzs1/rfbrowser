@@ -34,6 +34,7 @@ class PluginManifest {
   final String author;
   final String description;
   final List<Permission> permissions;
+
   /// Relative path to the JS entry point file (e.g. "main.js").
   /// When set, the sandbox loads and runs this file in a QuickJS engine.
   final String? entryPoint;

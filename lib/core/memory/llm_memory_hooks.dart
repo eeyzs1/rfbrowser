@@ -23,7 +23,10 @@ class LlmMemorySummarizer implements MemorySummarizer {
     try {
       return _buildLlmSummary(group, now ?? DateTime.now());
     } catch (e) {
-      appLog.warning('LlmMemorySummarizer: falling back to rule-based', error: e);
+      appLog.warning(
+        'LlmMemorySummarizer: falling back to rule-based',
+        error: e,
+      );
       return _fallback.buildSummary(group, now: now);
     }
   }

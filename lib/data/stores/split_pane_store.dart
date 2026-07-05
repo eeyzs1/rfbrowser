@@ -60,8 +60,7 @@ class SplitPaneNotifier extends Notifier<SplitPaneState> {
     // Add a new tab to the target leaf (or activate an existing tab that
     // already shows this note — avoids duplicate tabs for the same note).
     final newRoot = _updateLeafInTree(root, targetLeafId, (leaf) {
-      final existingIndex =
-          leaf.tabs.indexWhere((t) => t.noteId == noteId);
+      final existingIndex = leaf.tabs.indexWhere((t) => t.noteId == noteId);
       if (existingIndex != -1) {
         return leaf.copyLeafWith(activeTabIndex: existingIndex);
       }

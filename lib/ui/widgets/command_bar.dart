@@ -160,7 +160,9 @@ class _CommandBarState extends _CommandBarStateBase
                 child: ListView.builder(
                   controller: _scrollController,
                   shrinkWrap: true,
-                  padding: const EdgeInsets.symmetric(vertical: DesignSpacing.xs),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: DesignSpacing.xs,
+                  ),
                   itemCount: _isQuickMoveMode
                       ? _quickMoves.length
                       : (showCommands ? commands.length : 0) + _results.length,

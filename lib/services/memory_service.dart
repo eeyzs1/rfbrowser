@@ -192,10 +192,8 @@ class MemoryService {
   Future<void> upsertFragment(MemoryFragment fragment) =>
       _fragments.upsertFragment(fragment);
 
-  Future<void> deactivateFragment(
-    String fragmentId, {
-    String? supersededBy,
-  }) => _fragments.deactivateFragment(fragmentId, supersededBy: supersededBy);
+  Future<void> deactivateFragment(String fragmentId, {String? supersededBy}) =>
+      _fragments.deactivateFragment(fragmentId, supersededBy: supersededBy);
 
   Future<int> deleteFragment(String fragmentId) =>
       _fragments.deleteFragment(fragmentId);
@@ -310,10 +308,12 @@ class MemoryService {
 
   /// Tokenize a fragment's content into a small keyword set used for
   /// cross-session association. Delegates to [HebbianEdgeRepository].
-  static List<String> tokenizeForCrossSession(String content, {int limit = 8}) =>
-      HebbianEdgeRepository.tokenizeForCrossSession(content, limit: limit);
+  static List<String> tokenizeForCrossSession(
+    String content, {
+    int limit = 8,
+  }) => HebbianEdgeRepository.tokenizeForCrossSession(content, limit: limit);
 
-  Future<List<({MemoryFragment fragment, int overlap})> >
+  Future<List<({MemoryFragment fragment, int overlap})>>
   findCrossSessionAssociates(
     String fragmentId, {
     int minKeywordOverlap = 2,

@@ -74,10 +74,7 @@ void _showEditQuickMoveDialog(
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                             border: isSelected
-                                ? Border.all(
-                                    color: Color(colorValue),
-                                    width: 2,
-                                  )
+                                ? Border.all(color: Color(colorValue), width: 2)
                                 : Border.all(color: Colors.transparent),
                           ),
                           child: Icon(

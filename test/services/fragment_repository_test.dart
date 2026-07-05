@@ -86,13 +86,15 @@ void main() {
       expect(loaded.tier, MemoryTier.short);
     });
 
-    test('upsertFragment replaces an existing fragment on id conflict',
-        () async {
-      await repo.upsertFragment(_frag(id: 'f1', content: 'old content'));
-      await repo.upsertFragment(_frag(id: 'f1', content: 'new content'));
-      final loaded = await repo.getFragment('f1');
-      expect(loaded!.content, 'new content');
-    });
+    test(
+      'upsertFragment replaces an existing fragment on id conflict',
+      () async {
+        await repo.upsertFragment(_frag(id: 'f1', content: 'old content'));
+        await repo.upsertFragment(_frag(id: 'f1', content: 'new content'));
+        final loaded = await repo.getFragment('f1');
+        expect(loaded!.content, 'new content');
+      },
+    );
 
     test('getFragment returns null for an unknown id', () async {
       expect(await repo.getFragment('does-not-exist'), isNull);
@@ -110,50 +112,56 @@ void main() {
       expect(deleted, 0);
     });
 
-    test('deleteFragment also removes the FTS row so search no longer hits',
-        () async {
-      await repo.upsertFragment(_frag(id: 'f1', content: 'searchable text'));
-      // Sanity: searchable before deletion.
-      expect(
-        (await repo.searchFragments('searchable')).map((h) => h.id),
-        contains('f1'),
-      );
-      await repo.deleteFragment('f1');
-      final hits = await repo.searchFragments('searchable');
-      expect(hits.map((h) => h.id), isNot(contains('f1')));
-    });
+    test(
+      'deleteFragment also removes the FTS row so search no longer hits',
+      () async {
+        await repo.upsertFragment(_frag(id: 'f1', content: 'searchable text'));
+        // Sanity: searchable before deletion.
+        expect(
+          (await repo.searchFragments('searchable')).map((h) => h.id),
+          contains('f1'),
+        );
+        await repo.deleteFragment('f1');
+        final hits = await repo.searchFragments('searchable');
+        expect(hits.map((h) => h.id), isNot(contains('f1')));
+      },
+    );
 
-    test('deleteFragment removes Hebbian edges incident on the fragment',
-        () async {
-      await repo.upsertFragment(_frag(id: 'a', content: 'alpha'));
-      await repo.upsertFragment(_frag(id: 'b', content: 'beta'));
-      final db = await memDb.database;
-      await db.insert('memory_hebbian_links', {
-        'id': 'e1',
-        'fragment_a': 'a',
-        'fragment_b': 'b',
-        'strength': 0.1,
-        'stability': 1.0,
-        'co_access_count': 1,
-        'last_strengthened_at': DateTime.now().toIso8601String(),
-      });
-      await repo.deleteFragment('a');
-      final edges = await db.query('memory_hebbian_links');
-      expect(
-        edges,
-        isEmpty,
-        reason: 'edges incident on the deleted fragment must be removed',
-      );
-    });
+    test(
+      'deleteFragment removes Hebbian edges incident on the fragment',
+      () async {
+        await repo.upsertFragment(_frag(id: 'a', content: 'alpha'));
+        await repo.upsertFragment(_frag(id: 'b', content: 'beta'));
+        final db = await memDb.database;
+        await db.insert('memory_hebbian_links', {
+          'id': 'e1',
+          'fragment_a': 'a',
+          'fragment_b': 'b',
+          'strength': 0.1,
+          'stability': 1.0,
+          'co_access_count': 1,
+          'last_strengthened_at': DateTime.now().toIso8601String(),
+        });
+        await repo.deleteFragment('a');
+        final edges = await db.query('memory_hebbian_links');
+        expect(
+          edges,
+          isEmpty,
+          reason: 'edges incident on the deleted fragment must be removed',
+        );
+      },
+    );
 
-    test('deactivateFragment marks inactive and records superseded_by',
-        () async {
-      await repo.upsertFragment(_frag(id: 'f1', content: 'old'));
-      await repo.deactivateFragment('f1', supersededBy: 'f2');
-      final loaded = await repo.getFragment('f1');
-      expect(loaded!.isActive, isFalse);
-      expect(loaded.supersededBy, 'f2');
-    });
+    test(
+      'deactivateFragment marks inactive and records superseded_by',
+      () async {
+        await repo.upsertFragment(_frag(id: 'f1', content: 'old'));
+        await repo.deactivateFragment('f1', supersededBy: 'f2');
+        final loaded = await repo.getFragment('f1');
+        expect(loaded!.isActive, isFalse);
+        expect(loaded.supersededBy, 'f2');
+      },
+    );
 
     test('forgetFragment soft-deletes with source = forgotten', () async {
       await repo.upsertFragment(_frag(id: 'f1', content: 'forget me'));
@@ -184,21 +192,27 @@ void main() {
     test(
       'getFragmentsInTier returns only the requested tier, oldest first',
       () async {
-        await repo.upsertFragment(_frag(
-          id: 's1',
-          tier: MemoryTier.short,
-          createdAt: DateTime.utc(2026, 1, 1),
-        ));
-        await repo.upsertFragment(_frag(
-          id: 's2',
-          tier: MemoryTier.short,
-          createdAt: DateTime.utc(2026, 1, 2),
-        ));
-        await repo.upsertFragment(_frag(
-          id: 'm1',
-          tier: MemoryTier.mid,
-          createdAt: DateTime.utc(2026, 1, 3),
-        ));
+        await repo.upsertFragment(
+          _frag(
+            id: 's1',
+            tier: MemoryTier.short,
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+        await repo.upsertFragment(
+          _frag(
+            id: 's2',
+            tier: MemoryTier.short,
+            createdAt: DateTime.utc(2026, 1, 2),
+          ),
+        );
+        await repo.upsertFragment(
+          _frag(
+            id: 'm1',
+            tier: MemoryTier.mid,
+            createdAt: DateTime.utc(2026, 1, 3),
+          ),
+        );
         final shorts = await repo.getFragmentsInTier(MemoryTier.short);
         expect(shorts.map((f) => f.id).toList(), ['s1', 's2']);
         final mids = await repo.getFragmentsInTier(MemoryTier.mid);
@@ -270,16 +284,18 @@ void main() {
       tempDir.deleteSync(recursive: true);
     });
 
-    test('markAccessedBatch increments access_count for multiple ids',
-        () async {
-      await repo.upsertFragment(_frag(id: 'a'));
-      await repo.upsertFragment(_frag(id: 'b'));
-      await repo.upsertFragment(_frag(id: 'c'));
-      await repo.markAccessedBatch(['a', 'b', 'a']);
-      expect((await repo.getFragment('a'))!.accessCount, 2);
-      expect((await repo.getFragment('b'))!.accessCount, 1);
-      expect((await repo.getFragment('c'))!.accessCount, 0);
-    });
+    test(
+      'markAccessedBatch increments access_count for multiple ids',
+      () async {
+        await repo.upsertFragment(_frag(id: 'a'));
+        await repo.upsertFragment(_frag(id: 'b'));
+        await repo.upsertFragment(_frag(id: 'c'));
+        await repo.markAccessedBatch(['a', 'b', 'a']);
+        expect((await repo.getFragment('a'))!.accessCount, 2);
+        expect((await repo.getFragment('b'))!.accessCount, 1);
+        expect((await repo.getFragment('c'))!.accessCount, 0);
+      },
+    );
 
     test('markAccessedBatch is a no-op for an empty input', () async {
       await repo.upsertFragment(_frag(id: 'a'));
@@ -287,35 +303,39 @@ void main() {
       expect((await repo.getFragment('a'))!.accessCount, 0);
     });
 
-    test('markAccessed updates access_count and last_access_at on one fragment',
-        () async {
-      await repo.upsertFragment(_frag(id: 'a'));
-      await repo.markAccessed('a');
-      final loaded = await repo.getFragment('a');
-      expect(loaded!.accessCount, 1);
-      expect(loaded.lastAccessAt, isNotNull);
-    });
+    test(
+      'markAccessed updates access_count and last_access_at on one fragment',
+      () async {
+        await repo.upsertFragment(_frag(id: 'a'));
+        await repo.markAccessed('a');
+        final loaded = await repo.getFragment('a');
+        expect(loaded!.accessCount, 1);
+        expect(loaded.lastAccessAt, isNotNull);
+      },
+    );
 
-    test('addFragmentFromMessage is idempotent on duplicate message id',
-        () async {
-      final id1 = await repo.addFragmentFromMessage(
-        sessionId: 's',
-        messageId: 'm1',
-        content: 'first',
-      );
-      final id2 = await repo.addFragmentFromMessage(
-        sessionId: 's',
-        messageId: 'm1',
-        content: 'second',
-      );
-      expect(id1, id2);
-      final frag = await repo.getFragment(id1);
-      expect(
-        frag!.content,
-        'first',
-        reason: 'second call must not overwrite content',
-      );
-    });
+    test(
+      'addFragmentFromMessage is idempotent on duplicate message id',
+      () async {
+        final id1 = await repo.addFragmentFromMessage(
+          sessionId: 's',
+          messageId: 'm1',
+          content: 'first',
+        );
+        final id2 = await repo.addFragmentFromMessage(
+          sessionId: 's',
+          messageId: 'm1',
+          content: 'second',
+        );
+        expect(id1, id2);
+        final frag = await repo.getFragment(id1);
+        expect(
+          frag!.content,
+          'first',
+          reason: 'second call must not overwrite content',
+        );
+      },
+    );
 
     test(
       'addFragmentFromMessage inserts a searchable, manual-source fragment',
@@ -336,10 +356,12 @@ void main() {
       },
     );
 
-    test('getFragmentByMessageId returns null for unknown or null id',
-        () async {
-      expect(await repo.getFragmentByMessageId(null), isNull);
-      expect(await repo.getFragmentByMessageId('nope'), isNull);
-    });
+    test(
+      'getFragmentByMessageId returns null for unknown or null id',
+      () async {
+        expect(await repo.getFragmentByMessageId(null), isNull);
+        expect(await repo.getFragmentByMessageId('nope'), isNull);
+      },
+    );
   });
 }

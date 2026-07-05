@@ -125,9 +125,9 @@ class _BackupRestoreRowState extends ConsumerState<_BackupRestoreRow> {
       if (path == null) {
         if (!mounted) return;
         final l = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.restoreInvalidFile)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.restoreInvalidFile)));
         return;
       }
 
@@ -144,9 +144,9 @@ class _BackupRestoreRowState extends ConsumerState<_BackupRestoreRow> {
       } catch (_) {
         if (!mounted) return;
         final l = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.restoreInvalidFile)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.restoreInvalidFile)));
         return;
       }
 

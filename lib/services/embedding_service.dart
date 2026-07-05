@@ -129,8 +129,11 @@ class EmbeddingService {
         // (which would prevent us from seeing the error).
         debugPrint('ONNX embedding failed: $e');
         debugPrint('ONNX stack: $st');
-        appLog.warning('ONNX embedding failed, falling back',
-            error: e, stackTrace: st);
+        appLog.warning(
+          'ONNX embedding failed, falling back',
+          error: e,
+          stackTrace: st,
+        );
       }
     }
     return _embedViaLocalProvider(text);
@@ -178,7 +181,8 @@ class EmbeddingService {
     // on every call. Without this, batchEmbedMissing floods the log with
     // "not reachable" messages — one per note.
     final now = DateTime.now();
-    final cacheValid = _lastLocalProviderCheck != null &&
+    final cacheValid =
+        _lastLocalProviderCheck != null &&
         now.difference(_lastLocalProviderCheck!) < _localProviderCacheTtl;
     if (!cacheValid) {
       _localProviderReachable = await _isLocalProviderReachable();
@@ -316,11 +320,7 @@ class EmbeddingService {
     final metadata = {'title': note.title};
     hnswIndex.insert(note.id, embedding, metadata: metadata);
     store.insert(note.id, embedding, metadata: metadata);
-    await _indexStore?.upsertEmbedding(
-      note.id,
-      embedding,
-      metadata: metadata,
-    );
+    await _indexStore?.upsertEmbedding(note.id, embedding, metadata: metadata);
   }
 
   Future<int> batchEmbed(
@@ -398,8 +398,9 @@ class EmbeddingService {
     // responsive instead of freezing for seconds at startup.
     const chunkSize = 100;
     for (var i = 0; i < records.length; i += chunkSize) {
-      final end =
-          (i + chunkSize < records.length) ? i + chunkSize : records.length;
+      final end = (i + chunkSize < records.length)
+          ? i + chunkSize
+          : records.length;
       for (var j = i; j < end; j++) {
         final r = records[j];
         hnswIndex.insert(r.noteId, r.embedding, metadata: r.metadata);

@@ -333,7 +333,9 @@ List<Note> _applyNoteFilter(
   } else if (filter == NoteFilter.hasTags) {
     filtered = notes.where((n) => n.tags.isNotEmpty).toList();
   } else if (filter == NoteFilter.hasAttachments) {
-    filtered = notes.where((n) => n.frontMatter.containsKey('attachments')).toList();
+    filtered = notes
+        .where((n) => n.frontMatter.containsKey('attachments'))
+        .toList();
   }
   if (query.isEmpty) return filtered;
   final q = query.toLowerCase();

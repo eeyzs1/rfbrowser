@@ -134,8 +134,7 @@ void main() {
   });
 
   group('HnswIndex dimension mismatch handling', () {
-    test(
-        'inserting 384-dim vector after 128-dim vectors does not throw '
+    test('inserting 384-dim vector after 128-dim vectors does not throw '
         'RangeError (regression test for ONNX vs local-fallback crash)', () {
       final index = HnswIndex(M: 8, efConstruction: 50);
 
@@ -157,10 +156,7 @@ void main() {
       expect(index.size, 1);
 
       // Search with 384-dim query should work.
-      final results = index.search(
-        List.generate(384, (j) => j * 0.001),
-        k: 1,
-      );
+      final results = index.search(List.generate(384, (j) => j * 0.001), k: 1);
       expect(results.length, 1);
       expect(results.first.id, 'new_onnx');
     });

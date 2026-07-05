@@ -384,9 +384,7 @@ class FragmentRepository {
   /// fragments without one round-trip per id.
   ///
   /// [ids] is chunked to stay under SQLite's 999 bound-variable limit.
-  Future<List<MemoryFragment>> getFragmentsBatch(
-    Iterable<String> ids,
-  ) async {
+  Future<List<MemoryFragment>> getFragmentsBatch(Iterable<String> ids) async {
     final idList = ids.toSet().toList();
     if (idList.isEmpty) return const [];
     final db = await _database;

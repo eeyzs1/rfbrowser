@@ -80,9 +80,8 @@ class ComponentSettingsSection extends ConsumerWidget {
                 max: 50,
                 divisions: 50,
                 label: '${borderRadius.toInt()}px',
-                onChanged: (v) => ref
-                    .read(settingsProvider.notifier)
-                    .setBorderRadiusLive(v),
+                onChanged: (v) =>
+                    ref.read(settingsProvider.notifier).setBorderRadiusLive(v),
                 onChangeEnd: (v) =>
                     ref.read(settingsProvider.notifier).setBorderRadius(v),
               ),
@@ -110,9 +109,8 @@ class ComponentSettingsSection extends ConsumerWidget {
                 onChanged: (v) => ref
                     .read(settingsProvider.notifier)
                     .setIconSizeLive(v.round()),
-                onChangeEnd: (v) => ref
-                    .read(settingsProvider.notifier)
-                    .setIconSize(v.round()),
+                onChangeEnd: (v) =>
+                    ref.read(settingsProvider.notifier).setIconSize(v.round()),
               ),
             ),
           ),
@@ -195,9 +193,7 @@ class ComponentSettingsSection extends ConsumerWidget {
     required AppLocalizations l,
   }) {
     // effectiveBorderRadius 是 derived：根据 buttonStyle 计算。
-    final br = buttonStyle == AppButtonStyle.rounded
-        ? borderRadius
-        : 0.0;
+    final br = buttonStyle == AppButtonStyle.rounded ? borderRadius : 0.0;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(8),

@@ -21,10 +21,15 @@ mixin _CanvasViewBuildMixin on _CanvasViewStateBase {
         shortcutSvc.getShortcut('canvas_ungroup') ?? 'Ctrl+Shift+U';
 
     // Issue 18: Reuse cached bindings when the shortcut config is unchanged.
-    final cacheKey = [undoStr, redoStr, deleteStr, selectAllStr, groupStr,
-        ungroupStr].join('|');
-    if (_canvasBindingsCache != null &&
-        _canvasBindingsCacheKey == cacheKey) {
+    final cacheKey = [
+      undoStr,
+      redoStr,
+      deleteStr,
+      selectAllStr,
+      groupStr,
+      ungroupStr,
+    ].join('|');
+    if (_canvasBindingsCache != null && _canvasBindingsCacheKey == cacheKey) {
       return _canvasBindingsCache!;
     }
 

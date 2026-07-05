@@ -150,7 +150,8 @@ class _BrowserTabBarState extends ConsumerState<BrowserTabBar> {
         label: widget.l.tabLabel(tab.title.isNotEmpty ? tab.title : tab.url),
         child: ExcludeSemantics(
           child: InkWell(
-            onTap: () => ref.read(browserProvider.notifier).setActiveTab(tab.id),
+            onTap: () =>
+                ref.read(browserProvider.notifier).setActiveTab(tab.id),
             onSecondaryTapDown: (_) => widget.onShowContextMenu(tab),
             onLongPress: () => widget.onShowContextMenu(tab),
             hoverColor: theme.colorScheme.primary.withValues(alpha: 0.04),
@@ -205,7 +206,9 @@ class _BrowserTabBarState extends ConsumerState<BrowserTabBar> {
                       tab.title.isNotEmpty ? tab.title : tab.url,
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: isActive ? theme.colorScheme.primary : null,
-                        fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: isActive
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

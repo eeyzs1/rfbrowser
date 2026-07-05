@@ -200,8 +200,7 @@ mixin _SidebarNotesTreeMixin on _NoteSidebarStateBase {
           isRoot: child.depth == 0 && child.path.isEmpty,
           noteCount: child.totalNoteCount,
           folderPath: child.path,
-          hasChildren:
-              child.children.isNotEmpty || child.notes.isNotEmpty,
+          hasChildren: child.children.isNotEmpty || child.notes.isNotEmpty,
         ),
       );
       if (isExpanded) {
@@ -225,11 +224,13 @@ mixin _SidebarNotesTreeMixin on _NoteSidebarStateBase {
 class _TrieNode {
   final String path;
   final int depth;
+
   /// Keyed by full child path for O(1) lookup (replaces the previous
   /// `List<_TrieNode>` + linear `.where().firstOrNull` scan that was
   /// O(n) per path segment — O(n²) for flat vaults).
   final Map<String, _TrieNode> children = {};
   final List<Note> notes = [];
+
   /// Precomputed during trie construction by [_SidebarNotesTreeMixin._computeNoteCounts]
   /// to avoid recursing the whole subtree on every folder-row build.
   int totalNoteCount = 0;

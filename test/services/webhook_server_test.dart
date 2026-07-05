@@ -168,7 +168,11 @@ void main() {
     });
 
     test('GET /api/status — 返回服务状态', () async {
-      final response = await _httpGet('/api/status', 'test_key_123', server.port);
+      final response = await _httpGet(
+        '/api/status',
+        'test_key_123',
+        server.port,
+      );
       expect(response.statusCode, 200);
       final body = await _readBody(response);
       final json = jsonDecode(body) as Map<String, dynamic>;
@@ -210,7 +214,11 @@ void main() {
     });
 
     test('GET /api/tools — 返回工具列表', () async {
-      final response = await _httpGet('/api/tools', 'test_key_123', server.port);
+      final response = await _httpGet(
+        '/api/tools',
+        'test_key_123',
+        server.port,
+      );
       expect(response.statusCode, 200);
       final body = await _readBody(response);
       final json = jsonDecode(body) as Map<String, dynamic>;
@@ -219,7 +227,11 @@ void main() {
     });
 
     test('GET /api/agent/tasks — 返回任务列表', () async {
-      final response = await _httpGet('/api/agent/tasks', 'test_key_123', server.port);
+      final response = await _httpGet(
+        '/api/agent/tasks',
+        'test_key_123',
+        server.port,
+      );
       expect(response.statusCode, 200);
       final body = await _readBody(response);
       final json = jsonDecode(body) as Map<String, dynamic>;
@@ -252,7 +264,11 @@ Ref _createTestRef(ProviderContainer container) {
   return container.read(_testRefProvider);
 }
 
-Future<HttpClientResponse> _httpGet(String path, String? apiKey, int port) async {
+Future<HttpClientResponse> _httpGet(
+  String path,
+  String? apiKey,
+  int port,
+) async {
   final client = HttpClient();
   try {
     final request = await client.getUrl(

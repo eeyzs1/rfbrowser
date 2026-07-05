@@ -223,10 +223,12 @@ mixin _BrowserActionsMixin on _BrowserViewStateBase {
       }
       // 截断正文以避免超出 token 限制
       const maxLen = 8000;
-      final truncated =
-          text.length > maxLen ? '${text.substring(0, maxLen)}…' : text;
+      final truncated = text.length > maxLen
+          ? '${text.substring(0, maxLen)}…'
+          : text;
       final title = tab.title.isNotEmpty ? tab.title : tab.url;
-      final prompt = 'Here is the content from "$title" (${tab.url}):\n\n'
+      final prompt =
+          'Here is the content from "$title" (${tab.url}):\n\n'
           '$truncated\n\n'
           'Please summarize the key points of this page.';
       ref.read(aiProvider.notifier).sendMessage(prompt);
@@ -238,9 +240,9 @@ mixin _BrowserActionsMixin on _BrowserViewStateBase {
             label: l?.openAiChat ?? 'Open AI',
             onPressed: () {
               // 切换到 Capture 场景，AI 浮窗可通过右下角按钮打开
-              ref.read(requestContextProvider.notifier).updateScene(
-                    AppScene.capture,
-                  );
+              ref
+                  .read(requestContextProvider.notifier)
+                  .updateScene(AppScene.capture);
             },
           ),
         ),

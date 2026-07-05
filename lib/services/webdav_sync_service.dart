@@ -79,14 +79,17 @@ class WebDAVSyncNotifier extends Notifier<WebDAVSyncState>
       _autoSyncTimer?.cancel();
       _dio.close();
     });
-    _secureStorage.read(key: 'webdav_password').then((pwd) {
-      if (pwd != null && pwd.isNotEmpty) {
-        _cachedPassword = pwd;
-        state = state.copyWith(isPasswordSet: true);
-      }
-    }).catchError((_) {
-      // Secure storage read failure is non-fatal — password simply stays unset.
-    });
+    _secureStorage
+        .read(key: 'webdav_password')
+        .then((pwd) {
+          if (pwd != null && pwd.isNotEmpty) {
+            _cachedPassword = pwd;
+            state = state.copyWith(isPasswordSet: true);
+          }
+        })
+        .catchError((_) {
+          // Secure storage read failure is non-fatal — password simply stays unset.
+        });
     return WebDAVSyncState();
   }
 

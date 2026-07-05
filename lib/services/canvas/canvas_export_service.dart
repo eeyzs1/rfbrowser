@@ -116,9 +116,7 @@ class CanvasExportService {
     buffer.writeln('| # | Type | Title | Position | Layer |');
     buffer.writeln('|---|------|-------|----------|-------|');
     // Issue 16: Build layer name lookup once instead of O(n) per card.
-    final layerNameById = {
-      for (final l in data.layers) l.id: l.name,
-    };
+    final layerNameById = {for (final l in data.layers) l.id: l.name};
     // Issue 15a: Build cardById map once for connection title lookups.
     final cardById = {for (final c in data.cards) c.id: c};
     for (int i = 0; i < data.cards.length; i++) {
