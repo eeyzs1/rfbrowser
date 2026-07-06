@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/logging/app_logger.dart';
+import 'core/ai/builtin_model_registry.dart';
 import 'l10n/app_localizations.dart';
 import 'services/settings_service.dart';
 import 'services/shortcut_service.dart';
@@ -105,6 +106,9 @@ class _RFBrowserAppState extends ConsumerState<RFBrowserApp> {
       });
 
       await ref.read(settingsProvider.notifier).loadSettings();
+      // Load model metadata from JSON before AI config loads, so
+      // ModelDiscovery can use the registry during model list fetching.
+      await BuiltinModelRegistry.loadFromAssets();
       await ref.read(aiConfigProvider.notifier).loadConfig();
       await ref.read(shortcutServiceProvider).load();
       await ref.read(vaultProvider.notifier).loadRecentVaults();

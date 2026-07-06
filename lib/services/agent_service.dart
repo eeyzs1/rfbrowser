@@ -34,7 +34,6 @@ class AgentState {
 }
 
 class AgentNotifier extends Notifier<AgentState> {
-  static const int defaultReactIterations = 20;
   final AgentPersistence _persistence = AgentPersistence();
 
   @override

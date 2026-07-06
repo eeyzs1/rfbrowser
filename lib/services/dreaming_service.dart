@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../core/logging/app_logger.dart';
 import '../data/models/ai_provider.dart';
 import '../data/models/chat_memory.dart';
+import '../data/models/sampling_settings.dart';
 import '../core/memory/memory_scorer.dart';
 import '../core/memory/memory_summarizer.dart';
 import '../core/memory/summary_rollup.dart';
@@ -205,6 +206,10 @@ abstract class _DreamingServiceBase {
   AIProvider? _provider;
   AIModel? _model;
 
+  /// Sampling parameters for dreaming extraction (temperature / max_tokens).
+  /// Defaults to a conservative 0.3 / 1024 when not configured.
+  SamplingSettings _sampling = const SamplingSettings();
+
   /// Whether the user has enabled background dreaming in settings.
   /// `null` means "default on" so the service is permissive in tests.
   bool? _dreamingEnabled;
@@ -212,6 +217,11 @@ abstract class _DreamingServiceBase {
   void configureAI({AIProvider? provider, AIModel? model}) {
     _provider = provider;
     _model = model;
+  }
+
+  /// Update sampling parameters. Called by the provider when settings change.
+  void configureSampling(SamplingSettings sampling) {
+    _sampling = sampling;
   }
 
   void setDreamingEnabled(bool enabled) {
@@ -377,6 +387,7 @@ final dreamingServiceProvider = Provider<DreamingService>((ref) {
     hebbian: hebbian,
   );
   service.setDreamingEnabled(settings.memory.dreamingEnabled);
+  service.configureSampling(settings.sampling);
   ref.onDispose(service.dispose);
   return service;
 });

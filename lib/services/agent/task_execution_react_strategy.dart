@@ -16,10 +16,14 @@ class ReactLoopExecutionStrategy extends TaskExecutionStrategy {
     final stepResults = <String>[];
     final dynamicSteps = <AgentStep>[];
     var iteration = 0;
-    final maxIter = current.maxIterations.clamp(
+    // 用户可在 设置 → AI → 生成参数 中调整 ReAct 最大迭代数。
+    // 仍然以 [TaskExecutionStrategy.maxSteps] 为硬上限,防止用户设置过高。
+    final sampling = context.ref.read(settingsProvider).sampling;
+    final userCap = sampling.maxReactIterations.clamp(
       1,
       TaskExecutionStrategy.maxSteps,
     );
+    final maxIter = current.maxIterations.clamp(1, userCap);
 
     current = current.copyWith(status: TaskStatus.running);
     context.onUpdateTask(current);

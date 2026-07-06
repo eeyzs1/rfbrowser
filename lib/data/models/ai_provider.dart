@@ -32,16 +32,19 @@ enum ApiProtocol {
 
 enum ModelCapability {
   text,
-  vision;
+  vision,
+  tools;
 
   String get label => switch (this) {
     ModelCapability.text => 'Text',
     ModelCapability.vision => 'Vision',
+    ModelCapability.tools => 'Tools',
   };
 
   String get icon => switch (this) {
     ModelCapability.text => '📝',
     ModelCapability.vision => '👁',
+    ModelCapability.tools => '🔧',
   };
 }
 
@@ -102,9 +105,14 @@ class AIProvider {
     );
   }
 
+  /// True if [baseUrl] already ends with a version segment like `/v1`, `/v4`.
+  /// When true, the endpoint getters strip the `/v1` prefix from the protocol
+  /// path to avoid producing double-versioned URLs like `/v4/v1/chat/completions`.
+  bool get _baseUrlHasVersion => RegExp(r'/v\d+$').hasMatch(baseUrl);
+
   String get modelsEndpoint {
     final path = protocol.modelsPath;
-    if (baseUrl.endsWith('/v1') && path.startsWith('/v1')) {
+    if (_baseUrlHasVersion && path.startsWith('/v1')) {
       return '$baseUrl${path.substring(3)}';
     }
     return '$baseUrl$path';
@@ -112,14 +120,14 @@ class AIProvider {
 
   String get chatEndpoint {
     final path = protocol.chatPath;
-    if (baseUrl.endsWith('/v1') && path.startsWith('/v1')) {
+    if (_baseUrlHasVersion && path.startsWith('/v1')) {
       return '$baseUrl${path.substring(3)}';
     }
     return '$baseUrl$path';
   }
 
   String get embeddingEndpoint {
-    if (baseUrl.endsWith('/v1')) {
+    if (_baseUrlHasVersion) {
       return '$baseUrl/embeddings';
     }
     return '$baseUrl/v1/embeddings';
@@ -203,6 +211,8 @@ class AIModel {
       capabilities.length == 1 && capabilities.contains(ModelCapability.text);
 
   bool get supportsVision => capabilities.contains(ModelCapability.vision);
+
+  bool get supportsTools => capabilities.contains(ModelCapability.tools);
 
   String get capabilityLabel {
     final parts = capabilities.map((c) => c.label).toList()..sort();

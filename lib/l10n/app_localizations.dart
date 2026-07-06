@@ -1190,6 +1190,18 @@ abstract class AppLocalizations {
   /// **'Add Custom Model'**
   String get addCustomModel;
 
+  /// No description provided for @editCustomModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Custom Model'**
+  String get editCustomModel;
+
+  /// No description provided for @modelIdReadOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Model ID cannot be changed after creation'**
+  String get modelIdReadOnlyHint;
+
   /// No description provided for @modelId.
   ///
   /// In en, this message translates to:
@@ -1207,6 +1219,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'My Custom Model'**
   String get displayNameHint;
+
+  /// No description provided for @contextWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Context Window (tokens)'**
+  String get contextWindow;
+
+  /// No description provided for @contextWindowHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional, e.g. 8192. Leave empty if unknown.'**
+  String get contextWindowHint;
+
+  /// No description provided for @contextWindowInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a positive integer'**
+  String get contextWindowInvalid;
 
   /// No description provided for @refreshModels.
   ///
@@ -5465,6 +5495,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Advanced settings'**
   String get memoryAdvancedSettings;
+
+  /// No description provided for @samplingSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation Parameters'**
+  String get samplingSettings;
+
+  /// No description provided for @samplingSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Control temperature and output length for each AI scene.'**
+  String get samplingSettingsHint;
+
+  /// No description provided for @samplingChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get samplingChat;
+
+  /// No description provided for @samplingAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent Tasks'**
+  String get samplingAgent;
+
+  /// No description provided for @samplingDreaming.
+  ///
+  /// In en, this message translates to:
+  /// **'Dreaming Consolidation'**
+  String get samplingDreaming;
+
+  /// No description provided for @samplingTemperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get samplingTemperature;
+
+  /// No description provided for @samplingMaxTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Output Tokens'**
+  String get samplingMaxTokens;
+
+  /// No description provided for @samplingMaxTokensUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set (provider default)'**
+  String get samplingMaxTokensUnset;
+
+  /// No description provided for @samplingChatTempHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher = more creative, lower = more focused.'**
+  String get samplingChatTempHint;
+
+  /// No description provided for @samplingAgentTempHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower = more deterministic tool calls.'**
+  String get samplingAgentTempHint;
+
+  /// No description provided for @samplingDreamingTempHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower = more faithful summaries.'**
+  String get samplingDreamingTempHint;
+
+  /// No description provided for @samplingAgentExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent Execution Limits'**
+  String get samplingAgentExecution;
+
+  /// No description provided for @samplingAgentExecutionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Caps to prevent runaway tool loops.'**
+  String get samplingAgentExecutionHint;
+
+  /// No description provided for @samplingMaxToolLoops.
+  ///
+  /// In en, this message translates to:
+  /// **'Max tool-call rounds (chat)'**
+  String get samplingMaxToolLoops;
+
+  /// No description provided for @samplingMaxToolLoopsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Max AI↔tool round-trips per chat message.'**
+  String get samplingMaxToolLoopsHint;
+
+  /// No description provided for @samplingMaxReactIterations.
+  ///
+  /// In en, this message translates to:
+  /// **'Max ReAct iterations (agent)'**
+  String get samplingMaxReactIterations;
+
+  /// No description provided for @samplingMaxReactIterationsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Max observe→think→act cycles per agent task.'**
+  String get samplingMaxReactIterationsHint;
 
   /// No description provided for @consolidateNow.
   ///

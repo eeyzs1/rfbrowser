@@ -201,7 +201,40 @@ class AINotifier extends Notifier<AIState> with _ToolCallLoopMixin {
                 .getApiKeyForProvider(provider.id)
           : null;
 
-      final hasTools = tools != null && tools.isNotEmpty && bridge != null;
+      final hasToolsRequested =
+          tools != null && tools.isNotEmpty && bridge != null;
+
+      // ── Pre-send capability validation ───────────────────────────
+      //    若调用方请求了 tools,但当前 model 不支持 function calling,
+      //    降级为普通对话(不发 tools 数组,避免 provider API 报错),
+      //    并在 UI 上提示用户。日志记录便于排查"agent 模式不触发工具"类问题。
+      final hasTools = hasToolsRequested && model.supportsTools;
+      if (hasToolsRequested && !hasTools) {
+        appLog.warning(
+          'AI: model "${model.id}" does not declare tools capability; '
+          'falling back to plain chat (tools dropped). '
+          'If the model actually supports function calling, '
+          'edit it in Settings → AI → Custom Models to add the Tools capability.',
+        );
+        // 在 streaming 消息上挂一条用户可见提示,避免"静默降级"的困惑。
+        _updateLastAssistantMessage(
+          '(当前模型 "${model.displayName}" 未声明 Tools 能力,已降级为普通对话。'
+          '如需使用 Agent 工具调用,请在 设置 → AI → 自定义模型 中勾选 Tools。)\n\n',
+          isStreaming: true,
+        );
+      }
+
+      // ── Sampling parameters: read from settings (chat scene).
+      //    When the caller passes tools (agent tool-call loop), use the
+      //    agent scene's parameters instead for more deterministic output.
+      final sampling = ref.read(settingsProvider).sampling;
+      final isAgentCall = hasTools;
+      final temperature = isAgentCall
+          ? sampling.agentTemperature
+          : sampling.chatTemperature;
+      final maxTokens = isAgentCall
+          ? sampling.agentMaxTokens
+          : sampling.chatMaxTokens;
 
       final response = await _protocol.sendRequest(
         provider: provider,
@@ -209,7 +242,9 @@ class AINotifier extends Notifier<AIState> with _ToolCallLoopMixin {
         messages: messages,
         apiKey: apiKey,
         stream: true,
-        tools: tools,
+        tools: hasTools ? tools : null,
+        temperature: temperature,
+        maxTokens: maxTokens,
       );
 
       if (hasTools) {
@@ -221,6 +256,9 @@ class AINotifier extends Notifier<AIState> with _ToolCallLoopMixin {
           bridge,
           tools,
           messages,
+          temperature: temperature,
+          maxTokens: maxTokens,
+          maxLoops: sampling.maxToolLoops,
         );
       } else {
         final buffer = StringBuffer();

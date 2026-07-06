@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging/app_logger.dart';
 import '../../data/models/agent_task.dart';
 import '../ai_service.dart';
+import '../settings_service.dart';
 import 'agent_tool.dart';
 import 'agent_tool_registry.dart';
 import 'plan_generator.dart';

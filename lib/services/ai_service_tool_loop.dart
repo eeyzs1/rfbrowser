@@ -25,9 +25,11 @@ mixin _ToolCallLoopMixin on Notifier<AIState> {
     String? apiKey,
     AgentChatBridge bridge,
     List<Map<String, dynamic>> tools,
-    List<Map<String, dynamic>> apiMessages,
-  ) async {
-    const maxLoops = 10;
+    List<Map<String, dynamic>> apiMessages, {
+    double? temperature,
+    int? maxTokens,
+    int maxLoops = 10,
+  }) async {
     var currentMessages = List<Map<String, dynamic>>.from(apiMessages);
     var loopCount = 0;
 
@@ -44,6 +46,8 @@ mixin _ToolCallLoopMixin on Notifier<AIState> {
               apiKey: apiKey,
               stream: true,
               tools: tools,
+              temperature: temperature,
+              maxTokens: maxTokens,
             )).data.stream;
 
       await for (final chunk in stream) {

@@ -35,8 +35,8 @@ mixin _DreamingExtractionMixin on _DreamingServiceBase {
             {'role': 'system', 'content': _extractionSystemPrompt},
             {'role': 'user', 'content': prompt},
           ],
-          'temperature': 0.3,
-          'max_tokens': 1024,
+          'temperature': _sampling.dreamingTemperature,
+          'max_tokens': _sampling.dreamingMaxTokens,
         }),
       );
       final content = _extractContent(response.data, provider.protocol);

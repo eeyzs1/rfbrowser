@@ -1,0 +1,74 @@
+{
+  "_comment": "Built-in model metadata registry. Loaded by BuiltinModelRegistry at app startup. Each entry is matched by lowercase prefix (longest prefix wins). Data sources: official provider docs, verified 2025-08 (GLM-4.6/4.7/GLM-5 data from z.ai blog Dec 2025 - Feb 2026). To update: edit this file, no code changes needed.",
+  "_sources": [
+    "https://platform.openai.com/docs/models",
+    "https://docs.anthropic.com/en/docs/about-claude/models",
+    "https://help.aliyun.com/zh/dashscope/product-overview/models",
+    "https://open.bigmodel.cn/dev/api",
+    "https://deepseek.com/api",
+    "https://ai.google.dev/gemini-api/docs/models"
+  ],
+  "models": [
+    {"prefix": "gpt-4.1-nano", "contextWindow": 1000000, "maxOutputTokens": 32768, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "gpt-4.1-mini", "contextWindow": 1000000, "maxOutputTokens": 32768, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "gpt-4.1", "contextWindow": 1000000, "maxOutputTokens": 32768, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "gpt-4o-mini", "contextWindow": 128000, "maxOutputTokens": 16384, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "gpt-4o", "contextWindow": 128000, "maxOutputTokens": 16384, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "gpt-4-turbo", "contextWindow": 128000, "maxOutputTokens": 4096, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "gpt-4-vision-preview", "contextWindow": 128000, "maxOutputTokens": 4096, "capabilities": ["text", "vision"]},
+    {"prefix": "gpt-4-32k", "contextWindow": 32768, "maxOutputTokens": 4096, "capabilities": ["text", "tools"]},
+    {"prefix": "gpt-4", "contextWindow": 8192, "maxOutputTokens": 4096, "capabilities": ["text", "tools"]},
+    {"prefix": "gpt-3.5-turbo-16k", "contextWindow": 16385, "maxOutputTokens": 4096, "capabilities": ["text", "tools"]},
+    {"prefix": "gpt-3.5-turbo", "contextWindow": 16385, "maxOutputTokens": 4096, "capabilities": ["text", "tools"]},
+
+    {"prefix": "o4-mini", "contextWindow": 200000, "maxOutputTokens": 100000, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "o3-mini", "contextWindow": 200000, "maxOutputTokens": 100000, "capabilities": ["text", "tools"]},
+    {"prefix": "o3", "contextWindow": 200000, "maxOutputTokens": 100000, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "o1-mini", "contextWindow": 128000, "maxOutputTokens": 65536, "capabilities": ["text"]},
+    {"prefix": "o1-preview", "contextWindow": 128000, "maxOutputTokens": 32768, "capabilities": ["text"]},
+    {"prefix": "o1", "contextWindow": 200000, "maxOutputTokens": 100000, "capabilities": ["text", "vision"]},
+
+    {"prefix": "claude-3-7-sonnet", "contextWindow": 200000, "maxOutputTokens": 128000, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "claude-3-5-sonnet", "contextWindow": 200000, "maxOutputTokens": 8192, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "claude-3-5-haiku", "contextWindow": 200000, "maxOutputTokens": 8192, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "claude-3-opus", "contextWindow": 200000, "maxOutputTokens": 4096, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "claude-3-sonnet", "contextWindow": 200000, "maxOutputTokens": 4096, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "claude-3-haiku", "contextWindow": 200000, "maxOutputTokens": 4096, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "claude-2.1", "contextWindow": 200000, "maxOutputTokens": 4096, "capabilities": ["text"]},
+    {"prefix": "claude-2", "contextWindow": 100000, "maxOutputTokens": 4096, "capabilities": ["text"]},
+
+    {"prefix": "deepseek-reasoner", "contextWindow": 64000, "maxOutputTokens": 8192, "capabilities": ["text"]},
+    {"prefix": "deepseek-chat", "contextWindow": 64000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+
+    {"prefix": "gemini-2.0-flash", "contextWindow": 1000000, "maxOutputTokens": 8192, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "gemini-1.5-pro", "contextWindow": 2000000, "maxOutputTokens": 8192, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "gemini-1.5-flash", "contextWindow": 1000000, "maxOutputTokens": 8192, "capabilities": ["text", "vision", "tools"]},
+
+    {"prefix": "qwen-vl-max", "contextWindow": 32768, "maxOutputTokens": 8192, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "qwen-max", "contextWindow": 262144, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "qwen-plus", "contextWindow": 131072, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "qwen-turbo", "contextWindow": 1000000, "maxOutputTokens": 16384, "capabilities": ["text", "tools"]},
+
+    {"prefix": "glm-5", "contextWindow": 200000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4.7", "contextWindow": 200000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4.6", "contextWindow": 200000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4.5x", "contextWindow": 128000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4.5-flash", "contextWindow": 128000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4.5-air", "contextWindow": 128000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4.5", "contextWindow": 128000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4v", "contextWindow": 128000, "maxOutputTokens": 8192, "capabilities": ["text", "vision", "tools"]},
+    {"prefix": "glm-4-long", "contextWindow": 1000000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4-flashx", "contextWindow": 8192, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4-flash", "contextWindow": 128000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4-air", "contextWindow": 8192, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4-plus", "contextWindow": 128000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+    {"prefix": "glm-4", "contextWindow": 128000, "maxOutputTokens": 8192, "capabilities": ["text", "tools"]},
+
+    {"prefix": "llama3.1", "contextWindow": 131072, "maxOutputTokens": 4096, "capabilities": ["text"]},
+    {"prefix": "llama3", "contextWindow": 8192, "maxOutputTokens": 4096, "capabilities": ["text"]},
+    {"prefix": "qwen2.5", "contextWindow": 32768, "maxOutputTokens": 8192, "capabilities": ["text"]},
+    {"prefix": "mistral", "contextWindow": 32768, "maxOutputTokens": 4096, "capabilities": ["text"]},
+    {"prefix": "codellama", "contextWindow": 16384, "maxOutputTokens": 4096, "capabilities": ["text"]},
+    {"prefix": "nomic-embed-text", "contextWindow": 8192, "maxOutputTokens": 8192, "capabilities": ["text"]}
+  ]
+}

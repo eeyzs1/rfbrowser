@@ -1,18 +1,21 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
-import 'dart:io' show Platform, HttpOverrides;
+import 'dart:io' show Directory, File, HttpOverrides, Platform;
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path/path.dart' as p;
 import 'package:rfbrowser/data/models/ai_provider.dart';
+import 'package:rfbrowser/data/stores/vault_store.dart';
 import 'package:rfbrowser/services/ai_service.dart';
 import 'package:rfbrowser/services/settings_service.dart';
 import 'package:rfbrowser/services/connectivity_service.dart';
 import 'package:rfbrowser/services/dio_factory.dart';
+import '../helpers/sqflite_test_setup.dart';
 
 const secureStorage = FlutterSecureStorage();
 
@@ -20,7 +23,8 @@ class _RealHttpOverrides extends HttpOverrides {}
 
 class TestAIConfigNotifier extends AIConfigNotifier {
   final AIConfigState _state;
-  TestAIConfigNotifier(this._state);
+  final String? _apiKey;
+  TestAIConfigNotifier(this._state, this._apiKey);
   @override
   AIConfigState build() => _state;
   @override
@@ -31,10 +35,9 @@ class TestAIConfigNotifier extends AIConfigNotifier {
       final key = await secureStorage.read(key: 'ai_key_$providerId');
       if (key != null && key.isNotEmpty) return key;
     } catch (_) {}
-    final envKey =
-        Platform.environment['BAILIAN_API_KEY'] ??
+    return _apiKey ??
+        Platform.environment['AI_API_KEY'] ??
         Platform.environment['DASHSCOPE_API_KEY'];
-    return envKey;
   }
 }
 
@@ -45,15 +48,63 @@ class TestConnectivityNotifier extends ConnectivityNotifier {
   set state(ConnectivityState newState) => super.state = newState;
 }
 
-Future<String?> tryGetBailianApiKey() async {
+class TestVaultNotifier extends VaultNotifier {
+  final VaultState _state;
+  TestVaultNotifier(this._state);
+  @override
+  VaultState build() => _state;
+}
+
+final _envVars = <String, String>{};
+
+Future<void> _loadEnvVars() async {
+  if (_envVars.isNotEmpty) return;
+  try {
+    final candidates = [
+      p.join(Directory.current.path, '.env'),
+      p.join(Directory.current.path, 'test', '.env'),
+    ];
+    for (final envPath in candidates) {
+      final envFile = File(envPath);
+      if (await envFile.exists()) {
+        final lines = await envFile.readAsLines();
+        for (final line in lines) {
+          final trimmed = line.trim();
+          if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
+          final eqIndex = trimmed.indexOf('=');
+          if (eqIndex < 0) continue;
+          final key = trimmed.substring(0, eqIndex).trim();
+          var value = trimmed.substring(eqIndex + 1).trim();
+          if (value.startsWith('"') && value.endsWith('"')) {
+            value = value.substring(1, value.length - 1);
+          }
+          _envVars[key] = value;
+        }
+      }
+    }
+  } catch (e) {
+    print('读取 .env 文件失败: $e');
+  }
+}
+
+Future<String?> tryGetAiApiKey() async {
+  await _loadEnvVars();
+
   String? apiKey;
 
   try {
-    apiKey = await secureStorage.read(key: 'ai_key_bailian');
+    apiKey = await secureStorage.read(key: 'ai_key_test-ai');
   } catch (_) {}
 
   if (apiKey == null || apiKey.isEmpty) {
-    apiKey = Platform.environment['BAILIAN_API_KEY'];
+    final envKey = _envVars['AI_API_KEY'];
+    if (envKey != null && envKey.isNotEmpty && !envKey.startsWith('sk-your')) {
+      apiKey = envKey;
+    }
+  }
+
+  if (apiKey == null || apiKey.isEmpty) {
+    apiKey = Platform.environment['AI_API_KEY'];
   }
 
   if (apiKey == null || apiKey.isEmpty) {
@@ -63,19 +114,44 @@ Future<String?> tryGetBailianApiKey() async {
   return (apiKey != null && apiKey.isNotEmpty) ? apiKey : null;
 }
 
-const _skipReason = '未找到百炼 API Key，请设置环境变量 BAILIAN_API_KEY 或 DASHSCOPE_API_KEY';
+String get _aiBaseUrl =>
+    _envVars['AI_BASE_URL'] ??
+    Platform.environment['AI_BASE_URL'] ??
+    'https://dashscope.aliyuncs.com/compatible-mode';
+
+String get _aiModel =>
+    _envVars['AI_MODEL'] ?? Platform.environment['AI_MODEL'] ?? 'qwen-turbo';
+
+/// If [_aiBaseUrl] already ends with a version segment (e.g. `/v1`, `/v4`),
+/// append the endpoint path directly; otherwise prepend `/v1/`.
+String get _chatEndpoint {
+  if (RegExp(r'/v\d+$').hasMatch(_aiBaseUrl)) {
+    return '$_aiBaseUrl/chat/completions';
+  }
+  return '$_aiBaseUrl/v1/chat/completions';
+}
+
+String get _modelsEndpoint {
+  if (RegExp(r'/v\d+$').hasMatch(_aiBaseUrl)) {
+    return '$_aiBaseUrl/models';
+  }
+  return '$_aiBaseUrl/v1/models';
+}
+
+const _skipReason = '未找到 AI API Key，请设置环境变量 AI_API_KEY 或 DASHSCOPE_API_KEY';
 
 String? _cachedApiKey;
 
-void main() {
+Future<void> main() async {
   HttpOverrides.global = _RealHttpOverrides();
+  setupSqfliteForTests();
 
-  group('AI - 百炼 直接 API 测试', () {
-    setUpAll(() async {
-      _cachedApiKey = await tryGetBailianApiKey();
-    });
+  // Load API key BEFORE group/test definitions — the `skip` parameter is
+  // evaluated at definition time, so it must be available upfront.
+  _cachedApiKey = await tryGetAiApiKey();
 
-    test('1. 读取百炼 API Key', () async {
+  group('AI - 直接 API 测试', () {
+    test('1. 读取 AI API Key', () async {
       expect(_cachedApiKey, isNotEmpty);
       print('API Key 已找到 (长度: ${_cachedApiKey!.length})');
     }, skip: _cachedApiKey == null ? _skipReason : null);
@@ -84,7 +160,7 @@ void main() {
       final dio = DioFactory.instance;
 
       final response = await dio.post(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+        _chatEndpoint,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -92,7 +168,7 @@ void main() {
           },
         ),
         data: jsonEncode({
-          'model': 'qwen-turbo',
+          'model': _aiModel,
           'messages': [
             {'role': 'user', 'content': '你好！请用一句话介绍你自己。'},
           ],
@@ -104,14 +180,14 @@ void main() {
       expect(data['choices'], isNotEmpty);
       final content = data['choices'][0]['message']['content'] as String;
       expect(content, isNotEmpty);
-      print('百炼回复: $content');
+      print('AI 回复: $content');
     }, skip: _cachedApiKey == null ? _skipReason : null);
 
     test('3. 中文对话上下文理解', () async {
       final dio = DioFactory.instance;
 
       final response = await dio.post(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+        _chatEndpoint,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -119,7 +195,7 @@ void main() {
           },
         ),
         data: jsonEncode({
-          'model': 'qwen-turbo',
+          'model': _aiModel,
           'messages': [
             {'role': 'user', 'content': '我最近在学习Flutter开发，能给我推荐3个最佳实践吗？'},
           ],
@@ -140,7 +216,7 @@ void main() {
       final dio = DioFactory.instance;
 
       final response = await dio.post(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+        _chatEndpoint,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -149,7 +225,7 @@ void main() {
           responseType: ResponseType.stream,
         ),
         data: jsonEncode({
-          'model': 'qwen-turbo',
+          'model': _aiModel,
           'messages': [
             {'role': 'user', 'content': '用三句话描述AI的未来发展趋势。'},
           ],
@@ -189,7 +265,7 @@ void main() {
       final dio = DioFactory.instance;
       try {
         await dio.post(
-          'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+          _chatEndpoint,
           options: Options(
             headers: {
               'Content-Type': 'application/json',
@@ -197,7 +273,7 @@ void main() {
             },
           ),
           data: jsonEncode({
-            'model': 'qwen-turbo',
+            'model': _aiModel,
             'messages': [
               {'role': 'user', 'content': 'Hello'},
             ],
@@ -214,7 +290,7 @@ void main() {
       final dio = DioFactory.instance;
 
       final response = await dio.post(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+        _chatEndpoint,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -222,7 +298,7 @@ void main() {
           },
         ),
         data: jsonEncode({
-          'model': 'qwen-turbo',
+          'model': _aiModel,
           'messages': [
             {'role': 'system', 'content': '你是一个Flutter开发专家，回答要简洁，只给代码示例。'},
             {'role': 'user', 'content': '如何在Flutter中创建一个带圆角的Container？'},
@@ -243,7 +319,7 @@ void main() {
       final dio = DioFactory.instance;
 
       final response = await dio.post(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+        _chatEndpoint,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -251,7 +327,7 @@ void main() {
           },
         ),
         data: jsonEncode({
-          'model': 'qwen-turbo',
+          'model': _aiModel,
           'messages': [
             {
               'role': 'user',
@@ -282,7 +358,7 @@ void main() {
       final dio = DioFactory.instance;
 
       final response = await dio.post(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+        _chatEndpoint,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -290,7 +366,7 @@ void main() {
           },
         ),
         data: jsonEncode({
-          'model': 'qwen-turbo',
+          'model': _aiModel,
           'messages': [
             {'role': 'user', 'content': 'Hi'},
           ],
@@ -312,11 +388,11 @@ void main() {
       expect(data['choices'], isNotEmpty);
     }, skip: _cachedApiKey == null ? _skipReason : null);
 
-    test('9. 获取百炼可用模型列表', () async {
+    test('9. 获取可用模型列表', () async {
       final dio = DioFactory.instance;
 
       final response = await dio.get(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1/models',
+        _modelsEndpoint,
         options: Options(headers: {'Authorization': 'Bearer $_cachedApiKey'}),
       );
 
@@ -325,7 +401,7 @@ void main() {
       expect(data['data'], isNotNull);
       final models = data['data'] as List;
       expect(models, isNotEmpty);
-      print('百炼可用模型数量: ${models.length}');
+      print('可用模型数量: ${models.length}');
       for (final m in models.take(5)) {
         print('  - ${m['id']}');
       }
@@ -335,80 +411,104 @@ void main() {
   group('AI - AINotifier 集成测试', () {
     ProviderContainer? container;
     AINotifier? aiNotifier;
-    bool hasApiKey = false;
+    Directory? tempDir;
 
-    setUpAll(() async {
+    setUpAll(() {
       SharedPreferences.setMockInitialValues({});
-      final key = await tryGetBailianApiKey();
-      hasApiKey = key != null;
     });
 
     setUp(() async {
-      if (!hasApiKey) return;
+      if (_cachedApiKey == null) return;
 
-      final apiKey = await tryGetBailianApiKey();
-      if (apiKey == null) return;
+      // Create a temp vault directory so MemoryService gets a valid DB path
+      // and background persistence doesn't hit database_closed after tearDown.
+      tempDir = Directory.systemTemp.createTempSync('rfb_ai_test_');
+      final rfbDir = Directory(p.join(tempDir!.path, '.rfbrowser'));
+      if (!rfbDir.existsSync()) rfbDir.createSync(recursive: true);
 
-      final bailianProvider = AIProvider(
-        id: 'bailian',
-        name: '阿里百炼',
-        protocol: ApiProtocol.openaiCompatible,
-        baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode',
-        apiKey: apiKey,
+      final vaultState = VaultState(
+        currentVault: VaultConfig(
+          path: tempDir!.path,
+          name: 'test',
+          lastOpened: DateTime.now(),
+        ),
       );
-      const bailianModel = AIModel(
-        id: 'qwen-turbo',
-        providerId: 'bailian',
-        displayName: 'Qwen Turbo',
+
+      final testProvider = AIProvider(
+        id: 'test-ai',
+        name: 'Test AI',
+        protocol: ApiProtocol.openaiCompatible,
+        baseUrl: _aiBaseUrl,
+        apiKey: _cachedApiKey,
+      );
+      final testModel = AIModel(
+        id: _aiModel,
+        providerId: 'test-ai',
+        displayName: 'Test AI Model',
       );
 
       final configState = AIConfigState(
-        providers: [bailianProvider],
-        models: const [bailianModel],
+        providers: [testProvider],
+        models: [testModel],
       );
 
       container = ProviderContainer(
         overrides: [
+          vaultProvider.overrideWith(() => TestVaultNotifier(vaultState)),
           connectivityProvider.overrideWith(() => TestConnectivityNotifier()),
           aiConfigProvider.overrideWith(
-            () => TestAIConfigNotifier(configState),
+            () => TestAIConfigNotifier(configState, _cachedApiKey),
           ),
         ],
       );
 
       aiNotifier = container!.read(aiProvider.notifier);
       aiNotifier!.state = aiNotifier!.state.copyWith(
-        activeProvider: bailianProvider,
-        activeModel: bailianModel,
+        activeProvider: testProvider,
+        activeModel: testModel,
       );
     });
 
-    tearDown(() {
+    tearDown(() async {
+      // Give background persistence (MemoryService.saveMessage / DreamingService)
+      // a moment to finish before we dispose the container and close the DB.
+      await Future.delayed(const Duration(milliseconds: 500));
       container?.dispose();
       container = null;
+      try {
+        tempDir?.deleteSync(recursive: true);
+      } catch (_) {}
+      tempDir = null;
     });
 
-    test('10. AINotifier.sendMessage 完整调用', () async {
-      expect(aiNotifier!.state.activeProvider?.id, 'bailian');
-      expect(aiNotifier!.state.activeModel?.id, 'qwen-turbo');
+    test(
+      '10. AINotifier.sendMessage 完整调用',
+      () async {
+        expect(aiNotifier!.state.activeProvider?.id, 'test-ai');
+        expect(aiNotifier!.state.activeModel?.id, _aiModel);
 
-      await aiNotifier!.sendMessage('用一句话介绍Flutter');
+        await aiNotifier!.sendMessage('用一句话介绍Flutter');
 
-      expect(aiNotifier!.state.isLoading, false);
-      expect(aiNotifier!.state.error, isNull);
-      expect(aiNotifier!.state.messages.length, greaterThanOrEqualTo(2));
+        // Allow background persistence to settle
+        await Future.delayed(const Duration(seconds: 2));
 
-      final userMsg = aiNotifier!.state.messages[0];
-      final assistantMsg = aiNotifier!.state.messages[1];
-      if (assistantMsg.role != 'assistant') {
-        fail('Expected assistant message, got ${assistantMsg.role}');
-      }
+        expect(aiNotifier!.state.isLoading, false);
+        expect(aiNotifier!.state.error, isNull);
+        expect(aiNotifier!.state.messages.length, greaterThanOrEqualTo(2));
 
-      expect(userMsg.role, 'user');
-      expect(userMsg.content, '用一句话介绍Flutter');
-      expect(assistantMsg.content, isNotEmpty);
+        final userMsg = aiNotifier!.state.messages[0];
+        final assistantMsg = aiNotifier!.state.messages[1];
+        if (assistantMsg.role != 'assistant') {
+          fail('Expected assistant message, got ${assistantMsg.role}');
+        }
 
-      print('AINotifier 回复: ${assistantMsg.content}');
-    }, skip: !hasApiKey ? _skipReason : null);
+        expect(userMsg.role, 'user');
+        expect(userMsg.content, '用一句话介绍Flutter');
+        expect(assistantMsg.content, isNotEmpty);
+
+        print('AINotifier 回复: ${assistantMsg.content}');
+      },
+      skip: _cachedApiKey == null ? _skipReason : null,
+    );
   });
 }

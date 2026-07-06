@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/shared_prefs_aware.dart';
 import '../data/models/memory_settings.dart';
+import '../data/models/sampling_settings.dart';
 
 // Re-export AI config types so existing imports of `settings_service.dart`
 // continue to work after the AI config code was extracted to its own file.
 export 'ai_config_service.dart';
 
 part 'settings_memory_setters.dart';
+part 'settings_sampling_setters.dart';
 
 enum AppButtonStyle { rounded, sharp, pill }
 
@@ -59,6 +61,12 @@ class AppSettings {
   /// legacy `memory*` key names for backward compatibility.
   final MemorySettings memory;
 
+  // ── AI sampling parameters (chat / agent / dreaming) ─────────────
+  /// All sampling-related configuration. See [SamplingSettings] for the
+  /// individual field docs. Persisted to SharedPreferences with the
+  /// `sampling*` key prefix.
+  final SamplingSettings sampling;
+
   AppSettings({
     this.locale = 'system',
     this.editorFontSize = 14.0,
@@ -80,6 +88,7 @@ class AppSettings {
     this.searchEngine = 'bing',
     this.themeMode = ThemeMode.system,
     this.memory = const MemorySettings(),
+    this.sampling = const SamplingSettings(),
   });
 
   Color get accentColor => Color(accentColorValue);
@@ -152,6 +161,7 @@ class AppSettings {
     String? searchEngine,
     ThemeMode? themeMode,
     MemorySettings? memory,
+    SamplingSettings? sampling,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
@@ -177,12 +187,13 @@ class AppSettings {
       searchEngine: searchEngine ?? this.searchEngine,
       themeMode: themeMode ?? this.themeMode,
       memory: memory ?? this.memory,
+      sampling: sampling ?? this.sampling,
     );
   }
 }
 
 class SettingsNotifier extends Notifier<AppSettings>
-    with SharedPrefsAware, _MemorySettersMixin {
+    with SharedPrefsAware, _MemorySettersMixin, _SamplingSettersMixin {
   @override
   AppSettings build() => AppSettings();
 
@@ -215,6 +226,7 @@ class SettingsNotifier extends Notifier<AppSettings>
       searchEngine: prefs.getString('searchEngine') ?? 'bing',
       themeMode: themeMode,
       memory: MemorySettings.fromPrefs(prefs),
+      sampling: SamplingSettings.fromPrefs(prefs),
     );
   }
 

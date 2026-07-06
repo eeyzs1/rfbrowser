@@ -203,59 +203,84 @@ mixin _ProviderDialogsMixin on _AISettingsSectionStateBase {
     BuildContext context,
     WidgetRef ref,
     AIProvider provider,
-    AppLocalizations l,
-  ) {
-    final modelIdController = TextEditingController();
-    final displayNameController = TextEditingController();
-    final selectedCapabilities = <ModelCapability>{ModelCapability.text};
+    AppLocalizations l, {
+    AIModel? existingModel,
+  }) {
+    final isEditing = existingModel != null;
+    final modelIdController = TextEditingController(
+      text: existingModel?.id ?? '',
+    );
+    // 编辑模式下 model id 不可改(它是主键),展示但禁用。
+    final displayNameController = TextEditingController(
+      text: existingModel?.displayName ?? '',
+    );
+    final contextWindowController = TextEditingController(
+      text: existingModel?.contextWindow?.toString() ?? '',
+    );
+    final selectedCapabilities = <ModelCapability>{
+      ...(existingModel?.capabilities ?? {ModelCapability.text}),
+    };
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) {
           return AlertDialog(
-            title: Text(l.addCustomModel),
+            title: Text(isEditing ? l.editCustomModel : l.addCustomModel),
             content: SizedBox(
               width: 360,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: modelIdController,
-                    decoration: InputDecoration(
-                      labelText: l.modelId,
-                      hintText: 'my-model-v1',
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: modelIdController,
+                      enabled: !isEditing,
+                      decoration: InputDecoration(
+                        labelText: l.modelId,
+                        hintText: isEditing ? null : 'my-model-v1',
+                        helperText: isEditing ? (l.modelIdReadOnlyHint) : null,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: displayNameController,
-                    decoration: InputDecoration(
-                      labelText: l.displayName,
-                      hintText: l.displayNameHint,
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: displayNameController,
+                      decoration: InputDecoration(
+                        labelText: l.displayName,
+                        hintText: l.displayNameHint,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    children: ModelCapability.values.map((cap) {
-                      final isSelected = selectedCapabilities.contains(cap);
-                      return FilterChip(
-                        label: Text(cap.label),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            if (selected) {
-                              selectedCapabilities.add(cap);
-                            } else if (cap != ModelCapability.text) {
-                              selectedCapabilities.remove(cap);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: contextWindowController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: l.contextWindow,
+                        hintText: l.contextWindowHint,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      children: ModelCapability.values.map((cap) {
+                        final isSelected = selectedCapabilities.contains(cap);
+                        return FilterChip(
+                          label: Text(cap.label),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                selectedCapabilities.add(cap);
+                              } else if (cap != ModelCapability.text) {
+                                selectedCapabilities.remove(cap);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
               ),
             ),
             actions: [
@@ -266,7 +291,23 @@ mixin _ProviderDialogsMixin on _AISettingsSectionStateBase {
               FilledButton(
                 onPressed: () {
                   final modelId = modelIdController.text.trim();
+                  // 编辑模式下 modelId 不可改,但仍然校验非空(防御性)
                   if (modelId.isEmpty) return;
+
+                  // 解析 contextWindow(可选字段,留空为 null)
+                  int? contextWindow;
+                  final cwText = contextWindowController.text.trim();
+                  if (cwText.isNotEmpty) {
+                    final parsed = int.tryParse(cwText);
+                    if (parsed == null || parsed <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l.contextWindowInvalid)),
+                      );
+                      return;
+                    }
+                    contextWindow = parsed;
+                  }
+
                   final model = AIModel(
                     id: modelId,
                     providerId: provider.id,
@@ -274,8 +315,11 @@ mixin _ProviderDialogsMixin on _AISettingsSectionStateBase {
                         ? displayNameController.text.trim()
                         : modelId,
                     capabilities: Set.from(selectedCapabilities),
+                    contextWindow: contextWindow,
                     isCustom: true,
                   );
+                  // addCustomModel 是 upsert 语义(先 removeWhere 同 id 再 add),
+                  // 所以编辑模式直接调用即可覆盖原模型。
                   ref.read(aiConfigProvider.notifier).addCustomModel(model);
                   Navigator.pop(ctx);
                 },
