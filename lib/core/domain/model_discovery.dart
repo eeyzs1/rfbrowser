@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../ai/builtin_model_registry.dart';
 import '../logging/app_logger.dart';
 import '../../data/models/ai_provider.dart';
 
@@ -49,12 +50,17 @@ class ModelDiscovery {
     final models = <AIModel>[];
     for (final item in data['data']) {
       final id = item['id'] as String;
+      final builtin = BuiltinModelRegistry.lookup(id);
       models.add(
         AIModel(
           id: id,
           providerId: provider.id,
           displayName: _humanizeModelId(id),
-          capabilities: _inferCapabilities(id),
+          capabilities: builtin?.capabilities ?? _inferCapabilities(id),
+          contextWindow:
+              item['context_length'] as int? ??
+              item['context_window'] as int? ??
+              builtin?.contextWindow,
         ),
       );
     }
@@ -84,12 +90,17 @@ class ModelDiscovery {
     final models = <AIModel>[];
     for (final item in data['data']) {
       final id = item['id'] as String;
+      final builtin = BuiltinModelRegistry.lookup(id);
       models.add(
         AIModel(
           id: id,
           providerId: provider.id,
           displayName: _humanizeModelId(id),
-          capabilities: _inferCapabilities(id),
+          capabilities: builtin?.capabilities ?? _inferCapabilities(id),
+          contextWindow:
+              item['context_length'] as int? ??
+              item['context_window'] as int? ??
+              builtin?.contextWindow,
         ),
       );
     }
@@ -103,6 +114,14 @@ class ModelDiscovery {
   @visibleForTesting
   String humanizeModelId(String id) => _humanizeModelId(id);
 
+  /// 关键词推断模型能力(builtin registry 未命中时的 fallback)。
+  ///
+  /// 优先级:`/v1/models` 返回的 context_length > [BuiltinModelRegistry] >
+  /// 此处的关键词推断。builtin registry 命中时会直接使用其 capabilities,
+  /// 此方法仅在 registry 未覆盖的模型上生效。
+  ///
+  /// tools 推断保守策略:仅在模型 id 明确包含 function-calling 相关标记时
+  /// 才标 tools,避免对未知模型发送 tools 数组导致 API 报错。
   Set<ModelCapability> _inferCapabilities(String modelId) {
     final id = modelId.toLowerCase();
     final visionKeywords = [
@@ -120,7 +139,30 @@ class ModelDiscovery {
       'pixtral',
     ];
     final isVision = visionKeywords.any((k) => id.contains(k));
-    return {ModelCapability.text, if (isVision) ModelCapability.vision};
+
+    // 工具调用关键词:GPT-4 全系、Claude 3+、Gemini、Qwen-max/plus/turbo
+    // 已被 builtin registry 覆盖;此处仅捕获 registry 未覆盖的边缘情况,
+    // 例如 gpt-4-xxx 自定义微调名、claude-3-xxx-custom 等。
+    final toolsKeywords = [
+      'gpt-4',
+      'gpt-3.5-turbo',
+      'claude-3',
+      'claude-3-5',
+      'gemini',
+      'qwen-max',
+      'qwen-plus',
+      'qwen-turbo',
+      'deepseek-chat',
+      'function-call',
+      'tool-use',
+    ];
+    final isTools = toolsKeywords.any((k) => id.contains(k));
+
+    return {
+      ModelCapability.text,
+      if (isVision) ModelCapability.vision,
+      if (isTools) ModelCapability.tools,
+    };
   }
 
   String _humanizeModelId(String id) {
