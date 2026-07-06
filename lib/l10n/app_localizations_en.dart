@@ -564,6 +564,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addCustomModel => 'Add Custom Model';
 
   @override
+  String get editCustomModel => 'Edit Custom Model';
+
+  @override
+  String get modelIdReadOnlyHint => 'Model ID cannot be changed after creation';
+
+  @override
   String get modelId => 'Model ID';
 
   @override
@@ -571,6 +577,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get displayNameHint => 'My Custom Model';
+
+  @override
+  String get contextWindow => 'Context Window (tokens)';
+
+  @override
+  String get contextWindowHint =>
+      'Optional, e.g. 8192. Leave empty if unknown.';
+
+  @override
+  String get contextWindowInvalid => 'Please enter a positive integer';
 
   @override
   String get refreshModels => 'Refresh Models';
@@ -2887,6 +2903,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get memoryAdvancedSettings => 'Advanced settings';
+
+  @override
+  String get samplingSettings => 'Generation Parameters';
+
+  @override
+  String get samplingSettingsHint =>
+      'Control temperature and output length for each AI scene.';
+
+  @override
+  String get samplingChat => 'Chat';
+
+  @override
+  String get samplingAgent => 'Agent Tasks';
+
+  @override
+  String get samplingDreaming => 'Dreaming Consolidation';
+
+  @override
+  String get samplingTemperature => 'Temperature';
+
+  @override
+  String get samplingMaxTokens => 'Max Output Tokens';
+
+  @override
+  String get samplingMaxTokensUnset => 'Not set (provider default)';
+
+  @override
+  String get samplingChatTempHint =>
+      'Higher = more creative, lower = more focused.';
+
+  @override
+  String get samplingAgentTempHint => 'Lower = more deterministic tool calls.';
+
+  @override
+  String get samplingDreamingTempHint => 'Lower = more faithful summaries.';
+
+  @override
+  String get samplingAgentExecution => 'Agent Execution Limits';
+
+  @override
+  String get samplingAgentExecutionHint =>
+      'Caps to prevent runaway tool loops.';
+
+  @override
+  String get samplingMaxToolLoops => 'Max tool-call rounds (chat)';
+
+  @override
+  String get samplingMaxToolLoopsHint =>
+      'Max AI↔tool round-trips per chat message.';
+
+  @override
+  String get samplingMaxReactIterations => 'Max ReAct iterations (agent)';
+
+  @override
+  String get samplingMaxReactIterationsHint =>
+      'Max observe→think→act cycles per agent task.';
 
   @override
   String get consolidateNow => 'Consolidate now';

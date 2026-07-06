@@ -7,6 +7,7 @@ import 'category_header.dart';
 import 'ai_settings_section.dart';
 import 'agent_settings_section.dart';
 import 'memory_settings_section.dart';
+import 'sampling_settings_section.dart';
 import 'shortcut_settings_section.dart';
 
 /// AI 与自动化设置子页面：AISettings + AgentSettings + MemorySettings
@@ -34,6 +35,8 @@ class AISettingsPage extends ConsumerWidget {
       CategoryHeader(title: l.settingsCategoryAI),
       const SizedBox(height: 8),
       const AISettingsSection(),
+      const SizedBox(height: 16),
+      const SamplingSettingsSection(),
       const SizedBox(height: 16),
       const AgentSettingsSection(),
       const SizedBox(height: 16),

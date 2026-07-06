@@ -85,8 +85,9 @@ abstract class _AISettingsSectionStateBase
     BuildContext context,
     WidgetRef ref,
     AIProvider provider,
-    AppLocalizations l,
-  );
+    AppLocalizations l, {
+    AIModel? existingModel,
+  });
   void _showDeleteProviderConfirmDialog(
     BuildContext context,
     WidgetRef ref,

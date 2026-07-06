@@ -240,6 +240,8 @@ mixin _ProviderListMixin on _AISettingsSectionStateBase {
                 child: Icon(
                   cap == ModelCapability.vision
                       ? Icons.visibility
+                      : cap == ModelCapability.tools
+                      ? Icons.build
                       : Icons.text_fields,
                   size: 12,
                   color: theme.hintColor,
@@ -275,11 +277,28 @@ mixin _ProviderListMixin on _AISettingsSectionStateBase {
         ref.read(aiProvider.notifier).setActiveModel(provider, model);
       },
       trailing: model.isCustom
-          ? IconButton(
-              icon: const Icon(Icons.close, size: 14),
-              onPressed: () => ref
-                  .read(aiConfigProvider.notifier)
-                  .removeModel(model.id, model.providerId),
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 14),
+                  tooltip: l.editCustomModel,
+                  onPressed: () => _showAddCustomModelDialog(
+                    context,
+                    ref,
+                    provider,
+                    l,
+                    existingModel: model,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 14),
+                  tooltip: l.delete,
+                  onPressed: () => ref
+                      .read(aiConfigProvider.notifier)
+                      .removeModel(model.id, model.providerId),
+                ),
+              ],
             )
           : null,
     );

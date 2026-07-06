@@ -98,10 +98,10 @@ class MemorySettingsSection extends ConsumerWidget {
   }
 }
 
-/// 高级参数 section（阈值、半衰期、衰减常数、Hebbian 连接等）。
+/// 高级参数 section（阈值、上下文预算、LLM 选项等）。
 ///
 /// 从原 [MemorySettingsSection] 拆出，独立成 section。默认折叠，展开时挂载
-/// 10 个 Slider + 2 个 SwitchListTile。折叠时只渲染 toggle，子树完全不挂载，
+/// 6 个 Slider + 2 个 SwitchListTile。折叠时只渲染 toggle，子树完全不挂载，
 /// 避免与基础设置 section 的 rebuild 牵连。
 ///
 /// 展开状态持久化到 SharedPreferences（key: [_kAdvancedExpandedKey]）。
@@ -109,6 +109,12 @@ class MemorySettingsSection extends ConsumerWidget {
 /// 条件渲染（无动画）：AnimatedCrossFade 在 200ms 动画期间会同时挂载
 /// firstChild + secondChild 两套语义子树，批量涌入触发 AXTree diff 失败。
 /// 改用 if/else 条件渲染，折叠时完全不挂载子树。
+///
+/// P2-2 瘦身：移除 4 个内部调优参数的 UI 暴露
+/// （createdRecencyHalfLifeDays / accessRecencyHalfLifeDays /
+/// hebbianCoAccessMinutes / hebbianDecayDays）。这些参数有经过验证的默认值，
+/// 普通用户无需调整，且减少 Slider 数量有助于降低 AXTree 压力。
+/// 数据模型字段和 setter 保留不变，服务层仍从 settings 读取这些值。
 class MemoryAdvancedSettingsSection extends ConsumerStatefulWidget {
   const MemoryAdvancedSettingsSection({super.key});
 
@@ -232,42 +238,8 @@ class _MemoryAdvancedSettingsSectionState
                 max: 180,
                 onChanged: notifier.setMemoryMidMaxAgeDays,
               ),
-              _IntSlider(
-                label: 'Created recency half-life',
-                suffix: 'days',
-                value: memory.createdRecencyHalfLifeDays,
-                min: 30,
-                max: 730,
-                divisions: 70,
-                onChanged: notifier.setMemoryCreatedRecencyHalfLifeDays,
-              ),
-              _IntSlider(
-                label: 'Last-access recency half-life',
-                suffix: 'days',
-                value: memory.accessRecencyHalfLifeDays,
-                min: 1,
-                max: 90,
-                divisions: 89,
-                onChanged: notifier.setMemoryAccessRecencyHalfLifeDays,
-              ),
               const Divider(height: 1),
-              const _SectionHeader(label: 'Hebbian connections'),
-              _IntSlider(
-                label: 'Co-access window',
-                suffix: 'minutes',
-                value: memory.hebbianCoAccessMinutes,
-                min: 1,
-                max: 60,
-                onChanged: notifier.setMemoryHebbianCoAccessMinutes,
-              ),
-              _IntSlider(
-                label: 'Edge decay constant',
-                suffix: 'days',
-                value: memory.hebbianDecayDays,
-                min: 1,
-                max: 365,
-                onChanged: notifier.setMemoryHebbianDecayDays,
-              ),
+              const _SectionHeader(label: 'Auto-export'),
               _IntSlider(
                 label: 'Export chat to Markdown every',
                 suffix: memory.autoExportEveryNMessages == 0

@@ -559,6 +559,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addCustomModel => '添加自定义模型';
 
   @override
+  String get editCustomModel => '编辑自定义模型';
+
+  @override
+  String get modelIdReadOnlyHint => '模型 ID 创建后不可更改';
+
+  @override
   String get modelId => '模型 ID';
 
   @override
@@ -566,6 +572,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get displayNameHint => '我的自定义模型';
+
+  @override
+  String get contextWindow => '上下文窗口 (tokens)';
+
+  @override
+  String get contextWindowHint => '可选,例如 8192。未知时留空。';
+
+  @override
+  String get contextWindowInvalid => '请输入正整数';
 
   @override
   String get refreshModels => '刷新模型';
@@ -2821,6 +2836,58 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get memoryAdvancedSettings => '高级设置';
+
+  @override
+  String get samplingSettings => '生成参数';
+
+  @override
+  String get samplingSettingsHint => '为每个 AI 场景配置温度和输出长度。';
+
+  @override
+  String get samplingChat => '聊天';
+
+  @override
+  String get samplingAgent => 'Agent 任务';
+
+  @override
+  String get samplingDreaming => 'Dreaming 整理';
+
+  @override
+  String get samplingTemperature => '温度';
+
+  @override
+  String get samplingMaxTokens => '最大输出 tokens';
+
+  @override
+  String get samplingMaxTokensUnset => '未设置(使用 provider 默认值)';
+
+  @override
+  String get samplingChatTempHint => '越高越有创造力,越低越聚焦。';
+
+  @override
+  String get samplingAgentTempHint => '越低工具调用越确定。';
+
+  @override
+  String get samplingDreamingTempHint => '越低摘要越忠实原文。';
+
+  @override
+  String get samplingAgentExecution => 'Agent 执行上限';
+
+  @override
+  String get samplingAgentExecutionHint => '防止工具调用死循环的兜底上限。';
+
+  @override
+  String get samplingMaxToolLoops => '最大工具调用轮数(聊天)';
+
+  @override
+  String get samplingMaxToolLoopsHint => '每条聊天消息允许的 AI↔工具 往返次数。';
+
+  @override
+  String get samplingMaxReactIterations => '最大 ReAct 迭代数(Agent)';
+
+  @override
+  String get samplingMaxReactIterationsHint =>
+      '每个 Agent 任务的 observe→think→act 循环上限。';
 
   @override
   String get consolidateNow => '立即整理';

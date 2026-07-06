@@ -1,15 +1,11 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
-import '../../services/browser_service.dart';
+import '../../services/command_execution_service.dart';
 import '../../services/knowledge_service.dart';
-import '../../services/ai_service.dart';
-import '../../services/settings_service.dart';
 import '../../services/shortcut_service.dart';
-import '../../services/agent_service.dart';
-import '../../services/quick_move_service.dart';
+import '../../services/vault_workflow_service.dart';
 import '../../data/stores/vault_store.dart';
 import '../../core/ai/request_context.dart';
 import '../widgets/command_bar.dart';
@@ -22,6 +18,7 @@ import '../scenes/think/think_scene.dart';
 import '../scenes/connect/connect_scene.dart';
 import '../pages/settings_page.dart';
 import '../pages/memory_browser_page.dart';
+import 'layout_state_manager.dart';
 import 'scene_scaffold.dart';
 import 'keyboard_util.dart';
 
@@ -35,9 +32,6 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   bool _showCommandBar = false;
   bool _showSettings = false;
   SceneType _currentScene = SceneType.capture;
-  bool _leftPanelExpanded = true;
-  bool _rightPanelExpanded = true;
-  ConnectViewMode _connectViewMode = ConnectViewMode.canvas;
 
   void _openSettings() {
     setState(() => _showSettings = true);
@@ -73,9 +67,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   }
 
   void _toggleLeftPanel() =>
-      setState(() => _leftPanelExpanded = !_leftPanelExpanded);
+      ref.read(layoutStateManagerProvider.notifier).toggleLeftPanel();
   void _toggleRightPanel() =>
-      setState(() => _rightPanelExpanded = !_rightPanelExpanded);
+      ref.read(layoutStateManagerProvider.notifier).toggleRightPanel();
   void _onNoteOpened() {
     if (_currentScene != SceneType.think) {
       _switchScene(SceneType.think);
@@ -85,6 +79,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   @override
   Widget build(BuildContext context) {
     final vaultState = ref.watch(vaultProvider);
+    final layoutState = ref.watch(layoutStateManagerProvider);
     // 用 ref.listen 监听 vault 变化，只在 vault 真正变化时才更新 requestContext。
     // 之前的实现是在 build 中注册 addPostFrameCallback —— 这是反模式：
     // 1) 每次 MainLayout rebuild 都注册一个新 callback（每帧都注册）
@@ -140,24 +135,24 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                 child: SceneScaffold(
                   initialScene: _currentScene,
                   captureView: (_) => CaptureScene(
-                    leftPanelExpanded: _leftPanelExpanded,
-                    rightPanelExpanded: _rightPanelExpanded,
+                    leftPanelExpanded: layoutState.leftPanelExpanded,
+                    rightPanelExpanded: layoutState.rightPanelExpanded,
                     onToggleLeftPanel: _toggleLeftPanel,
                     onToggleRightPanel: _toggleRightPanel,
                     onNoteOpened: _onNoteOpened,
                   ),
                   thinkView: (_) => ThinkScene(
-                    leftPanelExpanded: _leftPanelExpanded,
-                    rightPanelExpanded: _rightPanelExpanded,
+                    leftPanelExpanded: layoutState.leftPanelExpanded,
+                    rightPanelExpanded: layoutState.rightPanelExpanded,
                     onToggleLeftPanel: _toggleLeftPanel,
                     onToggleRightPanel: _toggleRightPanel,
                     onCreateNote: _createNewNote,
                     onNoteOpened: _onNoteOpened,
                   ),
                   connectView: (_) => ConnectScene(
-                    initialViewMode: _connectViewMode,
-                    leftPanelExpanded: _leftPanelExpanded,
-                    rightPanelExpanded: _rightPanelExpanded,
+                    initialViewMode: layoutState.connectViewMode,
+                    leftPanelExpanded: layoutState.leftPanelExpanded,
+                    rightPanelExpanded: layoutState.rightPanelExpanded,
                     onToggleLeftPanel: _toggleLeftPanel,
                     onToggleRightPanel: _toggleRightPanel,
                   ),
@@ -249,11 +244,15 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     'switch_connect' => () => _switchScene(SceneType.connect),
     'connect_canvas' => () {
       _switchScene(SceneType.connect);
-      _connectViewMode = ConnectViewMode.canvas;
+      ref
+          .read(layoutStateManagerProvider.notifier)
+          .setConnectViewMode(ConnectViewMode.canvas);
     },
     'connect_graph' => () {
       _switchScene(SceneType.connect);
-      _connectViewMode = ConnectViewMode.graph;
+      ref
+          .read(layoutStateManagerProvider.notifier)
+          .setConnectViewMode(ConnectViewMode.graph);
     },
     'daily_note' => () {
       ref.read(knowledgeProvider.notifier).createDailyNote(DateTime.now());
@@ -267,33 +266,25 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     _ => null,
   };
 
-  void _handleCommand(String command) {
-    if (command.startsWith('/')) {
-      _executeQuickMove(command);
-      return;
-    }
-    final c = command.toLowerCase();
-    if (c.contains('new note')) {
-      _createNewNote();
-    } else if (c.contains('new tab')) {
-      ref.read(browserProvider.notifier).createTab(url: 'https://www.bing.com');
-      _switchScene(SceneType.capture);
-    } else if (c.contains('daily note')) {
-      ref.read(knowledgeProvider.notifier).createDailyNote(DateTime.now());
-      _switchScene(SceneType.think);
-    } else if (c.contains('graph')) {
-      _switchScene(SceneType.connect);
-    } else if (c.contains('settings')) {
-      _openSettings();
-    } else if (c.contains('theme')) {
-      final settings = ref.read(settingsProvider);
-      final isDark = settings.isDarkMode;
-      final newBg = isDark ? const Color(0xFFFAFCFF) : const Color(0xFF0F172A);
-      ref.read(settingsProvider.notifier).setScaffoldBgColor(newBg);
-    } else if (c.contains('research')) {
-      ref.read(agentProvider.notifier).research(command);
-    } else {
-      ref.read(aiProvider.notifier).sendMessage(command);
+  Future<void> _handleCommand(String command) async {
+    final effect = await ref
+        .read(commandExecutionProvider)
+        .executeCommand(command);
+    if (!mounted) return;
+    switch (effect) {
+      case CommandEffectNone():
+        break;
+      case CommandEffectSwitchScene(:final scene):
+        _switchScene(scene);
+      case CommandEffectOpenSettings():
+        _openSettings();
+      case CommandEffectCreateNote():
+        _createNewNote();
+      case CommandEffectOpenMemoryBrowser():
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MemoryBrowserPage()),
+        );
     }
   }
 
@@ -305,40 +296,8 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     }
   }
 
-  void _executeQuickMove(String command) {
-    final parts = command.substring(1).split(' ');
-    final match = ref.read(quickMoveProvider).matching(parts[0]).firstOrNull;
-    if (match == null) return;
-    ref.read(quickMoveProvider.notifier).recordUsage(match.id);
-    final ctx = ref.read(quickMoveContextProvider);
-    final args = <String, String>{
-      'input': parts.skip(1).join(' '),
-      if (ctx.pageContent != null)
-        'pageContent': ctx.pageContent!.length > 8000
-            ? ctx.pageContent!.substring(0, 8000)
-            : ctx.pageContent!,
-      if (ctx.selectedText != null)
-        'selectedText': ctx.selectedText!.length > 4000
-            ? ctx.selectedText!.substring(0, 4000)
-            : ctx.selectedText!,
-      if (ctx.currentUrl != null) 'pageUrl': ctx.currentUrl!,
-      if (ctx.noteContent != null)
-        'noteContent': ctx.noteContent!.length > 8000
-            ? ctx.noteContent!.substring(0, 8000)
-            : ctx.noteContent!,
-    };
-    ref.read(aiProvider.notifier).sendMessage(match.resolvePrompt(args));
-  }
-
   Future<void> _openVaultDialog() async {
     final l = AppLocalizations.of(context)!;
-    final result = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: l.selectVaultLocation,
-    );
-    if (result != null) {
-      await ref.read(vaultProvider.notifier).openVault(result);
-      ref.read(knowledgeProvider.notifier).loadAllNotes();
-      ref.read(browserProvider.notifier).loadBookmarks();
-    }
+    await ref.read(vaultWorkflowProvider).promptAndOpenVault(l);
   }
 }
