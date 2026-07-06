@@ -292,8 +292,8 @@ dart run build_runner build
 # 运行所有测试
 flutter test
 
-# 运行 Agent 百炼集成测试（需要 .env 中的 API Key）
-flutter test test/agent_bailian_integration_test.dart
+# 运行 Agent AI 集成测试（需要 .env 中的 API Key）
+flutter test test/integration/agent_ai_integration_test.dart
 
 # 运行测试并生成覆盖率报告
 flutter test --coverage
@@ -307,7 +307,7 @@ flutter analyze
 
 ### 集成测试配置
 
-Agent 集成测试需要阿里百炼 API Key。配置步骤：
+Agent 集成测试需要 AI API Key（任意 OpenAI 兼容供应商）。配置步骤：
 
 1. 复制 `.env.example` 为 `.env`：
    ```bash
@@ -316,12 +316,12 @@ Agent 集成测试需要阿里百炼 API Key。配置步骤：
 
 2. 编辑 `.env`，填入真实的 API Key：
    ```
-   BAILIAN_API_KEY=sk-your-real-key-here
+   AI_API_KEY=sk-your-api-key-here
    ```
 
 3. 运行测试：
    ```bash
-   flutter test test/agent_bailian_integration_test.dart
+   flutter test test/integration/agent_ai_integration_test.dart
    ```
 
 > `.env` 文件已在 `.gitignore` 中，不会被提交到仓库。如果没有 API Key，需要网络的测试会自动跳过，不需要 Key 的测试（工具验证、持久化）仍会正常运行。

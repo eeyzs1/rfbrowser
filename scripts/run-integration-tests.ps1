@@ -47,11 +47,19 @@ Write-Host ""
 # Step 1: Ensure all DLLs are built and available in build\windows\x64\
 Write-Host "[setup] flutter build windows --debug (ensures all DLLs exist)" -ForegroundColor Cyan
 $ErrorActionPreference = 'Continue'
-flutter build windows --debug --no-pub 2>&1 | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "flutter build FAILED" -ForegroundColor Red
+# Capture exit code immediately after the native command (do NOT pipe to
+# Out-Null — PowerShell's $LASTEXITCODE can be unreliable when .bat files
+# are piped through cmdlets). Redirect output to $null instead.
+& flutter build windows --debug --no-pub 2>&1 | Out-Null
+$buildExitCode = $LASTEXITCODE
+# Verify build succeeded by checking for the executable (more reliable than
+# $LASTEXITCODE for .bat files invoked from PowerShell).
+$builtExe = "build\windows\x64\runner\Debug\rfbrowser.exe"
+if ($buildExitCode -ne 0 -and -not (Test-Path $builtExe)) {
+    Write-Host "flutter build FAILED (exit code: $buildExitCode, exe not found)" -ForegroundColor Red
     exit 1
 }
+Write-Host "[setup] flutter build succeeded" -ForegroundColor Green
 $ErrorActionPreference = 'Stop'
 
 # Step 2: Copy all DLLs to runner\Debug (in case they were missing)

@@ -48,7 +48,7 @@ class TestAIConfigNotifier extends AIConfigNotifier {
       if (key != null && key.isNotEmpty) return key;
     } catch (_) {}
     return _apiKey ??
-        Platform.environment['BAILIAN_API_KEY'] ??
+        Platform.environment['AI_API_KEY'] ??
         Platform.environment['DASHSCOPE_API_KEY'];
   }
 }
@@ -88,7 +88,7 @@ Future<String?> _loadApiKey() async {
       }
     }
 
-    final apiKey = _envVars['BAILIAN_API_KEY'];
+    final apiKey = _envVars['AI_API_KEY'];
     if (apiKey != null && apiKey.isNotEmpty && !apiKey.startsWith('sk-your')) {
       return apiKey;
     }
@@ -97,7 +97,7 @@ Future<String?> _loadApiKey() async {
   }
 
   final envKey =
-      Platform.environment['BAILIAN_API_KEY'] ??
+      Platform.environment['AI_API_KEY'] ??
       Platform.environment['DASHSCOPE_API_KEY'];
   if (envKey != null && envKey.isNotEmpty) return envKey;
 
@@ -105,26 +105,35 @@ Future<String?> _loadApiKey() async {
 }
 
 String? _cachedApiKey;
-String _bailianModel = 'qwen-turbo';
-String _bailianBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode';
+String _aiModel = 'qwen-turbo';
+String _aiBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode';
+
+/// If [base] already ends with a version segment (e.g. `/v1`, `/v4`),
+/// append `/chat/completions` directly; otherwise prepend `/v1/`.
+String _buildChatEndpoint(String base) {
+  if (RegExp(r'/v\d+$').hasMatch(base)) return '$base/chat/completions';
+  return '$base/v1/chat/completions';
+}
+
+String get _chatEndpoint => _buildChatEndpoint(_aiBaseUrl);
 
 const _skipReason =
-    '未找到百炼 API Key。请在 .env 文件中设置 BAILIAN_API_KEY，'
-    '或设置环境变量 BAILIAN_API_KEY / DASHSCOPE_API_KEY';
+    '未找到 AI API Key。请在 .env 文件中设置 AI_API_KEY，'
+    '或设置环境变量 AI_API_KEY / DASHSCOPE_API_KEY';
 
 /// Quick connectivity probe used to decide whether the cached key + model
 /// are still valid. Returns false on auth errors, deprecated model, or any
 /// unexpected transport failure (in which case we treat the run as
 /// "no network available" and skip the network-dependent tests).
-Future<bool> _probeBailian() async {
+Future<bool> _probeAi() async {
   final base =
-      _envVars['BAILIAN_BASE_URL'] ??
+      _envVars['AI_BASE_URL'] ??
       'https://dashscope.aliyuncs.com/compatible-mode';
-  final model = _envVars['BAILIAN_MODEL'] ?? 'qwen-turbo';
+  final model = _envVars['AI_MODEL'] ?? 'qwen-turbo';
   try {
     final dio = DioFactory.instance;
     final response = await dio.post(
-      '$base/v1/chat/completions',
+      _buildChatEndpoint(base),
       options: Options(
         headers: {
           'Content-Type': 'application/json',
@@ -146,7 +155,7 @@ Future<bool> _probeBailian() async {
     final code = response.statusCode ?? 0;
     return code >= 200 && code < 400;
   } catch (e) {
-    print('Bailian probe threw: $e');
+    print('AI probe threw: $e');
     return false;
   }
 }
@@ -161,30 +170,30 @@ Future<void> main() async {
     // Quick API probe — bail if the key is rejected (401/403) or the model
     // is deprecated (400). Without this, a stale .env key would surface as
     // confusing "Expected: not empty / true" failures instead of a clean skip.
-    final probeOk = await _probeBailian();
+    final probeOk = await _probeAi();
     if (!probeOk) {
       print(
-        'Bailian API probe failed (key/model rejected). '
+        'AI API probe failed (key/model rejected). '
         'Treating as "no key available" and skipping all network tests.',
       );
       _cachedApiKey = null;
     }
   }
   if (_cachedApiKey != null) {
-    _bailianModel = _envVars['BAILIAN_MODEL'] ?? 'qwen-turbo';
-    _bailianBaseUrl =
-        _envVars['BAILIAN_BASE_URL'] ??
+    _aiModel = _envVars['AI_MODEL'] ?? 'qwen-turbo';
+    _aiBaseUrl =
+        _envVars['AI_BASE_URL'] ??
         'https://dashscope.aliyuncs.com/compatible-mode';
     print(
       'API Key 已加载 (长度: ${_cachedApiKey!.length}), '
-      '模型: $_bailianModel, '
-      'Base URL: $_bailianBaseUrl',
+      '模型: $_aiModel, '
+      'Base URL: $_aiBaseUrl',
     );
   } else {
     print(_skipReason);
   }
 
-  group('Agent 集成测试 — 百炼 API', () {
+  group('Agent 集成测试 — AI API', () {
     test(
       '3. PlanGenerator — AI 生成任务计划',
       () async {
@@ -201,7 +210,7 @@ Future<void> main() async {
           AIReasonTool((prompt, systemPrompt) async {
             final dio = DioFactory.instance;
             final response = await dio.post(
-              '$_bailianBaseUrl/v1/chat/completions',
+              _chatEndpoint,
               options: Options(
                 headers: {
                   'Content-Type': 'application/json',
@@ -209,7 +218,7 @@ Future<void> main() async {
                 },
               ),
               data: jsonEncode({
-                'model': _bailianModel,
+                'model': _aiModel,
                 'messages': [
                   {'role': 'system', 'content': systemPrompt},
                   {'role': 'user', 'content': prompt},
@@ -226,7 +235,7 @@ Future<void> main() async {
 
         final dio = DioFactory.instance;
         final response = await dio.post(
-          '$_bailianBaseUrl/v1/chat/completions',
+          _chatEndpoint,
           options: Options(
             headers: {
               'Content-Type': 'application/json',
@@ -234,7 +243,7 @@ Future<void> main() async {
             },
           ),
           data: jsonEncode({
-            'model': _bailianModel,
+            'model': _aiModel,
             'messages': [
               {'role': 'system', 'content': systemPrompt},
               {'role': 'user', 'content': '搜索关于"量子计算"的笔记，如果没找到就创建一个'},
@@ -283,7 +292,7 @@ Future<void> main() async {
             reasonCalled = true;
             final dio = DioFactory.instance;
             final response = await dio.post(
-              '$_bailianBaseUrl/v1/chat/completions',
+              _chatEndpoint,
               options: Options(
                 headers: {
                   'Content-Type': 'application/json',
@@ -291,7 +300,7 @@ Future<void> main() async {
                 },
               ),
               data: jsonEncode({
-                'model': _bailianModel,
+                'model': _aiModel,
                 'messages': [
                   {'role': 'system', 'content': systemPrompt ?? ''},
                   {'role': 'user', 'content': prompt},
@@ -345,25 +354,25 @@ Future<void> main() async {
           ),
         );
 
-        final bailianProvider = AIProvider(
-          id: 'bailian',
-          name: '阿里百炼',
+        final testProvider = AIProvider(
+          id: 'test-ai',
+          name: 'Test AI',
           protocol: ApiProtocol.openaiCompatible,
-          baseUrl: _bailianBaseUrl,
+          baseUrl: _aiBaseUrl,
           apiKey: _cachedApiKey,
         );
-        final bailianModel = AIModel(
-          id: _bailianModel,
-          providerId: 'bailian',
-          displayName: 'Qwen Turbo',
+        final testModel = AIModel(
+          id: _aiModel,
+          providerId: 'test-ai',
+          displayName: 'Test AI Model',
         );
 
         final configState = AIConfigState(
-          providers: [bailianProvider],
-          models: [bailianModel],
+          providers: [testProvider],
+          models: [testModel],
           activeConfig: ActiveAIConfig(
-            providerId: 'bailian',
-            modelId: _bailianModel,
+            providerId: 'test-ai',
+            modelId: _aiModel,
           ),
         );
 
@@ -381,8 +390,8 @@ Future<void> main() async {
 
         final aiNotifier = container.read(aiProvider.notifier);
         aiNotifier.state = aiNotifier.state.copyWith(
-          activeProvider: bailianProvider,
-          activeModel: bailianModel,
+          activeProvider: testProvider,
+          activeModel: testModel,
         );
 
         await aiNotifier.sendMessage('回复"Agent测试成功"四个字');
@@ -560,7 +569,7 @@ Future<void> main() async {
           executionLog.add('ai_reason(${prompt.substring(0, 20)}...)');
           final dio = DioFactory.instance;
           final response = await dio.post(
-            '$_bailianBaseUrl/v1/chat/completions',
+            _chatEndpoint,
             options: Options(
               headers: {
                 'Content-Type': 'application/json',
@@ -568,7 +577,7 @@ Future<void> main() async {
               },
             ),
             data: jsonEncode({
-              'model': _bailianModel,
+              'model': _aiModel,
               'messages': [
                 {'role': 'system', 'content': systemPrompt ?? ''},
                 {'role': 'user', 'content': prompt},
@@ -594,7 +603,7 @@ Future<void> main() async {
       );
 
       final response = await dio.post(
-        '$_bailianBaseUrl/v1/chat/completions',
+        _chatEndpoint,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -602,7 +611,7 @@ Future<void> main() async {
           },
         ),
         data: jsonEncode({
-          'model': _bailianModel,
+          'model': _aiModel,
           'messages': [
             {'role': 'system', 'content': reactPrompt},
             {'role': 'user', 'content': observation},
@@ -638,7 +647,7 @@ Future<void> main() async {
           );
 
           final response2 = await dio.post(
-            '$_bailianBaseUrl/v1/chat/completions',
+            _chatEndpoint,
             options: Options(
               headers: {
                 'Content-Type': 'application/json',
@@ -646,7 +655,7 @@ Future<void> main() async {
               },
             ),
             data: jsonEncode({
-              'model': _bailianModel,
+              'model': _aiModel,
               'messages': [
                 {'role': 'system', 'content': reactPrompt},
                 {'role': 'user', 'content': observation2},
